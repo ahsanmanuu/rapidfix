@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1767183560595",
+    "userId": "1767112475871",
+    "associatedId": "1767182848783",
+    "type": "credit",
+    "amount": 299,
+    "description": "Payment for Job #1767182848783",
+    "status": "completed",
+    "createdAt": "2025-12-31T12:19:20.595Z"
+  },
+  {
+    "id": "1767196158362",
+    "userId": "1767112475871",
+    "associatedId": "1767192436272",
+    "type": "credit",
+    "amount": 299,
+    "description": "Payment for Job #1767192436272",
+    "status": "completed",
+    "createdAt": "2025-12-31T15:49:18.362Z"
+  },
+  {
+    "id": "1767196226945",
+    "userId": "1767112475871",
+    "associatedId": "1767194604302",
+    "type": "credit",
+    "amount": 299,
+    "description": "Payment for Job #1767194604302",
+    "status": "completed",
+    "createdAt": "2025-12-31T15:50:26.945Z"
+  }
+]

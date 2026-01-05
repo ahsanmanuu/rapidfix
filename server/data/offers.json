@@ -1,0 +1,22 @@
+[
+  {
+    "id": "1767175809287",
+    "title": "Summer Sale",
+    "description": "Get 20% off on all AC Services this week!",
+    "badgeText": "20% OFF",
+    "createdBy": "admin",
+    "expiryDate": "2025-12-31",
+    "isActive": true,
+    "createdAt": "2025-12-31T10:10:09.287Z"
+  },
+  {
+    "id": "1767175809289",
+    "title": "New User Bonus",
+    "description": "Flat ₹100 cashback on your first booking.",
+    "badgeText": "₹100 CAHSBACK",
+    "createdBy": "admin",
+    "expiryDate": "2025-12-31",
+    "isActive": true,
+    "createdAt": "2025-12-31T10:10:09.289Z"
+  }
+]

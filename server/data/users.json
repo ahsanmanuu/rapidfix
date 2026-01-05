@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1767032116929",
+    "name": "ahsan",
+    "email": "ahsan33@gmail.com",
+    "phone": "7004855076",
+    "password": "sczone",
+    "location": {
+      "latitude": 26.0908591,
+      "longitude": 85.9406645,
+      "address": "Unknown Area, Unknown City"
+    },
+    "role": "user",
+    "createdAt": "2025-12-29T18:15:16.929Z",
+    "updatedAt": "2026-01-02T10:04:26.583Z"
+  }
+]

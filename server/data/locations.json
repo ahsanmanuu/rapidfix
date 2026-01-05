@@ -1,0 +1,5714 @@
+[
+  {
+    "id": "1767344207917",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:56:47.917Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344212256",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:56:52.256Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344216766",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:56:56.766Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344221102",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:01.102Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344225315",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:05.315Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344230000",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:10.000Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344234977",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:14.977Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344239730",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:19.730Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344244694",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:24.694Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344248839",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:28.840Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344253090",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:33.090Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344257582",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:37.582Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344261595",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:41.596Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344264322",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:44.322Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344269434",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:49.435Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344273929",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:57:53.929Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344280104",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:00.104Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344284382",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:04.382Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344288820",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:08.820Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344294065",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:14.065Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344298367",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:18.367Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344302584",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:22.585Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344307301",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:27.301Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344311328",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:31.328Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344318021",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:38.021Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344322419",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:42.419Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344326743",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:46.743Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344331538",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:51.538Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344335818",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:58:55.818Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344340240",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:00.240Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344346393",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:06.393Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344351086",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:11.086Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344356753",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:16.753Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344362100",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:22.100Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344369193",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:29.193Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344373526",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:33.526Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344376249",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:36.249Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344380963",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:40.963Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344384380",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:44.380Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344388069",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:48.069Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344395049",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:55.050Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344398103",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T08:59:58.103Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344402277",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:00:02.277Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344405119",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:00:05.119Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344412080",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:00:12.080Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344461257",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:01:01.257Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344468115",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:01:08.115Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344476151",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:01:16.151Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344482429",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:01:22.429Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344489185",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:01:29.185Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344493936",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:01:33.936Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344499813",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:01:39.814Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344505745",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:01:45.745Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344510364",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:01:50.364Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344515544",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:01:55.544Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344520295",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:00.295Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344526434",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:06.435Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344532198",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:12.198Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344536978",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:16.978Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344541311",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:21.311Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344545780",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:25.780Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344550520",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:30.520Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344555319",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:35.319Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344561235",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:41.235Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344565855",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:45.856Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344570179",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:50.179Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344575202",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:02:55.202Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344584062",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:03:04.062Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344590250",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:03:10.250Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344594917",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:03:14.917Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344641048",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:01.048Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344646553",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:06.554Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344652694",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:12.694Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344657329",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:17.330Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344662094",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:22.094Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344666974",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:26.974Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344671411",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:31.411Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344675889",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:35.889Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344680895",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:40.895Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344685270",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:45.270Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344690074",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:50.074Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344694533",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:54.534Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344699092",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:04:59.092Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344703376",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:03.376Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344709611",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:09.612Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344714038",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:14.038Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344718219",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:18.219Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344722707",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:22.707Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344727419",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:27.419Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344732197",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:32.197Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344736270",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:36.270Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344740931",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:40.931Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344745087",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:45.087Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344749716",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:49.716Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344753968",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:53.968Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344758499",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:05:58.499Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344762824",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:02.824Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344767382",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:07.382Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344771675",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:11.675Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344778042",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:18.042Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344782806",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:22.806Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344787486",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:27.486Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344791726",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:31.726Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344796085",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:36.086Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344800391",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:40.391Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344805660",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:45.660Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344810312",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:50.312Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344815084",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:55.084Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344819528",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:06:59.528Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344824391",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:04.391Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344829685",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:09.685Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344834165",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:14.165Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344838385",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:18.386Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344842826",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:22.826Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344847457",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:27.457Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344851652",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:31.652Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344856220",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:36.220Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344860581",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:40.581Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344864822",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:44.822Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344869614",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:49.614Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344873830",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:53.830Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344879249",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:07:59.249Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344886002",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:06.002Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344890635",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:10.635Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344896507",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:16.507Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344901607",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:21.607Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344906969",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:26.969Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344911922",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:31.922Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344916444",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:36.444Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344921081",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:41.081Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344926174",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:46.174Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344930928",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:50.928Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344935356",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:08:55.356Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344941098",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:01.098Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344945425",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:05.425Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344950375",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:10.375Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344954650",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:14.650Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344958092",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:18.092Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344960881",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:20.881Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344965797",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:25.797Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344970331",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:30.331Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344975655",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:35.655Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344980338",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:40.339Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344988429",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:48.429Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344992847",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:52.847Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767344997227",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:09:57.227Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345001801",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:10:01.802Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345006729",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:10:06.729Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345011910",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:10:11.910Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345016842",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:10:16.842Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345021521",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:10:21.522Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345026414",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:10:26.414Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345034862",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:10:34.862Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345049156",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:10:49.156Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345056685",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:10:56.685Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345061433",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:11:01.457Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345067115",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:11:07.115Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345072901",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:11:12.901Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345078009",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:11:18.009Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345084637",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:11:24.637Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345093871",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:11:33.875Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345100921",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:11:40.921Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345285655",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:14:45.655Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345293179",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:14:53.179Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345300227",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:15:00.227Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345305981",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:15:05.981Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345312605",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:15:12.605Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345362117",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:02.117Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345368389",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:08.389Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345374839",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:14.839Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345381547",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:21.547Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345387825",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:27.825Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345395059",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:35.059Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345400858",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:40.858Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345408002",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:48.002Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345410441",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:50.441Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345413523",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:53.523Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345419562",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:16:59.562Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345425020",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:17:05.020Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345430524",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:17:10.524Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345436494",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:17:16.495Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345443402",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:17:23.402Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345449397",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:17:29.397Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345454778",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:17:34.778Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345460181",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:17:40.181Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345464525",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:17:44.525Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345472721",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:17:52.721Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345479083",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:17:59.083Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345484362",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:04.362Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345491032",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:11.032Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345496481",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:16.481Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345501055",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:21.055Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345506152",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:26.152Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345510089",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:30.089Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345513973",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:33.973Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345518232",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:38.232Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345523919",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:43.919Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345528579",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:48.579Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345536426",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:18:56.426Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345541034",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:01.034Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345546420",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:06.420Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345550680",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:10.680Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345555249",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:15.249Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345560588",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:20.588Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345562410",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:22.410Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345562445",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:22.445Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345565526",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:25.526Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345568980",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:28.980Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345577210",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:37.210Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345581635",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:41.635Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345581885",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:41.885Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345583945",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:43.945Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345586030",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:46.030Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345586153",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:46.153Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345588002",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:48.002Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345588398",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:48.398Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345590945",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:50.945Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345594003",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:54.003Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345598776",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:19:58.776Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345604093",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:04.093Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345608848",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:08.849Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345614268",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:14.268Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345618278",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:18.278Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345623758",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:23.758Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345625892",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:25.892Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345627876",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:27.876Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345632088",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:32.088Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345636634",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:36.635Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345641112",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:41.112Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345649363",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:20:49.363Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345742037",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:22:22.037Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345746839",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:22:26.839Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345753864",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:22:33.864Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345758397",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:22:38.397Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345763050",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:22:43.051Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345768346",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:22:48.347Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345773249",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:22:53.249Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345778949",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:22:58.949Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345784126",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:23:04.126Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345788605",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:23:08.605Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345793342",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:23:13.342Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345798711",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:23:18.711Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345805326",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:23:25.326Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345811391",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:23:31.391Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345818040",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:23:38.040Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345823774",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:23:43.774Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345836544",
+    "userId": "1767345836497",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:23:56.544Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345937371",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:25:37.371Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345940592",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:25:40.592Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345944084",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:25:44.084Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345947125",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:25:47.125Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345950766",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:25:50.766Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345955912",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:25:55.912Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345961091",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:01.091Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345965181",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:05.181Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345968302",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:08.302Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345972033",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:12.033Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345975130",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:15.130Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345979838",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:19.838Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345986729",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:26.729Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345992182",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:32.182Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345994583",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:34.583Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345996499",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:36.499Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345996531",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:36.532Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767345998735",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:38.735Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346000261",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:40.261Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346007951",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:47.951Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346008052",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:48.052Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346014005",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:54.005Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346018666",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:26:58.666Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346071964",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:27:51.964Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346075129",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:27:55.129Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346082428",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:28:02.428Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346086522",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:28:06.522Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346093596",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:28:13.596Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346096031",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:28:16.031Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346146257",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:06.257Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346151704",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:11.704Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346157371",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:17.371Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346163374",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:23.374Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346170330",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:30.330Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346176368",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:36.368Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346179053",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:39.054Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346183204",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:43.204Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346187388",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:47.388Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346190242",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:50.242Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346194314",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:54.314Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346199266",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:29:59.266Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346204322",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:04.322Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346207241",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:07.241Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346210063",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:10.063Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346213052",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:13.052Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346219400",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:19.400Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346223863",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:23.863Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346228022",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:28.022Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346231322",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:31.322Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346234271",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:34.272Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346236910",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:36.910Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346239669",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:39.669Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346243175",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:43.175Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346243225",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:43.225Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346245591",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:45.591Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346247945",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:47.945Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346247968",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:47.968Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346250545",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:50.545Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346253276",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:53.276Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346256200",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:56.200Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346259609",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:30:59.610Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346262390",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:02.390Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346265482",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:05.482Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346268404",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:08.404Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346270886",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:10.887Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346273274",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:13.274Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346276083",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:16.083Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346278800",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:18.800Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346281606",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:21.606Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346284510",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:24.510Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346287145",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:27.145Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346290191",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:30.191Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346293057",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:33.057Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346296008",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:36.008Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346298443",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:38.443Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346300927",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:40.927Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346303687",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:43.687Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346306934",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:46.934Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346310127",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:50.127Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346313107",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:53.107Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346315583",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:55.583Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346318579",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:31:58.580Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346321513",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:01.513Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346324358",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:04.358Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346327002",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:07.002Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346329834",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:09.834Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346332427",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:12.427Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346335157",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:15.157Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346338077",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:18.077Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346340708",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:20.708Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346343269",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:23.269Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346345734",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:25.734Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346347936",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:27.937Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346350404",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:30.404Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346350438",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:30.438Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346355566",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:35.566Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346358076",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:38.076Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346361029",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:41.029Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346363430",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:43.430Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346365668",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:45.668Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346368094",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:48.095Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346371037",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:51.037Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346373362",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:53.362Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346376084",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:56.084Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346378498",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:32:58.498Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346380984",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:00.984Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346384052",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:04.052Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346387061",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:07.061Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346389967",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:09.967Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346393121",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:13.121Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346395553",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:15.553Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346398247",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:18.248Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346401038",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:21.038Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346404150",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:24.150Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346407339",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:27.339Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346409517",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:29.517Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346413191",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:33.191Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346418046",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:38.046Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346420222",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:40.222Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346422964",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:42.964Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346425289",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:45.289Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346428074",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:48.074Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346430290",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:50.290Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346432984",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:52.984Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346436957",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:33:56.957Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346442096",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:02.096Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346444545",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:04.545Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346447029",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:07.029Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346449370",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:09.370Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346452187",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:12.187Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346455047",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:15.047Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346457969",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:17.969Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346461042",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:21.042Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346464233",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:24.233Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346466517",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:26.517Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346469012",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:29.013Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346471976",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:31.976Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346475003",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:35.003Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346478294",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:38.294Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346481012",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:41.012Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346483015",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:43.015Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346485905",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:45.905Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346488005",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:48.006Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346490019",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:50.019Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346493066",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:53.066Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346495012",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:55.012Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346497034",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:34:57.035Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346500003",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:00.003Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346502966",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:02.966Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346505947",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:05.947Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346508022",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:08.022Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346510019",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:10.019Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346512021",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:12.021Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346515005",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:15.005Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346517997",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:17.997Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346521004",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:21.004Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346523001",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:23.001Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346525019",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:25.019Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346528024",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:28.024Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346530019",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:30.019Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346532282",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:32.283Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346534016",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:34.016Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346536013",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:36.013Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346538008",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:38.008Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346540008",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:40.008Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346543014",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:43.014Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346545010",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:45.010Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346546999",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:46.999Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346549029",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:49.029Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346550995",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:50.995Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346553002",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:53.002Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346555089",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:55.089Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346558141",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:35:58.141Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346560054",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:00.054Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346562001",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:02.001Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346565066",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:05.066Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346568280",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:08.280Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346573509",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:13.509Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346576058",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:16.058Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346578915",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:18.915Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346580936",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:20.936Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346582933",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:22.933Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346585055",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:25.055Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346587082",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:27.082Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346589024",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:29.024Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346591063",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:31.063Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346592934",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:32.934Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346595964",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:35.964Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346598098",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:38.098Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346601065",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:41.065Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346603008",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:43.008Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346606075",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:46.075Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346609063",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:49.063Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346611014",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:51.014Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346613047",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:53.047Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346615083",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:55.083Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346618158",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:58.158Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346619916",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:36:59.916Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346623839",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:03.839Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346627237",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:07.237Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346630025",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:10.025Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346633232",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:13.232Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346635033",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:15.033Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346636910",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:16.910Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346639132",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:19.132Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346642405",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:22.405Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346645016",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:25.016Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346647090",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:27.090Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346655290",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:35.290Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346658822",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:38.823Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346664293",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:44.293Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346667535",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:47.535Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346671087",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:51.087Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346675954",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:37:55.954Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346725534",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:38:45.534Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346729616",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:38:49.616Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346734524",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:38:54.524Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346738171",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:38:58.171Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346742933",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:02.933Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346745108",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:05.108Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346747766",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:07.766Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346752944",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:12.944Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346755209",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:15.209Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346757006",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:17.006Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346759075",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:19.075Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346761518",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:21.518Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346765037",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:25.038Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346768641",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:28.641Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346772562",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:32.562Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346775545",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:35.545Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346779216",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:39.216Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346783007",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:43.007Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346789014",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:49.014Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346792014",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:52.014Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346797420",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:39:57.420Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346802131",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:02.131Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346803977",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:03.977Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346806807",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:06.807Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346809319",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:09.319Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346810994",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:10.994Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346813020",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:13.021Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346817997",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:17.997Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346822524",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:22.524Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346827552",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:27.552Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346833644",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:33.644Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346841945",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:41.945Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346847168",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:47.168Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346852062",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:52.062Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346857458",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:40:57.458Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346862092",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:02.092Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346867712",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:07.712Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346874737",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:14.737Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346879969",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:19.969Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346882417",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:22.417Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346882818",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:22.818Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346885056",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:25.056Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346885102",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:25.102Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346891109",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:31.109Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346896580",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:36.580Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346897140",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:37.140Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346901613",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:41.613Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346909518",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:49.518Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346913965",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:41:53.965Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346924490",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:42:04.490Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346979912",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:42:59.912Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346983558",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:03.558Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346986616",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:06.616Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346990173",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:10.173Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346993254",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:13.254Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767346996063",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:16.063Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347000025",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:20.025Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347002139",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:22.139Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347005556",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:25.556Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347009830",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:29.830Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347014076",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:34.076Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347016006",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:36.006Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347021884",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:41.884Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347024089",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:44.089Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347027863",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:47.863Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347030031",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:50.031Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347031998",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:43:51.998Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347054765",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:14.765Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347057888",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:17.888Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347060147",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:20.147Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347063082",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:23.083Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347066663",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:26.663Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347069157",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:29.157Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347071069",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:31.069Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347073977",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:33.977Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347077148",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:37.148Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347078943",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:38.943Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347081098",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:41.098Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347083908",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:43.908Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347087010",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:47.010Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347089041",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:49.041Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347091989",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:51.989Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347094047",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:54.047Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347095928",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:55.928Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347099772",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:44:59.772Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347102020",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:02.020Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347104066",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:04.066Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347107604",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:07.604Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347111357",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:11.358Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347115150",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:15.150Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347118617",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:18.617Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347122838",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:22.838Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347126324",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:26.324Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347130247",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:30.247Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347137997",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:37.997Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347140028",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:40.028Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347143445",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:43.445Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347147333",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:47.333Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347150743",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:45:50.743Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347160788",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:00.788Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347164672",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:04.672Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347167735",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:07.735Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347170446",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:10.446Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347173527",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:13.527Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347175903",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:15.903Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347178017",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:18.017Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347179015",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:19.015Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347182049",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:22.049Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347185029",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:25.030Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347188021",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:28.021Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347191581",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:31.581Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347193934",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:33.935Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347198170",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:38.170Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347199967",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:39.967Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347203119",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:43.119Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347204924",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:44.924Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347207070",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:47.070Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347208932",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:48.932Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347210058",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:50.058Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347213030",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:53.030Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347217071",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:57.071Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347219051",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:46:59.051Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347221287",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:01.287Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347223169",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:03.169Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347226858",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:06.858Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347230655",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:10.655Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347235573",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:15.573Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347238039",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:18.039Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347239938",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:19.938Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347247544",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:27.544Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347250038",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:30.038Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347252012",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:32.012Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347254107",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:34.107Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347256238",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:36.239Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347258396",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:38.396Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347261464",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:41.464Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347263984",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:43.985Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347265934",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:45.934Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347267990",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:47.990Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347271502",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:51.502Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347274273",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:54.273Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347275882",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:55.882Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347278042",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:47:58.042Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347280314",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:00.314Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347281896",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:01.896Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347284080",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:04.080Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347286015",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:06.015Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347287993",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:07.993Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347290912",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:10.912Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347293905",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:13.905Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347296969",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:16.969Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347299876",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:19.876Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347302014",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:22.014Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347303880",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:23.880Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347306103",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:26.103Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347307940",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:27.940Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347310895",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:30.896Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347313020",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:33.020Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347314946",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:34.946Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347316946",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:36.946Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347319055",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:39.055Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347321873",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:41.873Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347324155",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:44.155Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347326877",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:46.877Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347328924",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:48.925Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347330929",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:50.930Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347333004",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:53.004Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347335884",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:55.884Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347338008",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:48:58.008Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347340895",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:00.895Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347343004",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:03.004Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347345880",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:05.880Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347348030",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:08.030Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347353005",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:13.005Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347355040",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:15.040Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347356993",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:16.993Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347359432",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:19.432Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347360980",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:20.980Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347362881",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:22.881Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347365314",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:25.314Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347368257",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:28.257Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347371511",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:31.511Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347373089",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:33.089Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347376917",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:36.917Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347377028",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:37.028Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347380081",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:40.081Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347383260",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:43.260Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347384971",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:44.971Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347386988",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:46.988Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347389881",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:49.881Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347392228",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:52.229Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347394985",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:54.985Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347396865",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:56.865Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347398932",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:49:58.933Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347401159",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:01.159Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347403931",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:03.932Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347409872",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:09.872Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347414279",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:14.279Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347417278",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:17.278Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347420433",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:20.434Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347423567",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:23.567Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347427033",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:27.033Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347432430",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:32.430Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347435839",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:35.839Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347444048",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:44.048Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347446010",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:46.010Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347448395",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:48.395Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347453942",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:50:53.942Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347462324",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:02.324Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347467639",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:07.640Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347472640",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:12.640Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347475508",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:15.508Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347478649",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:18.649Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347482152",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:22.152Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347485445",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:25.445Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347491324",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:31.324Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347495013",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:35.013Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347499526",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:39.526Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347503019",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:43.020Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347509344",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:49.344Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347514959",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:51:54.959Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347520985",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:52:00.985Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347526263",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:52:06.263Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347531668",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:52:11.668Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347537067",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:52:17.067Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347540704",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:52:20.704Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347543166",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:52:23.166Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347549141",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:52:29.141Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347551110",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:52:31.110Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347554789",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:52:34.789Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347560034",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:52:40.034Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347622887",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:53:42.887Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347629660",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:53:49.660Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347635503",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:53:55.503Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347641719",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:54:01.719Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347647237",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:54:07.237Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347653192",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:54:13.192Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347659237",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:54:19.237Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347665603",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:54:25.603Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347672795",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:54:32.795Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347679155",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:54:39.156Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347685776",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:54:45.776Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347693371",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:54:53.371Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347699255",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:54:59.255Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347707044",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:55:07.044Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347713988",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:55:13.988Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347722059",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:55:22.059Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347728213",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:55:28.213Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347834376",
+    "userId": "1767347834358",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:57:14.376Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767347996867",
+    "userId": "1767347996830",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T09:59:56.867Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767348246891",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T10:04:06.891Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767348256411",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T10:04:16.411Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767348258055",
+    "userId": "1767032116929",
+    "latitude": 26.0908591,
+    "longitude": 85.9406645,
+    "timestamp": "2026-01-02T10:04:18.055Z",
+    "type": "user_realtime"
+  }
+]

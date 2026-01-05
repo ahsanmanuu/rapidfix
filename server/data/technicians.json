@@ -1,0 +1,58 @@
+[
+  {
+    "id": "1767347834358",
+    "name": "mondal",
+    "email": "m@gmail.com",
+    "phone": "7994855076",
+    "serviceType": "Electrician",
+    "location": {
+      "latitude": 26.0908591,
+      "longitude": 85.9406645
+    },
+    "password": "sczone",
+    "experience": "8",
+    "addressDetails": {
+      "country": "India",
+      "state": "bihar",
+      "city": "darbhanga",
+      "pincode": "846002"
+    },
+    "documents": {
+      "photo": "/uploads/technicians/1767347834358/photo.jpg",
+      "pan": "/uploads/technicians/1767347834358/pan.jpg",
+      "aadhar": "/uploads/technicians/1767347834358/aadhar.jpg"
+    },
+    "rating": 0,
+    "reviews": [],
+    "status": "pending",
+    "joinedAt": "2026-01-02T09:57:14.358Z"
+  },
+  {
+    "id": "1767347996830",
+    "name": "akbar",
+    "email": "ak@gmail.com",
+    "phone": "7004855076",
+    "serviceType": "Inverter Technician",
+    "location": {
+      "latitude": 26.0908591,
+      "longitude": 85.9406645
+    },
+    "password": "sczone",
+    "experience": "6",
+    "addressDetails": {
+      "country": "India",
+      "state": "bihar",
+      "city": "darbhanga",
+      "pincode": "846002"
+    },
+    "documents": {
+      "photo": "/uploads/technicians/1767347996830/photo.jpg",
+      "pan": "/uploads/technicians/1767347996830/pan.jpg",
+      "aadhar": "/uploads/technicians/1767347996830/aadhar.jpg"
+    },
+    "rating": 0,
+    "reviews": [],
+    "status": "pending",
+    "joinedAt": "2026-01-02T09:59:56.830Z"
+  }
+]

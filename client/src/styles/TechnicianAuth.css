@@ -1,0 +1,925 @@
+/* Fonts */
+@import url('https://fonts.googleapis.com/css?family=Raleway:400,700');
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,700');
+
+/* General Style */
+* {
+    box-sizing: border-box;
+}
+
+.tech-auth-body {
+    font-family: 'Montserrat', sans-serif;
+    background: #f0f2f5;
+    /* Modern crisp background */
+    min-height: 100vh;
+}
+
+.tech-auth-container {
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.tech-auth-a {
+    display: inline-block;
+    text-decoration: none;
+}
+
+.tech-auth-input {
+    outline: none !important;
+}
+
+.tech-auth-h1 {
+    text-align: center;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    font-weight: 700;
+}
+
+#formHolder {
+    padding: 50px 0;
+}
+
+/* Brand Area */
+.brand {
+    padding: 20px;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(https://images.unsplash.com/photo-1581092921461-eab62e97a780?q=80&w=2070&auto=format&fit=crop);
+    background-size: cover;
+    background-position: center center;
+    color: #fff;
+    min-height: auto;
+    /* Let flex stretch handle it */
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.brand.active {
+    width: 100%;
+}
+
+.brand::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(249, 89, 89, 0.85);
+    /* Proper brand overlay */
+    z-index: -1;
+    opacity: 0.9;
+}
+
+.brand .logo {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    text-decoration: none;
+    line-height: 1em;
+    border: 2px solid #fff;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.brand .logo span {
+    font-size: 30px;
+    color: #fff;
+    transform: translateX(-5px);
+    display: inline-block;
+}
+
+.brand .heading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    transition: all 0.6s;
+}
+
+.brand .heading.active {
+    top: 100px;
+    left: 100px;
+    transform: translate(0);
+}
+
+.brand .heading h2 {
+    font-size: 60px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0px;
+    /* Removed gap */
+    letter-spacing: 2px;
+}
+
+.brand .heading p {
+    font-size: 16px;
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-family: 'Raleway', sans-serif;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 5px;
+    /* Slight gap */
+}
+
+.brand .success-msg {
+    width: 100%;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin-top: 60px;
+}
+
+.brand .success-msg p {
+    font-size: 25px;
+    font-weight: 400;
+    font-family: 'Raleway', sans-serif;
+}
+
+.brand .success-msg a {
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 12px 35px;
+    background: #fff;
+    text-decoration: none;
+    color: #f95959;
+    font-weight: 700;
+    border-radius: 30px;
+    margin-top: 10px;
+    display: inline-block;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.brand .success-msg p,
+.brand .success-msg a {
+    transition: all 0.9s;
+    transform: translateY(20px);
+    opacity: 0;
+}
+
+.brand .success-msg p.active,
+.brand .success-msg a.active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Form Area */
+.form {
+    position: relative;
+    width: 50%;
+    min-height: auto;
+    /* Let content dictate */
+    background: #fff;
+}
+
+.form-peice {
+    background: #fff;
+    min-height: 100%;
+    margin-top: 0;
+    /* Removed box-shadow here to flatten the look slightly or add subtle one */
+    color: #636e72;
+    /* Darker, readable grey */
+    padding: 50px 0;
+    width: 100%;
+    z-index: 1;
+    position: relative;
+    left: 0;
+    transition: all 0.3s ease;
+}
+
+/* Logic: Hide inactive, Show active */
+.login.form-peice {
+    display: block;
+}
+
+.signup.form-peice {
+    display: none;
+}
+
+.login.form-peice.switched {
+    display: none;
+}
+
+.signup.form-peice.switched {
+    display: block;
+}
+
+.tech-form {
+    padding: 0 40px;
+    margin: 30px auto;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    top: 0;
+    left: 0;
+    transform: none;
+}
+
+.form-group {
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.form-group.hasError input {
+    border-color: #f95959 !important;
+}
+
+.form-group.hasError label {
+    color: #f95959 !important;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif;
+    transform: translateY(35px);
+    transition: all 0.3s ease;
+    cursor: text;
+    z-index: -1;
+    position: absolute;
+    left: 0;
+    color: #999;
+}
+
+.form-group label.active {
+    transform: translateY(-5px);
+    font-size: 11px;
+    top: -15px;
+    color: #f95959;
+    /* Brand focus color */
+    font-weight: 700;
+}
+
+.form-group input:not([type=submit]) {
+    background: none;
+    outline: none;
+    border: none;
+    display: block;
+    padding: 12px 0;
+    width: 100%;
+    border-bottom: 2px solid #e0e0e0;
+    /* More visible border */
+    color: #2d3436;
+    /* Dark readable text */
+    font-size: 16px;
+    font-family: 'Montserrat', sans-serif;
+    z-index: 1;
+    transition: border-color 0.3s;
+}
+
+.form-group input:not([type=submit]):focus {
+    border-bottom-color: #f95959;
+}
+
+.form-group select {
+    background: none;
+    outline: none;
+    border: none;
+    display: block;
+    padding: 12px 0;
+    width: 100%;
+    border-bottom: 2px solid #e0e0e0;
+    color: #2d3436;
+    font-size: 16px;
+    font-family: 'Montserrat', sans-serif;
+    z-index: 1;
+    margin-top: 5px;
+    transition: border-color 0.3s;
+}
+
+.form-group select:focus {
+    border-bottom-color: #f95959;
+}
+
+.form-group input.hasError {
+    border-color: #f95959;
+}
+
+span.error {
+    color: #f95959;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    position: absolute;
+    bottom: -22px;
+    right: 0;
+    display: none;
+    /* Can toggle this if needed, or use AuthErrorAlert */
+}
+
+.form-group input[type=password] {
+    color: #2d3436;
+}
+
+.CTA {
+    margin-top: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.CTA input[type=submit] {
+    font-size: 13px;
+    text-transform: uppercase;
+    padding: 12px 40px;
+    background: #f95959;
+    color: #fff;
+    border-radius: 30px;
+    margin-right: 20px;
+    border: none;
+    font-family: 'Montserrat', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba(249, 89, 89, 0.3);
+    font-weight: 700;
+}
+
+.CTA input[type=submit]:hover {
+    background: #e04f4f;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(249, 89, 89, 0.4);
+}
+
+.CTA a.switch {
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    color: #636e72;
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+    position: relative;
+}
+
+.CTA a.switch:hover {
+    color: #f95959;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+footer p {
+    color: #b2bec3;
+    font-size: 12px;
+}
+
+footer a {
+    color: #636e72;
+    transition: all .3s;
+    text-decoration: none !important;
+    font-weight: 600;
+}
+
+footer a:hover {
+    color: #f95959;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tech-auth-container {
+        overflow: hidden;
+    }
+
+    #formHolder {
+        padding: 0;
+    }
+
+    .brand {
+        min-height: 200px !important;
+        width: 100% !important;
+        float: none !important;
+    }
+
+    .brand.active {
+        min-height: 100vh !important;
+    }
+
+    .brand .heading.active {
+        top: 200px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .brand .success-msg p {
+        font-size: 16px;
+    }
+
+    .brand .success-msg a {
+        padding: 5px 30px;
+        font-size: 10px;
+    }
+
+    .form {
+        width: 100%;
+        /* Changed from 80vw/10vw margin */
+        min-height: 500px;
+        float: none;
+    }
+
+    .form-peice {
+        margin: 0;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        transition: all .5s ease-in-out;
+    }
+
+    .form-peice.switched {
+        /* On mobile, standard hide */
+        display: none;
+        transform: none;
+    }
+
+    .tech-form {
+        width: 100% !important;
+        padding: 40px;
+        margin: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .tech-auth-h1 {
+        font-size: 50px !important;
+    }
+}
+
+/* Loader */
+.submit-loader {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.tech-auth-container {
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.tech-auth-a {
+    display: inline-block;
+    text-decoration: none;
+}
+
+.tech-auth-input {
+    outline: none !important;
+}
+
+.tech-auth-h1 {
+    text-align: center;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    font-weight: 700;
+}
+
+#formHolder {
+    padding: 50px 0;
+}
+
+/* Brand Area */
+.brand {
+    padding: 20px;
+    background: url(https://images.unsplash.com/photo-1581092921461-eab62e97a780?q=80&w=2070&auto=format&fit=crop);
+    background-size: cover;
+    background-position: center center;
+    color: #fff;
+    min-height: auto;
+    /* Let flex stretch handle it */
+    position: relative;
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+    z-index: 2;
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.brand.active {
+    width: 100%;
+}
+
+.brand::before {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.85);
+    /* Dark overlay */
+    z-index: -1;
+}
+
+.brand .logo {
+    color: #f95959;
+    font-size: 20px;
+    font-weight: 700;
+    text-decoration: none;
+    line-height: 1em;
+}
+
+.brand .logo span {
+    font-size: 30px;
+    color: #fff;
+    transform: translateX(-5px);
+    display: inline-block;
+}
+
+.brand .heading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    transition: all 0.6s;
+}
+
+.brand .heading.active {
+    top: 100px;
+    left: 100px;
+    transform: translate(0);
+}
+
+.brand .heading h2 {
+    font-size: 70px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0;
+}
+
+.brand .heading p {
+    font-size: 15px;
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-family: 'Raleway', sans-serif;
+}
+
+.brand .success-msg {
+    width: 100%;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin-top: 60px;
+}
+
+.brand .success-msg p {
+    font-size: 25px;
+    font-weight: 400;
+    font-family: 'Raleway', sans-serif;
+}
+
+.brand .success-msg a {
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 8px 30px;
+    background: #f95959;
+    text-decoration: none;
+    color: #fff;
+    border-radius: 30px;
+    margin-top: 10px;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.brand .success-msg p,
+.brand .success-msg a {
+    transition: all 0.9s;
+    transform: translateY(20px);
+    opacity: 0;
+}
+
+.brand .success-msg p.active,
+.brand .success-msg a.active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Form Area */
+.form {
+    position: relative;
+    width: 50%;
+    min-height: auto;
+    /* Let content dictate */
+    background: #fff;
+}
+
+.form-peice {
+    background: #fff;
+    min-height: 100%;
+    margin-top: 0;
+    box-shadow: none;
+    color: #bbbbbb;
+    padding: 50px 0;
+    width: 100%;
+    z-index: 1;
+    /* Changed from absolute to relative to allow natural height expansion */
+    position: relative;
+    left: 0;
+    transition: all 0.3s ease;
+}
+
+/* Hide inactive forms naturally */
+.form-peice.switched {
+    display: none;
+    transform: none;
+}
+
+/* Ensure active form is shown */
+.form-peice:not(.switched) {
+    display: block;
+}
+
+/* Override previous switching logic: 
+   Since we toggle 'switched' on both forms differently (one has it true, one false),
+   we need to ensure the logic matches TechnicianAuth.jsx state.
+   In JSX: Login has `isSwitched ? 'switched'` (hidden when switched)
+   Signup has `isSwitched ? 'switched'` (this logic was for absolute sliding).
+   Wait, the JSX logic is: 
+   Login className=`login form-peice ${isSwitched ? 'switched' : ''}`
+   Signup className=`signup form-peice ${isSwitched ? 'switched' : ''}`
+   
+   They BOTH get 'switched'.
+   So I need specific rules.
+*/
+
+.login.form-peice.switched {
+    display: none;
+}
+
+.signup.form-peice {
+    display: none;
+}
+
+.signup.form-peice.switched {
+    display: block;
+}
+
+.tech-form {
+    padding: 0 40px;
+    margin: 30px auto;
+    width: 90%;
+    max-width: 350px;
+    /* Small requested width */
+    position: relative;
+    top: 0;
+    left: 0;
+    transform: none;
+}
+
+.form-group {
+    margin-bottom: 35px;
+    /* Increased to 35px */
+    position: relative;
+}
+
+.form-group.hasError input {
+    border-color: #f95959 !important;
+}
+
+.form-group.hasError label {
+    color: #f95959 !important;
+}
+
+.form-group label {
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif;
+    transform: translateY(40px);
+    transition: all 0.4s;
+    cursor: text;
+    z-index: -1;
+    position: absolute;
+    left: 0;
+}
+
+.form-group label.active {
+    transform: translateY(0px);
+    /* Adjusted from 10px */
+    font-size: 10px;
+    top: -15px;
+    /* Manually position above input */
+}
+
+.form-group input:not([type=submit]) {
+    background: none;
+    outline: none;
+    border: none;
+    display: block;
+    padding: 10px 0;
+    width: 100%;
+    border-bottom: 1px solid #eee;
+    color: #444;
+    font-size: 15px;
+    font-family: 'Montserrat', sans-serif;
+    z-index: 1;
+}
+
+.form-group select {
+    background: none;
+    outline: none;
+    border: none;
+    display: block;
+    padding: 10px 0;
+    width: 100%;
+    border-bottom: 1px solid #eee;
+    color: #444;
+    font-size: 15px;
+    font-family: 'Montserrat', sans-serif;
+    z-index: 1;
+    margin-top: 5px;
+}
+
+.form-group input.hasError {
+    border-color: #f95959;
+}
+
+span.error {
+    color: #f95959;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    position: absolute;
+    bottom: -20px;
+    right: 0;
+    display: none;
+}
+
+.form-group input[type=password] {
+    color: #f95959;
+}
+
+.CTA {
+    margin-top: 30px;
+}
+
+.CTA input[type=submit] {
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 5px 30px;
+    background: #f95959;
+    color: #fff;
+    border-radius: 30px;
+    margin-right: 20px;
+    border: none;
+    font-family: 'Montserrat', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.CTA input[type=submit]:hover {
+    background: #ff7b7b;
+}
+
+.CTA a.switch {
+    font-size: 13px;
+    font-weight: 400;
+    font-family: 'Montserrat', sans-serif;
+    color: #bbbbbb;
+    text-decoration: underline;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.CTA a.switch:hover {
+    color: #f95959;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+footer p {
+    color: #777;
+}
+
+footer a {
+    color: #b8b09f;
+    transition: all .3s;
+    text-decoration: none !important;
+}
+
+footer a:hover {
+    color: #f95959;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tech-auth-container {
+        overflow: hidden;
+    }
+
+    #formHolder {
+        padding: 0;
+    }
+
+    .brand {
+        min-height: 200px !important;
+        width: 100% !important;
+        float: none !important;
+    }
+
+    .brand.active {
+        min-height: 100vh !important;
+    }
+
+    .brand .heading.active {
+        top: 200px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .brand .success-msg p {
+        font-size: 16px;
+    }
+
+    .brand .success-msg a {
+        padding: 5px 30px;
+        font-size: 10px;
+    }
+
+    .form {
+        width: 100%;
+        /* Changed from 80vw/10vw margin */
+        min-height: 500px;
+        float: none;
+    }
+
+    .form-peice {
+        margin: 0;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        transition: all .5s ease-in-out;
+    }
+
+    .form-peice.switched {
+        transform: translateY(-100%);
+        width: 100%;
+        left: 0;
+    }
+
+    .tech-form {
+        width: 100% !important;
+        padding: 60px;
+        left: 50%;
+    }
+}
+
+@media (max-width: 480px) {
+    .tech-auth-h1 {
+        font-size: 50px !important;
+    }
+}
+
+/* Loader */
+.submit-loader {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
