@@ -6,8 +6,8 @@
     "phone": "7994855076",
     "serviceType": "Electrician",
     "location": {
-      "latitude": 26.0908591,
-      "longitude": 85.9406645
+      "latitude": 25.2755205,
+      "longitude": 86.9223432
     },
     "password": "sczone",
     "experience": "8",
@@ -34,8 +34,8 @@
     "phone": "7004855076",
     "serviceType": "Inverter Technician",
     "location": {
-      "latitude": 26.0908591,
-      "longitude": 85.9406645
+      "latitude": 25.2755205,
+      "longitude": 86.9223432
     },
     "password": "sczone",
     "experience": "6",

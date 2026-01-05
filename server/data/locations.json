@@ -5710,5 +5710,45 @@
     "longitude": 85.9406645,
     "timestamp": "2026-01-02T10:04:18.055Z",
     "type": "user_realtime"
+  },
+  {
+    "id": "1767618594453",
+    "userId": "1767032116929",
+    "latitude": 25.2755205,
+    "longitude": 86.9223432,
+    "timestamp": "2026-01-05T13:09:54.456Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767619447696",
+    "userId": "1767032116929",
+    "latitude": 25.2755205,
+    "longitude": 86.9223432,
+    "timestamp": "2026-01-05T13:24:07.696Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767619450653",
+    "userId": "1767032116929",
+    "latitude": 25.2755205,
+    "longitude": 86.9223432,
+    "timestamp": "2026-01-05T13:24:10.653Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767619656830",
+    "userId": "1767032116929",
+    "latitude": 25.2755205,
+    "longitude": 86.9223432,
+    "timestamp": "2026-01-05T13:27:36.830Z",
+    "type": "user_realtime"
+  },
+  {
+    "id": "1767619659916",
+    "userId": "1767032116929",
+    "latitude": 25.2755205,
+    "longitude": 86.9223432,
+    "timestamp": "2026-01-05T13:27:39.916Z",
+    "type": "user_realtime"
   }
 ]

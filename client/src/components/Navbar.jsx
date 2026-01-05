@@ -93,25 +93,62 @@ const Navbar = ({ user, logout }) => {
                 </div>
             </div>
 
-            {/* Mobile Menu */}
-            <div className={`lg:hidden absolute top - full left - 0 w - full bg - white border - b border - slate - 200 p - 4 transition - all duration - 300 transform origin - top shadow - xl ${isMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0 pointer-events-none'} `}>
-                <div className="flex flex-col space-y-4">
-                    <MobileLink to="/" onClick={() => setIsMenuOpen(false)}>Home</MobileLink>
-                    <MobileLink to="/about" onClick={() => setIsMenuOpen(false)}>About Us</MobileLink>
-                    <MobileLink to="/contact" onClick={() => setIsMenuOpen(false)}>Contact Us</MobileLink>
-                    <MobileLink to="/join-partner" onClick={() => setIsMenuOpen(false)} className="text-blue-600 font-semibold">Join as Partner</MobileLink>
-                    <div className="h-px bg-slate-100 my-2"></div>
+            {/* Mobile Menu Overlay */}
+            <div
+                className={`lg:hidden fixed inset-0 z-[90] bg-white/95 backdrop-blur-xl transition-all duration-500 ease-in-out ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
+                    }`}
+            >
+                <div className="flex flex-col items-center justify-center h-full space-y-8 p-6">
+                    <MobileLink to="/" onClick={() => setIsMenuOpen(false)} delay="100">Home</MobileLink>
+                    <MobileLink to="/about" onClick={() => setIsMenuOpen(false)} delay="150">About Us</MobileLink>
+                    <MobileLink to="/contact" onClick={() => setIsMenuOpen(false)} delay="200">Contact Us</MobileLink>
+                    <MobileLink to="/join-partner" onClick={() => setIsMenuOpen(false)} delay="250" className="text-blue-600">Join as Partner</MobileLink>
+
+                    <div className="w-16 h-1 bg-slate-100 rounded-full my-4"></div>
+
                     {user ? (
-                        <>
-                            <MobileLink to="/wallet" onClick={() => setIsMenuOpen(false)}>Wallet</MobileLink>
-                            <MobileLink to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</MobileLink>
-                            <button onClick={handleLogout} className="text-left text-red-500 py-2 font-medium">Logout</button>
-                        </>
+                        <div className="flex flex-col items-center space-y-6 w-full max-w-xs animate-slide-up" style={{ animationDelay: '300ms' }}>
+                            <Link
+                                to="/wallet"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center gap-3 text-xl font-medium text-slate-700 hover:text-blue-600 transition-colors"
+                            >
+                                <Wallet size={24} />
+                                Wallet
+                            </Link>
+                            <Link
+                                to="/dashboard"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center gap-3 text-xl font-medium text-slate-700 hover:text-blue-600 transition-colors"
+                            >
+                                <LayoutDashboard size={24} />
+                                Dashboard
+                            </Link>
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 px-8 py-3 rounded-full bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-all w-full justify-center"
+                            >
+                                <LogOut size={20} />
+                                Logout
+                            </button>
+                        </div>
                     ) : (
-                        <>
-                            <MobileLink to="/login" onClick={() => setIsMenuOpen(false)}>Login</MobileLink>
-                            <MobileLink to="/register" onClick={() => setIsMenuOpen(false)} className="text-blue-600">Register</MobileLink>
-                        </>
+                        <div className="flex flex-col items-center space-y-4 w-full max-w-xs animate-slide-up" style={{ animationDelay: '300ms' }}>
+                            <Link
+                                to="/login"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="w-full text-center py-4 rounded-2xl text-lg font-bold text-slate-700 hover:bg-slate-50 transition-all"
+                            >
+                                Log In
+                            </Link>
+                            <Link
+                                to="/register"
+                                onClick={() => setIsMenuOpen(false)}
+                                className="w-full text-center py-4 rounded-2xl bg-slate-900 text-white text-lg font-bold shadow-lg hover:bg-black transition-all"
+                            >
+                                Register
+                            </Link>
+                        </div>
                     )}
                 </div>
             </div>
@@ -126,8 +163,12 @@ const NavLink = ({ to, icon, text }) => (
     </Link>
 );
 
-const MobileLink = ({ children, className = "", ...props }) => (
-    <Link className={`block py - 2 text - lg font - medium text - slate - 800 hover: text - blue - 600 ${className} `} {...props}>
+const MobileLink = ({ children, className = "", delay = "0", ...props }) => (
+    <Link
+        className={`text-3xl font-bold tracking-tight text-slate-800 hover:text-blue-600 transition-colors animate-slide-up ${className}`}
+        style={{ animationDelay: `${delay}ms` }}
+        {...props}
+    >
         {children}
     </Link>
 );
