@@ -12,8 +12,9 @@ export const SocketProvider = ({ children, user }) => {
 
     useEffect(() => {
         if (user) {
-            // Use local IP if testing on different devices, or localhost
-            const newSocket = io('http://localhost:3000');
+            // Use dynamic URL based on environment
+            const socketURL = import.meta.env.PROD ? '/' : 'http://localhost:3000';
+            const newSocket = io(socketURL);
 
             newSocket.on('connect', () => {
                 console.log('Connected to socket server:', newSocket.id);
