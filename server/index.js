@@ -36,6 +36,15 @@ app.use(bodyParser.json());
 // Serve uploads folder statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve Request client build (Production)
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Catch-all route to serve index.html for non-API requests (SPA support)
+// Place this AFTER all API routes
+// We will insert the catch-all handler at the very end of the file or after routes.
+// But for now, let's just add the static middleware here.
+
+
 // Configure Multer
 const upload = multer({ dest: 'uploads/temp/' });
 
@@ -820,8 +829,10 @@ app.get('/api/broadcasts', (req, res) => {
   res.json({ success: true, broadcasts });
 });
 
-app.get('/', (req, res) => {
-  res.send('Fixofy Backend Server is Running!');
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
 server.listen(port, () => {
