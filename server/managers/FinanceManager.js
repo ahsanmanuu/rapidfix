@@ -84,7 +84,7 @@ class FinanceManager {
     async processMembershipPayment(userId, amount) {
         const minFee = 499;
         if (amount < minFee) {
-            throw new Error(`Minimum membership fee is ₹${ minFee } `);
+            throw new Error("Minimum membership fee is ₹" + minFee);
         }
 
         const transaction = await this.createTransaction(
