@@ -37,8 +37,13 @@ function App() {
               <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
 
               {/* STRICT SEPARATION of Logins */}
-              <Route path="/admin/login" element={!user ? <AdminLogin /> : <Navigate to="/admin-dashboard" />} />
-              <Route path="/superadmin/login" element={!user ? <SuperAdminLogin /> : <Navigate to="/admin-dashboard" />} />
+              <Route path="/admin/login" element={!user || (user.role !== 'admin' && user.role !== 'superadmin') ? <AdminLogin /> : <Navigate to="/admin-dashboard" />} />
+              <Route path="/superadmin/login" element={!user || user.role !== 'superadmin' ? <SuperAdminLogin /> : <Navigate to="/admin-dashboard" />} />
+
+              {/* Redirects for convenience */}
+              <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+              <Route path="/admin/" element={<Navigate to="/admin/login" replace />} />
+              <Route path="/admin/dashboard" element={<Navigate to="/admin-dashboard" replace />} />
 
               <Route
                 path="/dashboard"
@@ -50,7 +55,7 @@ function App() {
               />
               <Route
                 path="/admin-dashboard"
-                element={user ? <AdminDashboard /> : <Navigate to="/login" />}
+                element={user && (user.role === 'admin' || user.role === 'superadmin') ? <AdminDashboard /> : <Navigate to="/admin/login" />}
               />
               <Route
                 path="/wallet"
