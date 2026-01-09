@@ -1,3 +1,4 @@
+```javascript
 const Database = require('./DatabaseLoader');
 
 class FinanceManager {
@@ -5,9 +6,29 @@ class FinanceManager {
         this.db = new Database('finance');
     }
 
-    createTransaction(userId, associatedId, type, amount, description) {
+    _mapFromDb(txn) {
+        if (!txn) return null;
+        const { user_id, associated_id, created_at, ...rest } = txn;
+        return {
+            ...rest,
+            userId: user_id,
+            associatedId: associated_id,
+            createdAt: created_at
+        };
+    }
+
+    _mapToDb(txn) {
+        if (!txn) return null;
+        const { userId, associatedId, createdAt, id, ...rest } = txn;
+        const mapped = { ...rest };
+        if (userId !== undefined) mapped.user_id = userId;
+        if (associatedId !== undefined) mapped.associated_id = associatedId;
+        if (createdAt !== undefined) mapped.created_at = createdAt;
+        return mapped;
+    }
+
+    async createTransaction(userId, associatedId, type, amount, description) {
         const transaction = {
-            id: Date.now().toString(),
             userId,
             associatedId, // e.g., jobId or technicianId
             type, // 'credit' or 'debit'
@@ -16,50 +37,62 @@ class FinanceManager {
             status: 'completed',
             createdAt: new Date().toISOString()
         };
-        return this.db.add(transaction);
+        const dbTxn = this._mapToDb(transaction);
+        const saved = await this.db.add(dbTxn);
+        return this._mapFromDb(saved);
+    }
+    
+    // Alias for more clarity in other parts of the app
+    async processPayment(userId, amount, type, description) {
+         return await this.createTransaction(userId, 'SYSTEM', type, amount, description);
     }
 
-    getBillsByUser(userId) {
+    async getBillsByUser(userId) {
         // Find all debit transactions for user (acting as bills)
-        return this.db.findAll('userId', userId).filter(t => t.type === 'debit');
+        const txns = await this.db.findAll('user_id', userId);
+        return txns.map(t => this._mapFromDb(t)).filter(t => t.type === 'debit');
     }
 
-    getBalance(userId) {
+    async getBalance(userId) {
         // Simple balance calculation (Credits - Debits)
-        const transactions = this.db.findAll('userId', userId);
+        const transactions = await this.db.findAll('user_id', userId);
         return transactions.reduce((acc, curr) => {
-            return curr.type === 'credit' ? acc + curr.amount : acc - curr.amount;
+            const t = this._mapFromDb(curr);
+            return t.type === 'credit' ? acc + t.amount : acc - t.amount;
         }, 0);
     }
 
-    getTransactionsByUser(userId) {
-        return this.db.findAll('userId', userId);
+    async getTransactionsByUser(userId) {
+        const txns = await this.db.findAll('user_id', userId);
+        return txns.map(t => this._mapFromDb(t));
     }
 
-    getAllTransactions() {
-        return this.db.read();
+    async getAllTransactions() {
+        const txns = await this.db.read();
+        return txns.map(t => this._mapFromDb(t));
     }
 
-    getSystemWalletBalance() {
+    async getSystemWalletBalance() {
         // Calculate total volume of credits in the system (simplistic view of "System Wallet" or Total Volume)
-        const transactions = this.db.read();
+        const transactions = await this.db.read();
         return transactions.reduce((acc, curr) => {
-            return curr.type === 'credit' ? acc + curr.amount : acc;
+             const t = this._mapFromDb(curr);
+            return t.type === 'credit' ? acc + t.amount : acc;
         }, 0);
     }
 
-    processMembershipPayment(userId, amount) {
+    async processMembershipPayment(userId, amount) {
         const minFee = 499;
         if (amount < minFee) {
-            throw new Error(`Minimum membership fee is ₹${minFee}`);
+            throw new Error(`Minimum membership fee is ₹${ minFee } `);
         }
 
-        const transaction = this.createTransaction(
+        const transaction = await this.createTransaction(
             userId,
             'SYSTEM',
             'debit',
             amount,
-            `Premium Membership Purchase (30 Days)`
+            `Premium Membership Purchase(30 Days)`
         );
 
         if (transaction) {

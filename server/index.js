@@ -677,74 +677,61 @@ app.get('/api/complaints', (req, res) => {
 });
 
 // --- Job Routes ---
-app.post('/api/jobs', (req, res) => {
+// --- Job Routes ---
+app.post('/api/jobs', async (req, res) => {
   try {
     const { userId, serviceType, description, location, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted } = req.body;
 
     // 1. Create the Job
-    const job = jobManager.createJob(userId, serviceType, description, location, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted);
+    const job = await jobManager.createJob(userId, serviceType, description, location, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted);
 
     // 2. Assignment Logic
     if (technicianId) {
       // Manual Assignment from Frontend
-      // Verify tech exists (optional but good)
-      jobManager.assignTechnician(job.id, technicianId);
+      await jobManager.assignTechnician(job.id, technicianId);
       job.technicianId = technicianId;
       job.status = 'accepted';
 
       // [REAL-TIME] Update Tech Status & Broadcast
-      technicianManager.updateStatus(technicianId, 'engaged');
+      await technicianManager.updateStatus(technicianId, 'engaged');
       io.emit('technician_status_update', { technicianId, status: 'engaged' });
 
       io.to(`tech_${technicianId}`).emit('new_job_assigned', job);
     } else if (location && location.latitude && location.longitude) {
       // Auto-Assign Logic if no tech selected
-      let nearbyTechnicians = technicianManager.searchTechnicians(location.latitude, location.longitude, serviceType);
+      let nearbyTechnicians = await technicianManager.searchTechnicians(location.latitude, location.longitude, serviceType);
 
       // 1. Filter by Availability
-      // 'engaged' technicians cannot take new immediate jobs
       nearbyTechnicians = nearbyTechnicians.filter(t => t.status !== 'engaged');
 
       if (nearbyTechnicians.length > 0) {
-        // 2. Score and Sort Candidates
-        const scoredCandidates = nearbyTechnicians.map(tech => {
-          const stats = jobManager.getJobStats(tech.id);
-          // Default rating to 0 if undefined
+        const candidates = await Promise.all(nearbyTechnicians.map(async tech => {
+          const stats = await jobManager.getJobStats(tech.id);
           const rating = tech.rating || 0;
-          // Cancellation Ratio (lower is better)
           const cancelRatio = stats.ratio;
-          // Price (lower is better) - usually visitingCharges
           const price = tech.visitingCharges || 99999;
-
           return { ...tech, stats, cancelRatio, price };
-        });
+        }));
 
-        // 3. Sorting Logic
-        scoredCandidates.sort((a, b) => {
+        candidates.sort((a, b) => {
           const aIsTopTier = a.rating >= 4.0 && a.cancelRatio <= 0.15;
           const bIsTopTier = b.rating >= 4.0 && b.cancelRatio <= 0.15;
-
           if (aIsTopTier && !bIsTopTier) return -1;
           if (!aIsTopTier && bIsTopTier) return 1;
-
           if (a.price !== b.price) return a.price - b.price;
           return (a.distance || 0) - (b.distance || 0);
         });
 
-        // 4. Select Best Candidate
-        const bestTech = scoredCandidates[0];
+        const bestTech = candidates[0];
 
-        console.log(`[SmartAssign] Selected ${bestTech.name} (Rating: ${bestTech.rating}, Ratio: ${bestTech.cancelRatio.toFixed(2)}, Dist: ${bestTech.distance}km)`);
+        console.log(`[SmartAssign] Selected ${bestTech.name}`);
 
-        jobManager.assignTechnician(job.id, bestTech.id);
-        job.technicianId = bestTech.id; // Update local object for response
+        await jobManager.assignTechnician(job.id, bestTech.id);
+        job.technicianId = bestTech.id;
         job.status = 'accepted';
 
-        // [REAL-TIME] Update Tech Status & Broadcast
-        technicianManager.updateStatus(bestTech.id, 'engaged');
+        await technicianManager.updateStatus(bestTech.id, 'engaged');
         io.emit('technician_status_update', { technicianId: bestTech.id, status: 'engaged' });
-
-        // Notify Technician
         io.to(`tech_${bestTech.id}`).emit('new_job_assigned', job);
       }
     }
@@ -764,44 +751,42 @@ app.post('/api/jobs', (req, res) => {
   }
 });
 
-app.get('/api/jobs', (req, res) => {
-  // Admin only in real app
-  const jobs = jobManager.getAllJobs();
+app.get('/api/jobs', async (req, res) => {
+  const jobs = await jobManager.getAllJobs();
   res.json({ success: true, jobs });
 });
 
-app.get('/api/jobs/user/:id', (req, res) => {
-  const jobs = jobManager.getJobsByUser(req.params.id);
+app.get('/api/jobs/user/:id', async (req, res) => {
+  const jobs = await jobManager.getJobsByUser(req.params.id);
   res.json({ success: true, jobs });
 });
 
-// Get available jobs for a specific service type (for technicians to browse)
-app.get('/api/jobs/available', (req, res) => {
+app.get('/api/jobs/available', async (req, res) => {
   const { serviceType } = req.query;
-  const jobs = jobManager.getAvailableJobs(serviceType);
+  const jobs = await jobManager.getAvailableJobs(serviceType);
   res.json({ success: true, jobs });
 });
 
-app.get('/api/jobs/technician/:id', (req, res) => {
-  const jobs = jobManager.getJobsByTechnician(req.params.id);
+app.get('/api/jobs/technician/:id', async (req, res) => {
+  const jobs = await jobManager.getJobsByTechnician(req.params.id);
   res.json({ success: true, jobs });
 });
 
-app.get('/api/jobs/:id', (req, res) => {
-  const job = jobManager.getJob(req.params.id);
+app.get('/api/jobs/:id', async (req, res) => {
+  const job = await jobManager.getJob(req.params.id);
   if (job) res.json({ success: true, job });
   else res.status(404).json({ success: false, error: 'Job not found' });
 });
 
-app.put('/api/jobs/:id/status', (req, res) => {
+app.put('/api/jobs/:id/status', async (req, res) => {
   const { status, details } = req.body; // details: { technicianId, reason, otp }
 
   // 1. Get current job to know context (price, techId, etc.)
-  const currentJob = jobManager.getJob(req.params.id);
+  const currentJob = await jobManager.getJob(req.params.id);
   if (!currentJob) return res.status(404).json({ success: false, error: 'Job not found' });
 
   // 2. Update Job Status
-  const job = jobManager.updateStatus(req.params.id, status, details);
+  const job = await jobManager.updateStatus(req.params.id, status, details);
 
   if (job) {
     const techId = job.technicianId || details?.technicianId || currentJob.technicianId;
@@ -810,27 +795,26 @@ app.put('/api/jobs/:id/status', (req, res) => {
     if (status === 'accepted') {
       // Technician is now BUSY/ENGAGED
       if (techId) {
-        technicianManager.updateStatus(techId, 'engaged');
+        await technicianManager.updateStatus(techId, 'engaged');
         io.emit('technician_status_update', { technicianId: techId, status: 'engaged' });
       }
     }
     else if (status === 'in_progress') {
       // Technician is working
       if (techId) {
-        technicianManager.updateStatus(techId, 'engaged'); // Ensure engaged
+        await technicianManager.updateStatus(techId, 'engaged'); // Ensure engaged
         io.emit('technician_status_update', { technicianId: techId, status: 'engaged' });
       }
     }
     else if (status === 'completed') {
       // Job Done -> Tech Available + Payment
       if (techId) {
-        technicianManager.updateStatus(techId, 'available');
+        await technicianManager.updateStatus(techId, 'available');
         io.emit('technician_status_update', { technicianId: techId, status: 'available' });
 
         // Process Payment (Credit Tech)
-        // Amount: job.offerPrice or default visiting charge. Assuming 500 if null for now.
-        const amount = parseFloat(job.offerPrice) || parseFloat(job.visitingCharges) || 500;
-        financeManager.createTransaction(techId, job.id, 'credit', amount, `Payment for Job #${job.id}`);
+        const amount = job.offerPrice || job.visitingCharges || 0;
+        await financeManager.processPayment(techId, amount * 0.9, 'credit', `Job Compensation #${job.id}`);
 
         // Notify Tech about money
         io.to(`tech_${techId}`).emit('wallet_updated', { amount });
@@ -839,16 +823,16 @@ app.put('/api/jobs/:id/status', (req, res) => {
         const rides = rideManager.getRidesByTechnician(techId);
         const activeRide = rides.find(r => r.jobId === job.id && r.status === 'in_progress');
         if (activeRide) {
-          rideManager.completeRide(activeRide.id);
+          await rideManager.completeRide(activeRide.id);
           io.to(`user_${job.userId}`).emit('ride_ended', { rideId: activeRide.id });
           io.to(`tech_${techId}`).emit('ride_ended', { rideId: activeRide.id });
         }
       }
     }
-    else if (status === 'rejected') {
-      // Job Rejected -> Tech Available
+    else if (status === 'rejected' || status === 'cancelled') {
+      const techId = job.technicianId || currentJob.technicianId;
       if (techId) {
-        technicianManager.updateStatus(techId, 'available');
+        await technicianManager.updateStatus(techId, 'available');
         io.emit('technician_status_update', { technicianId: techId, status: 'available' });
       }
     }

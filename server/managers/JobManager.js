@@ -9,57 +9,103 @@ class JobManager {
         this.techManager = new TechnicianManager();
     }
 
-    createJob(userId, serviceType, description, location, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice = null, technicianId = null, visitingCharges = 0, agreementAccepted = false) {
-        const user = this.userManager.getUser(userId);
+    // Helper to map DB snake_case to App camelCase
+    _mapFromDb(job) {
+        if (!job) return null;
+        const { user_id, technician_id, service_type, contact_name, contact_phone, scheduled_date, scheduled_time, is_custom_offer, visiting_charges, agreement_accepted, created_at, updated_at, ...rest } = job;
+        return {
+            ...rest,
+            userId: user_id,
+            technicianId: technician_id,
+            serviceType: service_type,
+            contactName: contact_name,
+            contactPhone: contact_phone,
+            scheduledDate: scheduled_date,
+            scheduledTime: scheduled_time,
+            isCustomOffer: is_custom_offer,
+            visitingCharges: visiting_charges,
+            agreementAccepted: agreement_accepted,
+            createdAt: created_at,
+            updatedAt: updated_at,
+            // Aliases or computed fields
+            customerMobile: contact_phone // Alias
+        };
+    }
 
-        const job = {
-            id: Date.now().toString(),
+    // Helper to map App camelCase to DB snake_case
+    _mapToDb(job) {
+        if (!job) return null;
+        const { userId, technicianId, serviceType, contactName, contactPhone, customerMobile, scheduledDate, scheduledTime, isCustomOffer, visitingCharges, agreementAccepted, createdAt, updatedAt, id, customer, technician, ...rest } = job;
+
+        const mapped = { ...rest };
+        if (userId !== undefined) mapped.user_id = userId;
+        if (technicianId !== undefined) mapped.technician_id = technicianId;
+        if (serviceType !== undefined) mapped.service_type = serviceType;
+        if (contactName !== undefined) mapped.contact_name = contactName;
+        // Use contactPhone or customerMobile
+        if (contactPhone !== undefined) mapped.contact_phone = contactPhone;
+        else if (customerMobile !== undefined) mapped.contact_phone = customerMobile;
+
+        if (scheduledDate !== undefined) mapped.scheduled_date = scheduledDate;
+        if (scheduledTime !== undefined) mapped.scheduled_time = scheduledTime;
+        if (isCustomOffer !== undefined) mapped.is_custom_offer = isCustomOffer;
+        if (visitingCharges !== undefined) mapped.visiting_charges = visitingCharges;
+        if (agreementAccepted !== undefined) mapped.agreement_accepted = agreementAccepted;
+        if (createdAt !== undefined) mapped.created_at = createdAt;
+        if (updatedAt !== undefined) mapped.updated_at = updatedAt;
+        // id, customer, technician are typically ignored for writes or handled separately
+
+        return mapped;
+    }
+
+    async createJob(userId, serviceType, description, location, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice = null, technicianId = null, visitingCharges = 0, agreementAccepted = false) {
+        const user = await this.userManager.getUser(userId);
+
+        const newJob = {
             userId,
-            technicianId: technicianId,
+            technicianId,
             serviceType,
             description,
             location,
             scheduledDate,
             scheduledTime,
-            // Store customer details directly in the job for persistence
             contactName: contactName || (user ? user.name : ""),
             contactPhone: contactPhone || (user ? user.phone : ""),
-            customerMobile: contactPhone || (user ? user.phone : ""), // Alias for clarity
             offerPrice,
             visitingCharges: visitingCharges,
             agreementAccepted: agreementAccepted,
             isCustomOffer: !!offerPrice,
-            status: 'pending', // pending, accepted, rejected, hold, completed
-            reason: null, // For rejected/hold
-            otp: null, // For completed
+            status: 'pending',
+            reason: null,
+            otp: null,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
-        const saved = this.db.add(job);
-        return this._enrichJob(saved);
+
+        const dbJob = this._mapToDb(newJob);
+        const saved = await this.db.add(dbJob);
+        return await this._enrichJob(this._mapFromDb(saved));
     }
 
-    _enrichJob(job) {
+    async _enrichJob(job) {
         if (!job) return null;
-        const customer = this.userManager.getUser(job.userId);
+        const customer = await this.userManager.getUser(job.userId);
 
-        // Ensure job has the latest details even if they were empty at creation
         const enriched = {
             ...job,
             customer,
-            // Fallbacks if primary fields are missing
             contactName: job.contactName || customer?.name || "Customer",
             contactPhone: job.contactPhone || customer?.phone || "",
             customerMobile: job.customerMobile || job.contactPhone || customer?.phone || ""
         };
 
         if (job.technicianId) {
-            const tech = this.techManager.getTechnician(job.technicianId);
+            const tech = await this.techManager.getTechnician(job.technicianId);
             if (tech) {
                 enriched.technician = {
                     name: tech.name,
                     phone: tech.phone,
-                    photo: tech.photo,
+                    photo: tech.documents?.photo || tech.photo, // Handle new docs structure or old
                     serviceType: tech.serviceType,
                     rating: tech.rating
                 };
@@ -68,45 +114,54 @@ class JobManager {
         return enriched;
     }
 
-    getJob(id) {
-        return this._enrichJob(this.db.find('id', id));
+    async getJob(id) {
+        const job = await this.db.find('id', id);
+        return await this._enrichJob(this._mapFromDb(job));
     }
 
-    getAllJobs() {
-        return this.db.read().map(j => this._enrichJob(j));
+    async getAllJobs() {
+        const jobs = await this.db.read();
+        // Use Promise.all for parallel enrichment
+        return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
     }
 
-    getJobsByUser(userId) {
-        const jobs = this.db.findAll('userId', userId);
-        return jobs.map(j => this._enrichJob(j));
+    async getJobsByUser(userId) {
+        const jobs = await this.db.findAll('user_id', userId);
+        return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
     }
 
-    getJobsByTechnician(technicianId) {
-        const jobs = this.db.findAll('technicianId', technicianId);
-        return jobs.map(j => this._enrichJob(j));
+    async getJobsByTechnician(technicianId) {
+        const jobs = await this.db.findAll('technician_id', technicianId);
+        return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
     }
 
-    // specific method to find available jobs for a technician's service type
-    getAvailableJobs(serviceType) {
-        return this.db.read().filter(job =>
+    async getAvailableJobs(serviceType) {
+        const allJobs = await this.db.read();
+        const mappedJobs = allJobs.map(j => this._mapFromDb(j));
+
+        const filtered = mappedJobs.filter(job =>
             job.status === 'pending' &&
             job.serviceType === serviceType
-        ).map(j => this._enrichJob(j));
+        );
+
+        return Promise.all(filtered.map(j => this._enrichJob(j)));
     }
 
-    updateStatus(id, status, details = {}) {
+    async updateStatus(id, status, details = {}) {
         // details can contain technicianId, reason, otp
-        const updateData = { status, updatedAt: new Date().toISOString(), ...details };
-        const updated = this.db.update('id', id, updateData);
-        return this._enrichJob(updated);
+        const updates = { status, updatedAt: new Date().toISOString(), ...details };
+        const dbUpdates = this._mapToDb(updates);
+
+        const updated = await this.db.update('id', id, dbUpdates);
+        return await this._enrichJob(this._mapFromDb(updated));
     }
 
-    assignTechnician(id, technicianId) {
-        return this.updateStatus(id, 'accepted', { technicianId });
+    async assignTechnician(id, technicianId) {
+        return await this.updateStatus(id, 'accepted', { technicianId });
     }
 
-    getJobStats(technicianId) {
-        const jobs = this.getJobsByTechnician(technicianId);
+    async getJobStats(technicianId) {
+        const jobs = await this.getJobsByTechnician(technicianId);
         const total = jobs.length;
         if (total === 0) return { total: 0, rejected: 0, ratio: 0 };
 
