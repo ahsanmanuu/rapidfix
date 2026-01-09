@@ -117,21 +117,36 @@ class TechnicianManager {
 
         // 3. Filter by distance
         const nearbyTechs = techs.map(tech => {
-            if (!tech.location || !tech.location.latitude || !tech.location.longitude) return null;
+            if (!tech.location) return null;
+
+            // Support both {latitude, longitude} and {lat, lng} formats
+            const tLat = tech.location.latitude ?? tech.location.lat;
+            const tLon = tech.location.longitude ?? tech.location.lng;
+
+            if (tLat === undefined || tLon === undefined) return null;
 
             const dist = this.calculateDistance(
                 lat,
                 lon,
-                parseFloat(tech.location.latitude),
-                parseFloat(tech.location.longitude)
+                parseFloat(tLat),
+                parseFloat(tLon)
             );
 
             const { password, ...rest } = tech;
+
+            // Normalize location for frontend consistency
+            const normalizedLocation = {
+                latitude: parseFloat(tLat),
+                longitude: parseFloat(tLon),
+                address: tech.location.address || ''
+            };
+
             return {
                 ...rest,
+                location: normalizedLocation,
                 distance: parseFloat(dist.toFixed(1))
             };
-        }).filter(item => item !== null && item.distance <= 10.0); // Radius increased for testing
+        }).filter(item => item !== null && item.distance <= 50.0); // Increased radius to 50km for safety
 
         const enrichedTechs = await this._enrichWithRatings(nearbyTechs);
         return enrichedTechs.sort((a, b) => a.distance - b.distance);
