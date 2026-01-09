@@ -631,10 +631,11 @@ app.put('/api/admin/users/:id/membership', (req, res) => {
 });
 
 // --- Feedback Routes ---
-app.post('/api/feedback', (req, res) => {
+// --- Feedback Routes ---
+app.post('/api/feedback', async (req, res) => {
   const { userId, technicianId, ratings, comment } = req.body;
   // ratings: object { time, attitude, communication, etc. }
-  const feedback = feedbackManager.addFeedback(userId, technicianId, ratings, comment);
+  const feedback = await feedbackManager.addFeedback(userId, technicianId, ratings, comment);
 
   // [REAL-TIME] Broadcast Updates
   // 1. To Technician
@@ -649,21 +650,21 @@ app.post('/api/feedback', (req, res) => {
   res.json({ success: true, feedback });
 });
 
-app.get('/api/feedback/technician/:id', (req, res) => {
-  const feedbacks = feedbackManager.getFeedbackForTechnician(req.params.id);
+app.get('/api/feedback/technician/:id', async (req, res) => {
+  const feedbacks = await feedbackManager.getFeedbackForTechnician(req.params.id);
   res.json({ success: true, feedbacks });
 });
 
 // --- Location Routes ---
-app.get('/api/locations', (req, res) => {
-  const locations = locationManager.getAllLocations();
+app.get('/api/locations', async (req, res) => {
+  const locations = await locationManager.getAllLocations();
   res.json({ success: true, locations });
 });
 
-app.post('/api/locations', (req, res) => {
+app.post('/api/locations', async (req, res) => {
   try {
     const { city, area, pincode } = req.body;
-    const loc = locationManager.addLocation(city, area, pincode);
+    const loc = await locationManager.addLocation(city, area, pincode);
     res.json({ success: true, location: loc });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
