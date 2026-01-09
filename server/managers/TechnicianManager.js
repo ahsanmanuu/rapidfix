@@ -116,13 +116,8 @@ class TechnicianManager {
             .filter(t => t.serviceType && t.serviceType.toLowerCase().trim() === type);
 
         // 3. Filter by distance
-        console.log(`[Search] User Location: ${lat}, ${lon}, Service: ${type}`);
-
         const nearbyTechs = techs.map(tech => {
-            if (!tech.location) {
-                console.log(`[Search] Tech ${tech.id} (${tech.name}) has NO location.`);
-                return null;
-            }
+            if (!tech.location) return null;
 
             // Support both {latitude, longitude} and {lat, lng} formats
             let tLat = tech.location.latitude ?? tech.location.lat;
@@ -132,10 +127,7 @@ class TechnicianManager {
             if (typeof tLat === 'string') tLat = parseFloat(tLat);
             if (typeof tLon === 'string') tLon = parseFloat(tLon);
 
-            if (tLat === undefined || tLon === undefined || isNaN(tLat) || isNaN(tLon)) {
-                console.log(`[Search] Tech ${tech.id} (${tech.name}) has INVALID coordinates:`, tech.location);
-                return null;
-            }
+            if (tLat === undefined || tLon === undefined || isNaN(tLat) || isNaN(tLon)) return null;
 
             const dist = this.calculateDistance(
                 lat,
@@ -143,8 +135,6 @@ class TechnicianManager {
                 tLat,
                 tLon
             );
-
-            console.log(`[Search] Tech ${tech.id} (${tech.name}): Dist=${dist.toFixed(1)}km, Loc=(${tLat},${tLon})`);
 
             const { password, ...rest } = tech;
 
@@ -160,9 +150,7 @@ class TechnicianManager {
                 location: normalizedLocation,
                 distance: parseFloat(dist.toFixed(1))
             };
-        }).filter(item => item !== null && item.distance <= 5000.0); // HUGE radius for debugging (5000km)
-
-        console.log(`[Search] Found ${nearbyTechs.length} techs within range.`);
+        }).filter(item => item !== null && item.distance <= 2.0); // Strict 2km radius
 
         const enrichedTechs = await this._enrichWithRatings(nearbyTechs);
         return enrichedTechs.sort((a, b) => a.distance - b.distance);
