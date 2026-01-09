@@ -20,11 +20,22 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response && error.response.status === 401) {
-            // Token expired or invalid
+        const isLoginRequest = error.config?.url?.includes('/login');
+
+        if (error.response && error.response.status === 401 && !isLoginRequest) {
+            // Token expired or invalid, but only redirect if it's NOT a login attempt
             localStorage.removeItem('user');
             localStorage.removeItem('sessionToken');
-            window.location.href = '/login';
+
+            // Redirect based on current context
+            const path = window.location.pathname;
+            if (path.includes('/admin')) {
+                window.location.href = '/admin/login';
+            } else if (path.includes('/technician')) {
+                window.location.href = '/login'; // Technicians usually share login or have their own
+            } else {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

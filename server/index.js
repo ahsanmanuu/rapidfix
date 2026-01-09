@@ -494,25 +494,7 @@ app.post('/api/superadmin/login', (req, res) => {
 });
 
 // --- Admin Routes ---
-app.post('/api/admin/login', (req, res) => {
-  const { email, password, deviceId } = req.body; // Added deviceId support
-  const admin = adminManager.login(email, password);
-  if (admin) {
-    // Create Session
-    const session = sessionManager.createSession(admin.id, 'admin', deviceId);
-    res.json({ success: true, admin, sessionToken: session.token });
-  } else {
-    res.status(401).json({ success: false, error: 'Invalid credentials' });
-  }
-});
-
-app.post('/api/admin/technicians/:id/status', (req, res) => {
-  // Ideally check if requester is admin
-  const { status } = req.body;
-  const tech = technicianManager.updateStatus(req.params.id, status);
-  if (tech) res.json({ success: true, technician: tech });
-  else res.status(404).json({ success: false, error: 'Technician not found' });
-});
+// --- Admin User Management Routes [DEPRECATED - Moved to consolidated block below] ---
 
 // --- Admin User Management Routes [NEW] ---
 
@@ -1077,10 +1059,13 @@ app.get('/api/broadcasts', (req, res) => {
 
 // --- Admin Dashboard Routes ---
 app.post('/api/admin/login', (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, deviceId } = req.body;
   const admin = adminManager.login(email, password);
+
   if (admin) {
-    res.json({ success: true, admin });
+    // Create Session
+    const session = sessionManager.createSession(admin.id, 'admin', deviceId);
+    res.json({ success: true, admin, sessionToken: session.token });
   } else {
     res.status(401).json({ success: false, error: 'Invalid admin credentials' });
   }
