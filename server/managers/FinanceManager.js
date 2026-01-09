@@ -1,4 +1,3 @@
-```javascript
 const Database = require('./DatabaseLoader');
 
 class FinanceManager {
@@ -41,10 +40,10 @@ class FinanceManager {
         const saved = await this.db.add(dbTxn);
         return this._mapFromDb(saved);
     }
-    
+
     // Alias for more clarity in other parts of the app
     async processPayment(userId, amount, type, description) {
-         return await this.createTransaction(userId, 'SYSTEM', type, amount, description);
+        return await this.createTransaction(userId, 'SYSTEM', type, amount, description);
     }
 
     async getBillsByUser(userId) {
@@ -76,7 +75,7 @@ class FinanceManager {
         // Calculate total volume of credits in the system (simplistic view of "System Wallet" or Total Volume)
         const transactions = await this.db.read();
         return transactions.reduce((acc, curr) => {
-             const t = this._mapFromDb(curr);
+            const t = this._mapFromDb(curr);
             return t.type === 'credit' ? acc + t.amount : acc;
         }, 0);
     }

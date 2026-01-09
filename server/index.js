@@ -497,37 +497,40 @@ app.post('/api/superadmin/login', (req, res) => {
 
 // --- Admin User Management Routes [NEW] ---
 
-app.get('/api/admin/users', (req, res) => {
+app.get('/api/admin/users', async (req, res) => {
   try {
-    const users = userManager.getAllUsers();
-    // Enrich with Wallet & Job Data
-    const enrichedUsers = users.map(user => {
-      const balance = financeManager.getBalance(user.id);
-      const jobs = jobManager.getJobsByUser(user.id);
+    const users = await userManager.getAllUsers();
 
-      // Calculate basic stats for quick view if needed, or send full jobs
+    // Enrich with Wallet & Job Data
+    // Use Promise.all for parallel async fetching
+    const enrichedUsers = await Promise.all(users.map(async user => {
+      // NOTE: getBalance and getJobsByUser are now async!
+      const balance = await financeManager.getBalance(user.id);
+      const jobs = await jobManager.getJobsByUser(user.id);
+
       // Sending full jobs so drawer can show history
       return {
         ...user,
         walletBalance: balance,
-        jobs: jobs, // Send full job objects
-        membership: user.membership || 'Free', // Default to Free
-        status: user.status || 'Active' // Default to Active
+        jobs: jobs,
+        membership: user.membership || 'Free',
+        status: user.status || 'Active'
       };
-    });
+    }));
+
     res.json({ success: true, users: enrichedUsers });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-app.put('/api/admin/users/:id/ban', (req, res) => {
+app.put('/api/admin/users/:id/ban', async (req, res) => {
   try {
     const id = String(req.params.id).trim();
     console.log(`SERVER: Received Ban Request for ID: "${id}"`);
 
     // Attempt update
-    const user = userManager.setStatus(id, 'Banned');
+    const user = await userManager.setStatus(id, 'Banned');
 
     if (user) {
       console.log(`SERVER: User banned successfully: ${user.name}`);
@@ -544,12 +547,12 @@ app.put('/api/admin/users/:id/ban', (req, res) => {
     } else {
       console.error(`SERVER: User not found for ID: ${id}`);
       // Try to find if it exists with different type
-      const allUsers = userManager.getAllUsers();
+      const allUsers = await userManager.getAllUsers();
       const foundLoose = allUsers.find(u => u.id == id);
       if (foundLoose) {
         console.log(`SERVER: Found user with loose equality! Actual ID: ${foundLoose.id} (Type: ${typeof foundLoose.id})`);
         // Try updating with actual ID
-        const userRetry = userManager.setStatus(foundLoose.id, 'Banned');
+        const userRetry = await userManager.setStatus(foundLoose.id, 'Banned');
         if (userRetry) {
           console.log("SERVER: Retry success.");
           io.to(`user_${userRetry.id}`).emit('account_status_change', { status: 'Banned' });
@@ -566,13 +569,13 @@ app.put('/api/admin/users/:id/ban', (req, res) => {
   }
 });
 
-app.put('/api/admin/users/:id/unban', (req, res) => {
+app.put('/api/admin/users/:id/unban', async (req, res) => {
   try {
     const id = String(req.params.id).trim();
     console.log(`SERVER: Received Unban Request for ID: "${id}"`);
 
     // Attempt update
-    const user = userManager.setStatus(id, 'Active');
+    const user = await userManager.setStatus(id, 'Active');
 
     if (user) {
       console.log(`SERVER: User unbanned: ${user.name}`);
@@ -583,11 +586,11 @@ app.put('/api/admin/users/:id/unban', (req, res) => {
     } else {
       console.error(`SERVER: User not found for ID: ${id}`);
       // Loose Search Fallback
-      const allUsers = userManager.getAllUsers();
+      const allUsers = await userManager.getAllUsers();
       const foundLoose = allUsers.find(u => u.id == id);
       if (foundLoose) {
         console.log(`SERVER: Found loose match for unban.`);
-        const userRetry = userManager.setStatus(foundLoose.id, 'Active');
+        const userRetry = await userManager.setStatus(foundLoose.id, 'Active');
         if (userRetry) {
           io.to(`user_${userRetry.id}`).emit('account_status_change', { status: 'Active' });
           io.emit('admin_user_update', userRetry);
@@ -664,15 +667,20 @@ app.post('/api/locations', (req, res) => {
 });
 
 // --- Complaint Routes ---
-app.post('/api/complaints', (req, res) => {
-  const { userId, technicianId, subject, description } = req.body;
-  const complaint = complaintManager.createComplaint(userId, technicianId, subject, description);
-  res.json({ success: true, complaint });
+// --- Complaint Routes ---
+app.post('/api/complaints', async (req, res) => {
+  try {
+    const { userId, technicianId, subject, description } = req.body;
+    const complaint = await complaintManager.createComplaint(userId, technicianId, subject, description);
+    res.json({ success: true, complaint });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
 });
 
-app.get('/api/complaints', (req, res) => {
+app.get('/api/complaints', async (req, res) => {
   // Should be admin only
-  const complaints = complaintManager.getAllComplaints();
+  const complaints = await complaintManager.getAllComplaints();
   res.json({ success: true, complaints });
 });
 
