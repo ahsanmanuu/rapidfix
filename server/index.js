@@ -252,7 +252,7 @@ app.get('/api/rides/technician/:id', (req, res) => {
 });
 
 // --- User Routes ---
-app.post('/api/users/register', (req, res) => {
+app.post('/api/users/register', async (req, res) => {
   try {
     const { name, email, phone, password, location } = req.body;
 
@@ -262,7 +262,7 @@ app.post('/api/users/register', (req, res) => {
     }
 
     // Save User with Location
-    const user = userManager.createUser(name, email, phone, password, location);
+    const user = await userManager.createUser(name, email, phone, password, location);
 
     // Also save to Location Manager specifically
     locationManager.saveUserRealtimeLocation(user.id, location);
@@ -276,9 +276,9 @@ app.post('/api/users/register', (req, res) => {
   }
 });
 
-app.post('/api/users/login', (req, res) => {
+app.post('/api/users/login', async (req, res) => {
   const { email, password, deviceId, location } = req.body;
-  const user = userManager.login(email, password);
+  const user = await userManager.login(email, password);
   if (user) {
     if (user.status === 'Banned') {
       return res.status(403).json({
@@ -290,12 +290,12 @@ app.post('/api/users/login', (req, res) => {
 
     // Capture location during login if provided
     if (location) {
-      userManager.updateUser(user.id, { location });
+      await userManager.updateUser(user.id, { location });
       locationManager.saveUserRealtimeLocation(user.id, location);
     }
 
     // [AUTO-LIFE] Check and Sync Membership Expiry
-    const syncedUser = userManager.checkAndSyncMembership(user.id);
+    const syncedUser = await userManager.checkAndSyncMembership(user.id);
     if (syncedUser.statusChanged && syncedUser.newTier === 'Free') {
       notificationManager.createNotification(user.id, 'user', 'Membership Expired', 'Your Premium membership has expired. You have been switched to the Free tier.', 'membership_expired', user.id);
     }
