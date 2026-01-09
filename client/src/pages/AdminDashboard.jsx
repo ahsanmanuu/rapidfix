@@ -475,8 +475,8 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* Activity Log */}
-                                    <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 flex flex-col shadow-lg overflow-hidden">
+                                    {/* Activity Log - Correctly inside the xl grid as the 3rd column */}
+                                    <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 flex flex-col shadow-lg overflow-hidden h-fit">
                                         <div className="p-5 border-b-2 border-red-600/20 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
                                             <h3 className="text-red-600 font-black uppercase tracking-tighter text-lg italic">Platform Monitoring</h3>
                                             <div className="flex items-center gap-2">
@@ -599,14 +599,13 @@ const AdminDashboard = () => {
                                     </tbody>
                                 </table>
                             </div>
+                            )}
+
                         </div>
                     )}
-
+                </main>
             </div>
-                    )}
-        </main>
-            </div >
-        </div >
+        </div>
     );
 };
 
