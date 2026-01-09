@@ -275,10 +275,10 @@ const AdminDashboard = () => {
 
     // Derived Stats for UI
     const dashboardStats = stats ? [
-        { label: 'Total Users', value: (stats.totalUsers || 0).toLocaleString(), trend: 12, icon: 'group' },
-        { label: 'Active Technicians', value: (stats.activeTechnicians || 0).toString(), trend: 3, icon: 'engineering' },
-        { label: 'Pending Verifications', value: (stats.pendingVerifications || 0).toString(), trend: 0, icon: 'verified_user', alert: (stats.pendingVerifications || 0) > 0 ? 'Action Needed' : '' },
-        { label: 'Total Wallet', value: `$${(stats.totalWallet || 0).toLocaleString()}`, trend: 8, icon: 'account_balance_wallet' },
+        { label: 'Total Users', value: (stats.totalUsers || 0).toLocaleString(), trend: 12, icon: 'group', color: 'blue' },
+        { label: 'Active Technicians', value: (stats.activeTechnicians || 0).toString(), trend: 3, icon: 'engineering', color: 'purple' },
+        { label: 'Pending Verifications', value: (stats.pendingVerifications || 0).toString(), trend: 0, icon: 'verified_user', alert: (stats.pendingVerifications || 0) > 0 ? 'Action Needed' : '', color: 'rose' },
+        { label: 'Total Wallet', value: `$${(stats.totalWallet || 0).toLocaleString()}`, trend: 8, icon: 'account_balance_wallet', color: 'emerald' },
     ] : [];
 
     return (
@@ -332,32 +332,34 @@ const AdminDashboard = () => {
                                     {/* TOP ROW: Map & Leaderboard (Higher Prominence) */}
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         {/* Time & Map Card */}
-                                        <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-0 overflow-hidden relative group shadow-sm dark:shadow-none min-h-[220px]">
-                                            <div className="h-40 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"
+                                        <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 p-0 overflow-hidden relative group shadow-lg min-h-[250px]">
+                                            <div className="h-44 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"
                                                 style={{
                                                     backgroundImage: location.lat
                                                         ? `url('https://maps.googleapis.com/maps/api/staticmap?center=${location.lat},${location.lng}&zoom=14&size=800x400&maptype=roadmap&markers=color:red%7C${location.lat},${location.lng}&key=AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU')`
                                                         : "url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80')"
                                                 }}
                                             >
-                                                <div className="bg-black/40 size-full"></div>
+                                                <div className="bg-black/30 size-full"></div>
                                             </div>
-                                            <div className="p-5 -mt-10 relative z-10">
-                                                <div className="flex justify-between items-end flex-wrap gap-4">
-                                                    <div className="bg-white dark:bg-[#111722] p-4 rounded-2xl shadow-xl border border-gray-100 dark:border-white/5">
-                                                        <div className="flex items-center gap-3 mb-1">
-                                                            <div className="size-8 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg">
-                                                                <span className="material-symbols-outlined text-sm">schedule</span>
-                                                            </div>
-                                                            <p className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest">Platform Time</p>
+
+                                            {/* SEPARATED CLOCK & LOCATION CONTAINER */}
+                                            <div className="p-4 px-6 relative z-10 flex flex-col gap-3 -mt-6">
+                                                <div className="flex justify-between items-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-3 rounded-xl border-2 border-red-600 shadow-xl">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="size-8 rounded-full bg-red-600 flex items-center justify-center text-white">
+                                                            <span className="material-symbols-outlined text-sm">schedule</span>
                                                         </div>
-                                                        <h3 className="text-blue-600 dark:text-blue-400 text-2xl font-black tracking-tight flex items-baseline gap-1">
-                                                            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                            <span className="text-sm font-bold text-gray-400 uppercase">{currentTime.toLocaleTimeString([], { hour12: true }).slice(-2)}</span>
-                                                        </h3>
+                                                        <div>
+                                                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Platform Time</p>
+                                                            <h3 className="text-red-600 dark:text-red-400 text-xl font-black flex items-baseline gap-1">
+                                                                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                <span className="text-[10px] uppercase">{currentTime.toLocaleTimeString([], { hour12: true }).slice(-2)}</span>
+                                                            </h3>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center gap-2 text-white bg-blue-600/90 backdrop-blur-md px-4 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 max-w-[200px] truncate">
-                                                        <span className="material-symbols-outlined text-sm">location_on</span>
+                                                    <div className="flex items-center gap-2 text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-black max-w-[180px] truncate border border-slate-200 dark:border-white/10">
+                                                        <span className="material-symbols-outlined text-sm text-red-600">location_on</span>
                                                         <span className="truncate">{location.address}</span>
                                                     </div>
                                                 </div>
@@ -365,29 +367,39 @@ const AdminDashboard = () => {
                                         </div>
 
                                         {/* Expanded Leaderboard Card */}
-                                        <div className="bg-gradient-to-br from-blue-600 to-indigo-800 rounded-xl border border-white/10 p-8 flex flex-col justify-between text-white relative overflow-hidden group shadow-xl">
-                                            <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                                                <span className="material-symbols-outlined text-[180px]">rocket_launch</span>
+                                        <div className="bg-gradient-to-br from-blue-700 to-indigo-900 rounded-xl border-2 border-red-600 p-8 flex flex-col justify-between text-white relative overflow-hidden group shadow-2xl">
+                                            <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
+                                                <span className="material-symbols-outlined text-[180px]">workspace_premium</span>
                                             </div>
                                             <div className="relative z-10">
-                                                <div className="flex items-center gap-3 mb-4">
-                                                    <div className="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                                                        <span className="material-symbols-outlined text-yellow-300">workspace_premium</span>
+                                                <div className="flex items-center gap-4 mb-4">
+                                                    <div className="size-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
+                                                        <span className="material-symbols-outlined text-yellow-400 text-3xl font-bold">trophy</span>
                                                     </div>
-                                                    <h3 className="text-2xl font-black tracking-tight">Technician Leaderboard</h3>
+                                                    <div>
+                                                        <h3 className="text-2xl font-black tracking-tighter uppercase italic">Top Technicians</h3>
+                                                        <p className="text-blue-200 text-xs font-bold uppercase tracking-widest">Performance Leaderboard</p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-blue-100/80 text-lg font-medium max-w-md leading-relaxed">
-                                                    Tracking real-time performance and efficiency across all service verticals.
+                                                <p className="text-white/90 text-sm font-medium max-w-sm leading-relaxed mb-6">
+                                                    Real-time statistics based on completion rates, customer feedback, and response times.
                                                 </p>
                                             </div>
-                                            <div className="mt-8 flex items-center gap-4 relative z-10">
+                                            <div className="flex items-center gap-6 relative z-10">
                                                 <button
                                                     onClick={() => setActiveTab('technicians')}
-                                                    className="bg-white text-blue-700 hover:bg-blue-50 px-8 py-3.5 rounded-xl text-sm font-black shadow-lg shadow-black/10 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2"
+                                                    className="bg-white text-blue-800 hover:bg-blue-50 px-6 py-3 rounded-xl text-xs font-black shadow-xl transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2 border-b-4 border-blue-200"
                                                 >
-                                                    <span className="material-symbols-outlined text-sm">analytics</span>
-                                                    View Report
+                                                    <span className="material-symbols-outlined text-sm">bar_chart</span>
+                                                    OPEN LEADERBOARD
                                                 </button>
+                                                <div className="flex -space-x-3 items-center">
+                                                    {[1, 2, 3].map(i => (
+                                                        <div key={i} className="size-9 rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-[10px] font-black text-white shadow-lg overflow-hidden ring-2 ring-blue-900/50">
+                                                            {['AJ', 'MH', 'RK'][i - 1]}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -403,11 +415,11 @@ const AdminDashboard = () => {
                                         {/* Area Chart & Pie Chart */}
                                         <div className="xl:col-span-2 flex flex-col gap-6">
                                             {/* Area Chart */}
-                                            <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 flex flex-col h-[400px] shadow-sm dark:shadow-none">
+                                            <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 p-6 flex flex-col h-[400px] shadow-lg">
                                                 <div className="flex justify-between items-center mb-6">
                                                     <div>
-                                                        <h3 className="text-blue-600 font-bold">User Trends</h3>
-                                                        <p className="text-gray-500 dark:text-slate-400 text-sm">Growth over last 30 days</p>
+                                                        <h3 className="text-blue-600 font-black uppercase tracking-tighter text-lg italic">User Traffic Trends</h3>
+                                                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Monthly Growth Overview</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 w-full">
@@ -431,168 +443,170 @@ const AdminDashboard = () => {
                                             </div>
 
                                             {/* Pie Chart Card */}
-                                            <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 shadow-sm">
-                                                <h3 className="text-blue-600 font-bold mb-4">Job Distribution</h3>
-                                                <div className="flex flex-wrap items-center gap-8">
-                                                    <div className="relative size-32">
-                                                        <ResponsiveContainer width="100%" height="100%">
-                                                            <PieChart>
-                                                                <Pie data={JOB_DISTRIBUTION} cx="50%" cy="50%" innerRadius={35} outerRadius={45} paddingAngle={5} dataKey="value">
-                                                                    {JOB_DISTRIBUTION.map((entry, index) => (
-                                                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                                                    ))}
-                                                                </Pie>
-                                                            </PieChart>
-                                                        </ResponsiveContainer>
-                                                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                            <span className="text-lg font-bold text-gray-900 dark:text-white">98%</span>
-                                                            <span className="text-[10px] text-gray-500 dark:text-slate-400">Rate</span>
-                                                        </div>
+                                            <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 p-6 shadow-lg">
+                                                <h3 className="text-emerald-600 font-black uppercase tracking-tighter text-lg italic mb-4">Job Service Allocation</h3>
+                                                <div className="relative size-32">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <PieChart>
+                                                            <Pie data={JOB_DISTRIBUTION} cx="50%" cy="50%" innerRadius={35} outerRadius={45} paddingAngle={5} dataKey="value">
+                                                                {JOB_DISTRIBUTION.map((entry, index) => (
+                                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                                ))}
+                                                            </Pie>
+                                                        </PieChart>
+                                                    </ResponsiveContainer>
+                                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                                        <span className="text-lg font-bold text-gray-900 dark:text-white">98%</span>
+                                                        <span className="text-[10px] text-gray-500 dark:text-slate-400">Rate</span>
                                                     </div>
-                                                    <div className="flex flex-col gap-3 flex-1 min-w-[200px]">
-                                                        {JOB_DISTRIBUTION.map((item) => (
-                                                            <div key={item.name} className="flex items-center justify-between border-b border-gray-50 dark:border-white/5 pb-2 last:border-0">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="size-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
-                                                                    <span className="text-sm text-gray-600 dark:text-slate-400 font-medium">{item.name}</span>
-                                                                </div>
-                                                                <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value}%</span>
+                                                </div>
+                                                <div className="flex flex-col gap-3 flex-1 min-w-[200px]">
+                                                    {JOB_DISTRIBUTION.map((item) => (
+                                                        <div key={item.name} className="flex items-center justify-between border-b border-gray-50 dark:border-white/5 pb-2 last:border-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="size-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
+                                                                <span className="text-sm text-gray-600 dark:text-slate-400 font-medium">{item.name}</span>
                                                             </div>
-                                                        ))}
-                                                    </div>
+                                                            <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value}%</span>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        {/* Activity Log */}
-                                        <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 flex flex-col shadow-sm">
-                                            <div className="p-5 border-b border-gray-50 dark:border-[#232f48] flex justify-between items-center">
-                                                <h3 className="text-blue-600 font-bold text-base">Real-time Activity</h3>
-                                                <span className="material-symbols-outlined text-blue-500 text-sm animate-pulse">rss_feed</span>
+                                    {/* Activity Log */}
+                                    <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 flex flex-col shadow-lg overflow-hidden">
+                                        <div className="p-5 border-b-2 border-red-600/20 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
+                                            <h3 className="text-red-600 font-black uppercase tracking-tighter text-lg italic">Platform Monitoring</h3>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-black text-red-600 uppercase tracking-widest animate-pulse">Live Feed</span>
+                                                <span className="material-symbols-outlined text-red-600 text-sm animate-pulse">sensors</span>
                                             </div>
-                                            <div className="p-4 overflow-y-auto custom-scrollbar flex flex-col gap-4 max-h-[750px] min-h-[400px]">
-                                                {ACTIVITY_LOG.map((item) => (
-                                                    <div key={item.id} className="flex gap-3 items-start group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
-                                                        <div className={`mt-1 size-8 rounded-full flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ${item.iconColor}`}>
-                                                            <span className="material-symbols-outlined text-xs">{item.icon}</span>
-                                                        </div>
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <p className="text-sm text-slate-800 dark:text-slate-100 leading-snug font-medium">
-                                                                <strong className="text-blue-700 dark:text-blue-400 font-black">{item.user}</strong> {item.action}
-                                                            </p>
-                                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter">{item.timestamp}</p>
-                                                        </div>
+                                        </div>
+                                        <div className="p-0 overflow-y-auto custom-scrollbar flex flex-col max-h-[750px] min-h-[400px]">
+                                            {ACTIVITY_LOG.map((item) => (
+                                                <div key={item.id} className="flex gap-4 items-center p-4 border-b border-slate-100 dark:border-white/5 hover:bg-red-50/30 dark:hover:bg-red-900/10 transition-colors">
+                                                    <div className={`size-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${item.iconColor.replace('text-', 'bg-').replace('600', '100').replace('dark:', '')} dark:bg-slate-800`}>
+                                                        <span className={`material-symbols-outlined text-xl ${item.iconColor}`}>{item.icon}</span>
                                                     </div>
-                                                ))}
-                                            </div>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <p className="text-sm text-slate-900 dark:text-white leading-tight font-black pl-2 border-l-2 border-red-600">
+                                                            <span className="text-red-600">{item.user}</span> {item.action}
+                                                        </p>
+                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-2">{item.timestamp}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                </>
-                            )}
+                                </div>
+                        </>
+                    )}
 
-                            {/* USERS TAB (New Implementation) */}
-                            {activeTab === 'users' && (
-                                <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
-                                    <UserHeader />
-                                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
-                                        <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
-                                            <Filters />
-                                            <UserTable
-                                                users={users}
-                                                selectedUserId={selectedUser?.id || null}
-                                                onSelectUser={handleSelectUser}
-                                                onBanUser={handleBanUser}
-                                                onChangeMembership={handleChangeMembership}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Detail Overlay */}
-                                    {isDrawerOpen && (
-                                        <div
-                                            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 sm:hidden"
-                                            onClick={handleCloseDrawer}
-                                        />
-                                    )}
-
-                                    <UserDrawer
-                                        user={selectedUser}
-                                        onClose={handleCloseDrawer}
+                    {/* USERS TAB (New Implementation) */}
+                    {activeTab === 'users' && (
+                        <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
+                            <UserHeader />
+                            <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
+                                <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
+                                    <Filters />
+                                    <UserTable
+                                        users={users}
+                                        selectedUserId={selectedUser?.id || null}
+                                        onSelectUser={handleSelectUser}
                                         onBanUser={handleBanUser}
                                         onChangeMembership={handleChangeMembership}
                                     />
                                 </div>
+                            </div>
+
+                            {/* Detail Overlay */}
+                            {isDrawerOpen && (
+                                <div
+                                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 sm:hidden"
+                                    onClick={handleCloseDrawer}
+                                />
                             )}
 
-                            {/* JOBS TAB (New Professional Implementation) */}
-                            {activeTab === 'jobs' && (
-                                <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
-                                    <JobHeader
-                                        activeFilter={activeJobFilter}
-                                        setActiveFilter={setActiveJobFilter}
-                                    />
-                                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative custom-scrollbar">
-                                        <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-2">
-                                            <JobStats jobs={jobs} />
-                                            <JobTable
-                                                jobs={jobs}
-                                                activeFilter={activeJobFilter}
-                                                onSelectJob={handleSelectJob}
-                                                selectedJobId={selectedJob?.id}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Drawer Backdrop */}
-                                    {isJobDrawerOpen && (
-                                        <div
-                                            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
-                                            onClick={handleCloseJobDrawer}
-                                        />
-                                    )}
-
-                                    <JobDrawer
-                                        job={selectedJob}
-                                        onClose={handleCloseJobDrawer}
-                                    />
-                                </div>
-                            )}
-
-                            {/* OTHER TABS (Placeholder to ensure switching works) */}
-                            {activeTab !== 'dashboard' && activeTab !== 'users' && activeTab !== 'jobs' && (
-                                <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 shadow-sm">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 italic">
-                                        {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Module Loaded
-                                    </h3>
-                                    <p className="text-gray-500 dark:text-text-secondary">
-                                        Data for {activeTab} is ready (Technicians: {technicians.length}, Users: {users.length}, Jobs: {jobs.length}).
-                                        <br />
-                                        <span className="text-xs opacity-50">Refactoring required to fully migrate table views to new design system.</span>
-                                    </p>
-                                    <div className="mt-8 overflow-x-auto">
-                                        {/* Simple table dump for verification */}
-                                        <table className="w-full text-left text-sm text-gray-500 dark:text-text-secondary">
-                                            <thead className="bg-gray-50 dark:bg-[#111722] text-xs uppercase">
-                                                <tr><th className="px-4 py-3">ID</th><th className="px-4 py-3">Details</th></tr>
-                                            </thead>
-                                            <tbody>
-                                                {(activeTab === 'technicians' ? technicians : activeTab === 'users' ? users : jobs).slice(0, 10).map((item, i) => (
-                                                    <tr key={i} className="border-b border-gray-100 dark:border-[#111722]">
-                                                        <td className="px-4 py-3 font-mono text-xs">{item.id?.substring(0, 8)}</td>
-                                                        <td className="px-4 py-3">{JSON.stringify(item).substring(0, 100)}...</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
-
+                            <UserDrawer
+                                user={selectedUser}
+                                onClose={handleCloseDrawer}
+                                onBanUser={handleBanUser}
+                                onChangeMembership={handleChangeMembership}
+                            />
                         </div>
                     )}
-                </main>
+
+                    {/* JOBS TAB (New Professional Implementation) */}
+                    {activeTab === 'jobs' && (
+                        <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
+                            <JobHeader
+                                activeFilter={activeJobFilter}
+                                setActiveFilter={setActiveJobFilter}
+                            />
+                            <div className="flex-1 overflow-y-auto overflow-x-hidden relative custom-scrollbar">
+                                <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-2">
+                                    <JobStats jobs={jobs} />
+                                    <JobTable
+                                        jobs={jobs}
+                                        activeFilter={activeJobFilter}
+                                        onSelectJob={handleSelectJob}
+                                        selectedJobId={selectedJob?.id}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Drawer Backdrop */}
+                            {isJobDrawerOpen && (
+                                <div
+                                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
+                                    onClick={handleCloseJobDrawer}
+                                />
+                            )}
+
+                            <JobDrawer
+                                job={selectedJob}
+                                onClose={handleCloseJobDrawer}
+                            />
+                        </div>
+                    )}
+
+                    {/* OTHER TABS (Placeholder to ensure switching works) */}
+                    {activeTab !== 'dashboard' && activeTab !== 'users' && activeTab !== 'jobs' && (
+                        <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 shadow-sm">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 italic">
+                                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Module Loaded
+                            </h3>
+                            <p className="text-gray-500 dark:text-text-secondary">
+                                Data for {activeTab} is ready (Technicians: {technicians.length}, Users: {users.length}, Jobs: {jobs.length}).
+                                <br />
+                                <span className="text-xs opacity-50">Refactoring required to fully migrate table views to new design system.</span>
+                            </p>
+                            <div className="mt-8 overflow-x-auto">
+                                {/* Simple table dump for verification */}
+                                <table className="w-full text-left text-sm text-gray-500 dark:text-text-secondary">
+                                    <thead className="bg-gray-50 dark:bg-[#111722] text-xs uppercase">
+                                        <tr><th className="px-4 py-3">ID</th><th className="px-4 py-3">Details</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {(activeTab === 'technicians' ? technicians : activeTab === 'users' ? users : jobs).slice(0, 10).map((item, i) => (
+                                            <tr key={i} className="border-b border-gray-100 dark:border-[#111722]">
+                                                <td className="px-4 py-3 font-mono text-xs">{item.id?.substring(0, 8)}</td>
+                                                <td className="px-4 py-3">{JSON.stringify(item).substring(0, 100)}...</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
             </div>
-        </div>
+                    )}
+        </main>
+            </div >
+        </div >
     );
 };
 
