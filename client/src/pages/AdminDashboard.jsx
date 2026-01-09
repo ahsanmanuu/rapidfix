@@ -329,14 +329,7 @@ const AdminDashboard = () => {
                                         <p className="text-gray-600 dark:text-slate-400 text-base font-normal">Here's what's happening with your platform today.</p>
                                     </div>
 
-                                    {/* Stats Grid */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        {dashboardStats.map((stat, idx) => (
-                                            <StatsCard key={idx} stat={stat} />
-                                        ))}
-                                    </div>
-
-                                    {/* TOP ROW: Map & Leaderboard (Newly Prominent) */}
+                                    {/* TOP ROW: Map & Leaderboard (Higher Prominence) */}
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         {/* Time & Map Card */}
                                         <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-0 overflow-hidden relative group shadow-sm dark:shadow-none min-h-[220px]">
@@ -358,7 +351,7 @@ const AdminDashboard = () => {
                                                             </div>
                                                             <p className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest">Platform Time</p>
                                                         </div>
-                                                        <h3 className="text-blue-600 dark:text-blue-400 text-4xl font-black tracking-tight flex items-baseline gap-1">
+                                                        <h3 className="text-blue-600 dark:text-blue-400 text-2xl font-black tracking-tight flex items-baseline gap-1">
                                                             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                             <span className="text-sm font-bold text-gray-400 uppercase">{currentTime.toLocaleTimeString([], { hour12: true }).slice(-2)}</span>
                                                         </h3>
@@ -384,7 +377,7 @@ const AdminDashboard = () => {
                                                     <h3 className="text-2xl font-black tracking-tight">Technician Leaderboard</h3>
                                                 </div>
                                                 <p className="text-blue-100/80 text-lg font-medium max-w-md leading-relaxed">
-                                                    Tracking real-time performance, efficiency, and customer satisfaction across all service verticals.
+                                                    Tracking real-time performance and efficiency across all service verticals.
                                                 </p>
                                             </div>
                                             <div className="mt-8 flex items-center gap-4 relative z-10">
@@ -393,18 +386,8 @@ const AdminDashboard = () => {
                                                     className="bg-white text-blue-700 hover:bg-blue-50 px-8 py-3.5 rounded-xl text-sm font-black shadow-lg shadow-black/10 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2"
                                                 >
                                                     <span className="material-symbols-outlined text-sm">analytics</span>
-                                                    View Detailed Report
+                                                    View Report
                                                 </button>
-                                                <div className="hidden sm:flex -space-x-3">
-                                                    {[1, 2, 3].map(i => (
-                                                        <div key={i} className="size-10 rounded-full border-4 border-blue-700 bg-blue-200 flex items-center justify-center text-[10px] font-bold text-blue-800">
-                                                            {['JD', 'SM', 'RK'][i - 1]}
-                                                        </div>
-                                                    ))}
-                                                    <div className="size-10 rounded-full border-4 border-blue-700 bg-white/10 backdrop-blur-sm flex items-center justify-center text-[10px] font-bold text-white">
-                                                        +12
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -494,10 +477,10 @@ const AdminDashboard = () => {
                                                             <span className="material-symbols-outlined text-xs">{item.icon}</span>
                                                         </div>
                                                         <div className="flex flex-col gap-0.5">
-                                                            <p className="text-sm text-gray-600 dark:text-slate-300 leading-snug">
-                                                                <strong className="text-gray-900 dark:text-white font-bold">{item.user}</strong> {item.action}
+                                                            <p className="text-sm text-slate-800 dark:text-slate-100 leading-snug font-medium">
+                                                                <strong className="text-blue-700 dark:text-blue-400 font-black">{item.user}</strong> {item.action}
                                                             </p>
-                                                            <p className="text-[11px] text-gray-400 font-medium uppercase">{item.timestamp}</p>
+                                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tighter">{item.timestamp}</p>
                                                         </div>
                                                     </div>
                                                 ))}
