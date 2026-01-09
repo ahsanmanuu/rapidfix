@@ -1009,19 +1009,19 @@ app.post('/api/membership/pay', (req, res) => {
 });
 
 // --- Ride Routes ---
-app.get('/api/rides/technician/:id', (req, res) => {
-  const rides = rideManager.getRidesByTechnician(req.params.id);
+app.get('/api/rides/technician/:id', async (req, res) => {
+  const rides = await rideManager.getRidesByTechnician(req.params.id);
   res.json({ success: true, rides });
 });
 
-app.post('/api/rides/start', (req, res) => {
+app.post('/api/rides/start', async (req, res) => {
   const { technicianId, jobId, startLocation, endLocation } = req.body;
-  const ride = rideManager.startRide(technicianId, jobId, startLocation, endLocation);
+  const ride = await rideManager.startRide(technicianId, jobId, startLocation, endLocation);
   res.json({ success: true, ride });
 });
 
-app.put('/api/rides/:id/complete', (req, res) => {
-  const ride = rideManager.completeRide(req.params.id);
+app.put('/api/rides/:id/complete', async (req, res) => {
+  const ride = await rideManager.completeRide(req.params.id);
   if (ride) res.json({ success: true, ride });
   else res.status(404).json({ success: false, error: 'Ride not found' });
 });
@@ -1077,12 +1077,12 @@ const verifyAdmin = (req, res, next) => {
   next();
 };
 
-app.get('/api/admin/stats', verifyAdmin, (req, res) => {
+app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
   try {
-    const users = userManager.getAllUsers();
-    const technicians = technicianManager.getAllTechnicians();
-    const jobs = jobManager.getAllJobs();
-    const wallet = financeManager.getSystemWalletBalance(); // Assuming this exists or we calculate
+    const users = await userManager.getAllUsers();
+    const technicians = await technicianManager.getAllTechnicians();
+    const jobs = await jobManager.getAllJobs();
+    const wallet = await financeManager.getSystemWalletBalance();
 
     // Calculate detailed stats
     const activeTechnicians = technicians.filter(t => t.status === 'approved' || t.status === 'verified').length;
