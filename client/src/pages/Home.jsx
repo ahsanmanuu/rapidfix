@@ -221,13 +221,14 @@ const Home = () => {
         return () => clearInterval(timer);
     }, []);
 
-    // Auto-advance Technician Profile
+    // Auto-advance Technician Profile (Fixed with dependency and bound check)
     useEffect(() => {
+        if (technicianProfiles.length === 0) return;
         const timer = setInterval(() => {
             setCurrentTechIndex((prev) => (prev + 1) % technicianProfiles.length);
         }, 6000);
         return () => clearInterval(timer);
-    }, []);
+    }, [technicianProfiles.length]);
 
     // Auto-Sync Location for Logged-In Users
     useEffect(() => {
@@ -639,61 +640,61 @@ const Home = () => {
                                 <div className="relative group mt-[15px]">
                                     <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-50 blur-lg group-hover:opacity-75 transition duration-1000"></div>
                                     <img
-                                        src={technicianProfiles[currentTechIndex].image}
-                                        alt={technicianProfiles[currentTechIndex].name}
+                                        src={technicianProfiles[currentTechIndex]?.image || fallbackProfiles[0].image}
+                                        alt={technicianProfiles[currentTechIndex]?.name || 'Technician'}
                                         className="relative shadow-2xl w-full object-cover aspect-[4/3] border border-white/20"
                                     />
                                     <div className="absolute bottom-8 left-8 bg-slate-900/90 backdrop-blur-md p-5 shadow-xl border border-white/10">
                                         <div className="flex items-center gap-2 mb-1">
                                             <Star size={18} className="text-yellow-400 fill-yellow-400" />
-                                            <span className="font-bold text-white text-lg">{technicianProfiles[currentTechIndex].rating} Rating</span>
+                                            <span className="font-bold text-white text-lg">{technicianProfiles[currentTechIndex]?.rating || '4.8'} Rating</span>
                                         </div>
-                                        <p className="text-xs text-slate-400 font-medium">Based on {technicianProfiles[currentTechIndex].reviewCount} reviews</p>
+                                        <p className="text-xs text-slate-400 font-medium">Based on {technicianProfiles[currentTechIndex]?.reviewCount || '0'} reviews</p>
                                     </div>
                                 </div>
                             </div>
                             <div className="md:w-1/2 space-y-8">
                                 <div>
-                                    <h4 className="text-blue-400 font-bold uppercase tracking-widest text-sm mb-3">Technician of the Month • {technicianProfiles[currentTechIndex].serviceType}</h4>
-                                    <h2 className="text-5xl font-extrabold mb-6 tracking-tight">Meet {technicianProfiles[currentTechIndex].name}</h2>
+                                    <h4 className="text-blue-400 font-bold uppercase tracking-widest text-sm mb-3">Technician of the Month • {technicianProfiles[currentTechIndex]?.serviceType}</h4>
+                                    <h2 className="text-5xl font-extrabold mb-6 tracking-tight">Meet {technicianProfiles[currentTechIndex]?.name}</h2>
                                     <p className="text-slate-300 text-xl leading-relaxed font-light">
-                                        {technicianProfiles[currentTechIndex].description}
+                                        {technicianProfiles[currentTechIndex]?.description}
                                     </p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-8 mb-5">
                                     <div className="bg-white/5 p-6 border border-white/5 backdrop-blur-sm">
-                                        <h5 className="text-3xl font-bold text-white mb-1">{technicianProfiles[currentTechIndex].jobsCompleted || technicianProfiles[currentTechIndex].jobs}</h5>
+                                        <h5 className="text-3xl font-bold text-white mb-1">{technicianProfiles[currentTechIndex]?.jobsCompleted || technicianProfiles[currentTechIndex]?.jobs || '0'}</h5>
                                         <p className="text-slate-400 font-medium">Jobs Completed</p>
                                     </div>
                                     <div className="bg-white/5 p-6 border border-white/5 backdrop-blur-sm">
-                                        <h5 className="text-3xl font-bold text-white mb-1">{technicianProfiles[currentTechIndex].onTime}</h5>
+                                        <h5 className="text-3xl font-bold text-white mb-1">{technicianProfiles[currentTechIndex]?.onTime || '100%'}</h5>
                                         <p className="text-slate-400 font-medium">On-Time Record</p>
                                     </div>
                                 </div>
 
                                 {/* Detailed Ratings Grid - Realtime Fetched Data */}
                                 <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-6 p-5 bg-slate-800/50 rounded-xl border border-white/5">
-                                    <RatingRow color="cyan" icon={UserCheck} label="Behavior" score={technicianProfiles[currentTechIndex].detailedRatings?.behavior || 5} />
-                                    <RatingRow color="amber" icon={Smile} label="Attitude" score={technicianProfiles[currentTechIndex].detailedRatings?.attitude || 5} />
-                                    <RatingRow color="emerald" icon={BookOpen} label="Knowledge" score={technicianProfiles[currentTechIndex].detailedRatings?.expertise || 5} />
-                                    <RatingRow color="indigo" icon={Briefcase} label="Professionalism" score={technicianProfiles[currentTechIndex].detailedRatings?.professionalism || 5} />
-                                    <RatingRow color="rose" icon={Heart} label="Respect" score={technicianProfiles[currentTechIndex].detailedRatings?.respect || 5} />
-                                    <RatingRow color="violet" icon={ShieldCheck} label="Honesty" score={technicianProfiles[currentTechIndex].detailedRatings?.honesty || 5} />
-                                    <RatingRow color="sky" icon={Clock} label="Timeliness" score={technicianProfiles[currentTechIndex].detailedRatings?.timeliness || 5} />
-                                    <RatingRow color="lime" icon={MessageSquare} label="Communication" score={technicianProfiles[currentTechIndex].detailedRatings?.communication || 5} />
+                                    <RatingRow color="cyan" icon={UserCheck} label="Behavior" score={technicianProfiles[currentTechIndex]?.detailedRatings?.behavior || 5} />
+                                    <RatingRow color="amber" icon={Smile} label="Attitude" score={technicianProfiles[currentTechIndex]?.detailedRatings?.attitude || 5} />
+                                    <RatingRow color="emerald" icon={BookOpen} label="Knowledge" score={technicianProfiles[currentTechIndex]?.detailedRatings?.expertise || 5} />
+                                    <RatingRow color="indigo" icon={Briefcase} label="Professionalism" score={technicianProfiles[currentTechIndex]?.detailedRatings?.professionalism || 5} />
+                                    <RatingRow color="rose" icon={Heart} label="Respect" score={technicianProfiles[currentTechIndex]?.detailedRatings?.respect || 5} />
+                                    <RatingRow color="violet" icon={ShieldCheck} label="Honesty" score={technicianProfiles[currentTechIndex]?.detailedRatings?.honesty || 5} />
+                                    <RatingRow color="sky" icon={Clock} label="Timeliness" score={technicianProfiles[currentTechIndex]?.detailedRatings?.timeliness || 5} />
+                                    <RatingRow color="lime" icon={MessageSquare} label="Communication" score={technicianProfiles[currentTechIndex]?.detailedRatings?.communication || 5} />
                                 </div>
 
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <Button
-                                        onClick={() => handleBookNow(technicianProfiles[currentTechIndex].serviceType, technicianProfiles[currentTechIndex])}
-                                        disabled={technicianProfiles[currentTechIndex].status === 'engaged'}
+                                        onClick={() => handleBookNow(technicianProfiles[currentTechIndex]?.serviceType || 'Electrician', technicianProfiles[currentTechIndex])}
+                                        disabled={technicianProfiles[currentTechIndex]?.status === 'engaged'}
                                         className={`px-10 py-4 bg-transparent text-white border-2 border-white font-bold shadow-lg shadow-white/10 transform transition 
-                                            ${technicianProfiles[currentTechIndex].status === 'engaged' ? 'opacity-50 cursor-not-allowed hover:none' : 'hover:bg-white hover:text-slate-900 hover:-translate-y-1'}`}
+                                            ${technicianProfiles[currentTechIndex]?.status === 'engaged' ? 'opacity-50 cursor-not-allowed hover:none' : 'hover:bg-white hover:text-slate-900 hover:-translate-y-1'}`}
                                     >
-                                        {technicianProfiles[currentTechIndex].status === 'engaged'
+                                        {technicianProfiles[currentTechIndex]?.status === 'engaged'
                                             ? `Expert Busy`
-                                            : `Book ${technicianProfiles[currentTechIndex].name.split(' ')[0]} Now`}
+                                            : `Book ${(technicianProfiles[currentTechIndex]?.name || '').split(' ')[0]} Now`}
                                     </Button>
                                     <div className="flex gap-2 items-center justify-center sm:justify-start pt-2 sm:pt-0">
                                         {technicianProfiles.map((_, idx) => (

@@ -157,9 +157,9 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                     // TEMP: Allow pending for testing
                                     const isAvailable = ['available', 'pending'].includes((rawStatus || '').toLowerCase().trim());
 
-                                    // FORCE FLOAT
-                                    const lat = parseFloat(tech.location.latitude);
-                                    const lng = parseFloat(tech.location.longitude);
+                                    // FORCE FLOAT with safety checks
+                                    const lat = parseFloat(tech.location?.latitude || userLocation.latitude);
+                                    const lng = parseFloat(tech.location?.longitude || userLocation.longitude);
 
                                     return (
                                         <OverlayView
@@ -292,7 +292,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                     </div>
                                                     {/* Rating Badge (Compact) */}
                                                     <div className="absolute -bottom-1 -right-1 bg-white px-2 py-0.5 rounded-full shadow-sm border border-slate-100 flex items-center gap-1 text-[10px] font-bold text-slate-700">
-                                                        {tech.rating && tech.rating > 0 ? (
+                                                        {tech.rating && tech.rating > 0 && tech.rating <= 5 ? (
                                                             <>
                                                                 <Star size={10} className="fill-yellow-400 text-yellow-400" />
                                                                 {tech.rating}
