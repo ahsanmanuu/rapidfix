@@ -375,14 +375,14 @@ app.post('/api/technicians/login', async (req, res) => {
   }
 });
 
-app.post('/api/technicians/search', (req, res) => {
+app.post('/api/technicians/search', async (req, res) => {
   try {
     const { latitude, longitude, serviceType } = req.body;
     if (!latitude || !longitude || !serviceType) {
       return res.status(400).json({ success: false, error: 'Missing location or service type' });
     }
 
-    const technicians = technicianManager.searchTechnicians(latitude, longitude, serviceType);
+    const technicians = await technicianManager.searchTechnicians(latitude, longitude, serviceType);
     res.json({ success: true, count: technicians.length, technicians });
   } catch (error) {
     console.error('Search error:', error);
@@ -390,24 +390,24 @@ app.post('/api/technicians/search', (req, res) => {
   }
 });
 
-app.get('/api/technicians', (req, res) => {
+app.get('/api/technicians', async (req, res) => {
   if (req.query.serviceType) {
-    const techs = technicianManager.findByService(req.query.serviceType);
+    const techs = await technicianManager.findByService(req.query.serviceType);
     res.json({ success: true, technicians: techs });
   } else {
-    const techs = technicianManager.getAllTechnicians();
+    const techs = await technicianManager.getAllTechnicians();
     res.json({ success: true, technicians: techs });
   }
 });
 
 // [NEW] Get Top Rated Technicians for "Technician of the Month"
-app.get('/api/technicians/top-rated', (req, res) => {
+app.get('/api/technicians/top-rated', async (req, res) => {
   try {
-    const allTechs = technicianManager.getAllTechnicians();
+    const allTechs = await technicianManager.getAllTechnicians();
 
-    const enrichedTechs = allTechs.map(tech => {
+    const enrichedTechs = await Promise.all(allTechs.map(async tech => {
       // 1. Get Feedbacks
-      const feedbacks = feedbackManager.getFeedbackForTechnician(tech.id);
+      const feedbacks = await feedbackManager.getFeedbackForTechnician(tech.id);
 
       // 2. Calc Average Rating
       let averageRating = 0;
@@ -439,7 +439,7 @@ app.get('/api/technicians/top-rated', (req, res) => {
       }
 
       // 3. Get Job Stats
-      const stats = jobManager.getJobStats(tech.id); // { total, rejected, ratio }
+      const stats = await jobManager.getJobStats(tech.id); // { total, rejected, ratio }
       // Mock On-Time based on Timeliness rating if jobs exist, else 100% or 0
       const onTimeRecord = detailedRatings.timeliness ? Math.round((detailedRatings.timeliness / 5) * 100) : (stats.total > 0 ? 100 : 100);
 
@@ -448,19 +448,23 @@ app.get('/api/technicians/top-rated', (req, res) => {
         rating: averageRating,
         reviewCount: feedbacks.length,
         jobsCompleted: stats.total,
-        onTime: `${onTimeRecord}%`,
+        onTimeRecord: onTimeRecord, // %
+        location: tech.addressDetails?.city || 'Unknown',
+        badge: averageRating >= 4.8 ? 'Top Rated' : (stats.total > 50 ? 'Expert' : 'Verified'),
         detailedRatings
       };
-    });
+    }));
 
-    // Sort by rating
-    const topTechs = enrichedTechs
-      .sort((a, b) => b.rating - a.rating);
+    // Sort by Best Rating + Job Count
+    const topRated = enrichedTechs
+      .filter(t => t.rating >= 0) // Show all for now
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 5); // Return Top 5
 
-    res.json({ success: true, technicians: topTechs });
+    res.json({ success: true, technicians: topRated });
   } catch (error) {
-    console.error("Top Rated Error", error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Top Rated Error', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
 
