@@ -5,9 +5,31 @@ class BroadcastManager {
         this.db = new Database('broadcasts');
     }
 
-    createBroadcast(title, message, type = 'info', audience = 'all', createdBy = 'system') {
+    _mapFromDb(bc) {
+        if (!bc) return null;
+        const { created_by, is_active, created_at, expires_at, ...rest } = bc;
+        return {
+            ...rest,
+            createdBy: created_by,
+            isActive: is_active,
+            createdAt: created_at,
+            expiresAt: expires_at
+        };
+    }
+
+    _mapToDb(bc) {
+        if (!bc) return null;
+        const { createdBy, isActive, createdAt, expiresAt, id, ...rest } = bc;
+        const mapped = { ...rest };
+        if (createdBy !== undefined) mapped.created_by = createdBy;
+        if (isActive !== undefined) mapped.is_active = isActive;
+        if (createdAt !== undefined) mapped.created_at = createdAt;
+        if (expiresAt !== undefined) mapped.expires_at = expiresAt;
+        return mapped;
+    }
+
+    async createBroadcast(title, message, type = 'info', audience = 'all', createdBy = 'system') {
         const broadcast = {
-            id: Date.now().toString(),
             title,
             message,
             type, // 'info', 'warning', 'critical', 'maintenance'
@@ -17,20 +39,24 @@ class BroadcastManager {
             createdAt: new Date().toISOString(),
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Default 24h expiry
         };
-        return this.db.add(broadcast);
+        const dbBc = this._mapToDb(broadcast);
+        const saved = await this.db.add(dbBc);
+        return this._mapFromDb(saved);
     }
 
-    getActiveBroadcasts() {
+    async getActiveBroadcasts() {
         const now = new Date().toISOString();
-        return this.db.read().filter(b => b.isActive && b.expiresAt > now);
+        const broadcasts = await this.db.read();
+        return broadcasts.map(b => this._mapFromDb(b)).filter(b => b.isActive && b.expiresAt > now);
     }
 
-    getAllBroadcasts() {
-        return this.db.read();
+    async getAllBroadcasts() {
+        const broadcasts = await this.db.read();
+        return broadcasts.map(b => this._mapFromDb(b));
     }
 
-    deactivateBroadcast(id) {
-        return this.db.update('id', id, { isActive: false });
+    async deactivateBroadcast(id) {
+        return await this.db.update('id', id, { is_active: false });
     }
 }
 

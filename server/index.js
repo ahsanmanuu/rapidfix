@@ -1030,16 +1030,13 @@ app.put('/api/rides/:id/complete', async (req, res) => {
 const BroadcastManager = require('./managers/BroadcastManager');
 const broadcastManager = new BroadcastManager();
 
-app.post('/api/broadcasts', (req, res) => {
+app.post('/api/broadcasts', async (req, res) => {
   try {
     const { title, message, audience, type } = req.body;
     // Security: Ideally verify user is Admin/SuperAdmin
-    const broadcast = broadcastManager.createBroadcast(title, message, audience, type);
+    const broadcast = await broadcastManager.createBroadcast(title, message, audience, type);
 
     // Realtime Emit
-    // 'audience' can be 'all', 'users', 'technicians'
-    // For simplicity, we emit 'general_broadcast' to everyone, and client filters or just shows it.
-    // Or we could use rooms if we had 'all_users' room.
     io.emit('general_broadcast', broadcast);
 
     res.json({ success: true, broadcast });
@@ -1048,19 +1045,19 @@ app.post('/api/broadcasts', (req, res) => {
   }
 });
 
-app.get('/api/broadcasts', (req, res) => {
-  const broadcasts = broadcastManager.getActiveBroadcasts();
+app.get('/api/broadcasts', async (req, res) => {
+  const broadcasts = await broadcastManager.getActiveBroadcasts();
   res.json({ success: true, broadcasts });
 });
 
 // --- Admin Dashboard Routes ---
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', async (req, res) => {
   const { email, password, deviceId } = req.body;
-  const admin = adminManager.login(email, password);
+  const admin = await adminManager.login(email, password);
 
   if (admin) {
     // Create Session
-    const session = sessionManager.createSession(admin.id, 'admin', deviceId);
+    const session = await sessionManager.createSession(admin.id, 'admin', deviceId);
     res.json({ success: true, admin, sessionToken: session.token });
   } else {
     res.status(401).json({ success: false, error: 'Invalid admin credentials' });
