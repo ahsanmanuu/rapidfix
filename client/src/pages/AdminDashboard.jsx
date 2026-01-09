@@ -336,8 +336,88 @@ const AdminDashboard = () => {
                                         ))}
                                     </div>
 
+                                    {/* TOP ROW: Map & Leaderboard (Newly Prominent) */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {/* Time & Map Card */}
+                                        <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-0 overflow-hidden relative group shadow-sm dark:shadow-none min-h-[220px]">
+                                            <div className="h-40 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"
+                                                style={{
+                                                    backgroundImage: location.lat
+                                                        ? `url('https://maps.googleapis.com/maps/api/staticmap?center=${location.lat},${location.lng}&zoom=14&size=800x400&maptype=roadmap&markers=color:red%7C${location.lat},${location.lng}&key=AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU')`
+                                                        : "url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80')"
+                                                }}
+                                            >
+                                                <div className="bg-black/40 size-full"></div>
+                                            </div>
+                                            <div className="p-5 -mt-10 relative z-10">
+                                                <div className="flex justify-between items-end flex-wrap gap-4">
+                                                    <div className="bg-white dark:bg-[#111722] p-4 rounded-2xl shadow-xl border border-gray-100 dark:border-white/5">
+                                                        <div className="flex items-center gap-3 mb-1">
+                                                            <div className="size-8 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg">
+                                                                <span className="material-symbols-outlined text-sm">schedule</span>
+                                                            </div>
+                                                            <p className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest">Platform Time</p>
+                                                        </div>
+                                                        <h3 className="text-blue-600 dark:text-blue-400 text-4xl font-black tracking-tight flex items-baseline gap-1">
+                                                            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            <span className="text-sm font-bold text-gray-400 uppercase">{currentTime.toLocaleTimeString([], { hour12: true }).slice(-2)}</span>
+                                                        </h3>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-white bg-blue-600/90 backdrop-blur-md px-4 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 max-w-[200px] truncate">
+                                                        <span className="material-symbols-outlined text-sm">location_on</span>
+                                                        <span className="truncate">{location.address}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Expanded Leaderboard Card */}
+                                        <div className="bg-gradient-to-br from-blue-600 to-indigo-800 rounded-xl border border-white/10 p-8 flex flex-col justify-between text-white relative overflow-hidden group shadow-xl">
+                                            <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                                                <span className="material-symbols-outlined text-[180px]">rocket_launch</span>
+                                            </div>
+                                            <div className="relative z-10">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+                                                        <span className="material-symbols-outlined text-yellow-300">workspace_premium</span>
+                                                    </div>
+                                                    <h3 className="text-2xl font-black tracking-tight">Technician Leaderboard</h3>
+                                                </div>
+                                                <p className="text-blue-100/80 text-lg font-medium max-w-md leading-relaxed">
+                                                    Tracking real-time performance, efficiency, and customer satisfaction across all service verticals.
+                                                </p>
+                                            </div>
+                                            <div className="mt-8 flex items-center gap-4 relative z-10">
+                                                <button
+                                                    onClick={() => setActiveTab('technicians')}
+                                                    className="bg-white text-blue-700 hover:bg-blue-50 px-8 py-3.5 rounded-xl text-sm font-black shadow-lg shadow-black/10 transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">analytics</span>
+                                                    View Detailed Report
+                                                </button>
+                                                <div className="hidden sm:flex -space-x-3">
+                                                    {[1, 2, 3].map(i => (
+                                                        <div key={i} className="size-10 rounded-full border-4 border-blue-700 bg-blue-200 flex items-center justify-center text-[10px] font-bold text-blue-800">
+                                                            {['JD', 'SM', 'RK'][i - 1]}
+                                                        </div>
+                                                    ))}
+                                                    <div className="size-10 rounded-full border-4 border-blue-700 bg-white/10 backdrop-blur-sm flex items-center justify-center text-[10px] font-bold text-white">
+                                                        +12
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        {dashboardStats.map((stat, idx) => (
+                                            <StatsCard key={idx} stat={stat} />
+                                        ))}
+                                    </div>
+
                                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                                        {/* Charts */}
+                                        {/* Area Chart & Pie Chart */}
                                         <div className="xl:col-span-2 flex flex-col gap-6">
                                             {/* Area Chart */}
                                             <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 flex flex-col h-[400px] shadow-sm dark:shadow-none">
@@ -352,124 +432,75 @@ const AdminDashboard = () => {
                                                         <AreaChart data={REGISTRATION_TRENDS}>
                                                             <defs>
                                                                 <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="5%" stopColor="var(--color-primary, #135bec)" stopOpacity={0.4} />
-                                                                    <stop offset="95%" stopColor="var(--color-primary, #135bec)" stopOpacity={0} />
+                                                                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.4} />
+                                                                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                                                                 </linearGradient>
                                                             </defs>
                                                             <Tooltip
                                                                 contentStyle={{ backgroundColor: '#1A202C', border: '1px solid #232f48', borderRadius: '8px' }}
                                                                 itemStyle={{ color: '#fff' }}
                                                             />
-                                                            <Area type="monotone" dataKey="count" stroke="#135bec" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+                                                            <Area type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
                                                             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#92a4c9', fontSize: 11 }} />
                                                         </AreaChart>
                                                     </ResponsiveContainer>
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                {/* Pie Chart */}
-                                                <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 shadow-sm dark:shadow-none">
-                                                    <h3 className="text-primary text-base font-bold mb-4">Job Distribution</h3>
-                                                    <div className="flex items-center gap-8">
-                                                        <div className="relative size-32">
-                                                            <ResponsiveContainer width="100%" height="100%">
-                                                                <PieChart>
-                                                                    <Pie data={JOB_DISTRIBUTION} cx="50%" cy="50%" innerRadius={35} outerRadius={45} paddingAngle={5} dataKey="value">
-                                                                        {JOB_DISTRIBUTION.map((entry, index) => (
-                                                                            <Cell key={`cell-${index}`} fill={entry.color} />
-                                                                        ))}
-                                                                    </Pie>
-                                                                </PieChart>
-                                                            </ResponsiveContainer>
-                                                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                                <span className="text-lg font-bold text-gray-900 dark:text-white">98%</span>
-                                                                <span className="text-[10px] text-gray-500 dark:text-text-secondary">Rate</span>
-                                                            </div>
+                                            {/* Pie Chart Card */}
+                                            <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 shadow-sm">
+                                                <h3 className="text-blue-600 font-bold mb-4">Job Distribution</h3>
+                                                <div className="flex flex-wrap items-center gap-8">
+                                                    <div className="relative size-32">
+                                                        <ResponsiveContainer width="100%" height="100%">
+                                                            <PieChart>
+                                                                <Pie data={JOB_DISTRIBUTION} cx="50%" cy="50%" innerRadius={35} outerRadius={45} paddingAngle={5} dataKey="value">
+                                                                    {JOB_DISTRIBUTION.map((entry, index) => (
+                                                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                                                    ))}
+                                                                </Pie>
+                                                            </PieChart>
+                                                        </ResponsiveContainer>
+                                                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                                            <span className="text-lg font-bold text-gray-900 dark:text-white">98%</span>
+                                                            <span className="text-[10px] text-gray-500 dark:text-slate-400">Rate</span>
                                                         </div>
-                                                        <div className="flex flex-col gap-3 flex-1">
-                                                            {JOB_DISTRIBUTION.map((item) => (
-                                                                <div key={item.name} className="flex items-center justify-between">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="size-2 rounded-full" style={{ backgroundColor: item.color }}></div>
-                                                                        <span className="text-sm text-gray-500 dark:text-text-secondary">{item.name}</span>
-                                                                    </div>
-                                                                    <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value}%</span>
+                                                    </div>
+                                                    <div className="flex flex-col gap-3 flex-1 min-w-[200px]">
+                                                        {JOB_DISTRIBUTION.map((item) => (
+                                                            <div key={item.name} className="flex items-center justify-between border-b border-gray-50 dark:border-white/5 pb-2 last:border-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="size-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
+                                                                    <span className="text-sm text-gray-600 dark:text-slate-400 font-medium">{item.name}</span>
                                                                 </div>
-                                                            ))}
-                                                        </div>
+                                                                <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value}%</span>
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                </div>
-
-                                                {/* Leaderboard */}
-                                                <div className="bg-gradient-to-br from-primary to-[#0f45b3] rounded-xl border border-white/5 p-6 flex flex-col justify-between text-white relative overflow-hidden group shadow-xl">
-                                                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
-                                                        <span className="material-symbols-outlined text-[120px]">rocket_launch</span>
-                                                    </div>
-                                                    <div className="relative z-10">
-                                                        <h3 className="text-xl font-bold mb-2">Technician Leaderboard</h3>
-                                                        <p className="text-blue-100 text-sm mb-6">View top performing technicians.</p>
-                                                    </div>
-                                                    <button onClick={() => setActiveTab('technicians')} className="relative z-10 bg-white text-primary px-4 py-2 rounded-lg text-sm font-bold self-start hover:bg-gray-100 transition-all hover:translate-x-1">
-                                                        View Report
-                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Right Sidebar Widgets */}
-                                        <div className="flex flex-col gap-6">
-                                            {/* Time & Map Card */}
-                                            <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-0 overflow-hidden relative group shadow-sm dark:shadow-none">
-                                                <div className="h-32 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"
-                                                    style={{
-                                                        backgroundImage: location.lat
-                                                            ? `url('https://maps.googleapis.com/maps/api/staticmap?center=${location.lat},${location.lng}&zoom=14&size=600x300&maptype=roadmap&markers=color:red%7C${location.lat},${location.lng}&key=AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU')`
-                                                            : "url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80')"
-                                                    }}
-                                                >
-                                                    <div className={`bg-black/50 size-full`}></div>
-                                                </div>
-                                                <div className="p-5 -mt-8 relative z-10">
-                                                    <div className="flex justify-between items-end">
-                                                        <div>
-                                                            <div className="size-12 rounded-full bg-[#111722] border-4 border-[#232f48] flex items-center justify-center text-white mb-2 shadow-xl">
-                                                                <span className="material-symbols-outlined">schedule</span>
-                                                            </div>
-                                                            <h3 className="text-primary text-3xl font-bold tracking-tight">
-                                                                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                <span className="text-sm font-normal text-gray-500 dark:text-text-secondary ml-1">{currentTime.toLocaleTimeString([], { hour12: true }).slice(-2)}</span>
-                                                            </h3>
+                                        {/* Activity Log */}
+                                        <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 flex flex-col shadow-sm">
+                                            <div className="p-5 border-b border-gray-50 dark:border-[#232f48] flex justify-between items-center">
+                                                <h3 className="text-blue-600 font-bold text-base">Real-time Activity</h3>
+                                                <span className="material-symbols-outlined text-blue-500 text-sm animate-pulse">rss_feed</span>
+                                            </div>
+                                            <div className="p-4 overflow-y-auto custom-scrollbar flex flex-col gap-4 max-h-[750px] min-h-[400px]">
+                                                {ACTIVITY_LOG.map((item) => (
+                                                    <div key={item.id} className="flex gap-3 items-start group p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+                                                        <div className={`mt-1 size-8 rounded-full flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ${item.iconColor}`}>
+                                                            <span className="material-symbols-outlined text-xs">{item.icon}</span>
                                                         </div>
-                                                        <div className="flex items-center gap-1 text-text-secondary bg-[#111722] px-3 py-1.5 rounded-full text-xs font-medium border border-white/5 max-w-[150px] truncate">
-                                                            <span className="material-symbols-outlined text-sm">location_on</span>
-                                                            <span className="truncate">{location.address}</span>
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <p className="text-sm text-gray-600 dark:text-slate-300 leading-snug">
+                                                                <strong className="text-gray-900 dark:text-white font-bold">{item.user}</strong> {item.action}
+                                                            </p>
+                                                            <p className="text-[11px] text-gray-400 font-medium uppercase">{item.timestamp}</p>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Activity Log */}
-                                            <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 flex flex-col flex-1 max-h-[600px] shadow-sm dark:shadow-none">
-                                                <div className="p-5 border-b border-gray-100 dark:border-[#111722] flex justify-between items-center">
-                                                    <h3 className="text-primary font-bold text-base">Real-time Activity</h3>
-                                                    <span className="material-symbols-outlined text-gray-400 dark:text-text-secondary text-sm animate-pulse">rss_feed</span>
-                                                </div>
-                                                <div className="p-4 overflow-y-auto custom-scrollbar flex flex-col gap-4 flex-1">
-                                                    {ACTIVITY_LOG.map((item) => (
-                                                        <div key={item.id} className="flex gap-3 items-start group">
-                                                            <div className={`mt-1 size-8 rounded-full flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ${item.iconColor}`}>
-                                                                <span className="material-symbols-outlined text-xs">{item.icon}</span>
-                                                            </div>
-                                                            <div className="flex flex-col gap-0.5">
-                                                                <p className="text-sm text-gray-600 dark:text-slate-300">
-                                                                    <strong className="text-gray-900 dark:text-white">{item.user}</strong> {item.action}
-                                                                </p>
-                                                                <p className="text-[11px] text-gray-400 dark:text-text-secondary">{item.timestamp}</p>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                ))}
                                             </div>
                                         </div>
                                     </div>
