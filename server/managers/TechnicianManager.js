@@ -5,18 +5,17 @@ class TechnicianManager {
         this.db = new Database('technicians');
     }
 
-    createTechnician(name, email, phone, serviceType, location, password, experience, addressDetails) {
+    async createTechnician(name, email, phone, serviceType, location, password, experience, addressDetails) {
         if (!name || !email || !password) {
             throw new Error("Missing required fields: name, email, or password");
         }
 
-        const existing = this.db.find('email', email);
+        const existing = await this.db.find('email', email);
         if (existing) {
             throw new Error('Technician already exists with this email');
         }
 
         const newTechnician = {
-            id: Date.now().toString(),
             name,
             email,
             phone,
@@ -27,24 +26,18 @@ class TechnicianManager {
             addressDetails, // { country, state, city, pincode }
             documents: {}, // key-value pairs of doc type and path
             rating: 0,
-            reviews: [],
-            status: 'available', // pending admin approval - TEMP: auto-approve
-            joinedAt: new Date().toISOString()
+            status: 'available',
+            created_at: new Date().toISOString()
         };
 
-        return this.db.add(newTechnician);
+        return await this.db.add(newTechnician);
     }
 
-    login(email, password) {
+    async login(email, password) {
         if (!email || !password) return null;
 
         const cleanEmail = email.trim().toLowerCase();
-        const allTechs = this.db.read();
-
-        // Detailed Debugging
-        console.log(`[TechnicianManager] Attempting login for: '${cleanEmail}'`);
-
-        const tech = allTechs.find(t => t.email && t.email.toLowerCase() === cleanEmail);
+        const tech = await this.db.find('email', cleanEmail);
 
         if (!tech) {
             console.log(`[TechnicianManager] User not found for email: ${cleanEmail}`);
@@ -61,8 +54,8 @@ class TechnicianManager {
         }
     }
 
-    getTechnician(id) {
-        const tech = this.db.find('id', id);
+    async getTechnician(id) {
+        const tech = await this.db.find('id', id);
         if (tech) {
             const { password, ...techWithoutPass } = tech;
             return techWithoutPass;
@@ -70,17 +63,14 @@ class TechnicianManager {
         return null;
     }
 
-    searchTechnicians(userLat, userLon, serviceType) {
-        // Convert inputs to floats/clean strings
+    async searchTechnicians(userLat, userLon, serviceType) {
         const lat = parseFloat(userLat);
         const lon = parseFloat(userLon);
         const type = (serviceType || '').toLowerCase().trim();
 
-        // 1. Get all techs (Case-Insensitive Service Match)
-        const allTechs = this.db.read();
+        const allTechs = await this.db.read();
         const techs = allTechs.filter(t => t.serviceType && t.serviceType.toLowerCase().trim() === type);
 
-        // 2. Filter by distance
         const nearbyTechs = techs.map(tech => {
             if (!tech.location || !tech.location.latitude || !tech.location.longitude) return null;
 
@@ -96,27 +86,20 @@ class TechnicianManager {
                 ...rest,
                 distance: parseFloat(dist.toFixed(1))
             };
-        }).filter(item => {
-            if (item === null) return false;
-            // Strict Radius: 2km
-            return item.distance <= 2.0;
-        });
+        }).filter(item => item !== null && item.distance <= 10.0); // Radius increased for testing
 
-        // 3. Enrich with Ratings (Real-time)
-        const enrichedTechs = this._enrichWithRatings(nearbyTechs);
-
-        // 4. Sort by distance
+        const enrichedTechs = await this._enrichWithRatings(nearbyTechs);
         return enrichedTechs.sort((a, b) => a.distance - b.distance);
     }
 
-    // Helper to inject real-time ratings from FeedbackManager
-    _enrichWithRatings(techs) {
+    async _enrichWithRatings(techs) {
         try {
             const FeedbackManager = require('./FeedbackManager');
             const feedbackManager = new FeedbackManager();
 
-            return techs.map(tech => {
-                const feedbacks = feedbackManager.getFeedbackForTechnician(tech.id);
+            const enriched = [];
+            for (const tech of techs) {
+                const feedbacks = await feedbackManager.getFeedbackForTechnician(tech.id);
                 let averageRating = 0;
 
                 if (feedbacks && feedbacks.length > 0) {
@@ -128,71 +111,67 @@ class TechnicianManager {
                     averageRating = parseFloat((total / feedbacks.length).toFixed(1));
                 }
 
-                return {
+                enriched.push({
                     ...tech,
-                    rating: averageRating, // Override DB value with real-time calc
+                    rating: averageRating,
                     reviewCount: feedbacks ? feedbacks.length : 0
-                };
-            });
+                });
+            }
+            return enriched;
         } catch (err) {
             console.error("[TechnicianManager] Enrich Ratings Error:", err);
-            return techs; // Fail graceful
+            return techs;
         }
     }
 
-    getAllTechnicians() {
-        const rawTechs = this.db.read().map(t => {
+    async getAllTechnicians() {
+        const all = await this.db.read();
+        const rawTechs = all.map(t => {
             const { password, ...rest } = t;
             return rest;
         });
-        return this._enrichWithRatings(rawTechs);
+        return await this._enrichWithRatings(rawTechs);
     }
 
-    findByService(serviceType) {
-        const rawTechs = this.db.findAll('serviceType', serviceType).map(t => {
+    async findByService(serviceType) {
+        const matches = await this.db.findAll('serviceType', serviceType);
+        const rawTechs = matches.map(t => {
             const { password, ...rest } = t;
             return rest;
         });
-        return this._enrichWithRatings(rawTechs);
+        return await this._enrichWithRatings(rawTechs);
     }
 
     calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Radius of the earth in km
+        const R = 6371;
         const dLat = this.deg2rad(lat2 - lat1);
         const dLon = this.deg2rad(lon2 - lon1);
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
             Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
             Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const d = R * c; // Distance in km
-        return d;
+        return R * c;
     }
 
-    deg2rad(deg) {
-        return deg * (Math.PI / 180);
+    deg2rad(deg) { return deg * (Math.PI / 180); }
+
+    async updateLocation(id, location) {
+        return await this.db.update('id', id, { location });
     }
 
-    updateLocation(id, location) {
-        // Ensure location has lat/lng if possible, or just save what is passed
-        return this.db.update('id', id, { location });
-    }
-
-    updateTechnicianDocuments(id, documents) {
-        const tech = this.db.find('id', id);
+    async updateTechnicianDocuments(id, documents) {
+        const tech = await this.db.find('id', id);
         if (!tech) return null;
-
         const updatedDocs = { ...tech.documents, ...documents };
-        return this.db.update('id', id, { documents: updatedDocs });
+        return await this.db.update('id', id, { documents: updatedDocs });
     }
 
-    updateStatus(id, status) {
-        return this.db.update('id', id, { status });
+    async updateStatus(id, status) {
+        return await this.db.update('id', id, { status });
     }
 
-    updateProfile(id, updates) {
-        // updates can contain: photo, password, etc.
-        const tech = this.db.find('id', id);
+    async updateProfile(id, updates) {
+        const tech = await this.db.find('id', id);
         if (!tech) return null;
 
         const { password, documents, ...rest } = updates;
@@ -203,19 +182,17 @@ class TechnicianManager {
             changes.documents = { ...tech.documents, photo: documents.photo };
         }
 
-        return this.db.update('id', id, changes);
+        return await this.db.update('id', id, changes);
     }
 
-    updateMembership(id, type) {
-        // type: 'free' | 'premium'
-        return this.db.update('id', id, { membership: type, membershipSince: new Date().toISOString() });
+    async updateMembership(id, type) {
+        return await this.db.update('id', id, {
+            membership: type,
+            membershipSince: new Date().toISOString()
+        });
     }
 
-    getOffers() {
-        // This is better handled by OfferManager, but we can provide a helper if needed.
-        // For now, let's assume OfferManager handles fetching.
-        return [];
-    }
+    getOffers() { return []; }
 }
 
 module.exports = TechnicianManager;

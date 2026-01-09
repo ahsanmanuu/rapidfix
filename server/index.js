@@ -97,18 +97,11 @@ const techUploads = upload.fields([
   { name: 'dl', maxCount: 1 }
 ]);
 
-app.post('/api/technicians/register', techUploads, (req, res) => {
+app.post('/api/technicians/register', techUploads, async (req, res) => {
   try {
     console.log('--- Register Request ---');
-    console.log('Body:', req.body);
-    console.log('Files:', req.files);
-
-    // Parse address details from body (formData makes everything strings)
-    // Actually, body-parser doesn't handle multipart. Multer does.
-    // req.body will contain text fields.
     const { name, email, phone, serviceType, location, password, experience, country, state, city, pincode } = req.body;
 
-    // Parse location if sent as string JSON
     let parsedLocation = location;
     if (typeof location === 'string') {
       try { parsedLocation = JSON.parse(location); } catch (e) { }
@@ -117,8 +110,7 @@ app.post('/api/technicians/register', techUploads, (req, res) => {
     const addressDetails = { country, state, city, pincode };
 
     // 1. Create Technician (Get ID)
-    const tech = technicianManager.createTechnician(name, email, phone, serviceType, parsedLocation, password, experience, addressDetails);
-    console.log('Created Tech ID:', tech.id);
+    const tech = await technicianManager.createTechnician(name, email, phone, serviceType, parsedLocation, password, experience, addressDetails);
 
     // 2. Handle Files
     const docPaths = {};
@@ -137,9 +129,7 @@ app.post('/api/technicians/register', techUploads, (req, res) => {
           const newPath = path.join(techDir, newFilename);
 
           fs.renameSync(oldPath, newPath);
-          // Store relative path URL
           docPaths[fieldname] = `/uploads/technicians/${tech.id}/${newFilename}`;
-          console.log(`Saved ${fieldname} to ${newPath}`);
         }
       };
 
@@ -149,18 +139,15 @@ app.post('/api/technicians/register', techUploads, (req, res) => {
       moveFile('dl');
     }
 
-    console.log('DocPaths:', docPaths);
-
     // 3. Update Technician with Doc Paths
-    const updatedTech = technicianManager.updateTechnicianDocuments(tech.id, docPaths);
-    console.log('Updated Tech:', updatedTech);
+    const updatedTech = await technicianManager.updateTechnicianDocuments(tech.id, docPaths);
 
     // 4. Save to Location Manager
     if (parsedLocation) {
-      locationManager.saveUserRealtimeLocation(tech.id, parsedLocation);
+      await locationManager.saveUserRealtimeLocation(tech.id, parsedLocation);
     }
 
-    res.json({ success: true, technician: updatedTech });
+    res.json({ success: true, technician: updatedTech || tech });
   } catch (error) {
     console.error('Register Error:', error);
     res.status(400).json({ success: false, error: error.message });
@@ -373,16 +360,11 @@ app.put('/api/users/:id', (req, res) => {
 // Old register route removed, replaced by Multer version above.
 // app.post('/api/technicians/register', ... ) replaced.
 
-app.post('/api/technicians/login', (req, res) => {
+app.post('/api/technicians/login', async (req, res) => {
   const { email, password } = req.body;
 
   console.log('--- Tech Login Request ---');
-  console.log('Email:', email);
-  console.log('Password:', password);
-
-  const technician = technicianManager.login(email, password);
-
-  console.log('Login Result:', technician ? 'Success' : 'Failed');
+  const technician = await technicianManager.login(email, password);
 
   if (technician) {
     // Create Session
