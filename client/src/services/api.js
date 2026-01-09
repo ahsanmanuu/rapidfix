@@ -20,19 +20,20 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        const isLoginRequest = error.config?.url?.includes('/login');
+        // Robust check for login requests - don't redirect if we're actually TRYING to log in
+        const isLoginRequest = error.config?.url?.includes('/login') ||
+            window.location.pathname.includes('/login');
 
         if (error.response && error.response.status === 401 && !isLoginRequest) {
-            // Token expired or invalid, but only redirect if it's NOT a login attempt
+            console.log('🔒 401 Unauthorized detected. Redirecting to context-aware login...');
+
             localStorage.removeItem('user');
             localStorage.removeItem('sessionToken');
 
-            // Redirect based on current context
-            const path = window.location.pathname;
-            if (path.includes('/admin')) {
+            const currentPath = window.location.pathname;
+
+            if (currentPath.includes('/admin')) {
                 window.location.href = '/admin/login';
-            } else if (path.includes('/technician')) {
-                window.location.href = '/login'; // Technicians usually share login or have their own
             } else {
                 window.location.href = '/login';
             }

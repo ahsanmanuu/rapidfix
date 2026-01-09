@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/neu-styles.css';
@@ -11,6 +11,12 @@ const AdminLogin = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // Clear any stale local user data on mount to avoid 401 traps
+    useEffect(() => {
+        localStorage.removeItem('user');
+        localStorage.removeItem('sessionToken');
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
