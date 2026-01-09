@@ -153,8 +153,6 @@ const AdminDashboard = () => {
     };
 
     // Data State
-
-    // Data State
     const [stats, setStats] = useState(null);
     const [technicians, setTechnicians] = useState([]);
     const [users, setUsers] = useState([]);
@@ -268,10 +266,6 @@ const AdminDashboard = () => {
             socket.off('job_status_updated', handleJobUpdate);
         };
     }, [socket, selectedUser, activeTab]);
-
-
-
-
 
     // Derived Stats for UI
     const dashboardStats = stats ? [
@@ -445,162 +439,163 @@ const AdminDashboard = () => {
                                             {/* Pie Chart Card */}
                                             <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 p-6 shadow-lg">
                                                 <h3 className="text-emerald-600 font-black uppercase tracking-tighter text-lg italic mb-4">Job Service Allocation</h3>
-                                                <div className="relative size-32">
-                                                    <ResponsiveContainer width="100%" height="100%">
-                                                        <PieChart>
-                                                            <Pie data={JOB_DISTRIBUTION} cx="50%" cy="50%" innerRadius={35} outerRadius={45} paddingAngle={5} dataKey="value">
-                                                                {JOB_DISTRIBUTION.map((entry, index) => (
-                                                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                                                ))}
-                                                            </Pie>
-                                                        </PieChart>
-                                                    </ResponsiveContainer>
-                                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                        <span className="text-lg font-bold text-gray-900 dark:text-white">98%</span>
-                                                        <span className="text-[10px] text-gray-500 dark:text-slate-400">Rate</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-col gap-3 flex-1 min-w-[200px]">
-                                                    {JOB_DISTRIBUTION.map((item) => (
-                                                        <div key={item.name} className="flex items-center justify-between border-b border-gray-50 dark:border-white/5 pb-2 last:border-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="size-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
-                                                                <span className="text-sm text-gray-600 dark:text-slate-400 font-medium">{item.name}</span>
-                                                            </div>
-                                                            <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value}%</span>
+                                                <div className="flex flex-col md:flex-row items-center gap-8">
+                                                    <div className="relative size-32">
+                                                        <ResponsiveContainer width="100%" height="100%">
+                                                            <PieChart>
+                                                                <Pie data={JOB_DISTRIBUTION} cx="50%" cy="50%" innerRadius={35} outerRadius={45} paddingAngle={5} dataKey="value">
+                                                                    {JOB_DISTRIBUTION.map((entry, index) => (
+                                                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                                                    ))}
+                                                                </Pie>
+                                                            </PieChart>
+                                                        </ResponsiveContainer>
+                                                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                                            <span className="text-lg font-bold text-gray-900 dark:text-white">98%</span>
+                                                            <span className="text-[10px] text-gray-500 dark:text-slate-400">Rate</span>
                                                         </div>
-                                                    ))}
+                                                    </div>
+                                                    <div className="flex flex-col gap-3 flex-1 min-w-[200px]">
+                                                        {JOB_DISTRIBUTION.map((item) => (
+                                                            <div key={item.name} className="flex items-center justify-between border-b border-gray-50 dark:border-white/5 pb-2 last:border-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="size-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
+                                                                    <span className="text-sm text-gray-600 dark:text-slate-400 font-medium">{item.name}</span>
+                                                                </div>
+                                                                <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value}%</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Activity Log - Correctly inside the xl grid as the 3rd column */}
-                                    <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 flex flex-col shadow-lg overflow-hidden h-fit">
-                                        <div className="p-5 border-b-2 border-red-600/20 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
-                                            <h3 className="text-red-600 font-black uppercase tracking-tighter text-lg italic">Platform Monitoring</h3>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-black text-red-600 uppercase tracking-widest animate-pulse">Live Feed</span>
-                                                <span className="material-symbols-outlined text-red-600 text-sm animate-pulse">sensors</span>
+                                        {/* Activity Log - Correctly inside the xl grid as the 3rd column */}
+                                        <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 flex flex-col shadow-lg overflow-hidden h-fit">
+                                            <div className="p-5 border-b-2 border-red-600/20 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
+                                                <h3 className="text-red-600 font-black uppercase tracking-tighter text-lg italic">Platform Monitoring</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-black text-red-600 uppercase tracking-widest animate-pulse">Live Feed</span>
+                                                    <span className="material-symbols-outlined text-red-600 text-sm animate-pulse">sensors</span>
+                                                </div>
+                                            </div>
+                                            <div className="p-0 overflow-y-auto custom-scrollbar flex flex-col max-h-[750px] min-h-[400px]">
+                                                {ACTIVITY_LOG.map((item) => (
+                                                    <div key={item.id} className="flex gap-4 items-center p-4 border-b border-slate-100 dark:border-white/5 hover:bg-red-50/30 dark:hover:bg-red-900/10 transition-colors">
+                                                        <div className={`size-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${item.iconColor.replace('text-', 'bg-').replace('600', '100').replace('dark:', '')} dark:bg-slate-800`}>
+                                                            <span className={`material-symbols-outlined text-xl ${item.iconColor}`}>{item.icon}</span>
+                                                        </div>
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <p className="text-sm text-slate-900 dark:text-white leading-tight font-black pl-2 border-l-2 border-red-600">
+                                                                <span className="text-red-600">{item.user}</span> {item.action}
+                                                            </p>
+                                                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-2">{item.timestamp}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
-                                        <div className="p-0 overflow-y-auto custom-scrollbar flex flex-col max-h-[750px] min-h-[400px]">
-                                            {ACTIVITY_LOG.map((item) => (
-                                                <div key={item.id} className="flex gap-4 items-center p-4 border-b border-slate-100 dark:border-white/5 hover:bg-red-50/30 dark:hover:bg-red-900/10 transition-colors">
-                                                    <div className={`size-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${item.iconColor.replace('text-', 'bg-').replace('600', '100').replace('dark:', '')} dark:bg-slate-800`}>
-                                                        <span className={`material-symbols-outlined text-xl ${item.iconColor}`}>{item.icon}</span>
-                                                    </div>
-                                                    <div className="flex flex-col gap-0.5">
-                                                        <p className="text-sm text-slate-900 dark:text-white leading-tight font-black pl-2 border-l-2 border-red-600">
-                                                            <span className="text-red-600">{item.user}</span> {item.action}
-                                                        </p>
-                                                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-2">{item.timestamp}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                    </div>
+                                </>
+                            )}
+
+                            {/* USERS TAB (New Implementation) */}
+                            {activeTab === 'users' && (
+                                <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
+                                    <UserHeader />
+                                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
+                                        <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
+                                            <Filters />
+                                            <UserTable
+                                                users={users}
+                                                selectedUserId={selectedUser?.id || null}
+                                                onSelectUser={handleSelectUser}
+                                                onBanUser={handleBanUser}
+                                                onChangeMembership={handleChangeMembership}
+                                            />
                                         </div>
                                     </div>
-                                </div>
-                        </>
-                    )}
 
-                    {/* USERS TAB (New Implementation) */}
-                    {activeTab === 'users' && (
-                        <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
-                            <UserHeader />
-                            <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
-                                <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
-                                    <Filters />
-                                    <UserTable
-                                        users={users}
-                                        selectedUserId={selectedUser?.id || null}
-                                        onSelectUser={handleSelectUser}
+                                    {/* Detail Overlay */}
+                                    {isDrawerOpen && (
+                                        <div
+                                            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 sm:hidden"
+                                            onClick={handleCloseDrawer}
+                                        />
+                                    )}
+
+                                    <UserDrawer
+                                        user={selectedUser}
+                                        onClose={handleCloseDrawer}
                                         onBanUser={handleBanUser}
                                         onChangeMembership={handleChangeMembership}
                                     />
                                 </div>
-                            </div>
-
-                            {/* Detail Overlay */}
-                            {isDrawerOpen && (
-                                <div
-                                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 sm:hidden"
-                                    onClick={handleCloseDrawer}
-                                />
                             )}
 
-                            <UserDrawer
-                                user={selectedUser}
-                                onClose={handleCloseDrawer}
-                                onBanUser={handleBanUser}
-                                onChangeMembership={handleChangeMembership}
-                            />
-                        </div>
-                    )}
-
-                    {/* JOBS TAB (New Professional Implementation) */}
-                    {activeTab === 'jobs' && (
-                        <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
-                            <JobHeader
-                                activeFilter={activeJobFilter}
-                                setActiveFilter={setActiveJobFilter}
-                            />
-                            <div className="flex-1 overflow-y-auto overflow-x-hidden relative custom-scrollbar">
-                                <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-2">
-                                    <JobStats jobs={jobs} />
-                                    <JobTable
-                                        jobs={jobs}
+                            {/* JOBS TAB (New Professional Implementation) */}
+                            {activeTab === 'jobs' && (
+                                <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
+                                    <JobHeader
                                         activeFilter={activeJobFilter}
-                                        onSelectJob={handleSelectJob}
-                                        selectedJobId={selectedJob?.id}
+                                        setActiveFilter={setActiveJobFilter}
+                                    />
+                                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative custom-scrollbar">
+                                        <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-2">
+                                            <JobStats jobs={jobs} />
+                                            <JobTable
+                                                jobs={jobs}
+                                                activeFilter={activeJobFilter}
+                                                onSelectJob={handleSelectJob}
+                                                selectedJobId={selectedJob?.id}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Drawer Backdrop */}
+                                    {isJobDrawerOpen && (
+                                        <div
+                                            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
+                                            onClick={handleCloseJobDrawer}
+                                        />
+                                    )}
+
+                                    <JobDrawer
+                                        job={selectedJob}
+                                        onClose={handleCloseJobDrawer}
                                     />
                                 </div>
-                            </div>
-
-                            {/* Drawer Backdrop */}
-                            {isJobDrawerOpen && (
-                                <div
-                                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
-                                    onClick={handleCloseJobDrawer}
-                                />
                             )}
 
-                            <JobDrawer
-                                job={selectedJob}
-                                onClose={handleCloseJobDrawer}
-                            />
-                        </div>
-                    )}
-
-                    {/* OTHER TABS (Placeholder to ensure switching works) */}
-                    {activeTab !== 'dashboard' && activeTab !== 'users' && activeTab !== 'jobs' && (
-                        <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 shadow-sm">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 italic">
-                                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Module Loaded
-                            </h3>
-                            <p className="text-gray-500 dark:text-text-secondary">
-                                Data for {activeTab} is ready (Technicians: {technicians.length}, Users: {users.length}, Jobs: {jobs.length}).
-                                <br />
-                                <span className="text-xs opacity-50">Refactoring required to fully migrate table views to new design system.</span>
-                            </p>
-                            <div className="mt-8 overflow-x-auto">
-                                {/* Simple table dump for verification */}
-                                <table className="w-full text-left text-sm text-gray-500 dark:text-text-secondary">
-                                    <thead className="bg-gray-50 dark:bg-[#111722] text-xs uppercase">
-                                        <tr><th className="px-4 py-3">ID</th><th className="px-4 py-3">Details</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        {(activeTab === 'technicians' ? technicians : activeTab === 'users' ? users : jobs).slice(0, 10).map((item, i) => (
-                                            <tr key={i} className="border-b border-gray-100 dark:border-[#111722]">
-                                                <td className="px-4 py-3 font-mono text-xs">{item.id?.substring(0, 8)}</td>
-                                                <td className="px-4 py-3">{JSON.stringify(item).substring(0, 100)}...</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                            {/* OTHER TABS (Placeholder to ensure switching works) */}
+                            {activeTab !== 'dashboard' && activeTab !== 'users' && activeTab !== 'jobs' && (
+                                <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 shadow-sm">
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 italic">
+                                        {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Module Loaded
+                                    </h3>
+                                    <p className="text-gray-500 dark:text-text-secondary">
+                                        Data for {activeTab} is ready (Technicians: {technicians.length}, Users: {users.length}, Jobs: {jobs.length}).
+                                        <br />
+                                        <span className="text-xs opacity-50">Refactoring required to fully migrate table views to new design system.</span>
+                                    </p>
+                                    <div className="mt-8 overflow-x-auto">
+                                        {/* Simple table dump for verification */}
+                                        <table className="w-full text-left text-sm text-gray-500 dark:text-text-secondary">
+                                            <thead className="bg-gray-50 dark:bg-[#111722] text-xs uppercase">
+                                                <tr><th className="px-4 py-3">ID</th><th className="px-4 py-3">Details</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                {(activeTab === 'technicians' ? technicians : activeTab === 'users' ? users : jobs).slice(0, 10).map((item, i) => (
+                                                    <tr key={i} className="border-b border-gray-100 dark:border-[#111722]">
+                                                        <td className="px-4 py-3 font-mono text-xs">{item.id?.substring(0, 8)}</td>
+                                                        <td className="px-4 py-3">{JSON.stringify(item).substring(0, 100)}...</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             )}
-
                         </div>
                     )}
                 </main>
