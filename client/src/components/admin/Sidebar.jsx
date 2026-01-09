@@ -13,7 +13,7 @@ const navItems = [
 
 export const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }) => {
     return (
-        <aside className={`fixed inset-y-0 left-0 z-[60] w-64 border-r border-gray-200 dark:border-[#232f48] bg-white dark:bg-[#111722] flex flex-col h-full overflow-y-auto custom-scrollbar transition-all duration-300 lg:static lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <aside className={`fixed inset-y-0 left-0 z-[60] w-64 border-r border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full overflow-y-auto custom-scrollbar transition-all duration-300 lg:static lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
             <div className="flex flex-col h-full p-4 justify-between">
                 <div className="flex flex-col gap-6">
                     <div className="flex items-center justify-between px-2">

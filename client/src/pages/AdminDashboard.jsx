@@ -282,7 +282,7 @@ const AdminDashboard = () => {
     ] : [];
 
     return (
-        <div className={`flex h-screen overflow-hidden font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors duration-300`}>
+        <div className={`flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300`}>
             {/* Mobile Sidebar Backdrop */}
             <div
                 className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 lg:hidden ${sidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
@@ -304,9 +304,14 @@ const AdminDashboard = () => {
                     onLogout={handleLogout}
                 />
 
-                <main className="flex-1 overflow-y-auto p-4 md:p-8 z-0 relative custom-scrollbar">
+                <main className="flex-1 overflow-y-auto p-4 md:p-8 relative custom-scrollbar bg-slate-50 dark:bg-slate-950">
                     {loading && activeTab === 'dashboard' ? (
-                        <div className="flex items-center justify-center h-full text-primary">Loading Admin Console...</div>
+                        <div className="flex items-center justify-center h-full text-blue-600 font-bold text-xl">
+                            <div className="flex flex-col items-center gap-4">
+                                <span className="material-symbols-outlined animate-spin text-4xl">sync</span>
+                                Loading Admin Console...
+                            </div>
+                        </div>
                     ) : (
                         <div className="max-w-[1400px] mx-auto flex flex-col gap-6">
 
@@ -320,8 +325,8 @@ const AdminDashboard = () => {
                                     </div>
 
                                     <div className="flex flex-col gap-1">
-                                        <p className="text-2xl md:text-3xl font-black leading-tight tracking-tight text-primary">Good Morning, Admin</p>
-                                        <p className="text-gray-500 dark:text-text-secondary text-base font-normal">Here's what's happening with your platform today.</p>
+                                        <p className="text-2xl md:text-3xl font-black leading-tight tracking-tight text-blue-600 dark:text-blue-500">Good Morning, Admin</p>
+                                        <p className="text-gray-600 dark:text-slate-400 text-base font-normal">Here's what's happening with your platform today.</p>
                                     </div>
 
                                     {/* Stats Grid */}
@@ -338,8 +343,8 @@ const AdminDashboard = () => {
                                             <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 flex flex-col h-[400px] shadow-sm dark:shadow-none">
                                                 <div className="flex justify-between items-center mb-6">
                                                     <div>
-                                                        <h3 className="text-primary text-base font-bold">User Trends</h3>
-                                                        <p className="text-gray-500 dark:text-text-secondary text-sm">Growth over last 30 days</p>
+                                                        <h3 className="text-blue-600 font-bold">User Trends</h3>
+                                                        <p className="text-gray-500 dark:text-slate-400 text-sm">Growth over last 30 days</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex-1 w-full">

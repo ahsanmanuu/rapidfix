@@ -30,7 +30,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen, activeTab, onLogout }) => 
     }, []);
 
     return (
-        <header className="sticky top-0 z-40 flex-shrink-0 flex items-center justify-between border-b border-gray-200/80 dark:border-[#232f48]/80 bg-white/80 dark:bg-[#111722]/80 backdrop-blur-md px-6 py-4 transition-colors duration-300">
+        <header className="sticky top-0 z-40 flex-shrink-0 flex items-center justify-between border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 transition-colors duration-300">
             {/* ... (sidebar toggle and search) ... */}
             <div className="flex items-center gap-4 lg:hidden">
                 <button
