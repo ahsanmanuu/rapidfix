@@ -5,6 +5,41 @@ class TechnicianManager {
         this.db = new Database('technicians');
     }
 
+    // Helper to map DB snake_case to App camelCase
+    _mapFromDb(tech) {
+        if (!tech) return null;
+        const { service_type, address_details, review_count, membership_since, joined_at, updated_at, documents, ...rest } = tech;
+        return {
+            ...rest,
+            serviceType: service_type,
+            addressDetails: address_details,
+            reviewCount: review_count,
+            membershipSince: membership_since,
+            joinedAt: joined_at,
+            updatedAt: updated_at,
+            documents: documents || {} // Ensure documents is object
+        };
+    }
+
+    // Helper to map App camelCase to DB snake_case
+    _mapToDb(tech) {
+        if (!tech) return null;
+        const { serviceType, addressDetails, reviewCount, membershipSince, joinedAt, updatedAt, documents, id, ...rest } = tech;
+
+        // Only include defined fields
+        const mapped = { ...rest };
+        if (serviceType !== undefined) mapped.service_type = serviceType;
+        if (addressDetails !== undefined) mapped.address_details = addressDetails;
+        if (reviewCount !== undefined) mapped.review_count = reviewCount;
+        if (membershipSince !== undefined) mapped.membership_since = membershipSince;
+        if (joinedAt !== undefined) mapped.joined_at = joinedAt;
+        if (updatedAt !== undefined) mapped.updated_at = updatedAt;
+        if (documents !== undefined) mapped.documents = documents;
+        if (id !== undefined) mapped.id = id;
+
+        return mapped;
+    }
+
     async createTechnician(name, email, phone, serviceType, location, password, experience, addressDetails) {
         if (!name || !email || !password) {
             throw new Error("Missing required fields: name, email, or password");
@@ -19,18 +54,20 @@ class TechnicianManager {
             name,
             email,
             phone,
-            serviceType,
-            location, // { latitude, longitude }
-            password, // In a real app, hash this!
+            location,
+            password,
             experience,
-            addressDetails, // { country, state, city, pincode }
-            documents: {}, // key-value pairs of doc type and path
             rating: 0,
             status: 'available',
-            created_at: new Date().toISOString()
+            // Mapped fields
+            service_type: serviceType,
+            address_details: addressDetails,
+            documents: {},
+            joined_at: new Date().toISOString()
         };
 
-        return await this.db.add(newTechnician);
+        const created = await this.db.add(newTechnician);
+        return this._mapFromDb(created);
     }
 
     async login(email, password) {
@@ -46,7 +83,8 @@ class TechnicianManager {
 
         if (tech.password === password) {
             console.log(`[TechnicianManager] Login successful for: ${tech.name}`);
-            const { password, ...techWithoutPass } = tech;
+            const appTech = this._mapFromDb(tech);
+            const { password, ...techWithoutPass } = appTech;
             return techWithoutPass;
         } else {
             console.log(`[TechnicianManager] Password mismatch for: ${tech.name}`);
@@ -57,7 +95,8 @@ class TechnicianManager {
     async getTechnician(id) {
         const tech = await this.db.find('id', id);
         if (tech) {
-            const { password, ...techWithoutPass } = tech;
+            const appTech = this._mapFromDb(tech);
+            const { password, ...techWithoutPass } = appTech;
             return techWithoutPass;
         }
         return null;
@@ -68,9 +107,15 @@ class TechnicianManager {
         const lon = parseFloat(userLon);
         const type = (serviceType || '').toLowerCase().trim();
 
+        // 1. Get all raw techs
         const allTechs = await this.db.read();
-        const techs = allTechs.filter(t => t.serviceType && t.serviceType.toLowerCase().trim() === type);
 
+        // 2. Map and Filter
+        const techs = allTechs
+            .map(t => this._mapFromDb(t))
+            .filter(t => t.serviceType && t.serviceType.toLowerCase().trim() === type);
+
+        // 3. Filter by distance
         const nearbyTechs = techs.map(tech => {
             if (!tech.location || !tech.location.latitude || !tech.location.longitude) return null;
 
@@ -127,16 +172,21 @@ class TechnicianManager {
     async getAllTechnicians() {
         const all = await this.db.read();
         const rawTechs = all.map(t => {
-            const { password, ...rest } = t;
+            const appTech = this._mapFromDb(t);
+            const { password, ...rest } = appTech;
             return rest;
         });
         return await this._enrichWithRatings(rawTechs);
     }
 
     async findByService(serviceType) {
-        const matches = await this.db.findAll('serviceType', serviceType);
+        // Warning: findAll might query by snake_case field if we pass 'serviceType'
+        // But Database.js (Supabase) won't know mapping. 
+        // We should query by 'service_type'
+        const matches = await this.db.findAll('service_type', serviceType);
         const rawTechs = matches.map(t => {
-            const { password, ...rest } = t;
+            const appTech = this._mapFromDb(t);
+            const { password, ...rest } = appTech;
             return rest;
         });
         return await this._enrichWithRatings(rawTechs);
@@ -156,40 +206,60 @@ class TechnicianManager {
     deg2rad(deg) { return deg * (Math.PI / 180); }
 
     async updateLocation(id, location) {
+        // Location is same in DB
         return await this.db.update('id', id, { location });
     }
 
     async updateTechnicianDocuments(id, documents) {
-        const tech = await this.db.find('id', id);
-        if (!tech) return null;
-        const updatedDocs = { ...tech.documents, ...documents };
-        return await this.db.update('id', id, { documents: updatedDocs });
+        const techRaw = await this.db.find('id', id);
+        if (!techRaw) return null;
+
+        // Need to handle existing docs which might be in DB format
+        // But since we just want to merge, we can read, merge, write.
+        const currentDocs = techRaw.documents || {};
+        const updatedDocs = { ...currentDocs, ...documents };
+
+        // Write back
+        const result = await this.db.update('id', id, { documents: updatedDocs });
+        return this._mapFromDb(result);
     }
 
     async updateStatus(id, status) {
-        return await this.db.update('id', id, { status });
+        const result = await this.db.update('id', id, { status });
+        return this._mapFromDb(result);
     }
 
     async updateProfile(id, updates) {
-        const tech = await this.db.find('id', id);
-        if (!tech) return null;
+        const techRaw = await this.db.find('id', id);
+        if (!techRaw) return null;
 
-        const { password, documents, ...rest } = updates;
-        const changes = {};
+        // Map updates to DB format
+        // This is tricky because updates uses camelCase
+        const dbUpdates = this._mapToDb(updates);
 
-        if (password) changes.password = password;
-        if (documents && documents.photo) {
-            changes.documents = { ...tech.documents, photo: documents.photo };
+        // Handle nested documents special case if needed, but _mapToDb handles top level
+        // Merge strategy? Database.js update usually merges top-level fields.
+        // If updates contains documents, it replaces.
+
+        // Special case for photo in documents if passed separately?
+        // Current logic: 
+        // if (documents && documents.photo) { changes.documents = { ...tech.documents, photo: documents.photo }; }
+
+        const currentDocs = techRaw.documents || {};
+        if (updates.documents) {
+            dbUpdates.documents = { ...currentDocs, ...updates.documents };
         }
 
-        return await this.db.update('id', id, changes);
+        const result = await this.db.update('id', id, dbUpdates);
+        return this._mapFromDb(result);
     }
 
     async updateMembership(id, type) {
-        return await this.db.update('id', id, {
+        const result = await this.db.update('id', id, {
             membership: type,
-            membershipSince: new Date().toISOString()
+            membership_since: new Date().toISOString()
         });
+        return this._mapFromDb(result);
     }
 
     getOffers() { return []; }
