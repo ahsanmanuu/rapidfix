@@ -76,7 +76,18 @@ const offerManager = new OfferManager();
 const NotificationManager = require('./managers/NotificationManager');
 const notificationManager = new NotificationManager();
 
-// ... (Socket.io code skipped for brevity, keeping existing) ...
+
+// VERSION CHECK - Verify Render has latest code
+app.get('/api/version', (req, res) => {
+  res.json({
+    version: '2.0-SUPABASE-WITH-ASYNC',
+    deployed: new Date().toISOString(),
+    config: {
+      USE_SUPABASE: process.env.USE_SUPABASE || 'NOT_SET',
+      database_type: process.env.USE_SUPABASE === 'true' ? 'Supabase' : 'JSON'
+    }
+  });
+});
 
 // --- Technician Routes ---
 const techUploads = upload.fields([
