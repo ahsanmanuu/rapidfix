@@ -92,7 +92,7 @@ class FinanceManager {
             'SYSTEM',
             'debit',
             amount,
-            `Premium Membership Purchase(30 Days)`
+            'Premium Membership Purchase(30 Days)'
         );
 
         if (transaction) {
