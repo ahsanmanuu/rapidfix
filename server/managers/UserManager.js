@@ -12,7 +12,6 @@ class UserManager {
         }
 
         const newUser = {
-            id: Date.now().toString(),
             name,
             email,
             phone,
@@ -22,7 +21,7 @@ class UserManager {
             photo: null, // Default photo
             status: 'Active', // Default status
             membership: 'Free', // Default tier
-            createdAt: new Date().toISOString()
+            created_at: new Date().toISOString()
         };
 
         return await this.db.add(newUser);
