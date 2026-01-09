@@ -1,22 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFinanceData } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const Wallet = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState(null);
-    const [finance, setFinance] = useState({ balance: 0, transactions: [] });
+    const { user } = useAuth();
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (!storedUser) {
+        if (!user) {
             navigate('/login');
         } else {
-            const u = JSON.parse(storedUser);
-            setUser(u);
-            fetchFinance(u.id);
+            fetchFinance(user.id);
         }
-    }, [navigate]);
+    }, [user, navigate]);
 
     const fetchFinance = async (userId) => {
         try {

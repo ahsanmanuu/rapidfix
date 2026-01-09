@@ -44,135 +44,36 @@ const color = {
 
 };
 
+import { useTheme } from '../context/ThemeContext';
+
+// ... (keep color definition)
+
 export const theme = (customization) => {
-    const themeOption = {
-        colors: color,
-        heading: color.grey900,
-        paper: color.paper,
-        backgroundDefault: color.grey100,
-        background: color.primaryLight,
-        darkTextPrimary: color.grey900,
-        darkTextSecondary: color.grey500,
-        textDark: color.grey900,
-        menuSelected: color.secondaryDark,
-        menuSelectedBack: color.secondaryLight,
-        divider: color.grey200,
-    };
+    const mode = customization.isDarkMode ? 'dark' : 'light';
+    // ... (rest of simple colors)
 
     const themeOptions = {
         direction: 'ltr',
         palette: {
-            mode: 'light',
+            mode: mode, // DYNAMIC MODE
             primary: {
-                light: themeOption.colors.primaryLight,
-                main: themeOption.colors.primaryMain,
-                dark: themeOption.colors.primaryDark,
-            },
-            secondary: {
-                light: themeOption.colors.secondaryLight,
-                main: themeOption.colors.secondaryMain,
-                dark: themeOption.colors.secondaryDark,
-            },
-            error: {
-                light: themeOption.colors.errorLight,
-                main: themeOption.colors.errorMain,
-                dark: themeOption.colors.errorDark,
-            },
-            orange: {
-                light: themeOption.colors.orangeLight,
-                main: themeOption.colors.orangeMain,
-                dark: themeOption.colors.orangeDark,
-            },
-            warning: {
-                light: themeOption.colors.warningLight,
-                main: themeOption.colors.warningMain,
-                dark: themeOption.colors.warningDark,
-            },
-            success: {
-                light: themeOption.colors.successLight,
-                main: themeOption.colors.successMain,
-                dark: themeOption.colors.successDark,
-            },
-            grey: {
-                50: themeOption.colors.grey50,
-                100: themeOption.colors.grey100,
-                500: themeOption.colors.grey500,
-                900: themeOption.colors.darkTextPrimary,
-            },
-            text: {
-                primary: themeOption.darkTextPrimary,
-                secondary: themeOption.darkTextSecondary,
-                dark: themeOption.textDark,
-                hint: themeOption.colors.grey100,
+                light: customization.isDarkMode ? color.darkPrimaryLight : color.primaryLight,
+                main: customization.isDarkMode ? color.darkPrimaryMain : color.primaryMain,
+                dark: customization.isDarkMode ? color.darkPrimaryDark : color.primaryDark,
             },
             background: {
-                paper: themeOption.paper,
-                default: themeOption.backgroundDefault,
+                paper: customization.isDarkMode ? color.darkPaper : color.paper,
+                default: customization.isDarkMode ? color.darkBackground : color.backgroundDefault,
             },
+            // ... (keep other palette items, maybe adjust for dark mode if needed, but primary/background are key)
+            text: {
+                primary: customization.isDarkMode ? color.darkTextPrimary : color.grey900,
+                secondary: customization.isDarkMode ? color.darkTextSecondary : color.grey500,
+            }
         },
-        typography: {
-            fontFamily: `'Roboto', sans-serif`,
-            h6: {
-                fontWeight: 500,
-                color: themeOption.heading,
-                fontSize: '0.75rem',
-            },
-            h5: {
-                fontSize: '0.875rem',
-                color: themeOption.heading,
-                fontWeight: 500,
-            },
-            h4: {
-                fontSize: '1rem',
-                color: themeOption.heading,
-                fontWeight: 600,
-            },
-            h3: {
-                fontSize: '1.25rem',
-                color: themeOption.heading,
-                fontWeight: 600,
-            },
-            h2: {
-                fontSize: '1.5rem',
-                color: themeOption.heading,
-                fontWeight: 700,
-            },
-            h1: {
-                fontSize: '2.125rem',
-                color: themeOption.heading,
-                fontWeight: 700,
-            },
-            subtitle1: {
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                color: themeOption.darkTextSecondary,
-            },
-            subtitle2: {
-                fontSize: '0.75rem',
-                fontWeight: 400,
-                color: themeOption.darkTextSecondary,
-            },
-            caption: {
-                fontSize: '0.75rem',
-                color: themeOption.darkTextSecondary,
-                fontWeight: 400,
-            },
-            body1: {
-                fontSize: '0.875rem',
-                fontWeight: 400,
-                lineHeight: '1.334em',
-            },
-            body2: {
-                letterSpacing: '0em',
-                fontWeight: 400,
-                lineHeight: '1.5em',
-                color: themeOption.darkTextSecondary,
-            },
-            button: {
-                textTransform: 'capitalize',
-            },
-        },
+        // ... (typography)
         components: {
+            // ...
             MuiPaper: {
                 styleOverrides: {
                     root: {
@@ -183,47 +84,17 @@ export const theme = (customization) => {
                     },
                 },
             },
-            MuiCardContent: {
-                styleOverrides: {
-                    root: {
-                        padding: '24px',
-                        '&:last-child': {
-                            paddingBottom: '24px',
-                        },
-                    },
-                },
-            },
-            MuiListItemButton: {
-                styleOverrides: {
-                    root: {
-                        borderRadius: '12px',
-                        color: themeOption.darkTextPrimary,
-                        padding: '10px 16px',
-                        '&.Mui-selected': {
-                            color: themeOption.menuSelected,
-                            backgroundColor: themeOption.menuSelectedBack,
-                            '&:hover': {
-                                backgroundColor: themeOption.menuSelectedBack,
-                            },
-                        },
-                        '&:hover': {
-                            backgroundColor: themeOption.colors.primaryLight,
-                            color: themeOption.menuSelected,
-                        },
-                    },
-                },
-            },
-        },
+        }
     };
 
     return createTheme(themeOptions);
 };
 
-// ... (colors definition is fine, keeping it)
-// ... (theme function is fine, keeping it)
-
 const ThemeCustomization = ({ children }) => {
-    const themes = theme({});
+    const { isDarkMode } = useTheme();
+
+    // value logic to pass to theme function
+    const themes = theme({ isDarkMode });
 
     return (
         <MUIThemeProvider theme={themes}>

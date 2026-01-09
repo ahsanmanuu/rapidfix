@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/neu-styles.css';
+import { useAuth } from '../context/AuthContext';
 
-const AdminLogin = ({ setUser }) => {
+const AdminLogin = () => {
+    const { setUser } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -19,10 +21,8 @@ const AdminLogin = ({ setUser }) => {
             const res = await api.post('/admin/login', { email, password });
             if (res.data.success) {
                 const adminUser = { ...res.data.admin, role: 'admin' };
-                localStorage.setItem('user', JSON.stringify(adminUser));
-                localStorage.setItem('sessionToken', 'dummy-admin-token');
-
-                if (setUser) setUser(adminUser);
+                // Use actual session token from backend
+                setUser(adminUser, res.data.sessionToken);
 
                 navigate('/admin-dashboard');
             }

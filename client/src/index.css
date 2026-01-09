@@ -55,33 +55,30 @@ button {
   padding: 0 2rem;
 }
 
-/* Scrollbar */
-/* Scrollbar - High Visibility */
 ::-webkit-scrollbar {
-  width: 12px;
-  /* Slightly wider for better usability */
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  /* Slate 100 - Distinct track */
-  border-radius: 6px;
+  background: #fef2f2;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #64748b;
-  /* Slate 500 - Visible thumb */
-  border-radius: 6px;
-  border: 3px solid #f1f5f9;
-  /* Creates a nice padding effect */
+  background: #dc2626;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-  /* Slate 600 - Darker on hover */
+  background: #b91c1c;
 }
 
 ::selection {
+  background: var(--primary);
+  color: white;
+}
+
+::-moz-selection {
   background: var(--primary);
   color: white;
 }

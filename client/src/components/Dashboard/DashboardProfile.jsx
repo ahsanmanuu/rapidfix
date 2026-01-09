@@ -13,8 +13,10 @@ import {
 } from '@mui/material';
 import { Person, Email, Phone, Lock, Save, CameraAlt, LocationOn } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { useAuth } from '../../context/AuthContext';
 
-const DashboardProfile = ({ user, setUser }) => {
+const DashboardProfile = () => {
+    const { user, updateUser } = useAuth();
     const theme = useTheme();
     const [formData, setFormData] = useState({
         name: user.name,
@@ -35,8 +37,8 @@ const DashboardProfile = ({ user, setUser }) => {
             if (Object.keys(updates).length > 0) {
                 const res = await api.put(`/users/${user.id}`, updates);
                 if (res.data.success) {
-                    alert('Profile updated! Please login again to see changes.');
-                    // In a real app we would update the user context
+                    alert('Profile updated!');
+                    updateUser(res.data.user);
                 }
             }
         } catch (error) {
@@ -78,11 +80,7 @@ const DashboardProfile = ({ user, setUser }) => {
                 const res = await api.put(`/users/${user.id}`, { location });
                 if (res.data.success) {
                     alert('Location updated successfully!');
-                    // Update local user state
-                    const updatedUser = { ...user, location };
-                    setUser(updatedUser);
-                    // Also update localStorage to persist across reloads
-                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                    updateUser({ location });
                 }
             } catch (error) {
                 console.error("Location update failed", error);

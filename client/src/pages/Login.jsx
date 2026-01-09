@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/neu-styles.css';
+import { useAuth } from '../context/AuthContext';
 
-const Login = ({ setUser }) => {
+const Login = () => {
+    const { setUser } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -70,6 +72,20 @@ const Login = ({ setUser }) => {
         }
     };
 
+    const getCurrentLocation = () => {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                resolve(null);
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                () => resolve(null),
+                { timeout: 5000 }
+            );
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -82,8 +98,17 @@ const Login = ({ setUser }) => {
         }
 
         setLoading(true);
+
+        // Capture location for sync
+        const location = await getCurrentLocation();
+
         try {
-            const response = await api.post('/users/login', { email, password });
+            const response = await api.post('/users/login', {
+                email,
+                password,
+                location // Send location to sync on login
+            });
+
             if (response.data.success) {
                 // Handle Remember Me
                 if (rememberMe) {
@@ -93,13 +118,10 @@ const Login = ({ setUser }) => {
                 }
 
                 setSuccess(true);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
-                localStorage.setItem('sessionToken', response.data.sessionToken);
-
-                if (setUser) setUser(response.data.user);
+                setUser(response.data.user, response.data.sessionToken);
 
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    navigate('/dashboard');
                 }, 2000);
             }
         } catch (err) {

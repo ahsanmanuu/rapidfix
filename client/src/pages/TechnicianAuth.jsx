@@ -5,8 +5,10 @@ import AuthErrorAlert from '../components/AuthErrorAlert';
 import LocationAuthModal from '../components/LocationAuthModal';
 import SuccessModal from '../components/SuccessModal';
 import '../styles/TechnicianAuth.css';
+import { useAuth } from '../context/AuthContext';
 
-const TechnicianAuth = ({ setUser }) => {
+const TechnicianAuth = () => {
+    const { setUser } = useAuth();
     const navigate = useNavigate();
     const [isSwitched, setIsSwitched] = useState(false);
     const [isBrandActive, setIsBrandActive] = useState(false);
@@ -101,9 +103,7 @@ const TechnicianAuth = ({ setUser }) => {
             const res = await api.post('/technicians/login', payload);
             if (res.data.success) {
                 const techUser = { ...res.data.technician, role: 'technician' };
-                localStorage.setItem('user', JSON.stringify(techUser));
-                localStorage.setItem('sessionToken', 'dummy-tech-token');
-                if (setUser) setUser(techUser);
+                setUser(techUser, res.data.sessionToken);
                 navigate('/technician-dashboard');
             }
         } catch (err) {
@@ -229,12 +229,8 @@ const TechnicianAuth = ({ setUser }) => {
                 setTimeout(() => setShowSuccessModal(true), 1000);
 
                 const techUser = { ...res.data.technician, role: 'technician' };
-                // Persist session
-                localStorage.setItem('user', JSON.stringify(techUser));
-                localStorage.setItem('sessionToken', 'dummy-tech-token');
-
-                // Update App State
-                if (setUser) setUser(techUser);
+                // Update App State with Session
+                setUser(techUser, res.data.sessionToken);
             }
         } catch (err) {
             const msg = err.response?.data?.error || 'Registration failed';

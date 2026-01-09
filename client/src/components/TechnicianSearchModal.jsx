@@ -14,22 +14,7 @@ const mapContainerStyle = {
 // Premium Map Styles (Silver/Grayscale)
 const mapOptions = {
     disableDefaultUI: true,
-    zoomControl: false,
-    styles: [
-        { "elementType": "geometry", "stylers": [{ "color": "#f5f5f5" }] },
-        { "elementType": "labels.icon", "stylers": [{ "visibility": "off" }] },
-        { "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] },
-        { "elementType": "labels.text.stroke", "stylers": [{ "color": "#f5f5f5" }] },
-        { "featureType": "administrative.land_parcel", "elementType": "labels.text.fill", "stylers": [{ "color": "#bdbdbd" }] },
-        { "featureType": "poi", "elementType": "geometry", "stylers": [{ "color": "#eeeeee" }] },
-        { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
-        { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#ffffff" }] },
-        { "featureType": "road.arterial", "elementType": "labels.text.fill", "stylers": [{ "color": "#757575" }] },
-        { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#dadada" }] },
-        { "featureType": "road.highway", "elementType": "labels.text.fill", "stylers": [{ "color": "#616161" }] },
-        { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#c9c9c9" }] },
-        { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#9e9e9e" }] }
-    ]
+    zoomControl: false
 };
 
 const getStatusConfig = (status) => {
@@ -97,15 +82,20 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
         }
     }, [isOpen, performSearch]);
 
-    // Real-time Updates
+    // Real-time Updates (Status & Location)
     useEffect(() => {
         if (!socket || !isOpen) return;
         const handleUpdate = () => {
-            console.log("Realtime update received");
+            console.log("Realtime update received (Location or Status)");
             performSearch();
         };
         socket.on('technician_status_update', handleUpdate);
-        return () => socket.off('technician_status_update', handleUpdate);
+        socket.on('technician_location_update', handleUpdate); // [NEW] Live movement
+
+        return () => {
+            socket.off('technician_status_update', handleUpdate);
+            socket.off('technician_location_update', handleUpdate);
+        };
     }, [socket, isOpen, performSearch]);
 
     // Real-time Updates
@@ -119,7 +109,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-[95vw] h-[90vh] overflow-hidden flex flex-col md:flex-row relative ring-1 ring-slate-900/5"
+                    className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-[95vw] h-[90vh] overflow-hidden flex flex-col md:flex-row relative border-4 border-red-600"
                 >
                     {/* Floating Close Button */}
                     <button
@@ -179,7 +169,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                             getPixelPositionOffset={(width, height) => ({ x: -(width / 2), y: -(height / 2) })}
                                         >
                                             <div
-                                                className={`relative flex flex-col items-center group ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed grayscale opacity-80'} hover:z-[999] -translate-y-4`}
+                                                className={`relative flex flex-col items-center group ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'} hover:z-[999] -translate-y-4`}
                                                 onClick={() => {
                                                     if (isAvailable) onBook(tech);
                                                     else alert(`This technician is currently ${statusConfig.label}`);
@@ -244,7 +234,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                 {searching ? `Searching...` : `Nearby ${serviceType}s`}
                             </h2>
                             <div className="flex items-center gap-3 mt-3">
-                                <span className={`flex h-3 w-3 rounded-full ${searching ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`}></span>
+                                <span className={`flex h-3 w-3 rounded-full ${searching ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`}></span>
                                 <p className="text-base font-medium text-slate-500">
                                     {searching ? "Connecting to dispatch grid..." : `${technicians.length} professionals found`}
                                 </p>
@@ -252,7 +242,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                         </div>
 
                         {/* List Content */}
-                        <div className="flex-1 overflow-y-auto px-12 py-12 space-y-10 custom-scrollbar bg-slate-50">
+                        <div className="flex-1 overflow-y-auto px-12 py-12 space-y-48 custom-scrollbar bg-slate-50">
                             {searching ? (
                                 // Skeletons
                                 [1, 2, 3].map(i => (
@@ -286,12 +276,13 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: idx * 0.05 }}
-                                            className={`group relative bg-white rounded-3xl p-10 border border-slate-100 shadow-sm transition-all duration-300 ${isAvailable ? 'hover:shadow-2xl hover:border-blue-200 cursor-pointer' : 'cursor-not-allowed opacity-90'}`}
+                                            className={`group relative bg-white rounded-3xl p-8 border-2 border-pink-500 shadow-sm transition-all duration-300 ${isAvailable ? 'hover:shadow-2xl hover:border-blue-200 cursor-pointer hover:-translate-y-1 hover:scale-[1.02]' : 'cursor-not-allowed opacity-90'}`}
+
                                         >
                                             <div className="flex gap-8 items-center">
                                                 {/* List Avatar (Refined Spacing) */}
                                                 <div className="relative flex-shrink-0">
-                                                    <div className={`w-14 h-14 rounded-full overflow-hidden border-4 border-slate-50 bg-slate-100 shadow-lg relative ${isAvailable ? 'group-hover:border-blue-50' : 'grayscale'} transition-all`}>
+                                                    <div className={`w-14 h-14 rounded-full overflow-hidden border-4 border-slate-50 bg-slate-100 shadow-lg relative ${isAvailable ? 'group-hover:border-blue-50' : ''} transition-all`}>
                                                         <img
                                                             src={photoUrl}
                                                             alt={tech.name}
@@ -299,10 +290,16 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                             onError={(e) => e.target.src = `https://ui-avatars.com/api/?name=${tech.name}&background=random`}
                                                         />
                                                     </div>
-                                                    {/* Rating */}
-                                                    <div className="absolute -bottom-1 -right-1 bg-white px-2.5 py-1 rounded-full shadow-md border border-slate-100 flex items-center gap-1 text-xs font-bold text-slate-700">
-                                                        <Star size={12} className="fill-yellow-400 text-yellow-400" />
-                                                        {tech.rating && tech.rating > 0 ? tech.rating : "No rating"}
+                                                    {/* Rating Badge (Compact) */}
+                                                    <div className="absolute -bottom-1 -right-1 bg-white px-2 py-0.5 rounded-full shadow-sm border border-slate-100 flex items-center gap-1 text-[10px] font-bold text-slate-700">
+                                                        {tech.rating && tech.rating > 0 ? (
+                                                            <>
+                                                                <Star size={10} className="fill-yellow-400 text-yellow-400" />
+                                                                {tech.rating}
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-[9px] text-blue-600 font-bold uppercase tracking-wide">New Talent</span>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -344,7 +341,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                         }
                                                     }}
                                                     disabled={!isAvailable}
-                                                    className={`px-10 py-4 text-base font-bold rounded-2xl shadow-lg transition-all active:scale-95 whitespace-nowrap self-center tracking-wide
+                                                    className={`px-28 py-7 text-xs font-bold active:scale-95 whitespace-nowrap self-center tracking-wide flex items-center justify-center leading-relaxed rounded-2xl shadow-lg transition-all
                                                         ${isAvailable
                                                             ? 'bg-slate-900 hover:bg-blue-600 text-white hover:shadow-xl hover:shadow-blue-500/20'
                                                             : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'

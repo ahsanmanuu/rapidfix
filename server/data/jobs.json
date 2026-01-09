@@ -362,5 +362,31 @@
     "otp": null,
     "createdAt": "2026-01-02T10:04:06.436Z",
     "updatedAt": "2026-01-02T10:04:06.456Z"
+  },
+  {
+    "id": "1767884211136",
+    "userId": "1767884075830",
+    "technicianId": "1767347834358",
+    "serviceType": "Electrician",
+    "description": "",
+    "location": {
+      "latitude": 25.2560821,
+      "longitude": 86.9849308,
+      "address": "Unknown Area, Bhagalpur"
+    },
+    "scheduledDate": "2026-12-12",
+    "scheduledTime": "10:00",
+    "contactName": "John Doe",
+    "contactPhone": "1234567890",
+    "customerMobile": "1234567890",
+    "offerPrice": null,
+    "visitingCharges": 0,
+    "agreementAccepted": true,
+    "isCustomOffer": false,
+    "status": "accepted",
+    "reason": null,
+    "otp": null,
+    "createdAt": "2026-01-08T14:56:51.136Z",
+    "updatedAt": "2026-01-08T14:56:51.148Z"
   }
 ]

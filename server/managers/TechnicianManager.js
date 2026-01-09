@@ -70,20 +70,6 @@ class TechnicianManager {
         return null;
     }
 
-    getAllTechnicians() {
-        return this.db.read().map(t => {
-            const { password, ...rest } = t;
-            return rest;
-        });
-    }
-
-    findByService(serviceType) {
-        return this.db.findAll('serviceType', serviceType).map(t => {
-            const { password, ...rest } = t;
-            return rest;
-        });
-    }
-
     searchTechnicians(userLat, userLon, serviceType) {
         // Convert inputs to floats/clean strings
         const lat = parseFloat(userLat);
@@ -91,19 +77,12 @@ class TechnicianManager {
         const type = (serviceType || '').toLowerCase().trim();
 
         // 1. Get all techs (Case-Insensitive Service Match)
-        // Note: db.findAll is simple, so we fetch all and filter manually for robustness
         const allTechs = this.db.read();
         const techs = allTechs.filter(t => t.serviceType && t.serviceType.toLowerCase().trim() === type);
 
-        const FeedbackManager = require('./FeedbackManager');
-        const feedbackManager = new FeedbackManager();
-
-        // 2. Filter by distance (using Haversine) and enrich
-        const availableTechs = techs.map(tech => {
-            if (!tech.location || !tech.location.latitude || !tech.location.longitude) {
-                // console.log(`[TechnicianManager] Tech ${tech.name} excluded: Missing location`);
-                return null;
-            }
+        // 2. Filter by distance
+        const nearbyTechs = techs.map(tech => {
+            if (!tech.location || !tech.location.latitude || !tech.location.longitude) return null;
 
             const dist = this.calculateDistance(
                 lat,
@@ -112,40 +91,69 @@ class TechnicianManager {
                 parseFloat(tech.location.longitude)
             );
 
-            // console.log(`[TechnicianManager] Tech: ${tech.name}, Distance: ${dist.toFixed(2)} km`);
-
-            // Calculate Ratings
-            const feedbacks = feedbackManager.getFeedbackForTechnician(tech.id);
-            let averageRating = 0;
-            if (feedbacks && feedbacks.length > 0) {
-                const total = feedbacks.reduce((sum, f) => {
-                    const categories = Object.values(f.ratings || {});
-                    const feedbackAvg = categories.length ? categories.reduce((a, b) => a + b, 0) / categories.length : 0;
-                    return sum + feedbackAvg;
-                }, 0);
-                averageRating = parseFloat((total / feedbacks.length).toFixed(1));
-            }
-
-            // Return tech with distance and rating
             const { password, ...rest } = tech;
             return {
                 ...rest,
-                distance: parseFloat(dist.toFixed(1)), // Keep 1 decimal place
-                rating: averageRating,
-                experience: tech.experience,
-                status: tech.status
+                distance: parseFloat(dist.toFixed(1))
             };
         }).filter(item => {
             if (item === null) return false;
-
-            // RELAXED Radius: Increased to 50km to ensure visibility
-            const isInRange = item.distance <= 50.0;
-            if (!isInRange) console.log(`[TechnicianManager] Tech ${item.name} filtered out: Distance ${item.distance} > 50km`);
-            return isInRange;
+            // Strict Radius: 2km
+            return item.distance <= 2.0;
         });
 
-        // 3. Sort by distance
-        return availableTechs.sort((a, b) => a.distance - b.distance);
+        // 3. Enrich with Ratings (Real-time)
+        const enrichedTechs = this._enrichWithRatings(nearbyTechs);
+
+        // 4. Sort by distance
+        return enrichedTechs.sort((a, b) => a.distance - b.distance);
+    }
+
+    // Helper to inject real-time ratings from FeedbackManager
+    _enrichWithRatings(techs) {
+        try {
+            const FeedbackManager = require('./FeedbackManager');
+            const feedbackManager = new FeedbackManager();
+
+            return techs.map(tech => {
+                const feedbacks = feedbackManager.getFeedbackForTechnician(tech.id);
+                let averageRating = 0;
+
+                if (feedbacks && feedbacks.length > 0) {
+                    const total = feedbacks.reduce((sum, f) => {
+                        const categories = Object.values(f.ratings || {});
+                        const feedbackAvg = categories.length ? categories.reduce((a, b) => a + b, 0) / categories.length : 0;
+                        return sum + feedbackAvg;
+                    }, 0);
+                    averageRating = parseFloat((total / feedbacks.length).toFixed(1));
+                }
+
+                return {
+                    ...tech,
+                    rating: averageRating, // Override DB value with real-time calc
+                    reviewCount: feedbacks ? feedbacks.length : 0
+                };
+            });
+        } catch (err) {
+            console.error("[TechnicianManager] Enrich Ratings Error:", err);
+            return techs; // Fail graceful
+        }
+    }
+
+    getAllTechnicians() {
+        const rawTechs = this.db.read().map(t => {
+            const { password, ...rest } = t;
+            return rest;
+        });
+        return this._enrichWithRatings(rawTechs);
+    }
+
+    findByService(serviceType) {
+        const rawTechs = this.db.findAll('serviceType', serviceType).map(t => {
+            const { password, ...rest } = t;
+            return rest;
+        });
+        return this._enrichWithRatings(rawTechs);
     }
 
     calculateDistance(lat1, lon1, lat2, lon2) {

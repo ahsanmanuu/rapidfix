@@ -20,6 +20,8 @@ class UserManager {
             location, // { latitude, longitude }
             role: 'user',
             photo: null, // Default photo
+            status: 'Active', // Default status
+            membership: 'Free', // Default tier
             createdAt: new Date().toISOString()
         };
 
@@ -27,7 +29,7 @@ class UserManager {
     }
 
     updateUser(id, updates) {
-        // updates can include name, photo, password
+        // updates can include name, photo, password, location, membership, membershipExpiry
         return this.db.update('id', id, { ...updates, updatedAt: new Date().toISOString() });
     }
 
@@ -54,6 +56,55 @@ class UserManager {
             const { password, ...rest } = u;
             return rest;
         });
+    }
+
+    setStatus(id, status) {
+        // Robust update: Find first, then update
+        const users = this.db.read();
+        const target = users.find(u => String(u.id) === String(id));
+
+        if (target) {
+            return this.db.update('id', target.id, { status, updatedAt: new Date().toISOString() });
+        }
+        return null; // User not found
+    }
+
+    checkAndSyncMembership(id) {
+        const user = this.db.find('id', id);
+        if (!user) return null;
+
+        // If Premium, check for expiry
+        if (user.membership === 'Premium' && user.membershipExpiry) {
+            const expiry = new Date(user.membershipExpiry);
+            const now = new Date();
+
+            if (now > expiry) {
+                console.log(`[UserManager] Membership expired for user ${id}. Downgrading to Free.`);
+                const updated = this.db.update('id', id, {
+                    membership: 'Free',
+                    updatedAt: new Date().toISOString()
+                });
+                return { ...updated, statusChanged: true, newTier: 'Free' };
+            }
+        }
+        return user;
+    }
+
+    setMembership(id, tier, expiryDate = null) {
+        // Robust update: Find first, then update
+        const users = this.db.read();
+        const target = users.find(u => String(u.id) === String(id));
+
+        if (target) {
+            const updates = {
+                membership: tier,
+                updatedAt: new Date().toISOString()
+            };
+            if (expiryDate) updates.membershipExpiry = expiryDate;
+
+            return this.db.update('id', target.id, updates);
+        }
+        return null;
     }
 }
 

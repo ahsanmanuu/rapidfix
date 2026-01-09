@@ -39,6 +39,41 @@ class FinanceManager {
     getAllTransactions() {
         return this.db.read();
     }
+
+    getSystemWalletBalance() {
+        // Calculate total volume of credits in the system (simplistic view of "System Wallet" or Total Volume)
+        const transactions = this.db.read();
+        return transactions.reduce((acc, curr) => {
+            return curr.type === 'credit' ? acc + curr.amount : acc;
+        }, 0);
+    }
+
+    processMembershipPayment(userId, amount) {
+        const minFee = 499;
+        if (amount < minFee) {
+            throw new Error(`Minimum membership fee is ₹${minFee}`);
+        }
+
+        const transaction = this.createTransaction(
+            userId,
+            'SYSTEM',
+            'debit',
+            amount,
+            `Premium Membership Purchase (30 Days)`
+        );
+
+        if (transaction) {
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 30);
+            return {
+                success: true,
+                tier: 'Premium',
+                expiryDate: expiryDate.toISOString(),
+                transaction
+            };
+        }
+        return { success: false };
+    }
 }
 
 module.exports = FinanceManager;

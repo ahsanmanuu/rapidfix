@@ -73,8 +73,8 @@ const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, us
                         {user.name ? user.name[0].toUpperCase() : 'U'}
                     </Avatar>
                     <Typography variant="h4">{user.name}</Typography>
-                    <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block' }}>
-                        Premium Member
+                    <Typography variant="caption" color="textSecondary" sx={{ mb: 1, display: 'block', fontWeight: 600 }}>
+                        {user.membership || 'Free'} Member
                     </Typography>
                 </Box>
             </Box>
@@ -87,7 +87,10 @@ const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, us
                     <ListItemButton
                         key={item.id}
                         selected={activeTab === item.id}
-                        onClick={() => setActiveTab(item.id)}
+                        onClick={() => {
+                            setActiveTab(item.id);
+                            if (!matchUpMd) handleDrawerToggle();
+                        }}
                         sx={{
                             mb: 0.5,
                             borderRadius: '12px',

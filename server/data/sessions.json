@@ -63,13 +63,6 @@
     "expiresAt": "2026-01-06T10:24:40.646Z"
   },
   {
-    "token": "6dbe0b9227aa18255209983b2b1acda1c0876b44026e7fd2f6dee6b22fa448c8",
-    "userId": "1767032116929",
-    "role": "user",
-    "createdAt": "2025-12-30T11:57:48.077Z",
-    "expiresAt": "2026-01-06T11:57:48.077Z"
-  },
-  {
     "token": "3159ddb1b4111b495d3c2c8188424a789417741cd31d1f432321eee48d057b75",
     "userId": "1767032116929",
     "role": "user",
@@ -103,5 +96,50 @@
     "role": "user",
     "createdAt": "2026-01-02T10:04:06.396Z",
     "expiresAt": "2026-01-09T10:04:06.396Z"
+  },
+  {
+    "token": "93b0faec3bdd79ce93ca62e06d964257e95c56885681022a79913aca73f248b3",
+    "userId": "1767032116929",
+    "role": "user",
+    "createdAt": "2026-01-05T19:51:58.752Z",
+    "expiresAt": "2026-01-12T19:51:58.756Z"
+  },
+  {
+    "token": "1627523298d94f54e519ab4d7d4db311dbe4aea6c3260524d96adafcaf00ee42",
+    "userId": "1767881837457",
+    "role": "user",
+    "deviceId": null,
+    "createdAt": "2026-01-08T14:17:17.481Z",
+    "expiresAt": "2026-01-15T14:17:17.481Z"
+  },
+  {
+    "token": "d12db0701de95b05bed233ce561c7d85155e277278a520af42af52f091a4a352",
+    "userId": "1767884075830",
+    "role": "user",
+    "deviceId": null,
+    "createdAt": "2026-01-08T14:54:35.861Z",
+    "expiresAt": "2026-01-15T14:54:35.861Z"
+  },
+  {
+    "token": "3dd354cecdc752328b46e9f6ea3017fd4211e29c09130d8cb24e64ee148d7317",
+    "userId": "1767881837457",
+    "role": "user",
+    "createdAt": "2026-01-08T15:39:06.122Z",
+    "expiresAt": "2026-01-15T15:39:06.122Z"
+  },
+  {
+    "token": "aaf1b25f7896836a45d84f169fc2be3da63438dd2affa41573982f616df1ebce",
+    "userId": "1767894246335",
+    "role": "user",
+    "deviceId": null,
+    "createdAt": "2026-01-08T17:44:06.347Z",
+    "expiresAt": "2026-01-15T17:44:06.347Z"
+  },
+  {
+    "token": "6dbe16d2700b7499389c478c97bb750656cf917fd75d6560cb6d5cc952999ed6",
+    "userId": "1767032116929",
+    "role": "user",
+    "createdAt": "2026-01-09T08:54:33.722Z",
+    "expiresAt": "2026-01-16T08:54:33.722Z"
   }
 ]

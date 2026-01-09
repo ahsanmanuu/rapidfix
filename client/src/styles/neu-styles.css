@@ -24,9 +24,10 @@
     background: #e0e5ec;
     border-radius: 20px;
     padding: 25px 30px;
+    padding: 25px 30px;
     box-shadow:
-        20px 20px 60px #bec3cf,
-        -20px -20px 60px #ffffff;
+        10px 10px 30px #d1d9e6,
+        -10px -10px 30px #ffffff;
     position: relative;
     transition: all 0.3s ease;
 }
@@ -47,18 +48,18 @@
     align-items: center;
     justify-content: center;
     box-shadow:
-        5px 5px 10px #bec3cf,
+        5px 5px 10px #d1d9e6,
         -5px -5px 10px #ffffff,
-        inset 0 0 0 #bec3cf,
+        inset 0 0 0 #d1d9e6,
         inset 0 0 0 #ffffff;
     transition: all 0.3s ease;
 }
 
 .neu-icon:hover {
     box-shadow:
-        3px 3px 6px #bec3cf,
+        3px 3px 6px #d1d9e6,
         -3px -3px 6px #ffffff,
-        inset 3px 3px 6px #bec3cf,
+        inset 3px 3px 6px #d1d9e6,
         inset -3px -3px 6px #ffffff;
 }
 
@@ -100,8 +101,8 @@
     background: #e0e5ec;
     border-radius: 10px;
     box-shadow:
-        inset 5px 5px 10px #bec3cf,
-        inset -5px -5px 10px #ffffff;
+        inset 3px 3px 6px #d1d9e6,
+        inset -3px -3px 6px #ffffff;
     transition: all 0.3s ease;
 }
 
@@ -111,42 +112,47 @@
         inset -3px -3px 6px #ffffff;
 }
 
-.neu-input input {
+/* Increased specificity to ensure padding is applied */
+.neu-body .neu-input input,
+.login-container .neu-input input {
     width: 100%;
-    background: transparent;
-    border: none;
-    padding: 12px 16px;
-    padding-left: 42px;
-    color: #3d4468;
-    font-size: 14px;
-    font-weight: 500;
+    background: transparent !important;
+    border: none !important;
+    padding: 24px 16px 8px 50px !important;
+    height: 56px !important;
     outline: none;
     transition: all 0.3s ease;
-    height: 42px;
+    line-height: normal;
+    color: #3d4468;
+    font-size: 15px;
+    font-weight: 500;
 }
 
 .neu-input input::placeholder {
     color: transparent;
 }
 
-.neu-input label {
+.neu-body .neu-input label,
+.login-container .neu-input label {
     position: absolute;
-    left: 42px;
+    left: 50px !important;
     top: 50%;
     transform: translateY(-50%);
     color: #9499b7;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 400;
     pointer-events: none;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    z-index: 10;
 }
 
 .neu-input input:focus+label,
 .neu-input input:not(:placeholder-shown)+label {
-    top: 4px;
-    font-size: 10px;
-    color: #6c7293;
-    transform: translateY(0);
+    top: 6px !important;
+    font-size: 10px !important;
+    color: #2d3748 !important;
+    transform: translateY(0) !important;
+    font-weight: 800;
 }
 
 .input-icon {
@@ -534,15 +540,18 @@
 /* Mobile */
 @media (max-width: 480px) {
     .neu-body {
-        padding-top: 100px;
-        /* Slightly less on mobile if header is smaller */
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-top: 80px;
+        padding-bottom: 20px;
+        padding-left: 20px;
+        padding-right: 20px;
+        align-items: center;
+        /* Center vertically on mobile */
     }
 
     .login-container {
         max-width: 100%;
         margin: 0;
+        width: 100%;
     }
 
     .login-card {

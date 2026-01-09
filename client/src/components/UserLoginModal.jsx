@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, LogIn, AlertCircle, User, Phone, ArrowRight, CheckCircle2 } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const UserLoginModal = ({ isOpen, onClose, onSuccess }) => {
+    const { setUser } = useAuth();
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -40,8 +39,7 @@ const UserLoginModal = ({ isOpen, onClose, onSuccess }) => {
 
                 if (res.data.success) {
                     const user = res.data.user;
-                    localStorage.setItem('user', JSON.stringify(user));
-                    localStorage.setItem('sessionToken', res.data.sessionToken);
+                    setUser(user, res.data.sessionToken);
                     onSuccess(user);
                 }
             } else {
@@ -82,8 +80,7 @@ const UserLoginModal = ({ isOpen, onClose, onSuccess }) => {
                 if (res.data.success) {
                     setRegisterSuccess(true);
                     const user = res.data.user;
-                    localStorage.setItem('user', JSON.stringify(user));
-                    localStorage.setItem('sessionToken', res.data.sessionToken);
+                    setUser(user, res.data.sessionToken);
 
                     // Delay slightly to show success animation
                     setTimeout(() => {

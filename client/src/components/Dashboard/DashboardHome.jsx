@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Grid, Typography, Card, CardContent, Box, Chip, Avatar, List, ListItem, ListItemAvatar, ListItemText, Divider, ListItemButton, ListItemIcon, Button, Modal, IconButton } from '@mui/material';
 import { AccessTime, LocationOn, Assessment, Schedule, Chat, AccountBalanceWallet, Work as WorkIcon, FlashOn, InvertColors as PlumbingIcon, FormatPaint, AcUnit, Videocam, Print, BatteryChargingFull, Fingerprint } from '@mui/icons-material';
@@ -7,8 +7,10 @@ import DashboardOffers from './DashboardOffers';
 import api, { getWalletBalance, createJob } from '../../services/api';
 import TechnicianSearchModal from '../TechnicianSearchModal';
 import BookingConfirmationModal from '../BookingConfirmationModal';
+import { useAuth } from '../../context/AuthContext';
 
-const DashboardHome = ({ user, jobs = [] }) => {
+const DashboardHome = ({ jobs = [] }) => {
+    const { user, updateUser } = useAuth();
     const theme = useTheme();
     const [currentTime, setCurrentTime] = useState(new Date());
     const [openOfferModal, setOpenOfferModal] = useState(false);
@@ -70,9 +72,8 @@ const DashboardHome = ({ user, jobs = [] }) => {
                             // Save to DB
                             await api.put(`/users/${user.id}`, { location: newLocation });
 
-                            // Save to LocalStorage (Single Source of Truth)
-                            const updatedUser = { ...user, location: newLocation };
-                            localStorage.setItem('user', JSON.stringify(updatedUser));
+                            // Update Context (Single Source of Truth)
+                            updateUser({ location: newLocation });
 
                             // Update React State for Booking usage
                             setLiveLocation(newLocation);
@@ -260,10 +261,10 @@ const DashboardHome = ({ user, jobs = [] }) => {
             {/* ... Welcome & Existing Stats ... */}
             <Grid item xs={12}>
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant="h2" gutterBottom>
+                    <Typography variant="h5" fontWeight="bold" gutterBottom>
                         Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋
                     </Typography>
-                    <Typography variant="body1" color="textSecondary">
+                    <Typography variant="body2" color="textSecondary">
                         Here's what's happening with your service requests today.
                     </Typography>
                 </Box>
@@ -271,23 +272,23 @@ const DashboardHome = ({ user, jobs = [] }) => {
 
             {/* Stats Cards (Moved to Top) */}
             {cards.map((card, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
+                <Grid item xs={6} sm={4} md={4} key={index}>
                     <Card sx={{
                         background: card.bgcolor,
                         color: '#fff',
-                        borderRadius: '16px',
+                        borderRadius: '12px',
                         height: '100%',
-                        boxShadow: '0 4px 20px 0 rgba(0,0,0,0.12)'
+                        boxShadow: '0 2px 10px 0 rgba(0,0,0,0.08)'
                     }}>
-                        <CardContent>
+                        <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Box>
-                                    <Typography variant="subtitle1" sx={{ opacity: 0.9, color: 'inherit' }}>{card.title}</Typography>
-                                    <Typography variant="h3" sx={{ my: 1, fontWeight: 'bold', color: 'inherit' }}>{card.value}</Typography>
-                                    <Typography variant="caption" sx={{ opacity: 0.8, color: 'inherit' }}>{card.subValue}</Typography>
+                                    <Typography variant="caption" sx={{ opacity: 0.9, color: 'inherit', fontSize: '0.7rem' }}>{card.title}</Typography>
+                                    <Typography variant="h6" sx={{ my: 0.25, fontWeight: 'bold', color: 'inherit', lineHeight: 1.2 }}>{card.value}</Typography>
+                                    <Typography variant="caption" sx={{ opacity: 0.8, color: 'inherit', fontSize: '0.6rem' }}>{card.subValue}</Typography>
                                 </Box>
-                                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 60, height: 60 }}>
-                                    {card.icon}
+                                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 32, height: 32 }}>
+                                    {React.cloneElement(card.icon, { fontSize: "small" })}
                                 </Avatar>
                             </Box>
                         </CardContent>
@@ -297,7 +298,7 @@ const DashboardHome = ({ user, jobs = [] }) => {
 
             {/* Quick Service Booking Tiles */}
             <Grid item xs={12}>
-                <Typography variant="h3" sx={{ mb: 2, fontWeight: 'bold' }}>Quick Book Professional</Typography>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Quick Book Professional</Typography>
                 <Grid container spacing={2}>
                     {quickServices.map((service, idx) => (
                         <Grid item xs={6} sm={4} md={2} key={idx}>
@@ -310,17 +311,18 @@ const DashboardHome = ({ user, jobs = [] }) => {
                                     transition: 'transform 0.2s, box-shadow 0.2s',
                                     '&:hover': { transform: 'translateY(-5px)', boxShadow: theme.shadows[4] }
                                 }}>
-                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                                     <Avatar sx={{
                                         bgcolor: service.bg,
                                         color: service.color,
-                                        width: 56,
-                                        height: 56,
+                                        width: 40,
+                                        height: 40,
                                         margin: '0 auto 8px'
                                     }}>
-                                        {service.icon}
+                                        {/* Scale down icon inside */}
+                                        {React.cloneElement(service.icon, { fontSize: "medium" })}
                                     </Avatar>
-                                    <Typography variant="subtitle2" fontWeight="bold">{service.title}</Typography>
+                                    <Typography variant="caption" fontWeight="bold" display="block" sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}>{service.title}</Typography>
                                 </CardContent>
                             </Card>
                         </Grid>
@@ -336,26 +338,31 @@ const DashboardHome = ({ user, jobs = [] }) => {
             <Grid item xs={12} md={4}>
                 <Card sx={{ borderRadius: '16px', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: theme.shadows[2] }}>
                     <CardContent>
-                        <Typography variant="h3" sx={{ mb: 3 }}>Other Actions</Typography>
-                        <List>
+                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Other Actions</Typography>
+                        <List dense>
                             <ListItemButton
                                 onClick={() => setOpenOfferModal(true)}
-                                sx={{ mb: 2, bgcolor: theme.palette.secondary.light, borderRadius: '12px', border: `1px dashed ${theme.palette.secondary.main}`, '&:hover': { bgcolor: theme.palette.secondary.light } }}
+                                sx={{ mb: 1, bgcolor: theme.palette.secondary.light, borderRadius: '12px', border: `1px dashed ${theme.palette.secondary.main}`, '&:hover': { bgcolor: theme.palette.secondary.light } }}
                             >
-                                <ListItemIcon><AccountBalanceWallet color="secondary" /></ListItemIcon>
+                                <ListItemIcon sx={{ minWidth: 36 }}><AccountBalanceWallet fontSize="small" color="secondary" /></ListItemIcon>
                                 <ListItemText
-                                    primary={<Typography variant="subtitle1" color="secondary" fontWeight="bold">Make an Offer</Typography>}
-                                    secondary="Post a custom job with your price"
+                                    primary={<Typography variant="subtitle2" color="secondary" fontWeight="bold">Make an Offer</Typography>}
+                                    secondary={<Typography variant="caption">Post a custom job</Typography>}
                                 />
                             </ListItemButton>
 
-                            <ListItemButton sx={{ mb: 2, bgcolor: theme.palette.grey[100], borderRadius: '12px' }}>
-                                <ListItemIcon><Chat /></ListItemIcon>
-                                <ListItemText primary="Contact Support" secondary="Get help" />
+                            <ListItemButton sx={{ mb: 1, bgcolor: theme.palette.grey[100], borderRadius: '12px' }}>
+                                <ListItemIcon sx={{ minWidth: 36 }}><Chat fontSize="small" /></ListItemIcon>
+                                <ListItemText
+                                    primary={<Typography variant="body2">Contact Support</Typography>}
+                                />
                             </ListItemButton>
                             <ListItemButton sx={{ bgcolor: theme.palette.grey[100], borderRadius: '12px' }}>
-                                <ListItemIcon><AccountBalanceWallet /></ListItemIcon>
-                                <ListItemText primary="Wallet Balance" secondary={`₹${walletBalance}`} />
+                                <ListItemIcon sx={{ minWidth: 36 }}><AccountBalanceWallet fontSize="small" /></ListItemIcon>
+                                <ListItemText
+                                    primary={<Typography variant="body2">Wallet Balance</Typography>}
+                                    secondary={<Typography variant="caption">₹{walletBalance}</Typography>}
+                                />
                             </ListItemButton>
                         </List>
                     </CardContent>
@@ -366,16 +373,17 @@ const DashboardHome = ({ user, jobs = [] }) => {
             <Grid item xs={12} md={8}>
                 <Card sx={{ borderRadius: '16px', height: '100%', boxShadow: theme.shadows[2] }}>
                     <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                            <Schedule color="primary" sx={{ mr: 1 }} />
-                            <Typography variant="h3">Recent Activity</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                            <Schedule color="primary" sx={{ mr: 1, fontSize: 20 }} />
+                            <Typography variant="h6" fontWeight="bold">Recent Activity</Typography>
                         </Box>
-                        <List>
+                        <List dense>
                             {safeJobs.slice(0, 3).map((job, idx) => (
                                 <Box key={job.id}>
-                                    <ListItem alignItems="flex-start" disablePadding sx={{ py: 2 }}>
-                                        <ListItemAvatar>
+                                    <ListItem alignItems="flex-start" disablePadding sx={{ py: 1 }}>
+                                        <ListItemAvatar sx={{ minWidth: 48 }}>
                                             <Avatar sx={{
+                                                width: 36, height: 36,
                                                 bgcolor: job.status === 'completed' ? theme.palette.success.light :
                                                     job.status === 'in-progress' ? theme.palette.primary.light :
                                                         theme.palette.warning.light,
@@ -383,17 +391,17 @@ const DashboardHome = ({ user, jobs = [] }) => {
                                                     job.status === 'in-progress' ? theme.palette.primary.dark :
                                                         theme.palette.warning.dark
                                             }}>
-                                                <WorkIcon />
+                                                <WorkIcon fontSize="small" />
                                             </Avatar>
                                         </ListItemAvatar>
                                         <ListItemText
-                                            primary={<Typography variant="h4">{job.serviceType}</Typography>}
+                                            primary={<Typography variant="subtitle2" fontWeight="semi-bold">{job.serviceType}</Typography>}
                                             secondary={
                                                 <Box component="span">
-                                                    <Typography component="span" variant="body2" color="textSecondary" display="block">
+                                                    <Typography component="span" variant="caption" color="textSecondary" display="block" noWrap>
                                                         {job.description}
                                                     </Typography>
-                                                    <Typography component="span" variant="caption" color="textSecondary">
+                                                    <Typography component="span" variant="caption" color="textSecondary" sx={{ fontSize: '0.7rem' }}>
                                                         {new Date(job.createdAt).toLocaleDateString()}
                                                     </Typography>
                                                 </Box>
@@ -403,6 +411,8 @@ const DashboardHome = ({ user, jobs = [] }) => {
                                             label={job.status}
                                             size="small"
                                             sx={{
+                                                height: 20,
+                                                fontSize: '0.65rem',
                                                 bgcolor: job.status === 'completed' ? theme.palette.success.light :
                                                     job.status === 'in-progress' ? theme.palette.primary.light :
                                                         theme.palette.warning.light,
@@ -418,7 +428,7 @@ const DashboardHome = ({ user, jobs = [] }) => {
                                 </Box>
                             ))}
                             {safeJobs.length === 0 && (
-                                <Typography variant="body1" align="center" color="textSecondary" sx={{ py: 4 }}>
+                                <Typography variant="caption" align="center" color="textSecondary" sx={{ py: 2, display: 'block' }}>
                                     No recent activity.
                                 </Typography>
                             )}

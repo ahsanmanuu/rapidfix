@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, CssBaseline, useMediaQuery, useTheme, styled } from '@mui/material';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -27,7 +27,19 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({
 const DashboardLayout = ({ user, activeTab, setActiveTab, onLogout, children }) => {
     const theme = useTheme();
     const matchDownMd = useMediaQuery(theme.breakpoints.down('md'));
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    // Default to CLOSED initially to prevent mobile flash
+    // Default to CLOSED initially to prevent mobile flash
+    // We strictly initialize to FALSE.
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Sync sidebar state: Open on Desktop, Close on Mobile
+    useEffect(() => {
+        if (!matchDownMd) {
+            setSidebarOpen(true);
+        } else {
+            setSidebarOpen(false);
+        }
+    }, [matchDownMd]);
 
     const handleDrawerToggle = () => {
         setSidebarOpen(!sidebarOpen);

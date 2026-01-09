@@ -50,9 +50,70 @@ const DashboardFinance = ({ user }) => {
                 <Typography variant="h2">Billing History</Typography>
             </Grid>
 
+            {user?.membership === 'Free' && (
+                <Grid item xs={12}>
+                    <Card sx={{
+                        background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                        color: 'white',
+                        borderRadius: '24px',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        mb: 4,
+                        boxShadow: '0 20px 40px rgba(99, 102, 241, 0.2)'
+                    }}>
+                        <CardContent sx={{ p: 4, position: 'relative', zIndex: 1 }}>
+                            <Grid container alignItems="center" spacing={3}>
+                                <Grid item xs={12} md={8}>
+                                    <Typography variant="h3" fontWeight="bold" gutterBottom sx={{ color: 'white' }}>
+                                        Upgrade to Premium 💎
+                                    </Typography>
+                                    <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)', mb: 3 }}>
+                                        Get exclusive benefits, priority support, and lower response times for just ₹499/month.
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 2 }}>
+                                        <Button
+                                            variant="contained"
+                                            sx={{
+                                                bgcolor: 'white',
+                                                color: '#6366f1',
+                                                fontWeight: 'bold',
+                                                '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                                                px: 4,
+                                                borderRadius: '12px'
+                                            }}
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await api.post('/membership/pay', { userId: user.id, amount: 499 });
+                                                    if (res.data.success) {
+                                                        alert("Welcome to Premium! Your membership is now active.");
+                                                        window.location.reload();
+                                                    }
+                                                } catch (e) {
+                                                    alert(e.response?.data?.error || "Payment failed");
+                                                }
+                                            }}
+                                        >
+                                            Upgrade Now
+                                        </Button>
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={12} md={4} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
+                                    <Avatar sx={{ width: 120, height: 120, bgcolor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
+                                        <Typography variant="h2">✨</Typography>
+                                    </Avatar>
+                                </Grid>
+                            </Grid>
+                        </CardContent>
+                        {/* Decorative blobs */}
+                        <Box sx={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                        <Box sx={{ position: 'absolute', bottom: -20, left: '20%', width: 100, height: 100, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
+                    </Card>
+                </Grid>
+            )}
+
             {bills.length === 0 ? (
                 <Grid item xs={12}>
-                    <Card sx={{ textAlign: 'center', p: 5, borderStyle: 'dashed' }}>
+                    <Card sx={{ textAlign: 'center', p: 5, borderStyle: 'dashed', borderRadius: '16px' }}>
                         <ReceiptLong sx={{ fontSize: 60, color: theme.palette.text.secondary, opacity: 0.5 }} />
                         <Typography variant="h3" color="textSecondary" sx={{ mt: 2 }}>No invoices yet</Typography>
                         <Typography variant="body1" color="textSecondary">Services you book will appear here for payment.</Typography>

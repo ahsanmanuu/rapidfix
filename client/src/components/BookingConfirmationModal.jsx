@@ -156,12 +156,17 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                             </div>
 
                             <button
-                                onClick={() => agreement && onConfirm({ ...jobDetails, visitingCharges, agreementAccepted: true, technicianId: technician?.id || null })}
-                                disabled={!agreement}
-                                className={`w-full py-4 rounded-xl text-white font-bold shadow-xl transition-all flex items-center justify-center gap-2 ${agreement ? 'bg-blue-600 hover:bg-blue-700 hover:shadow-blue-600/30 hover:-translate-y-0.5' : 'bg-slate-300 cursor-not-allowed'}`}
+                                onClick={() => {
+                                    if (!agreement) {
+                                        alert("Please agree to the terms to continue.");
+                                        return;
+                                    }
+                                    onConfirm({ ...jobDetails, visitingCharges, agreementAccepted: true, technicianId: technician?.id || null });
+                                }}
+                                className={`w-full py-4 rounded-xl text-white font-bold shadow-xl transition-all flex items-center justify-center gap-2 ${agreement ? 'bg-blue-600 hover:bg-blue-700 hover:shadow-blue-600/30 hover:-translate-y-0.5' : 'bg-slate-400 opacity-80'}`}
                             >
                                 <ShieldCheck size={20} />
-                                {agreement ? 'Confirm Booking' : 'Accept Terms to Continue'}
+                                {agreement ? 'Confirm Booking' : 'Agree to Terms & Continue'}
                             </button>
                         </div>
                     </div>

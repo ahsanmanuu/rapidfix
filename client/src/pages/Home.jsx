@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Shield, Clock, Zap, Droplet, Paintbrush, Camera, Fan, BatteryCharging, Fingerprint, Printer } from 'lucide-react';
+import { Star, Shield, Clock, Zap, Droplet, Paintbrush, Camera, Fan, BatteryCharging, Fingerprint, Printer, Wrench, ShieldCheck, Wallet, ThumbsUp, UserCheck, Smile, BookOpen, Briefcase, Heart, MessageSquare } from 'lucide-react';
 import Button from '../components/Button';
 import ErrorBoundary from '../components/ErrorBoundary';
 import TechnicianSearchModal from '../components/TechnicianSearchModal';
 import ServiceBookingForm from '../components/ServiceBookingForm';
 import BookingConfirmationModal from '../components/BookingConfirmationModal';
 import UserLoginModal from '../components/UserLoginModal';
-import api, { createJob } from '../services/api';
+import api, { createJob, getTopRatedTechnicians } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext'; // [NEW]
 
 // --- Hero Slides Data ---
 const slides = [
@@ -50,14 +52,160 @@ const slides = [
     }
 ];
 
-const Home = ({ setUser }) => {
+// --- Technician Profiles Data (Fallback) ---
+const fallbackProfiles = [
+    {
+        id: 1,
+        name: "Raj Kumar",
+        role: "Master Electrician",
+        serviceType: "Electrician",
+        image: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=2070&auto=format&fit=crop",
+        rating: "4.9/5",
+        reviewCount: "120+",
+        jobs: "500+",
+        onTime: "100%",
+        description: "Raj has been Fixofy's top-rated Master Electrician for 3 months running. With over 10 years of experience, he specializes in smart home installations."
+    },
+    {
+        id: 2,
+        name: "Vikram Singh",
+        role: "Senior Plumber",
+        serviceType: "Plumber",
+        image: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?q=80&w=2070&auto=format&fit=crop",
+        rating: "4.9/5",
+        reviewCount: "150+",
+        jobs: "450+",
+        onTime: "99%",
+        description: "Vikram is the go-to expert for emergency plumbing. Efficient, polite, and extremely skilled in complex pipe installations and leak detection."
+    },
+    {
+        id: 3,
+        name: "Sunita Sharma",
+        role: "Expert Painter",
+        serviceType: "Painter",
+        image: "https://images.unsplash.com/photo-1596073419667-9d77d59f033f?q=80&w=1935&auto=format&fit=crop",
+        rating: "4.8/5",
+        reviewCount: "98",
+        jobs: "320+",
+        onTime: "98%",
+        description: "Sunita brings walls to life with her artistic touch. She is known for her cleanliness, color consultation, and attention to detail in residential painting."
+    },
+    {
+        id: 4,
+        name: "Arjun Mehta",
+        role: "AC Specialist",
+        serviceType: "AC Technician",
+        image: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2070&auto=format&fit=crop",
+        rating: "4.7/5",
+        reviewCount: "85",
+        jobs: "250+",
+        onTime: "96%",
+        description: "Keep your cool with Arjun's expert AC servicing. He specializes in component repair, gas refilling, and energy-efficient cooling optimizations."
+    },
+    {
+        id: 5,
+        name: "Rahul Verma",
+        role: "Inverter Expert",
+        serviceType: "Inverter Technician",
+        image: "https://images.unsplash.com/photo-1558227691-41ea78d1f631?q=80&w=1974&auto=format&fit=crop",
+        rating: "4.8/5",
+        reviewCount: "65",
+        jobs: "180+",
+        onTime: "97%",
+        description: "Rahul ensures you never run out of power. He specializes in inverter battery maintenance, UPS repair, and new power backup installations."
+    },
+    {
+        id: 6,
+        name: "Amit Patel",
+        role: "CCTV Security Pro",
+        serviceType: "CCTV Technician",
+        image: "https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=1974&auto=format&fit=crop",
+        rating: "4.9/5",
+        reviewCount: "110",
+        jobs: "300+",
+        onTime: "99%",
+        description: "Secure your premises with Amit's expertise. From IP camera setups to complex DVR networking, he delivers top-tier security solutions."
+    },
+    {
+        id: 7,
+        name: "Zoya Khan",
+        role: "Biometrics Specialist",
+        serviceType: "Biometrics Technician",
+        image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1976&auto=format&fit=crop",
+        rating: "5.0/5",
+        reviewCount: "45",
+        jobs: "120+",
+        onTime: "100%",
+        description: "Zoya is our access control expert. She handles fingerprint sensors, smart locks, and facial recognition systems for offices and smart homes."
+    },
+    {
+        id: 8,
+        name: "David Fernandes",
+        role: "Printer Technician",
+        serviceType: "Printer Technician",
+        image: "https://images.unsplash.com/photo-1563206767-5b1d97287397?q=80&w=2070&auto=format&fit=crop",
+        rating: "4.6/5",
+        reviewCount: "70",
+        jobs: "210+",
+        onTime: "95%",
+        description: "David fixes paper jams and connectivity issues in a flash. Specializing in both laser and inkjet printers for home and office setups."
+    }
+];
+
+const Home = () => {
+    const { user, updateUser, setUser } = useAuth();
+    const socket = useSocket(); // [NEW]
     const navigate = useNavigate();
     const [currentSlide, setCurrentSlide] = useState(0);
     const [selectedService, setSelectedService] = useState('Electrician');
+    const [selectedTechnician, setSelectedTechnician] = useState(null); // [ENSURE_STATE]
+    const [currentTechIndex, setCurrentTechIndex] = useState(0);
+    const [technicianProfiles, setTechnicianProfiles] = useState(fallbackProfiles);
+
+    // Fetch Realtime Top Technicians
+    useEffect(() => {
+        const fetchTopTechs = async () => {
+            try {
+                const res = await getTopRatedTechnicians();
+                if (res.data.success && res.data.technicians.length > 0) {
+                    const serverUrl = 'http://localhost:3000'; // Or generic
+                    const mapped = res.data.technicians.map(t => ({
+                        ...t,
+                        // Ensure image URL is absolute or valid
+                        image: t.documents?.photo
+                            ? (t.documents.photo.startsWith('http') ? t.documents.photo : `${serverUrl}${t.documents.photo}`)
+                            : fallbackProfiles[0].image,
+                        role: `Expert ${t.serviceType}`,
+                        // Use description from DB if exists, else nice fallback
+                        description: t.description || `${t.name} is a highly skilled ${t.serviceType} with exceptional ratings. Known for prompt service and technical expertise.`,
+                        // Ensure detailedRatings exists
+                        detailedRatings: t.detailedRatings || { behavior: 5, expertise: 5, professionalism: 5, timelieness: 5 }
+                    }));
+                    setTechnicianProfiles(mapped);
+                }
+            } catch (err) {
+                console.error("Failed to fetch top technicians", err);
+            }
+        };
+        fetchTopTechs();
+    }, []);
+
+    // [REAL-TIME] Listen for status updates
+    useEffect(() => {
+        if (socket) {
+            const handleStatusUpdate = ({ technicianId, status }) => {
+                setTechnicianProfiles(prev => prev.map(t =>
+                    t.id === technicianId ? { ...t, status: status } : t
+                ));
+            };
+            socket.on('technician_status_update', handleStatusUpdate);
+            return () => socket.off('technician_status_update', handleStatusUpdate);
+        }
+    }, [socket]);
 
     // Flow State
     const [bookingParams, setBookingParams] = useState(null); // Data from form
-    const [selectedTechnician, setSelectedTechnician] = useState(null); // Selected Tech
+    // Removed duplicate selectedTechnician state
 
     // Modals
     const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -73,11 +221,16 @@ const Home = ({ setUser }) => {
         return () => clearInterval(timer);
     }, []);
 
+    // Auto-advance Technician Profile
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTechIndex((prev) => (prev + 1) % technicianProfiles.length);
+        }, 6000);
+        return () => clearInterval(timer);
+    }, []);
+
     // Auto-Sync Location for Logged-In Users
     useEffect(() => {
-        const userStr = localStorage.getItem('user');
-        const user = userStr ? JSON.parse(userStr) : null;
-
         if (user && user.id && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(async (position) => {
                 const lat = position.coords.latitude;
@@ -100,9 +253,8 @@ const Home = ({ setUser }) => {
                     const newLocation = { latitude: lat, longitude: lon, address: addressText };
                     await api.put(`/users/${user.id}`, { location: newLocation });
 
-                    // 3. Update Local Storage
-                    const updatedUser = { ...user, location: newLocation };
-                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                    // 3. Update Context (which handles localStorage)
+                    updateUser({ location: newLocation });
                     console.log("Home: Location synced to backend");
 
                 } catch (err) {
@@ -110,44 +262,33 @@ const Home = ({ setUser }) => {
                 }
             });
         }
-    }, []);
+    }, [user?.id]);
 
     const handleFormSearch = (data) => {
-        // Step 1: User fills form and clicks "Book" -> Direct Auto-Assign Flow
-        // We do NOT show the map/search modal. We send directly to backend.
-
-        const user = JSON.parse(localStorage.getItem('user'));
-
-        // Prepare base booking data
-        // We don't have a selected technician, so technicianId will be null
+        // Step 1: User fills form and clicks "Book"
+        // Open Confirmation Modal instead of direct creation
         const bookingData = {
             ...data,
-            technicianId: null,
-            visitingCharges: 0, // Default or handled by backend
-            agreementAccepted: true // Auto-accept for direct flow or add a small checkbox in form if strict
+            technicianId: data.technicianId || null, // [FIX] Preserved from form if present
+            visitingCharges: 299, // Set display charge
+            agreementAccepted: false // Reset agreement
         };
 
-        if (!user) {
-            // Not logged in -> Show Login Modal
-            setBookingParams(bookingData);
-            setIsLoginOpen(true);
-        } else {
-            // Logged in -> Create Job Directly (Smart Assignment)
-            createJobRequest({ ...bookingData, userId: user.id });
+        setBookingParams(bookingData);
+        // Only clear if not specific booking
+        if (!data.technicianId) {
+            setSelectedTechnician(null);
         }
+        setIsConfirmOpen(true);
     };
 
     const handleTechnicianSelect = (technician) => {
-        // Step 2: (Legacy/Dashboard Flow) User selects a technician from search results
         setSelectedTechnician(technician);
         setIsSearchOpen(false);
         setIsConfirmOpen(true);
     };
 
     const handleConfirmBooking = (finalBookingData) => {
-        // Step 3: (Legacy/Dashboard Flow) User confirms details in popup
-        const user = JSON.parse(localStorage.getItem('user'));
-
         if (!user) {
             setIsConfirmOpen(false);
             setIsLoginOpen(true);
@@ -157,15 +298,13 @@ const Home = ({ setUser }) => {
         }
     };
 
-    const handleLoginSuccess = (user) => {
-        // Update App state immediately so navigation works
-        if (setUser) setUser(user);
+    const handleLoginSuccess = (userData) => {
+        // setUser is now from context, it handles the state update
+        setUser(userData);
 
-        // Step 4: Login Successful -> Resume Booking
         setIsLoginOpen(false);
         if (bookingParams && selectedTechnician) {
-            // Re-trigger booking creation with new user ID
-            createJobRequest({ ...bookingParams, userId: user.id });
+            createJobRequest({ ...bookingParams, userId: userData.id });
         }
     };
 
@@ -175,27 +314,18 @@ const Home = ({ setUser }) => {
         try {
             const payload = {
                 ...fullData,
-                // Ensure field names match backend expectation
-                technicianId: selectedTechnician?.id,
+                technicianId: fullData.technicianId || selectedTechnician?.id,
             };
 
             const res = await createJob(payload);
             if (res.data.success) {
-                // Step 5: Success
                 setIsConfirmOpen(false);
 
-                // Check if user is technician (unlikely for this flow, but safe check)
-                const user = JSON.parse(localStorage.getItem('user'));
                 if (user && user.role === 'technician') {
                     alert("Booking created! Redirecting to dashboard...");
                     navigate('/technician-dashboard');
                 } else {
-                    // Custom Success Flow
                     setIsRequesting(true);
-
-                    // Redirect to user dashboard in background and auto terminate logic
-                    // We wait 3 seconds to let user read the message, then navigate.
-                    // Navigation unmounts Home, thus "auto terminating" the popup.
                     setTimeout(() => {
                         navigate('/dashboard');
                     }, 4000);
@@ -207,41 +337,50 @@ const Home = ({ setUser }) => {
         }
     };
 
-    const handleBookNow = (serviceType = 'Electrician') => {
-        const userStr = localStorage.getItem('user');
-        const user = userStr ? JSON.parse(userStr) : null;
+    // Updated to support specific technician booking
+    const handleBookNow = (serviceType = 'Electrician', technician = null) => {
+        // If specific tech, set state and scroll to form (Bypass Map)
+        if (technician) {
+            setSelectedService(serviceType);
+            setSelectedTechnician(technician);
+            document.getElementById('booking-form-section')?.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
 
         // Quick Booking through Tiles -> Open Map (Legacy/Quick Flow)
         setSelectedService(serviceType);
+        setSelectedTechnician(null); // Clear specific tech for general map search
+
+        // PRIORITY STRATEGY: Live Location -> User Profile -> Default (New Delhi)
 
         const launchModal = (loc) => {
             setBookingParams({
                 serviceType,
-                location: loc, // TechnicianSearchModal needs this
+                location: loc,
                 scheduledDate: new Date().toISOString().split('T')[0],
                 scheduledTime: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
                 contactName: user ? user.name : '',
                 contactPhone: '',
                 description: 'Quick Tile Booking'
             });
-            setIsSearchOpen(true); // Open the Map Modal
+            setIsSearchOpen(true);
         };
-
-        // PRIORITY 1: User Profile Location (Immediate Use)
-        if (user && user.location && user.location.latitude) {
-            const loc = {
-                latitude: user.location.latitude,
-                longitude: user.location.longitude,
-                address: user.location.address || "Saved Profile Location"
-            };
-            launchModal(loc);
-            return;
-        }
 
         const handleLocationError = (error = null) => {
             console.error("Location detection failed:", error);
 
-            // Fallback: Default Location (New Delhi)
+            // Fallback 1: User Profile Location (if available)
+            if (user && user.location && user.location.latitude) {
+                const loc = {
+                    latitude: user.location.latitude,
+                    longitude: user.location.longitude,
+                    address: user.location.address || "Saved Profile Location"
+                };
+                launchModal(loc);
+                return;
+            }
+
+            // Fallback 2: Default Location (New Delhi)
             alert("Location access failed. Showing technicians in New Delhi (Default).");
             const defaultLoc = {
                 latitude: 28.6139,
@@ -332,7 +471,7 @@ const Home = ({ setUser }) => {
             </AnimatePresence>
 
             {/* --- Hero Section with Slideshow --- */}
-            <section className="relative h-[650px] rounded-3xl overflow-hidden mx-6 shadow-2xl mb-32 z-0 ring-1 ring-slate-900/5">
+            <section className="relative h-[650px] overflow-hidden mb-32 z-0">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={currentSlide}
@@ -347,7 +486,8 @@ const Home = ({ setUser }) => {
                             style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
                         />
                         {/* Lighter Gradient Overlay for Light Theme readability if needed, or keeping it dark for contrast with white text */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/50 to-transparent"></div>
+                        {/* Red Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-red-950/95 via-red-900/60 to-red-900/20"></div>
                     </motion.div>
                 </AnimatePresence>
 
@@ -359,7 +499,7 @@ const Home = ({ setUser }) => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2, duration: 0.8 }}
                         >
-                            <span className="px-4 py-1.5 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-200 text-xs font-bold uppercase tracking-wider mb-6 inline-block backdrop-blur-md">
+                            <span className="px-4 py-1.5 rounded-full bg-red-600/20 border border-red-500/30 text-red-200 text-xs font-bold uppercase tracking-wider mb-6 inline-block backdrop-blur-md">
                                 ✨ #1 Home Service Platform
                             </span>
                             <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 text-white drop-shadow-lg tracking-tight">
@@ -368,15 +508,20 @@ const Home = ({ setUser }) => {
                             <p className="text-xl text-slate-200 mb-10 max-w-xl font-medium drop-shadow-md leading-relaxed">
                                 {slides[currentSlide].subtitle}
                             </p>
-                            <div className="flex gap-5">
+                            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto" style={{ flexDirection: 'column', gap: '1rem' }} data-version="nuclear-v4">
+                                {/* Mobile-first inline style override for redundancy */}
+                                <div className="hidden sm:block"> {/* Spacer for desktop logic if needed, but here we just ensure wrapper is robust */} </div>
+
                                 <Button
-                                    onClick={() => handleBookNow('Electrician')} // Default or derive from slide
-                                    className="px-10 py-4 text-base font-bold shadow-xl shadow-blue-600/30 bg-transparent hover:bg-white hover:text-slate-900 border-2 border-white rounded-full transform transition hover:-translate-y-1"
+                                    onClick={() => handleBookNow('Electrician')}
+                                    className="w-full sm:w-auto px-8 py-4 text-base font-bold shadow-xl shadow-blue-600/30 bg-white text-slate-900 border-2 border-white rounded-full transition-all hover:scale-105 active:scale-95 !w-full sm:!w-auto"
                                 >
                                     Book Now
                                 </Button>
-                                <Link to="/services">
-                                    <Button variant="secondary" className="px-10 py-4 text-base font-bold bg-transparent hover:bg-white hover:text-slate-900 text-white border-2 border-white backdrop-blur-md rounded-full shadow-lg transform transition hover:-translate-y-1">Learn More</Button>
+                                <Link to="/services" className="w-full sm:w-auto block">
+                                    <Button className="w-full sm:w-auto px-8 py-4 text-base font-bold bg-white/10 backdrop-blur-md text-white border-2 border-white/30 rounded-full transition-all hover:bg-white/20 hover:scale-105 active:scale-95 !w-full sm:!w-auto">
+                                        Learn More
+                                    </Button>
                                 </Link>
                             </div>
                         </motion.div>
@@ -389,7 +534,7 @@ const Home = ({ setUser }) => {
                         <button
                             key={idx}
                             onClick={() => setCurrentSlide(idx)}
-                            className={`h-1.5 rounded-full transition-all duration-500 shadow-sm ${idx === currentSlide ? 'w-12 bg-blue-500' : 'w-2 bg-white/30 hover:bg-white/60'}`}
+                            className={`h-1.5 rounded-full transition-all duration-500 shadow-sm ${idx === currentSlide ? 'w-12 bg-red-600' : 'w-2 bg-white/30 hover:bg-white/60'}`}
                         />
                     ))}
                 </div>
@@ -399,98 +544,175 @@ const Home = ({ setUser }) => {
 
             {/* --- Booking Section (Separated) --- */}
             <div id="booking-form-section" className="container mx-auto px-4 mb-24 relative z-20">
-                <div className="text-center mb-8 mt-12">
-                    <h2 className="text-3xl font-extrabold text-slate-900">Book a Professional</h2>
-                    <p className="text-slate-500 mt-2">Get the help you need, exactly when you need it.</p>
+                <div className="flex flex-col items-center text-center mb-16 mt-12">
+                    <div className="inline-flex items-center justify-center p-3 bg-blue-50 rounded-2xl mb-6">
+                        <Wrench className="text-blue-600" size={32} />
+                    </div>
+                    <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">Book a Professional Technician</h2>
+                    <p className="text-slate-500 text-lg md:text-xl max-w-2xl text-center">Select a service, pick your preferred time, and get expert help at your doorstep. Fast, reliable, and guaranteed quality.</p>
                 </div>
-                <div className="max-w-7xl mx-auto">
-                    <ServiceBookingForm preselectedService={selectedService} onSearch={handleFormSearch} />
+
+                <div className="flex flex-col items-center">
+                    <ServiceBookingForm
+                        preselectedService={selectedService}
+                        preselectedTechnician={selectedTechnician} // [NEW] Pass tech
+                        onSearch={handleFormSearch}
+                    />
                 </div>
             </div>
 
-            {/* --- Features / Trust Indicators --- */}
-            <div className="bg-white border-y border-slate-100 py-16 shadow-sm relative z-10 mb-24">
-                <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12">
-                    <FeatureBox icon={<Shield size={32} className="text-blue-600" />} title="Verified Experts" desc="Background checked & trained professionals." />
-                    <FeatureBox icon={<Clock size={32} className="text-amber-500" />} title="60-min Service" desc="Rapid response time for urgent repairs." />
-                    <FeatureBox icon={<Star size={32} className="text-green-600" />} title="Satisfaction Guarantee" desc="30-day warranty on all jobs done." />
-                </div>
-            </div>
+            {/* explicit spacer to force separation */}
+            <div className="h-[10px] w-full block" aria-hidden="true"></div>
 
-            {/* --- Services Grid --- */}
-            <section className="py-24 container mx-auto px-4">
-                <div className="text-center mb-20">
-                    <h2 className="text-4xl font-extrabold mb-4 text-slate-900 tracking-tight">Our Professional Services</h2>
-                    <p className="text-slate-500 text-lg max-w-2xl mx-auto">Expert solutions for every corner of your home.</p>
-                </div>
-
-                {/* Fixed Grid Alignment - Exact 8 Services with Full Names */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 px-4 md:px-12">
-                    <div onClick={() => handleBookNow('Electrician')}><ServiceCard icon={<Zap size={32} />} title="Electrician" desc="Wiring & Safety" color="text-amber-500" bg="bg-amber-50" /></div>
-                    <div onClick={() => handleBookNow('Plumber')}><ServiceCard icon={<Droplet size={32} />} title="Plumber" desc="Pipes & Leaks" color="text-cyan-600" bg="bg-cyan-50" /></div>
-                    <div onClick={() => handleBookNow('Painter')}><ServiceCard icon={<Paintbrush size={32} />} title="Painter" desc="Interior Styling" color="text-pink-500" bg="bg-pink-50" /></div>
-                    <div onClick={() => handleBookNow('AC Technician')}><ServiceCard icon={<Fan size={32} />} title="A.C. Technician" desc="Cooling & Gas" color="text-blue-600" bg="bg-blue-50" /></div>
-
-                    <div onClick={() => handleBookNow('Inverter Technician')}><ServiceCard icon={<BatteryCharging size={32} />} title="Inverter Technician" desc="Battery & UPS" color="text-orange-600" bg="bg-orange-50" /></div>
-                    <div onClick={() => handleBookNow('CCTV Technician')}><ServiceCard icon={<Camera size={32} />} title="CCTV Technician" desc="Security Cams" color="text-emerald-600" bg="bg-emerald-50" /></div>
-                    <div onClick={() => handleBookNow('Biometrics Technician')}><ServiceCard icon={<Fingerprint size={32} />} title="Biometrics Technician" desc="Access Control" color="text-purple-600" bg="bg-purple-50" /></div>
-                    <div onClick={() => handleBookNow('Printer Technician')}><ServiceCard icon={<Printer size={32} />} title="Printer Technician" desc="Repair & Fix" color="text-slate-600" bg="bg-slate-50" /></div>
-                </div>
-            </section>
-
-            {/* Added spacing to prevent collision */}
-            <div className="h-20"></div>
-
-            {/* --- Technician of the Month --- */}
-            <section className="py-32 bg-slate-900 text-white relative overflow-hidden my-24 mb-32 rounded-[3rem] mx-4 shadow-2xl">
-                <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-blue-900/30 to-transparent -skew-x-12 translate-x-20"></div>
-                <div className="container mx-auto px-8 relative z-10">
-                    <div className="flex flex-col md:flex-row items-center gap-16">
-                        <div className="md:w-1/2">
-                            <div className="relative group">
-                                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-3xl opacity-50 blur-lg group-hover:opacity-75 transition duration-1000"></div>
-                                <img
-                                    src="https://images.unsplash.com/photo-1542596594-649edbc13630?q=80&w=1974&auto=format&fit=crop"
-                                    alt="Technician of the Month"
-                                    className="relative rounded-2xl shadow-2xl w-full object-cover aspect-[4/3] border border-white/10"
-                                />
-                                <div className="absolute bottom-8 left-8 bg-slate-900/90 backdrop-blur-md p-5 rounded-2xl shadow-xl border border-white/10">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <Star size={18} className="text-yellow-400 fill-yellow-400" />
-                                        <span className="font-bold text-white text-lg">4.9/5 Rating</span>
-                                    </div>
-                                    <p className="text-xs text-slate-400 font-medium">Based on 120+ reviews</p>
-                                </div>
-                            </div>
+            {/* --- Features Grid (Moved Outside) --- */}
+            <div className="container mx-auto px-4 relative z-20 mb-24">
+                <div className="flex flex-wrap justify-center items-center gap-3 mx-auto w-full">
+                    <div className="w-[170px] shrink-0 h-[50px] flex flex-row items-center justify-center gap-3 p-2 bg-white rounded-lg border border-slate-100 shadow-sm transition-transform hover:-translate-y-1 duration-300">
+                        <div className="p-1.5 bg-blue-50 rounded-full text-blue-600 shrink-0">
+                            <ShieldCheck size={18} />
                         </div>
-                        <div className="md:w-1/2 space-y-8">
-                            <div>
-                                <h4 className="text-blue-400 font-bold uppercase tracking-widest text-sm mb-3">Technician of the Month</h4>
-                                <h2 className="text-5xl font-extrabold mb-6 tracking-tight">Meet Raj Kumar</h2>
-                                <p className="text-slate-300 text-xl leading-relaxed font-light">
-                                    Raj has been Fixofy's top-rated Master Electrician for 3 months running. With over 10 years of experience, he specializes in smart home installations.
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-8">
-                                <div className="bg-white/5 p-6 rounded-2xl border border-white/5 backdrop-blur-sm">
-                                    <h5 className="text-3xl font-bold text-white mb-1">500+</h5>
-                                    <p className="text-slate-400 font-medium">Jobs Completed</p>
-                                </div>
-                                <div className="bg-white/5 p-6 rounded-2xl border border-white/5 backdrop-blur-sm">
-                                    <h5 className="text-3xl font-bold text-white mb-1">100%</h5>
-                                    <p className="text-slate-400 font-medium">On-Time Record</p>
-                                </div>
-                            </div>
-
-                            <Button onClick={() => handleBookNow('Electrician')} className="px-10 py-4 bg-transparent text-white hover:bg-white hover:text-slate-900 border-2 border-white rounded-full font-bold shadow-lg shadow-white/10 transform transition hover:-translate-y-1">Book Raj Now</Button>
+                        <p className="text-xs font-bold text-slate-900 leading-tight">Verified Experts</p>
+                    </div>
+                    <div className="w-[170px] shrink-0 h-[50px] flex flex-row items-center justify-center gap-3 p-2 bg-white rounded-lg border border-slate-100 shadow-sm transition-transform hover:-translate-y-1 duration-300">
+                        <div className="p-1.5 bg-blue-50 rounded-full text-blue-600 shrink-0">
+                            <Clock size={18} />
                         </div>
+                        <p className="text-xs font-bold text-slate-900 leading-tight">On-Time Service</p>
+                    </div>
+                    <div className="w-[170px] shrink-0 h-[50px] flex flex-row items-center justify-center gap-3 p-2 bg-white rounded-lg border border-slate-100 shadow-sm transition-transform hover:-translate-y-1 duration-300">
+                        <div className="p-1.5 bg-blue-50 rounded-full text-blue-600 shrink-0">
+                            <Wallet size={18} />
+                        </div>
+                        <p className="text-xs font-bold text-slate-900 leading-tight">Min. Visit Price</p>
+                    </div>
+                    <div className="w-[170px] shrink-0 h-[50px] flex flex-row items-center justify-center gap-3 p-2 bg-white rounded-lg border border-slate-100 shadow-sm transition-transform hover:-translate-y-1 duration-300">
+                        <div className="p-1.5 bg-blue-50 rounded-full text-blue-600 shrink-0">
+                            <ThumbsUp size={18} />
+                        </div>
+                        <p className="text-xs font-bold text-slate-900 leading-tight">Top Rated</p>
                     </div>
                 </div>
+            </div>
+
+
+
+            {/* --- Services Grid --- */}
+            <section className="pt-24 pb-2 container mx-auto px-4">
+                <div className="text-center mb-20">
+                    <h2 className="text-4xl font-extrabold mb-4 text-slate-900 tracking-tight">Our Professional Services</h2>
+                    <p className="text-slate-500 text-lg mx-auto text-center w-full block px-4">Expert solutions for every corner of your home.</p>
+                </div>
+
+                {/* Flexbox alignment for dynamic centering */}
+                <div className="flex flex-wrap justify-center gap-3 md:gap-6 px-2 md:px-12 w-full">
+                    {[
+                        { id: 'Electrician', icon: <Zap size={18} />, title: "Electrician", desc: "Wiring & Safety", color: "text-amber-500", bg: "bg-amber-50" },
+                        { id: 'Plumber', icon: <Droplet size={18} />, title: "Plumber", desc: "Pipes & Leaks", color: "text-cyan-600", bg: "bg-cyan-50" },
+                        { id: 'Painter', icon: <Paintbrush size={18} />, title: "Painter", desc: "Interior Styling", color: "text-pink-500", bg: "bg-pink-50" },
+                        { id: 'AC Technician', icon: <Fan size={18} />, title: "A.C. Technician", desc: "Cooling & Gas", color: "text-blue-600", bg: "bg-blue-50" },
+                        { id: 'Inverter Technician', icon: <BatteryCharging size={18} />, title: "Inverter Technician", desc: "Battery & UPS", color: "text-orange-600", bg: "bg-orange-50" },
+                        { id: 'CCTV Technician', icon: <Camera size={18} />, title: "CCTV Technician", desc: "Security Cams", color: "text-emerald-600", bg: "bg-emerald-50" },
+                        { id: 'Biometrics Technician', icon: <Fingerprint size={18} />, title: "Biometrics Technician", desc: "Access Control", color: "text-purple-600", bg: "bg-purple-50" },
+                        { id: 'Printer Technician', icon: <Printer size={18} />, title: "Printer Technician", desc: "Repair & Fix", color: "text-slate-600", bg: "bg-slate-50" },
+                    ].map((service) => (
+                        <div key={service.id} onClick={() => handleBookNow(service.id)} className="w-[170px] shrink-0">
+                            <ServiceCard icon={service.icon} title={service.title} desc={service.desc} color={service.color} bg={service.bg} />
+                        </div>
+                    ))}
+                </div>
             </section>
 
+            {/* --- Technician of the Month --- */}
+            <section className="pt-24 pb-24 bg-slate-900 text-white relative overflow-hidden mt-[25px] mb-32 mx-4 shadow-2xl">
+                <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-blue-900/30 to-transparent -skew-x-12 translate-x-20"></div>
+                <div className="container mx-auto px-8 relative z-10">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentTechIndex}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.5 }}
+                            className="flex flex-col md:flex-row items-center gap-16"
+                        >
+                            <div className="md:w-1/2">
+                                <div className="relative group mt-[15px]">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-50 blur-lg group-hover:opacity-75 transition duration-1000"></div>
+                                    <img
+                                        src={technicianProfiles[currentTechIndex].image}
+                                        alt={technicianProfiles[currentTechIndex].name}
+                                        className="relative shadow-2xl w-full object-cover aspect-[4/3] border border-white/20"
+                                    />
+                                    <div className="absolute bottom-8 left-8 bg-slate-900/90 backdrop-blur-md p-5 shadow-xl border border-white/10">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Star size={18} className="text-yellow-400 fill-yellow-400" />
+                                            <span className="font-bold text-white text-lg">{technicianProfiles[currentTechIndex].rating} Rating</span>
+                                        </div>
+                                        <p className="text-xs text-slate-400 font-medium">Based on {technicianProfiles[currentTechIndex].reviewCount} reviews</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="md:w-1/2 space-y-8">
+                                <div>
+                                    <h4 className="text-blue-400 font-bold uppercase tracking-widest text-sm mb-3">Technician of the Month • {technicianProfiles[currentTechIndex].serviceType}</h4>
+                                    <h2 className="text-5xl font-extrabold mb-6 tracking-tight">Meet {technicianProfiles[currentTechIndex].name}</h2>
+                                    <p className="text-slate-300 text-xl leading-relaxed font-light">
+                                        {technicianProfiles[currentTechIndex].description}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-8 mb-5">
+                                    <div className="bg-white/5 p-6 border border-white/5 backdrop-blur-sm">
+                                        <h5 className="text-3xl font-bold text-white mb-1">{technicianProfiles[currentTechIndex].jobsCompleted || technicianProfiles[currentTechIndex].jobs}</h5>
+                                        <p className="text-slate-400 font-medium">Jobs Completed</p>
+                                    </div>
+                                    <div className="bg-white/5 p-6 border border-white/5 backdrop-blur-sm">
+                                        <h5 className="text-3xl font-bold text-white mb-1">{technicianProfiles[currentTechIndex].onTime}</h5>
+                                        <p className="text-slate-400 font-medium">On-Time Record</p>
+                                    </div>
+                                </div>
+
+                                {/* Detailed Ratings Grid - Realtime Fetched Data */}
+                                <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-6 p-5 bg-slate-800/50 rounded-xl border border-white/5">
+                                    <RatingRow color="cyan" icon={UserCheck} label="Behavior" score={technicianProfiles[currentTechIndex].detailedRatings?.behavior || 5} />
+                                    <RatingRow color="amber" icon={Smile} label="Attitude" score={technicianProfiles[currentTechIndex].detailedRatings?.attitude || 5} />
+                                    <RatingRow color="emerald" icon={BookOpen} label="Knowledge" score={technicianProfiles[currentTechIndex].detailedRatings?.expertise || 5} />
+                                    <RatingRow color="indigo" icon={Briefcase} label="Professionalism" score={technicianProfiles[currentTechIndex].detailedRatings?.professionalism || 5} />
+                                    <RatingRow color="rose" icon={Heart} label="Respect" score={technicianProfiles[currentTechIndex].detailedRatings?.respect || 5} />
+                                    <RatingRow color="violet" icon={ShieldCheck} label="Honesty" score={technicianProfiles[currentTechIndex].detailedRatings?.honesty || 5} />
+                                    <RatingRow color="sky" icon={Clock} label="Timeliness" score={technicianProfiles[currentTechIndex].detailedRatings?.timeliness || 5} />
+                                    <RatingRow color="lime" icon={MessageSquare} label="Communication" score={technicianProfiles[currentTechIndex].detailedRatings?.communication || 5} />
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <Button
+                                        onClick={() => handleBookNow(technicianProfiles[currentTechIndex].serviceType, technicianProfiles[currentTechIndex])}
+                                        disabled={technicianProfiles[currentTechIndex].status === 'engaged'}
+                                        className={`px-10 py-4 bg-transparent text-white border-2 border-white font-bold shadow-lg shadow-white/10 transform transition 
+                                            ${technicianProfiles[currentTechIndex].status === 'engaged' ? 'opacity-50 cursor-not-allowed hover:none' : 'hover:bg-white hover:text-slate-900 hover:-translate-y-1'}`}
+                                    >
+                                        {technicianProfiles[currentTechIndex].status === 'engaged'
+                                            ? `Expert Busy`
+                                            : `Book ${technicianProfiles[currentTechIndex].name.split(' ')[0]} Now`}
+                                    </Button>
+                                    <div className="flex gap-2 items-center justify-center sm:justify-start pt-2 sm:pt-0">
+                                        {technicianProfiles.map((_, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => setCurrentTechIndex(idx)}
+                                                className={`h-2 rounded-full transition-all duration-300 ${idx === currentTechIndex ? 'w-8 bg-blue-500' : 'w-2 bg-slate-600 hover:bg-slate-500'}`}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+            </section >
+
             {/* --- Testimonials --- */}
-            <section className="py-32 container mx-auto px-4 bg-slate-50 mb-48">
+            < section className="py-32 container mx-auto px-4 bg-slate-50 mb-48" >
                 <div className="text-center mb-44">
                     <h2 className="text-4xl font-extrabold mb-4 text-slate-900">What Our Clients Say</h2>
                     <p className="text-slate-500 text-lg">Trusted by thousands of homeowners across the city.</p>
@@ -516,7 +738,7 @@ const Home = ({ setUser }) => {
                         rating={5}
                     />
                 </div>
-            </section>
+            </section >
         </div >
     );
 };
@@ -536,16 +758,15 @@ const FeatureBox = ({ icon, title, desc }) => (
 
 const ServiceCard = ({ icon, title, desc, color, bg }) => (
     <motion.div
-        whileHover={{ y: -5, scale: 1.02 }}
-        className="aspect-square bg-white border border-slate-100 p-4 rounded-[1.5rem] shadow-sm hover:shadow-2xl transition-all group cursor-pointer flex flex-col items-center justify-center text-center relative overflow-hidden"
+        whileHover={{ y: -2 }}
+        className="flex flex-row items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer h-[50px] group overflow-hidden"
     >
-        <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`}></div>
-        <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-black/5`}>
-            <div className={`${color}`}>{icon}</div>
+        <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0 border border-black/5`}>
+            <div className={`${color} scale-75`}>{icon}</div>
         </div>
-        <div className="flex flex-col gap-1 w-full">
-            <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors w-full px-1 leading-tight tracking-tight">{title}</h3>
-            <p className="text-slate-400 text-xs font-medium px-1 opacity-90 uppercase tracking-wide">{desc}</p>
+        <div className="flex flex-col justify-center min-w-0">
+            <h3 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">{title}</h3>
+            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide truncate">{desc}</p>
         </div>
     </motion.div>
 );
@@ -564,6 +785,24 @@ const TestimonialCard = ({ name, role, review, rating }) => (
                 <h4 className="font-bold text-sm text-slate-900">{name}</h4>
                 <p className="text-xs text-slate-500">{role}</p>
             </div>
+        </div>
+    </div>
+);
+
+const RatingRow = ({ label, score, icon: Icon, color = 'blue' }) => (
+    <div className="flex items-center justify-between text-xs mb-1">
+        <div className="flex items-center gap-2 text-slate-400 font-medium">
+            {Icon && <Icon className={`w-3.5 h-3.5 text-${color}-400`} />}
+            <span>{label}</span>
+        </div>
+        <div className="flex gap-0.5">
+            {[...Array(5)].map((_, i) => (
+                <Star
+                    key={i}
+                    size={12}
+                    className={`transition-all duration-300 ${i < Math.round(score) ? `fill-${color}-500 text-${color}-500` : 'fill-slate-700/30 text-slate-700/30'}`}
+                />
+            ))}
         </div>
     </div>
 );

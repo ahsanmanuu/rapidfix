@@ -7,15 +7,31 @@ const api = axios.create({
 // Add a request interceptor to attach auth token if available
 api.interceptors.request.use(
     (config) => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        // const token = user?.token; 
-        // if (token) config.headers.Authorization = `Bearer ${token}`;
+        const token = localStorage.getItem('sessionToken');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
         return config;
     },
     (error) => Promise.reject(error)
 );
 
+// Add a response interceptor to handle global errors (like 401)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            // Token expired or invalid
+            localStorage.removeItem('user');
+            localStorage.removeItem('sessionToken');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
+
 export const getAvailableJobs = (serviceType) => api.get(`/jobs/available?serviceType=${serviceType}`);
+export const getUserProfile = (userId) => api.get(`/users/${userId}`);
 export const getMyJobs = (userId) => api.get(`/jobs/user/${userId}`);
 export const getJobsByTechnician = (techId) => api.get(`/jobs/technician/${techId}`);
 export const createJob = (data) => api.post('/jobs', data);
@@ -33,5 +49,13 @@ export const getRidesByTechnician = (techId) => api.get(`/rides/technician/${tec
 export const getOffers = () => api.get('/offers');
 export const getWalletBalance = (userId) => api.get(`/finance/wallet/${userId}`);
 export const addFunds = (userId, amount) => api.post('/finance/wallet/add', { userId, amount });
+
+// Admin User Management
+export const getAdminUsers = () => api.get('/admin/users');
+export const banUser = (id) => api.put(`/admin/users/${id}/ban`);
+export const unbanUser = (id) => api.put(`/admin/users/${id}/unban`);
+export const updateUserMembership = (id, tier) => api.put(`/admin/users/${id}/membership`, { tier });
+
+export const getTopRatedTechnicians = () => api.get('/technicians/top-rated');
 
 export default api;

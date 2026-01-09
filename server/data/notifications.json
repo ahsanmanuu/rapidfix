@@ -194,7 +194,7 @@
     "message": "Your job #1767194286235 is now rejected",
     "type": "job_rejected",
     "relatedId": "1767194286235",
-    "read": false,
+    "read": true,
     "createdAt": "2025-12-31T15:42:59.822Z"
   },
   {
@@ -227,7 +227,7 @@
     "message": "Your job #1767192436272 is now completed",
     "type": "job_completed",
     "relatedId": "1767192436272",
-    "read": false,
+    "read": true,
     "createdAt": "2025-12-31T15:49:18.368Z"
   },
   {
@@ -260,7 +260,7 @@
     "message": "Your job #1767195635050 is now in_progress",
     "type": "job_in_progress",
     "relatedId": "1767195635050",
-    "read": false,
+    "read": true,
     "createdAt": "2025-12-31T15:49:28.441Z"
   },
   {
@@ -293,7 +293,7 @@
     "message": "Your job #1767195635050 is now rejected",
     "type": "job_rejected",
     "relatedId": "1767195635050",
-    "read": false,
+    "read": true,
     "createdAt": "2025-12-31T15:50:10.282Z"
   },
   {
@@ -326,7 +326,7 @@
     "message": "Your job #1767194604302 is now in_progress",
     "type": "job_in_progress",
     "relatedId": "1767194604302",
-    "read": false,
+    "read": true,
     "createdAt": "2025-12-31T15:50:18.575Z"
   },
   {
@@ -359,7 +359,7 @@
     "message": "Your job #1767194604302 is now completed",
     "type": "job_completed",
     "relatedId": "1767194604302",
-    "read": false,
+    "read": true,
     "createdAt": "2025-12-31T15:50:26.956Z"
   },
   {
@@ -449,5 +449,137 @@
     "relatedId": "1767348246435",
     "read": false,
     "createdAt": "2026-01-02T10:04:06.500Z"
+  },
+  {
+    "id": "1767641658391v3787",
+    "recipientId": "1767032116929",
+    "role": "user",
+    "title": "Account Suspended",
+    "message": "Your account has been banned by the administrator.",
+    "type": "account_banned",
+    "relatedId": "1767032116929",
+    "read": true,
+    "createdAt": "2026-01-05T19:34:18.392Z"
+  },
+  {
+    "id": "1767641986179lo3ex",
+    "recipientId": "1767032116929",
+    "role": "user",
+    "title": "Account Reactivated",
+    "message": "Your account has been reactivated.",
+    "type": "account_active",
+    "relatedId": "1767032116929",
+    "read": true,
+    "createdAt": "2026-01-05T19:39:46.179Z"
+  },
+  {
+    "id": "1767641994808nm69y",
+    "recipientId": "1767032116929",
+    "role": "user",
+    "title": "Account Suspended",
+    "message": "Your account has been banned by the administrator.",
+    "type": "account_banned",
+    "relatedId": "1767032116929",
+    "read": true,
+    "createdAt": "2026-01-05T19:39:54.808Z"
+  },
+  {
+    "id": "1767642079423vl604",
+    "recipientId": "1767032116929",
+    "role": "user",
+    "title": "Account Suspended",
+    "message": "Your account has been banned by the administrator.",
+    "type": "account_banned",
+    "relatedId": "1767032116929",
+    "read": true,
+    "createdAt": "2026-01-05T19:41:19.423Z"
+  },
+  {
+    "id": "1767642443246jk96p",
+    "recipientId": "1767032116929",
+    "role": "user",
+    "title": "Account Reactivated",
+    "message": "Your account has been reactivated.",
+    "type": "account_active",
+    "relatedId": "1767032116929",
+    "read": true,
+    "createdAt": "2026-01-05T19:47:23.246Z"
+  },
+  {
+    "id": "1767642446327jzcx9",
+    "recipientId": "1767032116929",
+    "role": "user",
+    "title": "Account Suspended",
+    "message": "Your account has been banned by the administrator.",
+    "type": "account_banned",
+    "relatedId": "1767032116929",
+    "read": true,
+    "createdAt": "2026-01-05T19:47:26.327Z"
+  },
+  {
+    "id": "176764269952450ktw",
+    "recipientId": "1767032116929",
+    "role": "user",
+    "title": "Account Reactivated",
+    "message": "Your account has been reactivated.",
+    "type": "account_active",
+    "relatedId": "1767032116929",
+    "read": true,
+    "createdAt": "2026-01-05T19:51:39.524Z"
+  },
+  {
+    "id": "1767643258243t0h9l",
+    "recipientId": "1767032116929",
+    "role": "user",
+    "title": "Membership Updated",
+    "message": "Your membership has been updated to Premium.",
+    "type": "membership_update",
+    "relatedId": "1767032116929",
+    "read": true,
+    "createdAt": "2026-01-05T20:00:58.243Z"
+  },
+  {
+    "id": "1767643265789uj4wo",
+    "recipientId": "1767032116929",
+    "role": "user",
+    "title": "Membership Updated",
+    "message": "Your membership has been updated to Free.",
+    "type": "membership_update",
+    "relatedId": "1767032116929",
+    "read": true,
+    "createdAt": "2026-01-05T20:01:05.789Z"
+  },
+  {
+    "id": "1767643598855sjxpg",
+    "recipientId": "1767032116929",
+    "role": "user",
+    "title": "Membership Updated",
+    "message": "Your membership has been updated to Premium.",
+    "type": "membership_update",
+    "relatedId": "1767032116929",
+    "read": true,
+    "createdAt": "2026-01-05T20:06:38.855Z"
+  },
+  {
+    "id": "17678842111733haip",
+    "recipientId": "admin",
+    "role": "admin",
+    "title": "New Job Request",
+    "message": "Job #1767884211136 created by User",
+    "type": "job_created",
+    "relatedId": "1767884211136",
+    "read": false,
+    "createdAt": "2026-01-08T14:56:51.173Z"
+  },
+  {
+    "id": "1767884211177ehej4",
+    "recipientId": "1767347834358",
+    "role": "technician",
+    "title": "New Job Assigned",
+    "message": "You have been assigned Job #1767884211136",
+    "type": "job_assigned",
+    "relatedId": "1767884211136",
+    "read": false,
+    "createdAt": "2026-01-08T14:56:51.177Z"
   }
 ]

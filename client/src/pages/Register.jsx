@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/neu-styles.css';
+import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
+    const { setUser } = useAuth();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: '',
@@ -126,10 +128,9 @@ const Register = () => {
             const response = await api.post('/users/register', payload);
             if (response.data.success) {
                 setSuccess(true);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
-                localStorage.setItem('sessionToken', response.data.sessionToken);
+                setUser(response.data.user, response.data.sessionToken);
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    navigate('/dashboard');
                 }, 2000);
             }
         } catch (err) {
@@ -329,7 +330,7 @@ const Register = () => {
                         </div>
 
                         <button type="submit" className={`neu-button login-btn ${loading ? 'loading' : ''}`} disabled={loading}>
-                            <span className="btn-text">Sign Up</span>
+                            <span className="btn-text">Register Account</span>
                             <div className="btn-loader">
                                 <div className="neu-spinner"></div>
                             </div>

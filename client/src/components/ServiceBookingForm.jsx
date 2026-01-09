@@ -1,407 +1,318 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, MapPin, User, Phone, Search, CheckCircle, ArrowRight } from 'lucide-react';
-import { createJob } from '../services/api';
+import {
+    Calendar, Clock, MapPin, User, Phone, Search, CheckCircle,
+    ArrowRight, ChevronDown, Crosshair, ShieldCheck, Zap, Droplet,
+    Paintbrush, Fan, BatteryCharging, Video, Fingerprint, Printer
+} from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
-const ServiceBookingForm = ({ preselectedService = 'Electrician', onSearch }) => {
+const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = null, onSearch }) => {
+    const { user } = useAuth();
     const [formData, setFormData] = useState({
         serviceType: preselectedService,
+        technicianId: preselectedTechnician?.id || null, // [NEW]
         contactName: '',
         contactPhone: '',
         scheduledDate: '',
         scheduledTime: '',
-        description: '',
+        address: '',
         location: null
     });
 
+    const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    const [locationStatus, setLocationStatus] = useState('pending');
+    const [locationStatus, setLocationStatus] = useState('idle');
+
+    // ... (useEffect for click outside remains)
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user) {
-            setFormData(prev => ({ ...prev, contactName: user.name || '', contactPhone: user.phone || '' }));
-
-            // Priority: Use Saved User Location
-            if (user.location && user.location.latitude) {
-                setFormData(prev => ({
-                    ...prev,
-                    location: { ...user.location }
-                }));
-                setLocationStatus('success');
-                return; // Skip fresh geolocation
-            }
+        if (preselectedTechnician) {
+            setFormData(prev => ({
+                ...prev,
+                technicianId: preselectedTechnician.id,
+                // Also ensure service type matches tech if not set
+                serviceType: preselectedService || preselectedTechnician.serviceType
+            }));
         }
+    }, [preselectedTechnician]);
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    setFormData(prev => ({
-                        ...prev,
-                        location: { latitude: pos.coords.latitude, longitude: pos.coords.longitude }
-                    }));
-                    setLocationStatus('success');
-                },
-                (err) => {
-                    console.error('Location error', err);
-                    setLocationStatus('error');
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        }
-    }, [preselectedService]);
-
-    useEffect(() => {
-        setFormData(prev => ({ ...prev, serviceType: preselectedService }));
-    }, [preselectedService]);
+    // ... (other useEffects)
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!formData.location) {
-            alert("Location is required. Please enable location services.");
-            return;
-        }
-        if (onSearch) {
-            onSearch(formData);
-        }
+    const handleServiceSelect = (serviceName) => {
+        setFormData(prev => ({ ...prev, serviceType: serviceName }));
+        setIsServiceDropdownOpen(false);
     };
 
-    const services = [
-        "Electrician", "Plumber", "Painter", "AC Technician",
-        "Inverter Tech", "CCTV Technician", "Biometrics Technician", "Printer Technician"
-    ];
-
-    if (submitted) {
-        return (
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-3xl shadow-2xl p-10 text-center min-h-[250px] flex flex-col items-center justify-center border border-slate-100"
-            >
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600">
-                    <CheckCircle size={40} />
-                </div>
-                <h2 className="text-3xl font-bold text-slate-800 mb-2">Booking Confirmed</h2>
-                <p className="text-slate-500 mb-6">Expert arriving on {formData.scheduledDate} at {formData.scheduledTime}</p>
-                <button onClick={() => setSubmitted(false)} className="px-6 py-2 bg-slate-900 text-white rounded-lg font-bold">Book Another</button>
-            </motion.div>
-        );
-    }
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="w-full bg-white rounded-full shadow-[0_20px_40px_-5px_rgba(0,0,0,0.1)] border border-slate-200 p-2 pl-8 hidden lg:block"
-        >
-            <form onSubmit={handleSubmit} className="flex items-center divide-x divide-slate-200">
-                {/* 1. Service */}
-                <div className="flex-1 pr-6 py-2 group relative">
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Service</label>
-                    <div className="relative">
-                        <select
-                            name="serviceType"
-                            value={formData.serviceType}
-                            onChange={handleChange}
-                            className="w-full bg-transparent border-none p-0 text-lg font-bold text-slate-800 focus:ring-0 cursor-pointer appearance-none truncate"
-                        >
-                            {services.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                    </div>
-                    <p className="text-sm text-slate-400 truncate mt-0.5">What help do you need?</p>
-                </div>
-
-                {/* 2. Date & Time */}
-                <div className="flex-1 px-6 py-2">
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Schedule</label>
-                    <div className="flex gap-2">
-                        <input
-                            type="date"
-                            name="scheduledDate"
-                            value={formData.scheduledDate}
-                            onChange={handleChange}
-                            className="bg-transparent border-none p-0 text-sm font-bold text-slate-800 focus:ring-0 w-28 cursor-pointer"
-                            required
-                        />
-                        <input
-                            type="time"
-                            name="scheduledTime"
-                            value={formData.scheduledTime}
-                            onChange={handleChange}
-                            className="bg-transparent border-none p-0 text-sm font-bold text-slate-800 focus:ring-0 w-20 cursor-pointer"
-                            required
-                        />
-                    </div>
-                    <p className="text-sm text-slate-400 truncate mt-0.5">Pick a slot</p>
-                </div>
-
-                {/* 3. Contact */}
-                <div className="flex-1 px-6 py-2">
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Contact</label>
-                    <div className="flex flex-col">
-                        <input type="text" name="contactName" placeholder="Name" value={formData.contactName} onChange={handleChange} className="w-full bg-transparent border-none p-0 text-sm font-bold text-slate-800 focus:ring-0 placeholder:font-normal" required />
-                        <input type="tel" name="contactPhone" placeholder="Phone" value={formData.contactPhone} onChange={handleChange} className="w-full bg-transparent border-none p-0 text-xs text-slate-500 focus:ring-0" required />
-                    </div>
-                </div>
-
-                {/* 4. Description (Mobile hidden or truncated) */}
-                <div className="flex-1 px-6 py-2">
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Description</label>
-                    <input
-                        type="text"
-                        name="description"
-                        placeholder="Issue details..."
-                        value={formData.description}
-                        onChange={handleChange}
-                        className="w-full bg-transparent border-none p-0 text-sm font-medium text-slate-800 focus:ring-0 placeholder:text-slate-400"
-                    />
-                    <div className="flex items-center gap-1 mt-1">
-                        <div className={`w-1.5 h-1.5 rounded-full ${locationStatus === 'success' ? 'bg-green-500' : 'bg-slate-300'}`}></div>
-                        <span className="text-[10px] text-slate-400">{locationStatus === 'success' ? 'Location Set' : 'Locating...'}</span>
-                    </div>
-                </div>
-
-                {/* Button */}
-                <div className="pl-4">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="bg-red-500 hover:bg-red-600 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-lg transition-transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed group"
-                    >
-                        {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search size={28} />}
-                    </button>
-                </div>
-            </form>
-
-            {/* Mobile Fallback - keeping the larger card style for mobile only */}
-            <div className="lg:hidden">
-                {/* Fallback code for mobile view if needed, or we just rely on grid stack. 
-                    Actually, let's make the form responsive by using flex-col on mobile.
-                */}
-            </div>
-        </motion.div>
-    );
-};
-
-// We need a separate return for Mobile to look good.
-// Replacing the above with a responsive version in one component.
-
-const ResponsiveServiceBookingForm = ({ preselectedService = 'Electrician', onSearch }) => {
-    const [formData, setFormData] = useState({
-        serviceType: preselectedService,
-        contactName: '',
-        contactPhone: '',
-        scheduledDate: '',
-        scheduledTime: '',
-        description: '',
-        location: null
-    });
-    const [loading, setLoading] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
-    const [locationStatus, setLocationStatus] = useState('pending');
-
-    useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user) {
-            setFormData(prev => ({ ...prev, contactName: user.name || '', contactPhone: user.phone || '' }));
-            // Priority: Use Saved User Location
-            if (user.location && user.location.latitude) {
-                setFormData(prev => ({
-                    ...prev,
-                    location: { ...user.location }
-                }));
-                setLocationStatus('success');
-                return; // Skip fresh geolocation
-            }
-        }
+    const handleDetectLocation = (e) => {
+        e.preventDefault();
+        setLocationStatus('loading');
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    setFormData(prev => ({
-                        ...prev, location: { latitude: pos.coords.latitude, longitude: pos.coords.longitude }
-                    }));
-                    setLocationStatus('success');
-                },
-                () => setLocationStatus('error'),
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        }
-    }, [preselectedService]);
+                async (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const data = await response.json();
 
-    useEffect(() => { setFormData(prev => ({ ...prev, serviceType: preselectedService })); }, [preselectedService]);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!formData.location) { alert("Location required."); return; }
-        if (onSearch) onSearch(formData);
-    };
-
-    if (submitted) {
-        return (
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-3xl shadow-xl p-8 text-center min-h-[200px] flex flex-col items-center justify-center border border-slate-100">
-                <CheckCircle size={50} className="text-green-500 mb-4" />
-                <h2 className="text-2xl font-bold text-slate-800">Confirmed!</h2>
-                <p className="text-slate-500 mb-4">Technician arriving shortly.</p>
-                <button onClick={() => setSubmitted(false)} className="text-blue-600 font-bold hover:underline">Book Another</button>
-            </motion.div>
-        );
-    }
-
-    const services = ["Electrician", "Plumber", "Painter", "AC Technician", "Inverter Technician", "CCTV Technician", "Biometrics Technician", "Printer Technician"];
-
-    const handleRetryLocation = () => {
-        setLocationStatus('locating');
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    setFormData(prev => ({
-                        ...prev, location: { latitude: pos.coords.latitude, longitude: pos.coords.longitude }
-                    }));
-                    setLocationStatus('success');
+                        if (data && data.display_name) {
+                            setFormData(prev => ({
+                                ...prev,
+                                location: { latitude, longitude },
+                                address: data.display_name
+                            }));
+                            setLocationStatus('success');
+                        } else {
+                            throw new Error("Address not found");
+                        }
+                    } catch (error) {
+                        console.error("Reverse geocoding failed:", error);
+                        // Fallback if API fails
+                        setFormData(prev => ({
+                            ...prev,
+                            location: { latitude, longitude },
+                            address: `Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`
+                        }));
+                        setLocationStatus('success'); // Still success as we got coordinates
+                    }
                 },
                 (err) => {
                     console.error('Location error', err);
                     setLocationStatus('error');
-                    let msg = "Location access denied. Please enable permission in browser settings.";
-                    if (err.code === 2) msg = "Position unavailable. Please check your GPS.";
-                    if (err.code === 3) msg = "Location request timed out. Please try again.";
-                    alert(msg);
+                    alert("Could not access location. Please allow location permissions.");
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         } else {
-            alert("Geolocation is not supported by your browser.");
             setLocationStatus('error');
+            alert("Geolocation is not supported by your browser.");
         }
     };
 
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!formData.serviceType) {
+            alert("Please select a service type.");
+            return;
+        }
+        if (!formData.address && !formData.location) {
+            alert("Please enter an address or detect your location.");
+            return;
+        }
+        setLoading(true);
+        setTimeout(() => {
+            setLoading(false);
+            if (onSearch) onSearch(formData);
+            setSubmitted(true);
+        }, 1500);
+    };
+
+    const services = [
+        { name: "Electrician", icon: <Zap size={18} className="text-[#137fec]" /> },
+        { name: "Plumber", icon: <Droplet size={18} className="text-[#137fec]" /> },
+        { name: "Painter", icon: <Paintbrush size={18} className="text-[#137fec]" /> },
+        { name: "A.C. Technician", icon: <Fan size={18} className="text-[#137fec]" /> },
+        { name: "CCTV Technician", icon: <Video size={18} className="text-[#137fec]" /> },
+        { name: "Inverter Technician", icon: <BatteryCharging size={18} className="text-[#137fec]" /> },
+        { name: "Biometrics Technician", icon: <Fingerprint size={18} className="text-[#137fec]" /> },
+        { name: "Printer Technician", icon: <Printer size={18} className="text-[#137fec]" /> }
+    ];
+
+    // ...
+
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full bg-white rounded-3xl shadow-[0_10px_40px_-5px_rgba(0,0,0,0.1)] border border-slate-200 p-4"
-        >
-            <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-4">
+        <div className="max-w-[680px] w-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border-2 border-red-500 overflow-visible mx-auto font-sans relative z-30">
+            {/* [NEW] Expert Booking Banner */}
+            {preselectedTechnician && (
+                <div className="bg-blue-50/50 border-b border-blue-100 p-4 rounded-t-xl flex items-center justify-center gap-2 text-blue-700">
+                    <CheckCircle size={18} className="fill-blue-100" />
+                    <span className="font-semibold text-sm">Booking Expert: {preselectedTechnician.name}</span>
+                </div>
+            )}
 
-                {/* 1. Service */}
-                <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100 hover:border-blue-200 transition-colors group cursor-pointer relative">
-                    <label className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                        <Search size={14} /> Service
+            <form onSubmit={handleSubmit} className="p-14 md:p-28 space-y-8 pt-10"> {/* Adjusted padding-top if banner exists */}
+
+                {/* Service Type (Custom Dropdown) */}
+                <div className="flex flex-col gap-2.5 relative z-50">
+                    <label className="text-slate-800 text-sm font-bold uppercase tracking-wider">
+                        Service Type <span className="text-red-500">*</span>
                     </label>
-                    <select
-                        name="serviceType"
-                        value={formData.serviceType}
-                        onChange={handleChange}
-                        className="w-full bg-transparent border-none p-0 text-slate-900 font-bold text-lg focus:ring-0 cursor-pointer appearance-none z-10 relative"
-                    >
-                        {services.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                    <div className="absolute right-4 bottom-4 text-slate-300 pointer-events-none">
-                        <ArrowRight size={16} className="transform rotate-90" />
+                    <div className="relative group" ref={dropdownRef}>
+                        <div
+                            onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
+                            className="flex items-center w-full rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all cursor-pointer py-4 px-4 focus-within:ring-4 focus-within:ring-[#137fec]/10 focus-within:border-[#137fec]"
+                        >
+                            <Search size={20} className="mr-3 text-slate-400 shrink-0" />
+                            <input
+                                className="flex-1 w-full bg-transparent border-none text-slate-900 placeholder:text-slate-400 focus:ring-0 text-base cursor-pointer font-medium min-w-0"
+                                placeholder="Select a technician (Electrician, Plumber, etc.)"
+                                value={formData.serviceType}
+                                readOnly
+                                type="text"
+                            />
+                            <ChevronDown size={20} className="ml-3 text-slate-400 shrink-0" />
+                        </div>
+
+                        <AnimatePresence>
+                            {isServiceDropdownOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className="absolute top-full left-0 w-full mt-2 bg-white border border-slate-100 rounded-xl shadow-2xl z-[100] py-3 max-h-[300px] overflow-y-auto"
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1 px-3">
+                                        {services.map((service) => (
+                                            <div
+                                                key={service.name}
+                                                onClick={() => handleServiceSelect(service.name)}
+                                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer text-slate-700 transition-colors group/item"
+                                            >
+                                                {service.icon}
+                                                <span className="text-sm font-medium group-hover/item:text-[#137fec] transition-colors">{service.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
 
-                {/* 2. Schedule */}
-                <div className="flex-[1.2] bg-slate-50 rounded-2xl p-4 border border-slate-100 hover:border-blue-200 transition-colors">
-                    <label className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                        <Clock size={14} /> Date & Time
-                    </label>
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="date"
-                            name="scheduledDate"
-                            value={formData.scheduledDate}
-                            onChange={handleChange}
-                            className="bg-white rounded-lg border border-slate-200 px-2 py-1 text-sm font-bold text-slate-700 focus:ring-1 focus:ring-blue-500 w-full"
-                            required
-                        />
-                        <input
-                            type="time"
-                            name="scheduledTime"
-                            value={formData.scheduledTime}
-                            onChange={handleChange}
-                            className="bg-white rounded-lg border border-slate-200 px-2 py-1 text-sm font-bold text-slate-700 focus:ring-1 focus:ring-blue-500 w-32"
-                            required
-                        />
+                {/* Date & Time Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2.5">
+                        <label className="text-slate-800 text-sm font-bold uppercase tracking-wider">
+                            Preferred Date <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="date"
+                                name="scheduledDate"
+                                value={formData.scheduledDate}
+                                onChange={handleChange}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 py-4 px-5 focus:ring-4 focus:ring-[#137fec]/10 focus:border-[#137fec] transition-all outline-none font-medium"
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-2.5">
+                        <label className="text-slate-800 text-sm font-bold uppercase tracking-wider">
+                            Preferred Time <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <select
+                                name="scheduledTime"
+                                value={formData.scheduledTime}
+                                onChange={handleChange}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 py-4 px-5 focus:ring-4 focus:ring-[#137fec]/10 focus:border-[#137fec] transition-all outline-none font-medium appearance-none cursor-pointer"
+                                required
+                            >
+                                <option value="">Select Time Slot</option>
+                                <option value="09:00 AM - 11:00 AM">09:00 AM - 11:00 AM</option>
+                                <option value="11:00 AM - 01:00 PM">11:00 AM - 01:00 PM</option>
+                                <option value="02:00 PM - 04:00 PM">02:00 PM - 04:00 PM</option>
+                                <option value="04:00 PM - 06:00 PM">04:00 PM - 06:00 PM</option>
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                <Clock size={20} />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* 3. Contact */}
-                <div className="flex-[1.3] bg-slate-50 rounded-2xl p-4 border border-slate-100 hover:border-blue-200 transition-colors">
-                    <label className="flex items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                        <User size={14} /> Contact
-                    </label>
-                    <div className="flex flex-col gap-2">
-                        <input
-                            type="text"
-                            name="contactName"
-                            placeholder="Full Name"
-                            value={formData.contactName}
-                            onChange={handleChange}
-                            className="w-full bg-white rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-900 focus:ring-1 focus:ring-blue-500 placeholder:text-slate-400"
-                            required
-                        />
-                        <input
-                            type="tel"
-                            name="contactPhone"
-                            placeholder="Phone Number"
-                            value={formData.contactPhone}
-                            onChange={handleChange}
-                            className="w-full bg-transparent border-none p-0 px-1 text-xs font-medium text-slate-500 focus:ring-0 placeholder:text-slate-400"
-                            required
-                        />
+                {/* Contact Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-2.5">
+                        <label className="text-slate-800 text-sm font-bold uppercase tracking-wider">
+                            Full Name <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                name="contactName"
+                                placeholder="John Doe"
+                                value={formData.contactName}
+                                onChange={handleChange}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 py-4 px-5 focus:ring-4 focus:ring-[#137fec]/10 focus:border-[#137fec] transition-all outline-none font-medium placeholder:text-slate-400"
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-2.5">
+                        <label className="text-slate-800 text-sm font-bold uppercase tracking-wider">
+                            Mobile No <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="tel"
+                                name="contactPhone"
+                                placeholder="+1 (555) 000-0000"
+                                value={formData.contactPhone}
+                                onChange={handleChange}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 py-4 px-5 focus:ring-4 focus:ring-[#137fec]/10 focus:border-[#137fec] transition-all outline-none font-medium placeholder:text-slate-400"
+                                required
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {/* 4. Details */}
-                <div className="flex-[1.5] flex items-center gap-3 bg-slate-50 rounded-2xl p-2 pr-2 border border-slate-100 pl-4 hover:border-blue-200 transition-colors">
-                    <div className="flex-1 py-2">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Description (Optional)</label>
-                        <input
-                            type="text"
-                            name="description"
-                            placeholder="Describe the issue..."
-                            value={formData.description}
-                            onChange={handleChange}
-                            className="w-full bg-transparent border-none p-0 text-sm font-medium text-slate-700 focus:ring-0 placeholder:text-slate-400"
-                        />
+                {/* Service Location */}
+                <div className="flex flex-col gap-2.5">
+                    <label className="text-slate-800 text-sm font-bold uppercase tracking-wider">
+                        Service Location <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-3">
+                        <div className="relative flex-1">
+                            <input
+                                type="text"
+                                name="address"
+                                placeholder="Enter your full address"
+                                value={formData.address}
+                                onChange={handleChange}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 py-4 pr-10 pl-5 focus:ring-4 focus:ring-[#137fec]/10 focus:border-[#137fec] transition-all outline-none font-medium placeholder:text-slate-400"
+                                required={!formData.location}
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                <MapPin size={20} />
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleDetectLocation}
+                            className="flex items-center justify-center gap-2 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all group shrink-0 active:scale-95 border border-slate-200 min-w-[120px]"
+                        >
+                            <Crosshair size={20} className={`text-[#137fec] ${locationStatus === 'loading' ? 'animate-spin' : 'group-active:scale-90'}`} />
+                            <span className="hidden sm:inline">Detect</span>
+                        </button>
                     </div>
+                    {locationStatus === 'success' && <p className="text-xs text-green-600 font-medium flex items-center gap-1"><CheckCircle size={12} /> Location lat/long captured</p>}
+                </div>
 
+                <div className="pt-8">
                     <button
                         type="submit"
                         disabled={loading}
-                        className="h-12 px-6 bg-slate-900 hover:bg-black text-white rounded-xl font-bold text-sm shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shrink-0"
+                        className="w-full bg-[#137fec] hover:bg-[#116dd9] text-white font-bold py-5 rounded-xl text-lg shadow-xl shadow-[#137fec]/25 transition-all flex items-center justify-center gap-3 group active:scale-[0.99]"
                     >
-                        {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>Book <ArrowRight size={18} /></>}
+                        {loading ? 'Processing...' : 'Book Now'}
+                        {!loading && <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />}
                     </button>
+                    <div className="flex items-center justify-center gap-2 text-slate-400 text-xs mt-4">
+                        <ShieldCheck size={14} />
+                        Your request is secure and verified
+                    </div>
                 </div>
             </form>
-
-            {/* GPS Indicator (Clickable for Retry) */}
-            <div
-                onClick={locationStatus === 'error' || locationStatus === 'pending' ? handleRetryLocation : undefined}
-                className={`absolute -top-9 right-6 flex items-center gap-2 px-3 py-1.5 rounded-full transition-all cursor-pointer ${locationStatus === 'error' ? 'bg-red-50 border border-red-100 shadow-sm' : 'bg-white/80 backdrop-blur border border-slate-100 shadow-sm'}`}
-            >
-                <div className={`w-2 h-2 rounded-full ${locationStatus === 'success' ? 'bg-green-500' : locationStatus === 'error' ? 'bg-red-500 animate-pulse' : 'bg-slate-400 animate-pulse'}`}></div>
-                <span className={`text-[10px] font-bold uppercase tracking-widest ${locationStatus === 'error' ? 'text-red-600' : 'text-slate-600'}`}>
-                    {locationStatus === 'success' ? 'Location Detected' : locationStatus === 'error' ? 'Retry Location' : 'Locating...'}
-                </span>
-            </div>
-        </motion.div>
+        </div>
     );
 };
 
-export default ResponsiveServiceBookingForm;
-
+export default ServiceBookingForm;

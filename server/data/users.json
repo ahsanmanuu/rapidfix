@@ -6,12 +6,68 @@
     "phone": "7004855076",
     "password": "sczone",
     "location": {
-      "latitude": 26.0908591,
-      "longitude": 85.9406645,
+      "latitude": 26.0898816,
+      "longitude": 85.9439104,
       "address": "Unknown Area, Unknown City"
     },
     "role": "user",
+    "photo": null,
+    "status": "Active",
+    "membership": "Premium",
     "createdAt": "2025-12-29T18:15:16.929Z",
-    "updatedAt": "2026-01-02T10:04:26.583Z"
+    "updatedAt": "2026-01-09T11:05:56.029Z"
+  },
+  {
+    "id": "1767881837457",
+    "name": "John Doe",
+    "email": "test@example.com",
+    "phone": "1234567890",
+    "password": "Password123!",
+    "location": {
+      "latitude": 26.0833082,
+      "longitude": 85.9381814,
+      "address": "Unknown Area, Unknown City"
+    },
+    "role": "user",
+    "photo": null,
+    "status": "Active",
+    "membership": "Free",
+    "createdAt": "2026-01-08T14:17:17.457Z",
+    "updatedAt": "2026-01-09T05:55:28.491Z"
+  },
+  {
+    "id": "1767884075830",
+    "name": "John Doe",
+    "email": "super_unique_999@example.com",
+    "phone": "1234567890",
+    "password": "Password123!",
+    "location": {
+      "latitude": 25.2560821,
+      "longitude": 86.9849308,
+      "address": "Unknown Area, Bhagalpur"
+    },
+    "role": "user",
+    "photo": null,
+    "status": "Active",
+    "membership": "Free",
+    "createdAt": "2026-01-08T14:54:35.830Z",
+    "updatedAt": "2026-01-08T15:05:55.445Z"
+  },
+  {
+    "id": "1767894246335",
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "phone": "1234567890",
+    "password": "password123",
+    "location": {
+      "latitude": 26.1,
+      "longitude": 85.8,
+      "address": "Admin Location"
+    },
+    "role": "user",
+    "photo": null,
+    "status": "Active",
+    "membership": "Free",
+    "createdAt": "2026-01-08T17:44:06.335Z"
   }
 ]

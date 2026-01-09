@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import '../styles/neu-styles.css';
+import { useAuth } from '../context/AuthContext';
 
-const SuperAdminLogin = ({ setUser }) => {
+const SuperAdminLogin = () => {
+    const { setUser } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -19,10 +21,7 @@ const SuperAdminLogin = ({ setUser }) => {
             const res = await api.post('/superadmin/login', { email, password });
             if (res.data.success) {
                 const adminUser = { ...res.data.superadmin, role: 'superadmin' };
-                localStorage.setItem('user', JSON.stringify(adminUser));
-                localStorage.setItem('sessionToken', 'dummy-super-token');
-
-                if (setUser) setUser(adminUser);
+                setUser(adminUser, 'dummy-super-token');
 
                 // Redirect to super dashboard (using admin dashboard for now, or new one)
                 navigate('/admin-dashboard');

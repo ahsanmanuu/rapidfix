@@ -1,16 +1,47 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fixofy - Premium Home Services</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+    rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fixofy - Premium Home Services</title>
+  <script>
+    (function () {
+      try {
+        const savedMode = localStorage.getItem('theme-mode');
+        const isDark = savedMode === 'dark' || (!savedMode && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+
+        const savedColor = localStorage.getItem('theme-color');
+        if (savedColor) {
+          const themes = {
+            blue: { h: '221', s: '83%', l: '53%' },
+            green: { h: '142', s: '71%', l: '45%' },
+            purple: { h: '271', s: '81%', l: '56%' },
+            orange: { h: '25', s: '95%', l: '53%' },
+            rose: { h: '343', s: '87%', l: '56%' },
+          };
+          const c = themes[savedColor] || themes.blue;
+          document.documentElement.style.setProperty('--primary-h', c.h);
+          document.documentElement.style.setProperty('--primary-s', c.s);
+          document.documentElement.style.setProperty('--primary-l', c.l);
+        }
+      } catch (e) { console.error('Theme init failed', e); }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

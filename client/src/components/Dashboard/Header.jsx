@@ -74,8 +74,16 @@ const Header = ({ handleDrawerToggle, onLogout, setActiveTab, user }) => {
             setUnreadCount(prev => prev + 1);
         });
 
-        return () => socket.off('job_status_updated');
-    }, [socket]);
+        socket.on('membership_update', (data) => {
+            console.log("Header: Membership updated, refetching notifications");
+            fetchNotifications();
+        });
+
+        return () => {
+            socket.off('job_status_updated');
+            socket.off('membership_update');
+        };
+    }, [socket, user?.id]); // Adding user.id as dependency for fetchNotifications availability
 
     const fetchNotifications = async () => {
         try {

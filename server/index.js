@@ -178,6 +178,9 @@ io.on('connection', (socket) => {
       locationManager.saveUserRealtimeLocation(data.userId, data.location);
     }
     // Broadcast to relevant rooms if necessary
+    if (data.role === 'technician') {
+      io.emit('technician_location_update', { technicianId: data.userId, location: data.location });
+    }
   });
 
   socket.on('job_status_change', (data) => {
@@ -274,14 +277,34 @@ app.post('/api/users/register', (req, res) => {
 });
 
 app.post('/api/users/login', (req, res) => {
-  const { email, password, deviceId } = req.body;
+  const { email, password, deviceId, location } = req.body;
   const user = userManager.login(email, password);
   if (user) {
+    if (user.status === 'Banned') {
+      return res.status(403).json({
+        success: false,
+        error: 'Your profile has been blacklisted. Please contact support.',
+        status: 'Banned'
+      });
+    }
+
+    // Capture location during login if provided
+    if (location) {
+      userManager.updateUser(user.id, { location });
+      locationManager.saveUserRealtimeLocation(user.id, location);
+    }
+
+    // [AUTO-LIFE] Check and Sync Membership Expiry
+    const syncedUser = userManager.checkAndSyncMembership(user.id);
+    if (syncedUser.statusChanged && syncedUser.newTier === 'Free') {
+      notificationManager.createNotification(user.id, 'user', 'Membership Expired', 'Your Premium membership has expired. You have been switched to the Free tier.', 'membership_expired', user.id);
+    }
+
     // Create Session
     const session = sessionManager.createSession(user.id, 'user', deviceId);
     res.json({
       success: true,
-      user,
+      user: { ...user, ...syncedUser, location: location || user.location }, // Return fresh location and membership
       sessionToken: session.token
     });
   } else {
@@ -298,9 +321,15 @@ app.post('/api/users/logout', (req, res) => {
 });
 
 app.get('/api/users/:id', (req, res) => {
-  const user = userManager.getUser(req.params.id);
-  if (user) res.json({ success: true, user });
-  else res.status(404).json({ success: false, error: 'User not found' });
+  // Always sync membership on fetch to ensure dashboard matches DB
+  const syncedUser = userManager.checkAndSyncMembership(req.params.id);
+  if (syncedUser) {
+    if (syncedUser.statusChanged && syncedUser.newTier === 'Free') {
+      notificationManager.createNotification(req.params.id, 'user', 'Membership Expired', 'Your Premium membership has reached its end date. You are now on the Free tier.', 'membership_expired', req.params.id);
+      io.to(`user_${req.params.id}`).emit('membership_update', { user: syncedUser });
+    }
+    res.json({ success: true, user: syncedUser });
+  } else res.status(404).json({ success: false, error: 'User not found' });
 });
 
 app.put('/api/users/:id', (req, res) => {
@@ -339,7 +368,9 @@ app.post('/api/technicians/login', (req, res) => {
   console.log('Login Result:', technician ? 'Success' : 'Failed');
 
   if (technician) {
-    res.json({ success: true, technician });
+    // Create Session
+    const session = sessionManager.createSession(technician.id, 'technician', req.body.deviceId);
+    res.json({ success: true, technician, sessionToken: session.token });
   } else {
     res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
@@ -367,6 +398,70 @@ app.get('/api/technicians', (req, res) => {
   } else {
     const techs = technicianManager.getAllTechnicians();
     res.json({ success: true, technicians: techs });
+  }
+});
+
+// [NEW] Get Top Rated Technicians for "Technician of the Month"
+app.get('/api/technicians/top-rated', (req, res) => {
+  try {
+    const allTechs = technicianManager.getAllTechnicians();
+
+    const enrichedTechs = allTechs.map(tech => {
+      // 1. Get Feedbacks
+      const feedbacks = feedbackManager.getFeedbackForTechnician(tech.id);
+
+      // 2. Calc Average Rating
+      let averageRating = 0;
+      let detailedRatings = {
+        behavior: 0,
+        attitude: 0,
+        professionalism: 0,
+        communication: 0,
+        expertise: 0, // Knowledge
+        timeliness: 0, // Punctuality
+        honesty: 0,
+        respect: 0
+      };
+
+      if (feedbacks.length > 0) {
+        const total = feedbacks.reduce((sum, f) => {
+          const categories = Object.values(f.ratings || {});
+          const feedbackAvg = categories.length ? categories.reduce((a, b) => a + b, 0) / categories.length : 0;
+          return sum + feedbackAvg;
+        }, 0);
+        averageRating = parseFloat((total / feedbacks.length).toFixed(1));
+
+        // Aggregate Categories
+        const cats = ['behavior', 'attitude', 'professionalism', 'communication', 'knowledge', 'punctuality', 'honesty', 'respect'];
+        cats.forEach(key => {
+          const sum = feedbacks.reduce((a, f) => a + (f.ratings?.[key] || 0), 0);
+          detailedRatings[key === 'knowledge' ? 'expertise' : (key === 'punctuality' ? 'timeliness' : key)] = parseFloat((sum / feedbacks.length).toFixed(1));
+        });
+      }
+
+      // 3. Get Job Stats
+      const stats = jobManager.getJobStats(tech.id); // { total, rejected, ratio }
+      // Mock On-Time based on Timeliness rating if jobs exist, else 100% or 0
+      const onTimeRecord = detailedRatings.timeliness ? Math.round((detailedRatings.timeliness / 5) * 100) : (stats.total > 0 ? 100 : 100);
+
+      return {
+        ...tech,
+        rating: averageRating,
+        reviewCount: feedbacks.length,
+        jobsCompleted: stats.total,
+        onTime: `${onTimeRecord}%`,
+        detailedRatings
+      };
+    });
+
+    // Sort by rating
+    const topTechs = enrichedTechs
+      .sort((a, b) => b.rating - a.rating);
+
+    res.json({ success: true, technicians: topTechs });
+  } catch (error) {
+    console.error("Top Rated Error", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -400,10 +495,12 @@ app.post('/api/superadmin/login', (req, res) => {
 
 // --- Admin Routes ---
 app.post('/api/admin/login', (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, deviceId } = req.body; // Added deviceId support
   const admin = adminManager.login(email, password);
   if (admin) {
-    res.json({ success: true, admin });
+    // Create Session
+    const session = sessionManager.createSession(admin.id, 'admin', deviceId);
+    res.json({ success: true, admin, sessionToken: session.token });
   } else {
     res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
@@ -415,6 +512,134 @@ app.post('/api/admin/technicians/:id/status', (req, res) => {
   const tech = technicianManager.updateStatus(req.params.id, status);
   if (tech) res.json({ success: true, technician: tech });
   else res.status(404).json({ success: false, error: 'Technician not found' });
+});
+
+// --- Admin User Management Routes [NEW] ---
+
+app.get('/api/admin/users', (req, res) => {
+  try {
+    const users = userManager.getAllUsers();
+    // Enrich with Wallet & Job Data
+    const enrichedUsers = users.map(user => {
+      const balance = financeManager.getBalance(user.id);
+      const jobs = jobManager.getJobsByUser(user.id);
+
+      // Calculate basic stats for quick view if needed, or send full jobs
+      // Sending full jobs so drawer can show history
+      return {
+        ...user,
+        walletBalance: balance,
+        jobs: jobs, // Send full job objects
+        membership: user.membership || 'Free', // Default to Free
+        status: user.status || 'Active' // Default to Active
+      };
+    });
+    res.json({ success: true, users: enrichedUsers });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/admin/users/:id/ban', (req, res) => {
+  try {
+    const id = String(req.params.id).trim();
+    console.log(`SERVER: Received Ban Request for ID: "${id}"`);
+
+    // Attempt update
+    const user = userManager.setStatus(id, 'Banned');
+
+    if (user) {
+      console.log(`SERVER: User banned successfully: ${user.name}`);
+      // 1. Notify User (Real-time force logout/disable)
+      io.to(`user_${user.id}`).emit('account_status_change', { status: 'Banned' });
+
+      // 2. Notify Admin
+      io.emit('admin_user_update', user);
+
+      // 3. Persist Notification
+      notificationManager.createNotification(user.id, 'user', 'Account Suspended', 'Your account has been banned by the administrator.', 'account_banned', user.id);
+
+      res.json({ success: true, user });
+    } else {
+      console.error(`SERVER: User not found for ID: ${id}`);
+      // Try to find if it exists with different type
+      const allUsers = userManager.getAllUsers();
+      const foundLoose = allUsers.find(u => u.id == id);
+      if (foundLoose) {
+        console.log(`SERVER: Found user with loose equality! Actual ID: ${foundLoose.id} (Type: ${typeof foundLoose.id})`);
+        // Try updating with actual ID
+        const userRetry = userManager.setStatus(foundLoose.id, 'Banned');
+        if (userRetry) {
+          console.log("SERVER: Retry success.");
+          io.to(`user_${userRetry.id}`).emit('account_status_change', { status: 'Banned' });
+          io.emit('admin_user_update', userRetry);
+          res.json({ success: true, user: userRetry });
+          return;
+        }
+      }
+      res.status(404).json({ success: false, error: 'User not found' });
+    }
+  } catch (error) {
+    console.error("SERVER: Ban Error", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/admin/users/:id/unban', (req, res) => {
+  try {
+    const id = String(req.params.id).trim();
+    console.log(`SERVER: Received Unban Request for ID: "${id}"`);
+
+    // Attempt update
+    const user = userManager.setStatus(id, 'Active');
+
+    if (user) {
+      console.log(`SERVER: User unbanned: ${user.name}`);
+      io.to(`user_${user.id}`).emit('account_status_change', { status: 'Active' });
+      io.emit('admin_user_update', user);
+      notificationManager.createNotification(user.id, 'user', 'Account Reactivated', 'Your account has been reactivated.', 'account_active', user.id);
+      res.json({ success: true, user });
+    } else {
+      console.error(`SERVER: User not found for ID: ${id}`);
+      // Loose Search Fallback
+      const allUsers = userManager.getAllUsers();
+      const foundLoose = allUsers.find(u => u.id == id);
+      if (foundLoose) {
+        console.log(`SERVER: Found loose match for unban.`);
+        const userRetry = userManager.setStatus(foundLoose.id, 'Active');
+        if (userRetry) {
+          io.to(`user_${userRetry.id}`).emit('account_status_change', { status: 'Active' });
+          io.emit('admin_user_update', userRetry);
+          res.json({ success: true, user: userRetry });
+          return;
+        }
+      }
+      res.status(404).json({ success: false, error: 'User not found' });
+    }
+  } catch (error) {
+    console.error("SERVER: Unban Error", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/admin/users/:id/membership', (req, res) => {
+  try {
+    const id = String(req.params.id).trim();
+    const { tier } = req.body; // 'Free' or 'Premium'
+
+    const user = userManager.setMembership(id, tier);
+    if (user) {
+      // Send full user object for easier state merging
+      io.to(`user_${user.id}`).emit('membership_update', { user });
+      io.emit('admin_user_update', user);
+      notificationManager.createNotification(user.id, 'user', 'Membership Updated', `Your membership has been updated to ${tier}.`, 'membership_update', user.id);
+      res.json({ success: true, user });
+    } else {
+      res.status(404).json({ success: false, error: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // --- Feedback Routes ---
@@ -485,6 +710,11 @@ app.post('/api/jobs', (req, res) => {
       jobManager.assignTechnician(job.id, technicianId);
       job.technicianId = technicianId;
       job.status = 'accepted';
+
+      // [REAL-TIME] Update Tech Status & Broadcast
+      technicianManager.updateStatus(technicianId, 'engaged');
+      io.emit('technician_status_update', { technicianId, status: 'engaged' });
+
       io.to(`tech_${technicianId}`).emit('new_job_assigned', job);
     } else if (location && location.latitude && location.longitude) {
       // Auto-Assign Logic if no tech selected
@@ -502,20 +732,13 @@ app.post('/api/jobs', (req, res) => {
           const rating = tech.rating || 0;
           // Cancellation Ratio (lower is better)
           const cancelRatio = stats.ratio;
-          // Price (lower is better) - assuming visitingCharges is strictly numerical or null
-          // Check if tech has specific visiting charges in their profile? 
-          // Currently data model doesn't show it, so we might skip price specific comparison or assume equal.
-          // But user asked for it. Let's assume tech object MIGHT have 'visitingCharges', else distinct.
+          // Price (lower is better) - usually visitingCharges
           const price = tech.visitingCharges || 99999;
 
           return { ...tech, stats, cancelRatio, price };
         });
 
         // 3. Sorting Logic
-        // Primary: Rating > 4.0 AND Low Cancellation (< 15%)
-        // Secondary: Price (Low to High)
-        // Tertiary: Distance (Close to Far)
-
         scoredCandidates.sort((a, b) => {
           const aIsTopTier = a.rating >= 4.0 && a.cancelRatio <= 0.15;
           const bIsTopTier = b.rating >= 4.0 && b.cancelRatio <= 0.15;
@@ -523,17 +746,11 @@ app.post('/api/jobs', (req, res) => {
           if (aIsTopTier && !bIsTopTier) return -1;
           if (!aIsTopTier && bIsTopTier) return 1;
 
-          // If both are same tier, compare Price
           if (a.price !== b.price) return a.price - b.price;
-
-          // If price same, compare Distance (assuming searchTechnicians returns 'distance' property)
-          // Note: searchTechnicians already sorts by distance, so we can rely on index if stable sort, 
-          // but explicit comparison is safer.
           return (a.distance || 0) - (b.distance || 0);
         });
 
         // 4. Select Best Candidate
-        // If only one available, logic naturally picks it as index 0.
         const bestTech = scoredCandidates[0];
 
         console.log(`[SmartAssign] Selected ${bestTech.name} (Rating: ${bestTech.rating}, Ratio: ${bestTech.cancelRatio.toFixed(2)}, Dist: ${bestTech.distance}km)`);
@@ -541,6 +758,10 @@ app.post('/api/jobs', (req, res) => {
         jobManager.assignTechnician(job.id, bestTech.id);
         job.technicianId = bestTech.id; // Update local object for response
         job.status = 'accepted';
+
+        // [REAL-TIME] Update Tech Status & Broadcast
+        technicianManager.updateStatus(bestTech.id, 'engaged');
+        io.emit('technician_status_update', { technicianId: bestTech.id, status: 'engaged' });
 
         // Notify Technician
         io.to(`tech_${bestTech.id}`).emit('new_job_assigned', job);
@@ -784,6 +1005,31 @@ app.post('/api/finance/wallet/add', (req, res) => { // [NEW] Add Funds
   res.json({ success: true, transaction, newBalance });
 });
 
+// --- Membership Lifecycle Routes ---
+app.post('/api/membership/pay', (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+
+    // 1. Process Payment in Finance
+    const paymentResult = financeManager.processMembershipPayment(userId, amount);
+
+    if (paymentResult.success) {
+      // 2. Update User Membership
+      const user = userManager.setMembership(userId, paymentResult.tier, paymentResult.expiryDate);
+
+      // 3. Notify & Emit
+      io.to(`user_${userId}`).emit('membership_update', { user });
+      notificationManager.createNotification(userId, 'user', 'Membership Restored', `Your Premium membership has been activated until ${new Date(paymentResult.expiryDate).toLocaleDateString()}.`, 'membership_restored', userId);
+
+      res.json({ success: true, user, transaction: paymentResult.transaction });
+    } else {
+      res.status(400).json({ success: false, error: 'Payment failed' });
+    }
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
 // --- Ride Routes ---
 app.get('/api/rides/technician/:id', (req, res) => {
   const rides = rideManager.getRidesByTechnician(req.params.id);
@@ -827,6 +1073,143 @@ app.post('/api/broadcasts', (req, res) => {
 app.get('/api/broadcasts', (req, res) => {
   const broadcasts = broadcastManager.getActiveBroadcasts();
   res.json({ success: true, broadcasts });
+});
+
+// --- Admin Dashboard Routes ---
+app.post('/api/admin/login', (req, res) => {
+  const { email, password } = req.body;
+  const admin = adminManager.login(email, password);
+  if (admin) {
+    res.json({ success: true, admin });
+  } else {
+    res.status(401).json({ success: false, error: 'Invalid admin credentials' });
+  }
+});
+
+// Middleware to verify Admin Session (basic check for now)
+// In production, use a proper middleware checking headers authorization
+const verifyAdmin = (req, res, next) => {
+  // For now, we trust the request if it has a specific header or just allow it 
+  // as per current simple auth. ideally check for token.
+  // const token = req.headers.authorization;
+  // if (!token) return res.status(403).json({ error: 'No token' });
+  next();
+};
+
+app.get('/api/admin/stats', verifyAdmin, (req, res) => {
+  try {
+    const users = userManager.getAllUsers();
+    const technicians = technicianManager.getAllTechnicians();
+    const jobs = jobManager.getAllJobs();
+    const wallet = financeManager.getSystemWalletBalance(); // Assuming this exists or we calculate
+
+    // Calculate detailed stats
+    const activeTechnicians = technicians.filter(t => t.status === 'approved' || t.status === 'verified').length;
+    const pendingVerifications = technicians.filter(t => t.status === 'pending').length;
+
+    // Job Stats
+    const completedJobs = jobs.filter(j => j.status === 'completed').length;
+    const pendingJobs = jobs.filter(j => j.status === 'pending' || j.status === 'assigned').length;
+    const cancelledJobs = jobs.filter(j => j.status === 'cancelled').length;
+    const completionRate = jobs.length > 0 ? Math.round((completedJobs / jobs.length) * 100) : 0;
+
+    res.json({
+      success: true,
+      stats: {
+        totalUsers: users.length,
+        totalTechnicians: technicians.length,
+        activeTechnicians,
+        pendingVerifications,
+        totalWallet: wallet || 45200, // Mock if 0 for demo
+        jobs: {
+          total: jobs.length,
+          completed: completedJobs,
+          pending: pendingJobs,
+          cancelled: cancelledJobs,
+          completionRate
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/admin/technicians', verifyAdmin, (req, res) => {
+  const technicians = technicianManager.getAllTechnicians();
+  res.json({ success: true, technicians });
+});
+
+app.post('/api/admin/technicians/:id/verify', verifyAdmin, (req, res) => {
+  const { status } = req.body; // 'approved', 'rejected', 'pending'
+  const tech = technicianManager.updateStatus(req.params.id, status);
+  if (tech) res.json({ success: true, technician: tech });
+  else res.status(404).json({ success: false, error: 'Technician not found' });
+});
+
+app.post('/api/admin/technicians/:id/membership', verifyAdmin, (req, res) => {
+  const { membership } = req.body; // 'free', 'silver', 'gold', 'premium'
+  const tech = technicianManager.updateMembership(req.params.id, membership);
+  if (tech) {
+    res.json({ success: true, technician: tech });
+  } else {
+    res.status(404).json({ success: false, error: 'Technician not found' });
+  }
+});
+
+app.get('/api/admin/users', verifyAdmin, (req, res) => {
+  const users = userManager.getAllUsers();
+  res.json({ success: true, users });
+});
+
+app.get('/api/admin/jobs', verifyAdmin, (req, res) => {
+  const jobs = jobManager.getAllJobs();
+  res.json({ success: true, jobs });
+});
+
+app.get('/api/admin/feedbacks', verifyAdmin, (req, res) => {
+  // Collect all feedbacks from all technicians
+  // FeedbackManager structure might need 'getAllFeedback'
+  const allFeedback = feedbackManager.getAllFeedback ? feedbackManager.getAllFeedback() : [];
+  res.json({ success: true, feedbacks: allFeedback });
+});
+
+app.get('/api/admin/transactions', verifyAdmin, (req, res) => {
+  const transactions = financeManager.getAllTransactions();
+  res.json({ success: true, transactions });
+});
+
+
+// Store system settings (mock persistence)
+let systemSettings = {
+  walletEnabled: true
+};
+
+app.post('/api/admin/wallet/control', verifyAdmin, (req, res) => {
+  const { enabled } = req.body;
+  systemSettings.walletEnabled = enabled;
+  res.json({ success: true, enabled: systemSettings.walletEnabled });
+});
+
+app.get('/api/admin/wallet/status', verifyAdmin, (req, res) => {
+  res.json({ success: true, enabled: systemSettings.walletEnabled });
+});
+
+app.post('/api/admin/users/:id/membership', verifyAdmin, (req, res) => {
+  const { membership } = req.body; // 'free', 'premium'
+  // Assuming UserManager has an update method. If not, we might need to add one.
+  // For now, let's try to update using a direct DB update or similar if exposed, 
+  // but UserManager usually has valid methods. Check UserManager.js if this fails.
+  // userManager.updateMembership(req.params.id, membership); // Hypothetical
+
+  // Fallback: Read, Modify, Save (Not safe for concurrency but works for MVP)
+  // Use the generic updateUser method to persist changes
+  const updatedUser = userManager.updateUser(req.params.id, { membership: req.body.membership });
+  if (updatedUser) {
+    res.json({ success: true, user: updatedUser });
+  } else {
+    res.status(404).json({ success: false, error: 'User not found' });
+  }
 });
 
 // The "catchall" handler: for any request that doesn't

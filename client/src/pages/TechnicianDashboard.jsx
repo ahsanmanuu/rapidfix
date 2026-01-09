@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
 import Navbar from '../components/Navbar'; // Use main Navbar if preferred, or custom sidebar
+import { useAuth } from '../context/AuthContext';
 
 import GoogleMapReact from 'google-map-react';
 import LiveRideModal from '../components/Dashboard/LiveRideModal';
@@ -18,23 +19,23 @@ import LiveRideModal from '../components/Dashboard/LiveRideModal';
 // --- AdminLTE Style Components ---
 
 const SmallBox = ({ title, value, icon: Icon, color, footerText = "More info", onClick }) => (
-    <div className={`relative rounded-lg overflow-hidden shadow-md text-white ${color} mb-4`}>
-        <div className="p-4 relative z-10">
-            <h3 className="text-3xl font-bold mb-2">{value}</h3>
-            <p className="text-sm font-medium opacity-90 uppercase tracking-wide">{title}</p>
+    <div className={`relative rounded-lg overflow-hidden shadow-sm text-white ${color} mb-2`}>
+        <div className="p-2 relative z-10">
+            <h3 className="text-lg lg:text-3xl font-bold mb-0.5">{value}</h3>
+            <p className="text-[9px] sm:text-xs font-medium opacity-90 uppercase tracking-wide leading-none">{title}</p>
         </div>
-        <div className="absolute right-4 top-4 opacity-20 hover:scale-110 transition-transform duration-300">
-            <Icon size={70} />
+        <div className="absolute right-1 top-2 opacity-20 hover:scale-110 transition-transform duration-300">
+            <Icon size={32} />
         </div>
-        <button onClick={onClick} className="w-full bg-black/10 hover:bg-black/20 text-center py-1 text-xs font-medium flex items-center justify-center gap-1 transition-colors relative z-20 cursor-pointer">
-            {footerText} <ChevronRight size={12} />
+        <button onClick={onClick} className="w-full bg-black/10 hover:bg-black/20 text-center py-0.5 text-[9px] font-medium flex items-center justify-center gap-1 transition-colors relative z-20 cursor-pointer">
+            {footerText} <ChevronRight size={10} />
         </button>
     </div>
 );
 
 const ContentHeader = ({ title, breadcrumb }) => (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 px-6 bg-transparent">
-        <h1 className="text-2xl font-normal text-gray-800 m-0">{title}</h1>
+        <h1 className="text-lg sm:text-2xl font-normal text-gray-800 m-0">{title}</h1>
         <nav className="flex text-sm text-gray-500 mt-2 sm:mt-0">
             <span className="hover:text-blue-500 cursor-pointer">Home</span>
             <span className="mx-2">/</span>
@@ -106,12 +107,28 @@ const StatusToggle = ({ currentStatus, onUpdate, loading }) => {
 
 // --- Main Layout Component ---
 
-const TechnicianDashboard = ({ user: initialUser, logout }) => {
+const TechnicianDashboard = () => {
     const navigate = useNavigate();
     const socket = useSocket();
-    const [user, setUser] = useState(initialUser || JSON.parse(localStorage.getItem('user')));
+    const { user, logout, updateUser } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [activeTab, setActiveTab] = useState('dashboard');
+
+    const handleLogout = async () => {
+        try {
+            const token = localStorage.getItem('sessionToken');
+            if (token) {
+                await api.post('/users/logout', { token });
+            }
+        } catch (error) {
+            console.error("Logout error", error);
+        } finally {
+            // Hard Logout: Clear storage and force reload to Home to bypass ProtectedRoute race conditions
+            localStorage.removeItem('user');
+            localStorage.removeItem('sessionToken');
+            window.location.replace('/');
+        }
+    };
 
     // Data States
     const [stats, setStats] = useState({
@@ -355,9 +372,7 @@ const TechnicianDashboard = ({ user: initialUser, logout }) => {
                 location: user.location
             });
             if (res.data.success) {
-                const updatedUser = { ...user, status: newStatus };
-                setUser(updatedUser);
-                localStorage.setItem('user', JSON.stringify(updatedUser));
+                updateUser({ status: newStatus });
             }
         } catch (error) {
             console.error("Status update failed", error);
@@ -402,7 +417,7 @@ const TechnicianDashboard = ({ user: initialUser, logout }) => {
             const res = await api.put(`/technicians/${user.id}/profile`, changes);
             if (res.data.success) {
                 alert("Profile Updated Successfully!");
-                setUser({ ...user, ...res.data.technician });
+                updateUser(res.data.technician);
             }
         } catch (error) {
             console.error("Profile update failed", error);
@@ -696,7 +711,7 @@ const TechnicianDashboard = ({ user: initialUser, logout }) => {
                 />
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12 mb-12">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
                 <SmallBox
                     title="Total Balance"
                     value={`₹${stats.earnings.toLocaleString()}`}
@@ -1057,7 +1072,7 @@ const TechnicianDashboard = ({ user: initialUser, logout }) => {
                                 </button>
                             </li>
                             <li>
-                                <button onClick={logout} className="w-full flex items-center px-3 py-2.5 rounded text-sm text-rose-400 hover:bg-rose-900/20 hover:text-rose-300 transition-colors mt-2">
+                                <button onClick={handleLogout} className="w-full flex items-center px-3 py-2.5 rounded text-sm text-rose-400 hover:bg-rose-900/20 hover:text-rose-300 transition-colors mt-2">
                                     <LogOut size={18} className="mr-3" /> Sign Out
                                 </button>
                             </li>
