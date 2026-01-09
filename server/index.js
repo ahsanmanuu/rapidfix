@@ -254,6 +254,9 @@ app.get('/api/rides/technician/:id', (req, res) => {
 // --- User Routes ---
 app.post('/api/users/register', async (req, res) => {
   try {
+    console.log('[REGISTER] Starting registration...');
+    console.log('[REGISTER] USE_SUPABASE:', process.env.USE_SUPABASE);
+
     const { name, email, phone, password, location } = req.body;
 
     // Mandatory Location Check
@@ -261,8 +264,10 @@ app.post('/api/users/register', async (req, res) => {
       throw new Error('Realtime location is mandatory for registration.');
     }
 
+    console.log('[REGISTER] Creating user:', email);
     // Save User with Location
     const user = await userManager.createUser(name, email, phone, password, location);
+    console.log('[REGISTER] User created successfully:', user.id);
 
     // Also save to Location Manager specifically
     locationManager.saveUserRealtimeLocation(user.id, location);
@@ -272,6 +277,7 @@ app.post('/api/users/register', async (req, res) => {
 
     res.json({ success: true, user, sessionToken: session.token });
   } catch (error) {
+    console.error('[REGISTER] Error:', error.message);
     res.status(400).json({ success: false, error: error.message });
   }
 });
