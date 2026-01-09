@@ -283,7 +283,18 @@ const AdminDashboard = () => {
 
     return (
         <div className={`flex h-screen overflow-hidden font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors duration-300`}>
-            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+            {/* Mobile Sidebar Backdrop */}
+            <div
+                className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 lg:hidden ${sidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+                onClick={() => setSidebarOpen(false)}
+            />
+
+            <Sidebar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isOpen={sidebarOpen}
+                setIsOpen={setSidebarOpen}
+            />
 
             <div className="flex-1 flex flex-col h-full min-w-0">
                 <Header
