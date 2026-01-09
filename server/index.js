@@ -882,10 +882,10 @@ app.put('/api/technicians/:id/status', (req, res) => {
   }
 });
 
-app.put('/api/technicians/:id/profile', (req, res) => {
+app.put('/api/technicians/:id/profile', async (req, res) => {
   try {
     const updates = req.body; // Expect { password, documents: { photo: ... } }
-    const tech = technicianManager.updateProfile(req.params.id, updates);
+    const tech = await technicianManager.updateProfile(req.params.id, updates);
     if (tech) res.json({ success: true, technician: tech });
     else res.status(404).json({ success: false, error: 'Technician not found' });
   } catch (e) {
@@ -894,7 +894,8 @@ app.put('/api/technicians/:id/profile', (req, res) => {
 });
 
 // [NEW] Monthly Stats Endpoint
-app.get('/api/technicians/:id/stats/monthly', (req, res) => {
+// [NEW] Monthly Stats Endpoint
+app.get('/api/technicians/:id/stats/monthly', async (req, res) => {
   try {
     const techId = req.params.id;
     const now = new Date();
@@ -902,7 +903,7 @@ app.get('/api/technicians/:id/stats/monthly', (req, res) => {
     const currentYear = now.getFullYear();
 
     // 1. Calculate Monthly Earnings
-    const transactions = financeManager.getTransactionsByUser(techId);
+    const transactions = await financeManager.getTransactionsByUser(techId);
     const monthlyEarnings = transactions.reduce((sum, t) => {
       const tDate = new Date(t.createdAt);
       if (tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear && t.type === 'credit') {
@@ -912,7 +913,7 @@ app.get('/api/technicians/:id/stats/monthly', (req, res) => {
     }, 0);
 
     // 2. Calculate Monthly Completed Jobs
-    const jobs = jobManager.getJobsByTechnician(techId);
+    const jobs = await jobManager.getJobsByTechnician(techId);
     const monthlyJobs = jobs.filter(j => {
       const jDate = new Date(j.createdAt); // Or use updatedAt for completion time
       return j.status === 'completed' && jDate.getMonth() === currentMonth && jDate.getFullYear() === currentYear;
@@ -946,18 +947,22 @@ app.get('/api/chat/conversations/:userId', (req, res) => {
   res.json({ success: true, conversations });
 });
 
-// --- Offer Routes [NEW] ---
-app.get('/api/offers', (req, res) => {
-  const offers = offerManager.getAllOffers();
+// --- Offer Routes ---
+app.get('/api/offers', async (req, res) => {
+  const offers = await offerManager.getAllOffers();
   res.json({ success: true, offers });
 });
 
-app.post('/api/offers', (req, res) => {
+app.post('/api/offers', async (req, res) => {
   const { title, description, badgeText, createdBy, expiryDate } = req.body;
-  const offer = offerManager.createOffer(title, description, badgeText, createdBy, expiryDate);
+  const offer = await offerManager.createOffer(title, description, badgeText, createdBy, expiryDate);
   res.json({ success: true, offer });
 });
 
+app.delete('/api/offers/:id', async (req, res) => {
+  await offerManager.deleteOffer(req.params.id);
+  res.json({ success: true });
+});
 // --- Finance Routes ---
 app.get('/api/finance/user/:id', (req, res) => {
   // Generate/fetch bills for the user
