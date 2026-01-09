@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class AdminManager {
     constructor() {
-        this.db = new Database('admins.json');
+        this.db = new Database('admins');
         this.ensureDefaultAdmin();
     }
 

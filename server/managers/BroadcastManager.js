@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class BroadcastManager {
     constructor() {
-        this.db = new Database('broadcasts.json');
+        this.db = new Database('broadcasts');
     }
 
     createBroadcast(title, message, type = 'info', audience = 'all', createdBy = 'system') {

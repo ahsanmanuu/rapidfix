@@ -1,9 +1,9 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 const crypto = require('crypto');
 
 class SessionManager {
     constructor() {
-        this.db = new Database('sessions.json');
+        this.db = new Database('sessions');
     }
 
     createSession(userId, role, deviceId) {

@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class TechnicianManager {
     constructor() {
-        this.db = new Database('technicians.json');
+        this.db = new Database('technicians');
     }
 
     createTechnician(name, email, phone, serviceType, location, password, experience, addressDetails) {

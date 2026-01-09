@@ -88,7 +88,7 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                     setLocationStatus('error');
                     alert("Could not access location. Please allow location permissions.");
                 },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
             );
         } else {
             setLocationStatus('error');

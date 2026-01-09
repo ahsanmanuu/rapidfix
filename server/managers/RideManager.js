@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class RideManager {
     constructor() {
-        this.db = new Database('rides.json');
+        this.db = new Database('rides');
     }
 
     startRide(technicianId, jobId, startLocation, endLocation) {

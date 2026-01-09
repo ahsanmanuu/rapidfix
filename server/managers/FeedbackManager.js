@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class FeedbackManager {
     constructor() {
-        this.db = new Database('feedbacks.json');
+        this.db = new Database('feedbacks');
     }
 
     addFeedback(userId, technicianId, ratings, comment) {

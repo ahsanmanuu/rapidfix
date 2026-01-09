@@ -167,21 +167,25 @@ const Home = () => {
         const fetchTopTechs = async () => {
             try {
                 const res = await getTopRatedTechnicians();
-                if (res.data.success && res.data.technicians.length > 0) {
-                    const serverUrl = 'http://localhost:3000'; // Or generic
-                    const mapped = res.data.technicians.map(t => ({
-                        ...t,
-                        // Ensure image URL is absolute or valid
+                if (res.data.success) {
+                    const serverUrl = 'http://localhost:3000';
+                    const profiles = res.data.technicians.map(t => ({
+                        id: t._id,
+                        name: t.name,
+                        role: t.expertise || t.serviceType || 'Master Technician',
+                        serviceType: t.serviceType,
                         image: t.documents?.photo
                             ? (t.documents.photo.startsWith('http') ? t.documents.photo : `${serverUrl}${t.documents.photo}`)
-                            : fallbackProfiles[0].image,
-                        role: `Expert ${t.serviceType}`,
-                        // Use description from DB if exists, else nice fallback
-                        description: t.description || `${t.name} is a highly skilled ${t.serviceType} with exceptional ratings. Known for prompt service and technical expertise.`,
+                            : (fallbackProfiles && fallbackProfiles[0] ? fallbackProfiles[0].image : ''),
+                        rating: t.rating || '4.8/5',
+                        reviewCount: t.reviewCount || '50+',
+                        jobs: t.completedJobs || '100+',
+                        onTime: '99%',
+                        description: t.bio || `Professional ${t.serviceType} with a track record of excellence.`,
                         // Ensure detailedRatings exists
                         detailedRatings: t.detailedRatings || { behavior: 5, expertise: 5, professionalism: 5, timelieness: 5 }
                     }));
-                    setTechnicianProfiles(mapped);
+                    setTechnicianProfiles(profiles);
                 }
             } catch (err) {
                 console.error("Failed to fetch top technicians", err);
@@ -261,7 +265,9 @@ const Home = () => {
                 } catch (err) {
                     console.error("Home: Location sync failed", err);
                 }
-            });
+            },
+                (err) => console.log("Silent location failure:", err),
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
         }
     }, [user?.id]);
 
@@ -410,7 +416,7 @@ const Home = () => {
             },
             {
                 enableHighAccuracy: true,
-                timeout: 10000,
+                timeout: 5000,
                 maximumAge: 0
             }
         );
@@ -484,7 +490,7 @@ const Home = () => {
                     >
                         <div
                             className="absolute inset-0 bg-cover bg-center"
-                            style={{ backgroundImage: `url(${slides[currentSlide].image})` }}
+                            style={{ backgroundImage: `url(${(slides && slides[currentSlide]) ? slides[currentSlide].image : ''})` }}
                         />
                         {/* Lighter Gradient Overlay for Light Theme readability if needed, or keeping it dark for contrast with white text */}
                         {/* Red Gradient Overlay */}
@@ -504,10 +510,10 @@ const Home = () => {
                                 ✨ #1 Home Service Platform
                             </span>
                             <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 text-white drop-shadow-lg tracking-tight">
-                                {slides[currentSlide].title}
+                                {(slides && slides[currentSlide]) ? slides[currentSlide].title : 'Fixofy Services'}
                             </h1>
                             <p className="text-xl text-slate-200 mb-10 max-w-xl font-medium drop-shadow-md leading-relaxed">
-                                {slides[currentSlide].subtitle}
+                                {(slides && slides[currentSlide]) ? slides[currentSlide].subtitle : 'Expert solutions for your home.'}
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto" style={{ flexDirection: 'column', gap: '1rem' }} data-version="nuclear-v4">
                                 {/* Mobile-first inline style override for redundancy */}
@@ -638,12 +644,14 @@ const Home = () => {
                         >
                             <div className="md:w-1/2">
                                 <div className="relative group mt-[15px]">
-                                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-500 opacity-50 blur-lg group-hover:opacity-75 transition duration-1000"></div>
-                                    <img
-                                        src={technicianProfiles[currentTechIndex]?.image || fallbackProfiles[0].image}
-                                        alt={technicianProfiles[currentTechIndex]?.name || 'Technician'}
-                                        className="relative shadow-2xl w-full object-cover aspect-[4/3] border border-white/20"
-                                    />
+                                    <div className="relative group/img overflow-hidden rounded-[2.5rem] bg-slate-100 shadow-2xl border-4 border-white aspect-square max-w-[450px] mx-auto scale-90 group-hover:scale-100 transition-transform duration-700">
+                                        <img
+                                            src={(technicianProfiles && technicianProfiles[currentTechIndex]) ? technicianProfiles[currentTechIndex].image : (fallbackProfiles && fallbackProfiles[0] ? fallbackProfiles[0].image : '')}
+                                            alt="Technician of the Month"
+                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                    </div>
                                     <div className="absolute bottom-8 left-8 bg-slate-900/90 backdrop-blur-md p-5 shadow-xl border border-white/10">
                                         <div className="flex items-center gap-2 mb-1">
                                             <Star size={18} className="text-yellow-400 fill-yellow-400" />

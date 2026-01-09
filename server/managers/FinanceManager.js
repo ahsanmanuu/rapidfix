@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class FinanceManager {
     constructor() {
-        this.db = new Database('finance.json');
+        this.db = new Database('finance');
     }
 
     createTransaction(userId, associatedId, type, amount, description) {

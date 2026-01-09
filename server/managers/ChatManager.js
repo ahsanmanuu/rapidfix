@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class ChatManager {
     constructor() {
-        this.db = new Database('chats.json');
+        this.db = new Database('chats');
     }
 
     sendMessage(senderId, receiverId, message, senderName) {

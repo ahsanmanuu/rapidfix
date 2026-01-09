@@ -1,10 +1,10 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 const UserManager = require('./UserManager');
 const TechnicianManager = require('./TechnicianManager');
 
 class JobManager {
     constructor() {
-        this.db = new Database('jobs.json');
+        this.db = new Database('jobs');
         this.userManager = new UserManager();
         this.techManager = new TechnicianManager();
     }

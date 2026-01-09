@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class SuperAdminManager {
     constructor() {
-        this.db = new Database('superadmins.json');
+        this.db = new Database('superadmins');
 
         // Ensure at least one super admin exists if empty
         if (this.db.read().length === 0) {

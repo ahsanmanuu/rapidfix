@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class OfferManager {
     constructor() {
-        this.db = new Database('offers.json');
+        this.db = new Database('offers');
 
         // Seed some initial offers if empty
         const offers = this.db.read();

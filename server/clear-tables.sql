@@ -1,0 +1,15 @@
+-- Clear all tables before re-running migration
+TRUNCATE TABLE users CASCADE;
+TRUNCATE TABLE technicians CASCADE;
+TRUNCATE TABLE jobs CASCADE;
+TRUNCATE TABLE feedbacks CASCADE;
+TRUNCATE TABLE finance CASCADE;
+TRUNCATE TABLE rides CASCADE;
+TRUNCATE TABLE sessions CASCADE;
+TRUNCATE TABLE complaints CASCADE;
+TRUNCATE TABLE notifications CASCADE;
+TRUNCATE TABLE offers CASCADE;
+TRUNCATE TABLE admins CASCADE;
+TRUNCATE TABLE chats CASCADE;
+
+SELECT 'All tables cleared!' as status;

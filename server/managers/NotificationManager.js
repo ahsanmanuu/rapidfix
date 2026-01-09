@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class NotificationManager {
     constructor() {
-        this.db = new Database('notifications.json');
+        this.db = new Database('notifications');
     }
 
     createNotification(recipientId, role, title, message, type, relatedId = null) {

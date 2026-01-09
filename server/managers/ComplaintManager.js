@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class ComplaintManager {
     constructor() {
-        this.db = new Database('complaints.json');
+        this.db = new Database('complaints');
     }
 
     createComplaint(userId, technicianId, subject, description) {

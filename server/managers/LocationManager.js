@@ -1,8 +1,8 @@
-const Database = require('./Database');
+const Database = require('./DatabaseLoader');
 
 class LocationManager {
     constructor() {
-        this.db = new Database('locations.json');
+        this.db = new Database('locations');
     }
 
     addLocation(city, area, pincode) {
