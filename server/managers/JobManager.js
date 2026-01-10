@@ -37,7 +37,6 @@ class JobManager {
     }
 
     // Helper to map App camelCase to DB snake_case
-    // Helper to map App camelCase to DB snake_case
     _mapToDb(job) {
         if (!job) return null;
 
