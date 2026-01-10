@@ -326,7 +326,7 @@ const AdminDashboard = () => {
                                     {/* TOP ROW: Map & Leaderboard (Higher Prominence) */}
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         {/* Time & Map Card */}
-                                        <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 p-0 overflow-hidden relative group shadow-lg min-h-[250px]">
+                                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-0 overflow-hidden relative group shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[250px]">
                                             <div className="h-44 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"
                                                 style={{
                                                     backgroundImage: location.lat
@@ -339,14 +339,14 @@ const AdminDashboard = () => {
 
                                             {/* SEPARATED CLOCK & LOCATION CONTAINER */}
                                             <div className="p-4 px-6 relative z-10 flex flex-col gap-3 -mt-6">
-                                                <div className="flex justify-between items-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-3 rounded-xl border-2 border-red-600 shadow-xl">
+                                                <div className="flex justify-between items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3 rounded-xl border border-primary/20 shadow-xl">
                                                     <div className="flex items-center gap-3">
                                                         <div className="size-8 rounded-full bg-red-600 flex items-center justify-center text-white">
                                                             <span className="material-symbols-outlined text-sm">schedule</span>
                                                         </div>
                                                         <div>
                                                             <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Platform Time</p>
-                                                            <h3 className="text-red-600 dark:text-red-400 text-xl font-black flex items-baseline gap-1">
+                                                            <h3 className="text-primary dark:text-primary text-xl font-black flex items-baseline gap-1">
                                                                 {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                                 <span className="text-[10px] uppercase">{currentTime.toLocaleTimeString([], { hour12: true }).slice(-2)}</span>
                                                             </h3>
@@ -409,7 +409,7 @@ const AdminDashboard = () => {
                                         {/* Area Chart & Pie Chart */}
                                         <div className="xl:col-span-2 flex flex-col gap-6">
                                             {/* Area Chart */}
-                                            <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 p-6 flex flex-col h-[400px] shadow-lg">
+                                            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 flex flex-col h-[400px] shadow-lg hover:shadow-xl transition-shadow duration-300">
                                                 <div className="flex justify-between items-center mb-6">
                                                     <div>
                                                         <h3 className="text-blue-600 font-black uppercase tracking-tighter text-lg italic">User Traffic Trends</h3>
@@ -437,7 +437,7 @@ const AdminDashboard = () => {
                                             </div>
 
                                             {/* Pie Chart Card */}
-                                            <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 p-6 shadow-lg">
+                                            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
                                                 <h3 className="text-emerald-600 font-black uppercase tracking-tighter text-lg italic mb-4">Job Service Allocation</h3>
                                                 <div className="flex flex-col md:flex-row items-center gap-8">
                                                     <div className="relative size-32">
@@ -471,8 +471,8 @@ const AdminDashboard = () => {
                                         </div>
 
                                         {/* Activity Log - Correctly inside the xl grid as the 3rd column */}
-                                        <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-600 flex flex-col shadow-lg overflow-hidden h-fit">
-                                            <div className="p-5 border-b-2 border-red-600/20 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
+                                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden h-fit">
+                                            <div className="p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
                                                 <h3 className="text-red-600 font-black uppercase tracking-tighter text-lg italic">Platform Monitoring</h3>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[10px] font-black text-red-600 uppercase tracking-widest animate-pulse">Live Feed</span>
