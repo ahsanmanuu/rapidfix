@@ -130,13 +130,13 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
             return;
         }
         if (!formData.address && !formData.location) {
-            alert("Please enter an address or detect your location.");
+            alert("Please detect your location so we can find nearby technicians.");
             return;
         }
-        // [NEW] Nudge for coordinates if only address is typed
+        // [FIX] Enforce coordinates to prevent "Missing location" errors in backend
         if (formData.address && !formData.location) {
-            const proceed = window.confirm("You've entered an address but haven't detected your precise location. Precise location helps us find the best nearby technician. Proceed anyway?");
-            if (!proceed) return;
+            alert("We need your precise location coordinates to assign a technician. Please click 'Detect Location'.");
+            return;
         }
         setLoading(true);
         setTimeout(() => {

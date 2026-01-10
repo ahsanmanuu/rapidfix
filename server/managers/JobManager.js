@@ -133,7 +133,8 @@ class JobManager {
             if (location && (location.latitude || location.lat) && (location.longitude || location.lng)) {
                 const lat = location.latitude || location.lat;
                 const lon = location.longitude || location.lng;
-                const radii = [2.0, 5.0, 10.0, 25.0]; // Progressive search
+                // [FIX] Restricted radius to 2km (primary) and 5km (secondary) as per user request
+                const radii = [2.0, 5.0];
 
                 for (const radius of radii) {
                     console.log(`[JobManager] Searching technicians in ${radius}km for Job #${jobId}`);

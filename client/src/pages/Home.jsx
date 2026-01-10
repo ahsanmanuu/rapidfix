@@ -425,7 +425,7 @@ const Home = () => {
     };
 
     return (
-        <div className="bg-slate-50 min-h-screen font-sans text-slate-900 overflow-x-hidden pt-48">
+        <div className="bg-slate-50 min-h-screen font-sans text-slate-900 overflow-x-hidden pt-24 md:pt-48">
 
             {/* Modals */}
             <AnimatePresence>
