@@ -12,9 +12,12 @@ export const SocketProvider = ({ children, user }) => {
 
     useEffect(() => {
         if (user) {
-            // Use dynamic URL based on environment
-            const socketURL = import.meta.env.PROD ? '/' : 'http://localhost:3000';
-            const newSocket = io(socketURL);
+            // Use window.location.origin for reliable production connection
+            const socketURL = import.meta.env.PROD ? window.location.origin : 'http://localhost:3000';
+            const newSocket = io(socketURL, {
+                transports: ['websocket', 'polling'], // Allow polling fallbacks
+                path: '/socket.io' // Ensure path matches server
+            });
 
             newSocket.on('connect', () => {
                 console.log('Connected to socket server:', newSocket.id);
