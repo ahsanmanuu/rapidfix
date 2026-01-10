@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Clock, MapPin, ShieldCheck, CheckCircle, Star, Zap, User } from 'lucide-react';
 
@@ -39,7 +39,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
         ? (technician.documents.photo.startsWith('http') ? technician.documents.photo : `http://localhost:3000${technician.documents.photo}`)
         : `https://ui-avatars.com/api/?name=${technician?.name || 'Tech'}&background=random`;
 
-    return ReactDOM.createPortal(
+    return createPortal(
         <AnimatePresence>
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md font-sans">
                 <motion.div

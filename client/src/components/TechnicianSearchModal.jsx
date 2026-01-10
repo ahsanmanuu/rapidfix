@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import ReactDOM from 'react-dom';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GoogleMap, useJsApiLoader, Marker, OverlayView } from '@react-google-maps/api';
 import { searchTechnicians } from '../services/api';
@@ -102,7 +102,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
 
     if (!isOpen) return null;
 
-    return ReactDOM.createPortal(
+    return createPortal(
         <AnimatePresence>
             <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 font-sans">
                 <motion.div
