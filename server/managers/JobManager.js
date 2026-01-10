@@ -30,9 +30,9 @@ class JobManager {
                 contactPhone: contact_phone,
                 scheduledDate: scheduled_date,
                 scheduledTime: scheduled_time,
-                createdAt: created_at,
-                updatedAt: updated_at,
-                customerMobile: contact_phone
+                createdAt: created_at || job.createdAt,
+                updatedAt: updated_at || job.updatedAt,
+                customerMobile: contact_phone || job.customerMobile
             };
         } catch (err) {
             console.error("[JobManager] Error mapping from DB:", err);
@@ -252,6 +252,31 @@ class JobManager {
             return enriched;
         } catch (err) {
             console.error(`[JobManager] Error updating status for job ${id}:`, err);
+            throw err;
+        }
+    }
+
+    async updateJob(id, data) {
+        try {
+            const updates = {
+                ...this._mapToDb(data),
+                updated_at: new Date().toISOString()
+            };
+            delete updates.id; // Protect ID
+
+            const result = await this.db.update('id', id, updates);
+            const enriched = await this._enrichJob(this._mapFromDb(result));
+
+            if (this.io) {
+                this.io.to(`user_${enriched.userId}`).emit('job_updated', enriched);
+                if (enriched.technicianId) {
+                    this.io.to(`tech_${enriched.technicianId}`).emit('job_updated', enriched);
+                }
+                this.io.emit('admin_job_update', enriched);
+            }
+            return enriched;
+        } catch (err) {
+            console.error(`[JobManager] Error updating job ${id}:`, err);
             throw err;
         }
     }

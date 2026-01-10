@@ -17,9 +17,9 @@ class UserManager {
             const { membership_expiry, created_at, updated_at, ...rest } = user;
             return {
                 ...rest,
-                membershipExpiry: membership_expiry,
-                createdAt: created_at,
-                updatedAt: updated_at
+                membershipExpiry: membership_expiry || user.membershipExpiry,
+                createdAt: created_at || user.createdAt,
+                updatedAt: updated_at || user.updatedAt
             };
         } catch (err) {
             console.error("[UserManager] Error mapping from DB:", err);
@@ -135,6 +135,29 @@ class UserManager {
         } catch (err) {
             console.error("[UserManager] Error getting all users:", err);
             return [];
+        }
+    }
+
+    async updateUser(id, data) {
+        try {
+            const updates = {
+                ...this._mapToDb(data),
+                updated_at: new Date().toISOString()
+            };
+            // Prevent ID/Email tampering if not intended
+            delete updates.id;
+
+            const result = await this.db.update('id', id, updates);
+            const user = this._mapFromDb(result);
+
+            if (this.io) {
+                this.io.to(`user_${id}`).emit('profile_updated', user);
+                this.io.emit('admin_user_update', user);
+            }
+            return user;
+        } catch (err) {
+            console.error(`[UserManager] Error updating user ${id}:`, err);
+            return null;
         }
     }
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const UserDrawer = ({ user, onClose, onBanUser, onChangeMembership }) => {
+const UserDrawer = ({ user, onClose, onBanUser, onChangeMembership, onEdit }) => {
     const [activeTab, setActiveTab] = useState('active');
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
@@ -23,17 +23,26 @@ const UserDrawer = ({ user, onClose, onBanUser, onChangeMembership }) => {
             />
 
             {/* Drawer */}
-            <div className={`fixed inset-y-0 right-0 w-full sm:max-w-md md:max-w-lg bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-out z-50 flex flex-col h-full overflow-hidden ${user ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed right-4 md:right-8 top-1/2 -translate-y-1/2 h-[60vh] w-[90%] md:w-96 bg-white dark:bg-slate-900 shadow-2xl rounded-2xl border border-slate-200 dark:border-slate-700 transform transition-transform duration-300 ease-out z-50 flex flex-col overflow-hidden ${user ? 'translate-x-0' : 'translate-x-[200%]'}`}>
                 {/* Header with Close Button */}
                 <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-800">
                     <h2 className="text-lg font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">User Details</h2>
-                    <button
-                        onClick={onClose}
-                        className="size-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-200 dark:hover:border-red-500/20 transition-all hover:scale-110 active:scale-95 shadow-sm"
-                        aria-label="Close drawer"
-                    >
-                        <span className="material-symbols-outlined text-xl font-bold">close</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => onEdit(user)}
+                            className="size-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:border-blue-200 dark:hover:border-blue-500/20 transition-all hover:scale-110 active:scale-95 shadow-sm"
+                            title="Edit User"
+                        >
+                            <span className="material-symbols-outlined text-xl font-bold">edit</span>
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="size-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-200 dark:hover:border-red-500/20 transition-all hover:scale-110 active:scale-95 shadow-sm"
+                            aria-label="Close drawer"
+                        >
+                            <span className="material-symbols-outlined text-xl font-bold">close</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content */}
@@ -96,7 +105,29 @@ const UserDrawer = ({ user, onClose, onBanUser, onChangeMembership }) => {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border border-amber-200 dark:border-amber-800">
-                                <span className="text-xs text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wide block mb-2">Membership</span>
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wide">Membership</span>
+                                    <button
+                                        onClick={async () => {
+                                            if (isUpdatingStatus) return;
+                                            const newTier = user.membership === 'Premium' ? 'Free' : 'Premium';
+                                            setIsUpdatingStatus(true);
+                                            try {
+                                                await onChangeMembership(user.id, newTier);
+                                            } finally {
+                                                setIsUpdatingStatus(false);
+                                            }
+                                        }}
+                                        disabled={isUpdatingStatus}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all focus:outline-none ${user.membership === 'Premium' ? 'bg-yellow-500 shadow-md shadow-yellow-500/30' : 'bg-slate-300 dark:bg-slate-600'
+                                            } ${isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+                                    >
+                                        <span
+                                            className={`inline-block size-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${user.membership === 'Premium' ? 'translate-x-6' : 'translate-x-1'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
                                 <div className="flex items-center gap-2">
                                     <span className={`material-symbols-outlined filled ${user.membership === 'Premium' ? 'text-yellow-600 dark:text-yellow-400' : 'text-slate-400'}`}>
                                         workspace_premium
@@ -108,7 +139,7 @@ const UserDrawer = ({ user, onClose, onBanUser, onChangeMembership }) => {
                             <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200 dark:border-emerald-800">
                                 <span className="text-xs text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wide block mb-2">Wallet</span>
                                 <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
-                                    ${(user.walletBalance || 0).toFixed(2)}
+                                    ₹{(user.walletBalance || 0).toFixed(2)}
                                 </div>
                             </div>
                         </div>
@@ -125,8 +156,8 @@ const UserDrawer = ({ user, onClose, onBanUser, onChangeMembership }) => {
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
                                         className={`px-4 py-2 text-sm font-semibold transition-all border-b-2 capitalize ${activeTab === tab
-                                                ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
-                                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-transparent'
+                                            ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
+                                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border-transparent'
                                             }`}
                                     >
                                         {tab}
@@ -146,9 +177,9 @@ const UserDrawer = ({ user, onClose, onBanUser, onChangeMembership }) => {
                                                 <div className="flex justify-between items-start mb-2">
                                                     <span className="text-xs font-mono text-slate-400 truncate">#{job.id?.substring(0, 8)}</span>
                                                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${['accepted', 'in_progress'].includes(job.status) ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300' :
-                                                            ['rejected', 'cancelled'].includes(job.status) ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300' :
-                                                                job.status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' :
-                                                                    'bg-slate-100 text-slate-600'
+                                                        ['rejected', 'cancelled'].includes(job.status) ? 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300' :
+                                                            job.status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300' :
+                                                                'bg-slate-100 text-slate-600'
                                                         }`}>
                                                         {job.status.replace('_', ' ')}
                                                     </span>

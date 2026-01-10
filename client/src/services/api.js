@@ -64,9 +64,13 @@ export const addFunds = (userId, amount) => api.post('/finance/wallet/add', { us
 
 // Admin User Management
 export const getAdminUsers = () => api.get('/admin/users');
+export const getDashboardStats = () => api.get('/admin/stats');
 export const banUser = (id) => api.put(`/admin/users/${id}/ban`);
 export const unbanUser = (id) => api.put(`/admin/users/${id}/unban`);
 export const updateUserMembership = (id, tier) => api.put(`/admin/users/${id}/membership`, { tier });
+export const createUser = (userData) => api.post('/admin/users', userData);
+export const updateUser = (id, data) => api.put(`/admin/users/${id}`, data);
+export const updateJob = (id, data) => api.put(`/admin/jobs/${id}`, data);
 
 export const getTopRatedTechnicians = () => api.get('/technicians/top-rated');
 

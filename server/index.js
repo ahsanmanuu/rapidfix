@@ -640,7 +640,287 @@ app.put('/api/admin/users/:id/membership', async (req, res) => {
   }
 });
 
-// --- Feedback Routes ---
+// --- Admin User/Job Routes ---
+app.post('/api/admin/users', async (req, res) => {
+  try {
+    const { email, password, options } = req.body;
+    const { name, role, membership } = options?.data || {};
+
+    // Create basic user
+    const newUser = await userManager.createUser(name, email, '', password, {}, null);
+
+    // Apply role/membership updates if needed
+    if (newUser) {
+      const updates = {};
+      if (membership) updates.membership = membership;
+      if (role) updates.role = role;
+
+      if (Object.keys(updates).length > 0) {
+        await userManager.updateUser(newUser.id, updates);
+      }
+      res.json({ success: true, user: newUser });
+    } else {
+      res.status(400).json({ success: false, error: 'User creation failed' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/admin/users/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updates = req.body;
+    const updatedUser = await userManager.updateUser(id, updates);
+    if (updatedUser) {
+      res.json({ success: true, user: updatedUser });
+    } else {
+      res.status(404).json({ success: false, error: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/admin/jobs/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updates = req.body;
+    const updatedJob = await jobManager.updateJob(id, updates);
+    if (updatedJob) {
+      res.json({ success: true, job: updatedJob });
+    } else {
+      res.status(404).json({ success: false, error: 'Job not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/admin/stats', async (req, res) => {
+  try {
+    const users = await userManager.getAllUsers();
+    const jobs = await jobManager.getAllJobs();
+    const technicians = await technicianManager.getAllTechnicians();
+    const activeTechnicians = technicians.filter(t => t.status === 'Active' || t.status === 'Available');
+
+    console.log(`[Stats DEBUG] Total Users: ${users.length}, Total Jobs: ${jobs.length}, Total Techs: ${technicians.length}`); // Debug
+
+    // 1. Job Distribution (Normalize status to lowercase)
+    const getCount = (list, statuses) => list.filter(j => statuses.includes((j.status || '').toLowerCase())).length;
+
+    const jobStats = {
+      completed: getCount(jobs, ['completed']),
+      pending: getCount(jobs, ['pending']),
+      cancelled: getCount(jobs, ['cancelled', 'rejected']),
+      in_progress: getCount(jobs, ['in-progress', 'accepted', 'assigned'])
+    };
+
+    console.log('[Stats DEBUG] Job Stats:', jobStats); // Debug
+
+    const jobDistribution = [
+      { name: 'Completed', value: jobStats.completed, color: '#10b981' },
+      { name: 'Pending', value: jobStats.pending, color: '#f59e0b' },
+      { name: 'Cancelled', value: jobStats.cancelled, color: '#ef4444' },
+      { name: 'In Progress', value: jobStats.in_progress, color: '#3b82f6' }
+    ];
+
+    // 2. Registration Trends (Last 30 Days)
+    const trends = [];
+    const now = new Date();
+
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+
+      const day = d.getDate();
+      const month = d.toLocaleString('default', { month: 'short' });
+      const year = d.getFullYear();
+      const label = `${day} ${month}`; // e.g. "10 Jan"
+
+      const count = users.filter(u => {
+        const dateStr = u.createdAt || u.created_at || u.date_created;
+        if (!dateStr) return false;
+        const uDate = new Date(dateStr);
+        return uDate.getDate() === day && uDate.getMonth() === d.getMonth() && uDate.getFullYear() === year;
+      }).length;
+
+      trends.push({ name: label, count });
+    }
+
+    // 2b. Technician Registration Trends (Last 30 Days)
+    const technicianTrends = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+
+      const day = d.getDate();
+      const month = d.toLocaleString('default', { month: 'short' });
+      const year = d.getFullYear();
+      const label = `${day} ${month}`;
+
+      const count = technicians.filter(t => {
+        const dateStr = t.joinedAt || t.joined_at || t.createdAt || t.created_at;
+        if (!dateStr) return false;
+        const tDate = new Date(dateStr);
+        return tDate.getDate() === day && tDate.getMonth() === d.getMonth() && tDate.getFullYear() === year;
+      }).length;
+
+      technicianTrends.push({ name: label, count });
+    }
+
+    // 3. Activity Log (Normalized)
+    const recentActivity = [
+      ...jobs.map(j => ({
+        id: `job_${j.id}`,
+        user: j.contactName || 'Client',
+        action: `created job #${j.id}`,
+        timestamp: j.createdAt || j.created_at || new Date().toISOString(),
+        icon: 'work',
+        type: 'job'
+      })),
+      ...users.map(u => ({
+        id: `user_${u.id}`,
+        user: u.name || 'User',
+        action: `registered`,
+        timestamp: u.createdAt || u.created_at || new Date().toISOString(),
+        icon: 'person_add',
+        type: 'user'
+      }))
+    ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
+
+    // 4. Calculate Trends (Month over Month)
+    const getTrend = (data, dateField) => {
+      const now = new Date();
+      const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const firstDayNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+      const currentMonthCount = data.filter(item => {
+        const d = new Date(item[dateField] || item.createdAt || item.created_at);
+        return d >= firstDayCurrentMonth && d < firstDayNextMonth;
+      }).length;
+
+      const lastMonthCount = data.filter(item => {
+        const d = new Date(item[dateField] || item.createdAt || item.created_at);
+        return d >= firstDayLastMonth && d < firstDayCurrentMonth;
+      }).length; // Corrected: should be .length for count
+
+      if (lastMonthCount === 0) return currentMonthCount > 0 ? 100 : 0;
+      return Math.round(((currentMonthCount - lastMonthCount) / lastMonthCount) * 100);
+    };
+
+    const trendsData = {
+      users: getTrend(users, 'createdAt'),
+      jobs: getTrend(jobs, 'createdAt'),
+      revenue: 0 // Placeholder
+    };
+
+    // Helper for safe, case-insensitive status matching
+    const countStatus = (arr, statusList) => {
+      const lowerStatusList = statusList.map(s => s.toLowerCase());
+      return arr.filter(item => {
+        const s = (item.status || '').toLowerCase();
+        return lowerStatusList.includes(s);
+      }).length;
+    };
+
+    // DEBUG: Log first 3 job statuses to verify mapping
+    console.log('[API] Debug Job Statuses:', jobs.slice(0, 3).map(j => j.status));
+
+    // 5. Detailed Breakdowns (Corrected for DB casing)
+    const detailedStats = {
+      // Jobs
+      jobsPending: countStatus(jobs, ['pending']),
+      jobsActive: countStatus(jobs, ['accepted', 'in-progress', 'in_progress', 'ongoing', 'started']),
+      jobsRejected: countStatus(jobs, ['rejected', 'cancelled', 'canceled']),
+      jobsAccepted: countStatus(jobs, ['accepted']),
+      jobsFinishing: countStatus(jobs, ['work_done', 'completed', 'finishing']), // mapped 'completed' here too
+
+      // Technicians
+      // DB uses lowercase 'available', 'approved', etc.
+      techsAvailable: countStatus(technicians, ['available', 'active', 'online']),
+      techsUnavailable: countStatus(technicians, ['offline', 'inactive', 'unavailable']),
+      techsEngaged: countStatus(technicians, ['engaged', 'busy', 'working']),
+
+      techsPremium: technicians.filter(t => (t.membership || '').toLowerCase() === 'premium').length,
+      techsFree: technicians.filter(t => (t.membership || '').toLowerCase() === 'free' || !t.membership).length,
+
+      techsApproved: countStatus(technicians, ['approved', 'active', 'verified']),
+      techsNotApproved: countStatus(technicians, ['pending', 'unverified', 'review']),
+      techsBlacklisted: countStatus(technicians, ['banned', 'blacklisted', 'suspended']),
+
+      techsExpiring: technicians.filter(t => {
+        if (!t.membershipSince) return false;
+        const since = new Date(t.membershipSince);
+        const expiry = new Date(since);
+        expiry.setDate(expiry.getDate() + 30); // Assume 30 day cycle
+
+        const now = new Date();
+        const daysLeft = (expiry - now) / (1000 * 60 * 60 * 24);
+        return daysLeft > 0 && daysLeft <= 7;
+      }).length,
+
+      // Users
+      usersFree: users.filter(u => (u.membership || '').toLowerCase() === 'free' || !u.membership).length,
+      usersPremium: users.filter(u => (u.membership || '').toLowerCase() === 'premium').length,
+      usersBanned: countStatus(users, ['banned', 'suspended']),
+      usersExpiring: users.filter(u => {
+        if (!u.membershipExpiry) return false;
+        const expiry = new Date(u.membershipExpiry);
+        const now = new Date();
+        const daysLeft = (expiry - now) / (1000 * 60 * 60 * 24);
+        return daysLeft > 0 && daysLeft <= 7;
+      }).length
+    };
+
+    // Revenue Trend calculation (sum of offerPrice for current vs last month)
+    const getRevenueTrend = () => {
+      const now = new Date();
+      const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+      const currentMonthRevenue = jobs.reduce((acc, j) => {
+        const d = new Date(j.createdAt || j.created_at);
+        if (d >= firstDayCurrentMonth) return acc + (Number(j.offerPrice) || Number(j.offer_price) || 0);
+        return acc;
+      }, 0);
+
+      const lastMonthRevenue = jobs.reduce((acc, j) => {
+        const d = new Date(j.createdAt || j.created_at);
+        if (d >= firstDayLastMonth && d < firstDayCurrentMonth) return acc + (Number(j.offerPrice) || Number(j.offer_price) || 0);
+        return acc;
+      }, 0);
+
+      if (lastMonthRevenue === 0) return currentMonthRevenue > 0 ? 100 : 0;
+      return Math.round(((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100);
+    };
+    trendsData.revenue = getRevenueTrend();
+
+    console.log('[API] Calculated Detailed Stats:', detailedStats);
+
+    res.json({
+      success: true,
+      stats: {
+        totalUsers: users.length,
+        totalJobs: jobs.length,
+        activeTechnicians: activeTechnicians.length,
+        revenue: jobs.reduce((acc, j) => acc + (Number(j.offerPrice) || Number(j.offer_price) || 0), 0),
+        jobDistribution,
+        registrationTrends: trends,
+        technicianTrends, // New field
+        activityLog: recentActivity,
+        trends: trendsData,
+        detailed: detailedStats
+      }
+    });
+
+  } catch (err) {
+    console.error('[API] Admin Stats Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // --- Feedback Routes ---
 app.post('/api/feedback', async (req, res) => {
   const { userId, technicianId, ratings, comment } = req.body;
@@ -1053,44 +1333,7 @@ const verifyAdmin = (req, res, next) => {
   next();
 };
 
-app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
-  try {
-    const users = await userManager.getAllUsers();
-    const technicians = await technicianManager.getAllTechnicians();
-    const jobs = await jobManager.getAllJobs();
-    const wallet = await financeManager.getSystemWalletBalance();
-
-    // Calculate detailed stats
-    const activeTechnicians = technicians.filter(t => t.status === 'approved' || t.status === 'verified').length;
-    const pendingVerifications = technicians.filter(t => t.status === 'pending').length;
-
-    // Job Stats
-    const completedJobs = jobs.filter(j => j.status === 'completed').length;
-    const pendingJobs = jobs.filter(j => j.status === 'pending' || j.status === 'assigned').length;
-    const cancelledJobs = jobs.filter(j => j.status === 'cancelled').length;
-    const completionRate = jobs.length > 0 ? Math.round((completedJobs / jobs.length) * 100) : 0;
-
-    res.json({
-      success: true,
-      stats: {
-        totalUsers: users.length,
-        totalTechnicians: technicians.length,
-        activeTechnicians,
-        pendingVerifications,
-        totalWallet: wallet || 45200, // Mock if 0 for demo
-        jobs: {
-          total: jobs.length,
-          completed: completedJobs,
-          pending: pendingJobs,
-          cancelled: cancelledJobs,
-          completionRate
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+// [REMOVED DUPLICATE /api/admin/stats ENDPOINT]
 
 app.get('/api/admin/technicians', verifyAdmin, async (req, res) => {
   const technicians = await technicianManager.getAllTechnicians();

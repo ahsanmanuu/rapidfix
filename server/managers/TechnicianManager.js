@@ -125,6 +125,19 @@ class TechnicianManager {
         }
     }
 
+    async getAllTechnicians() {
+        try {
+            const techs = await this.db.read();
+            return techs.map(t => {
+                const { password, ...rest } = this._mapFromDb(t);
+                return rest;
+            });
+        } catch (err) {
+            console.error("[TechnicianManager] Error getting all techs:", err);
+            return [];
+        }
+    }
+
     async searchTechnicians(userLat, userLon, serviceType, radius = 2.0) {
         try {
             const lat = parseFloat(userLat);

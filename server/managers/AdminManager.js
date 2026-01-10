@@ -89,7 +89,9 @@ class AdminManager {
             }
 
             const cleanEmail = String(email).trim().toLowerCase();
-            console.log(`[AdminManager] Attempting login for: ${cleanEmail}`);
+            const cleanPassword = String(password).trim();
+
+            console.log(`[AdminManager] Attempting login for: ${cleanEmail} (Pass Length: ${cleanPassword.length})`);
 
             const admin = await this.db.find('email', cleanEmail);
 
@@ -98,7 +100,11 @@ class AdminManager {
                 return null;
             }
 
-            if (admin.password === password) {
+            // Compare passwords (Plain text for now, should be hashed in future)
+            // Trim stored password just in case DB has trailing spaces
+            const dbPassword = String(admin.password).trim();
+
+            if (dbPassword === cleanPassword) {
                 console.log(`[AdminManager] Login successful for: ${cleanEmail}`);
                 const result = this._mapFromDb(admin);
                 const { password, ...adminWithoutPass } = result;
@@ -107,7 +113,7 @@ class AdminManager {
                 }
                 return adminWithoutPass;
             } else {
-                console.log(`[AdminManager] Login failed: Incorrect password for ${cleanEmail}`);
+                console.log(`[AdminManager] Login failed: Incorrect password for ${cleanEmail}. InputLen: ${cleanPassword.length}, StoredLen: ${dbPassword.length}`);
                 return null;
             }
         } catch (err) {

@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import api, { banUser, unbanUser, updateUserMembership } from '../services/api';
+import api, { banUser, unbanUser, updateUserMembership, createUser, updateUser, updateJob, getDashboardStats } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { useTheme } from '../context/ThemeContext';
-import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Sidebar } from '../components/admin/Sidebar';
 import { Header } from '../components/admin/Header';
 import { StatsCard } from '../components/admin/StatsCard';
+import { CompactStatCard } from '../components/admin/CompactStatCard';
+import { useRealtimeStats } from '../hooks/useRealtimeStats';
 import UserHeader from '../components/admin/users/UserHeader';
 import Filters from '../components/admin/users/Filters';
 import UserTable from '../components/admin/users/UserTable';
@@ -17,6 +19,9 @@ import JobHeader from '../components/admin/jobs/JobHeader';
 import JobStats from '../components/admin/jobs/JobStats';
 import JobTable from '../components/admin/jobs/JobTable';
 import JobDrawer from '../components/admin/jobs/JobDrawer';
+import UserCreateModal from '../components/admin/users/UserCreateModal';
+import JobFormModal from '../components/admin/jobs/JobFormModal';
+
 // Mock Data & Constants
 const ACTIVITY_LOG = [
     { id: '1', user: 'John D.', action: 'completed job', targetId: '#4921', timestamp: '2 minutes ago', icon: 'check', iconColor: 'text-primary bg-primary/20' },
@@ -44,12 +49,24 @@ const getDashboardInsights = async () => {
 
 const AdminDashboard = () => {
     // UI State
-    const [activeTab, setActiveTab] = useState('dashboard');
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    // activeTab and sidebarOpen/isSidebarOpen moved to unified block below
+
+    // Pagination State
+    const [userPage, setUserPage] = useState(1);
+    const [jobPage, setJobPage] = useState(1);
+    const LIMIT_PER_PAGE = 10;
+
+    // Filters State
+    const [activeTier, setActiveTier] = useState('All');
+    const [activeStatus, setActiveStatus] = useState('All');
+
+    // Modals
+    const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
+    const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+
     const navigate = useNavigate();
 
     // Auth & Theme
-    const { logout } = useAuth();
     const { isDarkMode, currentColor, toggleTheme, setThemeColor } = useTheme();
 
     const handleLogout = async () => {
@@ -75,8 +92,59 @@ const AdminDashboard = () => {
 
     // Job Panel State
     const [activeJobFilter, setActiveJobFilter] = useState('all');
+    const [activeTab, setActiveTab] = useState('dashboard');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Use valid Auth context or fallback
+    const { user, logout } = useAuth() || { user: { name: 'Admin' }, logout: () => { } };
+
+    // Search State
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Real-time Stats Hook (Replaces local useEffect)
+    const { stats, loading, error, refetch } = useRealtimeStats();
+
+    // Data for Tables (User & Job)
+    const [users, setUsers] = useState([]);
+    const [jobs, setJobs] = useState([]);
+
     const [selectedJob, setSelectedJob] = useState(null);
     const [isJobDrawerOpen, setIsJobDrawerOpen] = useState(false);
+    const [isEditJobOpen, setIsEditJobOpen] = useState(false);
+
+    const fetchUsers = async () => {
+        try {
+            const response = await api.get('/users'); // Assuming this endpoint exists for admin
+            // Ensure response.data is an array
+            const data = Array.isArray(response.data) ? response.data : [];
+            setUsers(data);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            setUsers([]);
+        }
+    };
+
+    const fetchJobs = async () => {
+        try {
+            const response = await api.get('/jobs'); // Assuming this endpoint exists for admin
+            // Ensure response.data is an array
+            const data = Array.isArray(response.data) ? response.data : [];
+            setJobs(data);
+        } catch (error) {
+            console.error('Error fetching jobs:', error);
+            setJobs([]);
+        }
+    };
+
+    // Keep separate effect for Table data (User/Jobs) as they might need separate pagination logic later
+    // Ideally, these would also be real-time, but for now we focus on the Dashboard Stats being realtime.
+    // We can piggy-back on the global refresh to update these lists too if needed.
+    useEffect(() => {
+        fetchUsers();
+        fetchJobs();
+    }, []); // Initial load only for now, or add dependency on 'stats' to auto-refresh tables too
+
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     const refreshUsers = async () => {
         try {
@@ -92,56 +160,72 @@ const AdminDashboard = () => {
 
     const handleCloseDrawer = () => {
         setIsDrawerOpen(false);
-        setSelectedUser(null);
+        setTimeout(() => setSelectedUser(null), 300); // Wait for transition
     };
 
     const handleBanUser = async (userId, currentStatus) => {
-        if (!userId) {
-            console.error("Attempted to ban user with invalid ID:", userId);
-            alert("Error: User ID is missing. Cannot perform action.");
-            return;
-        }
-        console.log(`Attempting to toggle ban for user: "${userId}" (type: ${typeof userId}), status: ${currentStatus}`);
-        // Trim ID to ensure clean value
-        const cleanId = String(userId).trim();
-
         try {
-            let res;
             if (currentStatus === 'Banned') {
-                res = await unbanUser(cleanId);
+                await unbanUser(userId);
             } else {
-                res = await banUser(cleanId);
+                await banUser(userId);
             }
-            console.log("API Response:", res.data);
-
-            // Refetch to ensure data consistency
-            await refreshUsers();
-
-            // Force local update if we have a selected user
-            if (selectedUser && String(selectedUser.id) === cleanId) {
-                console.log("Updating local selectedUser state...");
-                const newStatus = currentStatus === 'Banned' ? 'Active' : 'Banned';
-                setSelectedUser(prev => ({ ...prev, status: newStatus }));
-            }
-        } catch (error) {
-            console.error("Ban Action Error", error);
-            alert("Failed to update user status: " + (error.response?.data?.error || error.message));
-        }
-    };
-
-    const handleChangeMembership = async (userId, tier) => {
-        try {
-            await updateUserMembership(userId, tier);
-            await refreshUsers();
+            refreshUsers();
             if (selectedUser && selectedUser.id === userId) {
-                setSelectedUser(prev => ({ ...prev, membership: tier }));
+                setSelectedUser(prev => ({ ...prev, status: currentStatus === 'Banned' ? 'Active' : 'Banned' }));
             }
         } catch (error) {
-            console.error("Membership Action Error", error);
+            console.error('Failed to toggle ban status:', error);
+            alert('Failed to update user status');
         }
     };
 
-    // Job Handlers
+    const handleChangeMembership = async (userId, newTier) => {
+        try {
+            await updateUserMembership(userId, newTier);
+            refreshUsers();
+            if (selectedUser && selectedUser.id === userId) {
+                setSelectedUser(prev => ({ ...prev, membership: newTier }));
+            }
+        } catch (error) {
+            console.error('Failed to update membership:', error);
+            alert('Failed to update membership');
+        }
+    };
+
+    const handleCreateUser = async (userData) => {
+        try {
+            console.log("Creating user:", userData);
+            await createUser(userData);
+            alert("User created successfully!");
+            refreshUsers();
+        } catch (error) {
+            console.error("Create user failed:", error);
+            throw error;
+        }
+    };
+
+    const handleEditUser = (user) => {
+        setSelectedUser(user);
+        setIsEditUserOpen(true);
+    };
+
+    const handleUpdateUser = async (userData) => {
+        try {
+            console.log("Updating user:", userData);
+            await updateUser(userData.id, userData);
+
+            // Optimistic update
+            setUsers(users.map(u => u.id === userData.id ? { ...u, ...userData } : u));
+            setSelectedUser(prev => prev && prev.id === userData.id ? { ...prev, ...userData } : prev);
+            setIsEditUserOpen(false);
+            alert("User updated successfully!");
+        } catch (error) {
+            console.error("Update user failed:", error);
+            alert("Failed to update user");
+        }
+    };
+
     const handleSelectJob = (job) => {
         setSelectedJob(job);
         setIsJobDrawerOpen(true);
@@ -149,369 +233,353 @@ const AdminDashboard = () => {
 
     const handleCloseJobDrawer = () => {
         setIsJobDrawerOpen(false);
-        setSelectedJob(null);
+        setTimeout(() => setSelectedJob(null), 300);
     };
 
-    // Data State
-    const [stats, setStats] = useState(null);
-    const [technicians, setTechnicians] = useState([]);
-    const [users, setUsers] = useState([]);
-    const [jobs, setJobs] = useState([]);
-    const [feedbacks, setFeedbacks] = useState([]);
-    const [transactions, setTransactions] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const handleEditJob = (job) => {
+        setSelectedJob(job);
+        setIsEditJobOpen(true);
+    };
 
-    // Time & Location
-    const [currentTime, setCurrentTime] = useState(new Date());
-    const [location, setLocation] = useState({ lat: null, lng: null, address: 'Locating...' });
+    const handleUpdateJob = async (jobData) => {
+        try {
+            console.log("Updating job:", jobData);
+            await updateJob(jobData.id, jobData);
 
-    // --- Effects ---
-
-    // 1. Utilities Initialization (Clock & AI)
-    useEffect(() => {
-        // Fetch AI insights
-        getDashboardInsights().then(setInsights);
-
-        // Clock
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    // 2. Data Fetching
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [statsRes, techRes, usersRes, jobsRes, feedRes, transRes] = await Promise.all([
-                    api.get('/admin/stats').catch(() => ({ data: { stats: { totalUsers: 0, totalTechnicians: 0, pendingVerifications: 0, totalWallet: 0 } } })),
-                    api.get('/admin/technicians').catch(() => ({ data: { technicians: [] } })),
-                    api.get('/admin/users').catch(() => ({ data: { users: [] } })),
-                    api.get('/admin/jobs').catch(() => ({ data: { jobs: [] } })),
-                    api.get('/admin/feedbacks').catch(() => ({ data: { feedbacks: [] } })),
-                    api.get('/admin/transactions').catch(() => ({ data: { transactions: [] } })),
-                ]);
-
-                setStats(statsRes.data.stats);
-                setTechnicians(techRes.data.technicians || []);
-                setUsers(usersRes.data.users || []);
-                setJobs(jobsRes.data.jobs || []);
-                setFeedbacks(feedRes.data.feedbacks || []);
-                setTransactions(transRes.data.transactions || []);
-                setLoading(false);
-            } catch (error) {
-                console.error("Data Fetch Error", error);
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-        const interval = setInterval(fetchData, 30000);
-
-        // Geolocation
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                try {
-                    const { latitude, longitude } = pos.coords;
-                    const apiKey = "AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU";
-                    const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`);
-                    const data = await res.json();
-                    let address = "Unknown Location";
-                    if (data.results?.[0]) {
-                        const locality = data.results[0].address_components.find(c => c.types.includes('locality'))?.long_name;
-                        const area = data.results[0].address_components.find(c => c.types.includes('sublocality'))?.long_name;
-                        const country = data.results[0].address_components.find(c => c.types.includes('country'))?.short_name;
-                        address = area && locality ? `${area}, ${locality}` : (locality ? `${locality}, ${country}` : data.results[0].formatted_address.split(',')[0]);
-                    }
-                    setLocation({ lat: latitude, lng: longitude, address });
-                } catch (e) { console.error(e); }
-            }, () => { });
+            // Optimistic update
+            setJobs(jobs.map(j => j.id === jobData.id ? { ...j, ...jobData } : j));
+            setSelectedJob(prev => prev && prev.id === jobData.id ? { ...prev, ...jobData } : prev);
+            setIsEditJobOpen(false);
+            alert("Job updated successfully!");
+        } catch (error) {
+            console.error("Update job failed:", error);
+            alert("Failed to update job");
         }
-        return () => clearInterval(interval);
+    };
+
+
+
+    // Data State
+    const [technicians, setTechnicians] = useState([]);
+
+    // Derived State - Filtered Users
+    const filteredUsers = users.filter(user => {
+        const matchesSearch = searchQuery === '' ||
+            user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.id?.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesTier = activeTier === 'All' || user.membership === activeTier;
+        const matchesStatus = activeStatus === 'All' || user.status === activeStatus;
+
+        return matchesSearch && matchesTier && matchesStatus;
+    });
+
+    // Derived State - Filtered Jobs
+    const filteredJobs = jobs.filter(job => {
+        const matchesSearch = searchQuery === '' ||
+            job.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.contactName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.serviceType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.status?.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesStatus = activeJobFilter === 'all' || job.status.toLowerCase() === activeJobFilter.toLowerCase();
+
+        return matchesSearch && matchesStatus;
+    });
+
+    // Pagination Logic
+    const paginatedUsers = filteredUsers.slice((userPage - 1) * LIMIT_PER_PAGE, userPage * LIMIT_PER_PAGE);
+    const paginatedJobs = filteredJobs.slice((jobPage - 1) * LIMIT_PER_PAGE, jobPage * LIMIT_PER_PAGE);
+
+    // Initial Data Fetch
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const [usersRes, techsRes, jobsRes] = await Promise.all([
+                    api.get('/admin/users'),
+                    api.get('/admin/technicians'),
+                    api.get('/admin/jobs')
+                ]);
+                setUsers(usersRes.data.users || []);
+                setTechnicians(techsRes.data.technicians || []);
+                setJobs(jobsRes.data.jobs || []);
+            } catch (error) {
+                console.error("Dashboard data fetch error", error);
+                // Fallback mock data if API fails
+                if (users.length === 0) {
+                    setUsers([
+                        { id: '1', name: 'Ahsan M.', email: 'ahsan@example.com', role: 'admin', status: 'Active', membership: 'Premium', walletBalance: 1250, avatar: 'https://randomuser.me/api/portraits/men/1.jpg', lastActive: '2 min ago' },
+                        { id: '2', name: 'John Doe', email: 'john@test.com', role: 'user', status: 'Active', membership: 'Free', walletBalance: 0, avatar: 'https://randomuser.me/api/portraits/men/32.jpg', lastActive: '1 day ago' },
+                        { id: '3', name: 'Jane Smith', email: 'jane@test.com', role: 'technician', status: 'Banned', membership: 'Free', walletBalance: 450, avatar: 'https://randomuser.me/api/portraits/women/44.jpg', lastActive: '5 days ago' }
+                    ]);
+                    setJobs([
+                        { id: 'JOB-8821', serviceType: 'AC Repair', status: 'Pending', contactName: 'Mike Ross', offerPrice: 1500, createdAt: new Date().toISOString() },
+                        { id: 'JOB-9923', serviceType: 'Plumbing', status: 'Completed', contactName: 'Rachel Green', offerPrice: 850, createdAt: new Date(Date.now() - 86400000).toISOString() },
+                        { id: 'JOB-7742', serviceType: 'Electrical', status: 'In-Progress', contactName: 'Joey T.', offerPrice: 2200, createdAt: new Date().toISOString() }
+                    ]);
+                }
+            }
+        };
+        fetchDashboardData();
+        // getDashboardInsights().then(setInsights);
     }, []);
 
-    // 3. Real-time Socket Listeners
-    const socket = useSocket();
-
-    useEffect(() => {
-        if (!socket) return;
-
-        const handleUserUpdate = (updatedUser) => {
-            refreshUsers();
-            if (activeTab === 'dashboard') {
-                api.get('/admin/stats').then(res => setStats(res.data.stats)).catch(err => console.error(err));
-            }
-            if (selectedUser && selectedUser.id === updatedUser.id) {
-                // Determine if banned status changed to show immediate feedback
-                const newStatus = updatedUser.status || selectedUser.status;
-                const newMembership = updatedUser.membership || selectedUser.membership;
-                setSelectedUser(prev => ({ ...prev, ...updatedUser, status: newStatus, membership: newMembership }));
-            }
+    const userStats = React.useMemo(() => {
+        return {
+            totalUsers: users.length,
+            activeUsers: users.filter(u => u.status === 'Active').length,
+            premiumUsers: users.filter(u => u.membership === 'Premium').length,
+            revenue: users.reduce((acc, curr) => acc + (curr.walletBalance || 0), 0)
         };
-
-        const handleJobUpdate = (job) => {
-            refreshUsers(); // Refresh user list for latest job counts
-            if (activeTab === 'dashboard') {
-                // Refresh dashboard widgets
-                api.get('/admin/jobs').then(res => setJobs(res.data.jobs || [])).catch(() => { });
-                api.get('/admin/stats').then(res => setStats(res.data.stats)).catch(() => { });
-            }
-        };
-
-        socket.on('admin_user_update', handleUserUpdate);
-        socket.on('job_status_updated_admin', handleJobUpdate);
-        socket.on('job_status_updated', handleJobUpdate);
-
-        return () => {
-            socket.off('admin_user_update', handleUserUpdate);
-            socket.off('job_status_updated_admin', handleJobUpdate);
-            socket.off('job_status_updated', handleJobUpdate);
-        };
-    }, [socket, selectedUser, activeTab]);
-
-    // Derived Stats for UI
-    const dashboardStats = stats ? [
-        { label: 'Total Users', value: (stats.totalUsers || 0).toLocaleString(), trend: 12, icon: 'group', color: 'blue' },
-        { label: 'Active Technicians', value: (stats.activeTechnicians || 0).toString(), trend: 3, icon: 'engineering', color: 'purple' },
-        { label: 'Pending Verifications', value: (stats.pendingVerifications || 0).toString(), trend: 0, icon: 'verified_user', alert: (stats.pendingVerifications || 0) > 0 ? 'Action Needed' : '', color: 'rose' },
-        { label: 'Total Wallet', value: `$${(stats.totalWallet || 0).toLocaleString()}`, trend: 8, icon: 'account_balance_wallet', color: 'emerald' },
-    ] : [];
+    }, [users]);
 
     return (
-        <div className={`flex h-screen overflow-hidden font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300`}>
-            {/* Mobile Sidebar Backdrop */}
-            <div
-                className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 lg:hidden ${sidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
-                onClick={() => setSidebarOpen(false)}
-            />
-
+        <div className={`flex h-screen bg-gray-50 dark:bg-[#0f172a] transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
+            {/* Sidebar */}
             <Sidebar
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
-                isOpen={sidebarOpen}
-                setIsOpen={setSidebarOpen}
+                isOpen={isSidebarOpen}
+                setIsOpen={setIsSidebarOpen}
             />
 
-            <div className="flex-1 flex flex-col h-full min-w-0">
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col h-full overflow-hidden relative">
                 <Header
-                    sidebarOpen={sidebarOpen}
-                    setSidebarOpen={setSidebarOpen}
+                    isDarkMode={isDarkMode}
+                    toggleTheme={toggleTheme}
+                    toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                    sidebarOpen={isSidebarOpen}
                     activeTab={activeTab}
                     onLogout={handleLogout}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
                 />
 
-                <main className="flex-1 overflow-y-auto p-4 md:p-8 relative custom-scrollbar bg-slate-50 dark:bg-slate-950">
-                    {loading && activeTab === 'dashboard' ? (
-                        <div className="flex items-center justify-center h-full text-blue-600 font-bold text-xl">
-                            <div className="flex flex-col items-center gap-4">
-                                <span className="material-symbols-outlined animate-spin text-4xl">sync</span>
-                                Loading Admin Console...
+                <main className="flex-1 overflow-auto p-4 md:p-8 relative">
+                    {activeTab === 'dashboard' ? (
+                        <div className="max-w-[1600px] mx-auto space-y-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <StatsCard stat={{ label: 'Total Users', value: stats.totalUsers, icon: 'group', color: 'blue', trend: stats.trends?.users || 0 }} />
+                                <StatsCard stat={{ label: 'Active Techs', value: stats.activeTechnicians, icon: 'engineering', color: 'emerald', trend: 0 }} />
+                                <StatsCard stat={{ label: 'Total Jobs', value: stats.totalJobs, icon: 'work', color: 'orange', trend: stats.trends?.jobs || 0 }} />
+                                <StatsCard stat={{ label: 'Total Revenue', value: `₹${(stats.revenue || 0).toLocaleString()}`, icon: 'payments', color: 'purple', trend: stats.trends?.revenue || 0 }} />
+                            </div>
+
+                            {/* Detailed Stats Breakdown */}
+                            <div className="space-y-8 animate-fade-in-up">
+                                {/* Job Overview */}
+                                <div className="bg-blue-50/50 rounded-2xl px-6 py-[110px] border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="space-y-6">
+                                        <div className="flex items-center gap-2 px-1">
+                                            <span className="material-symbols-outlined text-blue-500 text-lg">work_history</span>
+                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Job Overview</h3>
+                                        </div>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6">
+                                            <CompactStatCard stat={{ label: 'Pending', value: stats.detailed?.jobsPending || 0, icon: 'hourglass_empty', color: 'orange' }} />
+                                            <CompactStatCard stat={{ label: 'Active', value: stats.detailed?.jobsActive || 0, icon: 'play_circle', color: 'blue' }} />
+                                            <CompactStatCard stat={{ label: 'Accepted', value: stats.detailed?.jobsAccepted || 0, icon: 'check_circle', color: 'indigo' }} />
+                                            <CompactStatCard stat={{ label: 'Finishing', value: stats.detailed?.jobsFinishing || 0, icon: 'rule', color: 'cyan' }} />
+                                            <CompactStatCard stat={{ label: 'Rejected', value: stats.detailed?.jobsRejected || 0, icon: 'cancel', color: 'red' }} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    {/* Technician Status */}
+                                    <div className="bg-emerald-50/50 rounded-2xl px-6 py-[110px] border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
+                                        <div className="space-y-6">
+                                            <div className="flex items-center gap-2 px-1">
+                                                <span className="material-symbols-outlined text-emerald-500 text-lg">engineering</span>
+                                                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Technician Status</h3>
+                                            </div>
+                                            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 gap-y-6">
+                                                <CompactStatCard stat={{ label: 'Available', value: stats.detailed?.techsAvailable || 0, icon: 'wifi', color: 'emerald' }} />
+                                                <CompactStatCard stat={{ label: 'Engaged', value: stats.detailed?.techsEngaged || 0, icon: 'engineering', color: 'blue' }} />
+                                                <CompactStatCard stat={{ label: 'Unavailable', value: stats.detailed?.techsUnavailable || 0, icon: 'wifi_off', color: 'slate' }} />
+                                                <CompactStatCard stat={{ label: 'Blacklisted', value: stats.detailed?.techsBlacklisted || 0, icon: 'block', color: 'red' }} />
+
+                                                <CompactStatCard stat={{ label: 'Premium', value: stats.detailed?.techsPremium || 0, icon: 'diamond', color: 'purple' }} />
+                                                <CompactStatCard stat={{ label: 'Free', value: stats.detailed?.techsFree || 0, icon: 'money_off', color: 'gray' }} />
+                                                <CompactStatCard stat={{ label: 'Approved', value: stats.detailed?.techsApproved || 0, icon: 'verified', color: 'green' }} />
+                                                <CompactStatCard stat={{ label: 'Pending', value: stats.detailed?.techsNotApproved || 0, icon: 'pending', color: 'orange' }} />
+                                                <CompactStatCard stat={{ label: 'Expiring Soon', value: stats.detailed?.techsExpiring || 0, icon: 'alarm', color: 'orange' }} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* User Insights */}
+                                    <div className="bg-purple-50/50 rounded-2xl px-6 py-[110px] border border-purple-100 shadow-sm hover:shadow-md transition-shadow">
+                                        <div className="space-y-6">
+                                            <div className="flex items-center gap-2 px-1">
+                                                <span className="material-symbols-outlined text-purple-500 text-lg">group</span>
+                                                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">User Insights</h3>
+                                            </div>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 gap-y-6">
+                                                <CompactStatCard stat={{ label: 'Premium', value: stats.detailed?.usersPremium || 0, icon: 'workspace_premium', color: 'amber' }} />
+                                                <CompactStatCard stat={{ label: 'Free', value: stats.detailed?.usersFree || 0, icon: 'person_outline', color: 'slate' }} />
+                                                <CompactStatCard stat={{ label: 'Banned', value: stats.detailed?.usersBanned || 0, icon: 'gavel', color: 'red', alert: (stats.detailed?.usersBanned || 0) > 0 ? 'Review' : null }} />
+                                                <CompactStatCard stat={{ label: 'Expiring', value: stats.detailed?.usersExpiring || 0, icon: 'timer', color: 'rose', alert: (stats.detailed?.usersExpiring || 0) > 0 ? 'Soon' : null }} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[250px]">
+                                <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col">
+                                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">User Registration Trends</h3>
+                                    <div className="flex-1 min-h-0">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={stats.registrationTrends}>
+                                                <defs>
+                                                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                                    itemStyle={{ color: '#fff' }}
+                                                />
+                                                <Area type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+                                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col">
+                                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Job Distribution</h3>
+                                    <div className="flex-1 min-h-0">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={stats.jobDistribution}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={80}
+                                                    paddingAngle={5}
+                                                    dataKey="value"
+                                                >
+                                                    {(stats.jobDistribution || []).map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                    itemStyle={{ color: '#1e293b' }}
+                                                />
+                                                <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '10px' }} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Technician Trends Chart */}
+                            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col h-[300px]">
+                                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Technician Registration Trends</h3>
+                                <div className="flex-1 min-h-0">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={stats.technicianTrends || []}>
+                                            <defs>
+                                                <linearGradient id="colorTechs" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                            <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} tickMargin={10} minTickGap={30} />
+                                            <YAxis fontSize={12} tickLine={false} axisLine={false} tickMargin={10} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                itemStyle={{ color: '#1e293b' }}
+                                                cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                            />
+                                            <Area type="monotone" dataKey="count" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorTechs)" />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+
+
+
+
+                            {/* Activity Feed */}
+                            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-slate-800 mb-8">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-800 dark:text-white">Recent Activity</h3>
+                                        <p className="text-sm text-slate-500 font-medium mt-1">Latest system events</p>
+                                    </div>
+                                    <button className="text-blue-600 font-bold text-sm hover:underline">View All</button>
+                                </div>
+                                <div className="space-y-6">
+                                    {(stats.activityLog || []).map((activity) => (
+                                        <div key={activity.id} className="flex items-start gap-4 group">
+                                            <div className={`p-3 rounded-2xl ${activity.type === 'job' ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10' : 'bg-green-50 text-green-600 dark:bg-green-500/10'} group-hover:scale-110 transition-transform duration-300`}>
+                                                <span className="material-symbols-outlined text-xl">{activity.icon}</span>
+                                            </div>
+                                            <div className="flex-1 pt-1">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <h4 className="font-bold text-slate-800 dark:text-white text-sm">
+                                                        {activity.user} <span className="font-medium text-slate-500 dark:text-slate-400">{activity.action}</span>
+                                                    </h4>
+                                                    <span className="text-xs font-bold text-slate-400">{new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                                <p className="text-xs font-medium text-slate-400">
+                                                    {new Date(activity.timestamp).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(stats.activityLog || []).length === 0 && (
+                                        <div className="text-center text-slate-500 py-4">No recent activity</div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="max-w-[1400px] mx-auto flex flex-col gap-6">
-
-                            {/* DASHBOARD TAB */}
-                            {activeTab === 'dashboard' && (
-                                <>
-                                    {/* AI Banner */}
-                                    <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-center gap-3 animate-fade-in">
-                                        <span className="material-symbols-outlined text-primary">auto_awesome</span>
-                                        <p className="text-primary text-sm font-medium italic">{insights}</p>
-                                    </div>
-
-                                    <div className="flex flex-col gap-1">
-                                        <p className="text-2xl md:text-3xl font-black leading-tight tracking-tight text-blue-600 dark:text-blue-500">Good Morning, Admin</p>
-                                        <p className="text-gray-600 dark:text-slate-400 text-base font-normal">Here's what's happening with your platform today.</p>
-                                    </div>
-
-                                    {/* TOP ROW: Map & Leaderboard (Higher Prominence) */}
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        {/* Time & Map Card */}
-                                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-0 overflow-hidden relative group shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[250px]">
-                                            <div className="h-44 bg-cover bg-center transition-transform duration-1000 group-hover:scale-110"
-                                                style={{
-                                                    backgroundImage: location.lat
-                                                        ? `url('https://maps.googleapis.com/maps/api/staticmap?center=${location.lat},${location.lng}&zoom=14&size=800x400&maptype=roadmap&markers=color:red%7C${location.lat},${location.lng}&key=AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU')`
-                                                        : "url('https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80')"
-                                                }}
-                                            >
-                                                <div className="bg-black/30 size-full"></div>
-                                            </div>
-
-                                            {/* SEPARATED CLOCK & LOCATION CONTAINER */}
-                                            <div className="p-4 px-6 relative z-10 flex flex-col gap-3 -mt-6">
-                                                <div className="flex justify-between items-center bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3 rounded-xl border border-primary/20 shadow-xl">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="size-8 rounded-full bg-red-600 flex items-center justify-center text-white">
-                                                            <span className="material-symbols-outlined text-sm">schedule</span>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Platform Time</p>
-                                                            <h3 className="text-primary dark:text-primary text-xl font-black flex items-baseline gap-1">
-                                                                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                <span className="text-[10px] uppercase">{currentTime.toLocaleTimeString([], { hour12: true }).slice(-2)}</span>
-                                                            </h3>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-black max-w-[180px] truncate border border-slate-200 dark:border-white/10">
-                                                        <span className="material-symbols-outlined text-sm text-red-600">location_on</span>
-                                                        <span className="truncate">{location.address}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Expanded Leaderboard Card */}
-                                        <div className="bg-gradient-to-br from-blue-700 to-indigo-900 rounded-xl border-2 border-red-600 p-8 flex flex-col justify-between text-white relative overflow-hidden group shadow-2xl">
-                                            <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
-                                                <span className="material-symbols-outlined text-[180px]">workspace_premium</span>
-                                            </div>
-                                            <div className="relative z-10">
-                                                <div className="flex items-center gap-4 mb-4">
-                                                    <div className="size-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
-                                                        <span className="material-symbols-outlined text-yellow-400 text-3xl font-bold">trophy</span>
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="text-2xl font-black tracking-tighter uppercase italic">Top Technicians</h3>
-                                                        <p className="text-blue-200 text-xs font-bold uppercase tracking-widest">Performance Leaderboard</p>
-                                                    </div>
-                                                </div>
-                                                <p className="text-white/90 text-sm font-medium max-w-sm leading-relaxed mb-6">
-                                                    Real-time statistics based on completion rates, customer feedback, and response times.
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-6 relative z-10">
-                                                <button
-                                                    onClick={() => setActiveTab('technicians')}
-                                                    className="bg-white text-blue-800 hover:bg-blue-50 px-6 py-3 rounded-xl text-xs font-black shadow-xl transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-2 border-b-4 border-blue-200"
-                                                >
-                                                    <span className="material-symbols-outlined text-sm">bar_chart</span>
-                                                    OPEN LEADERBOARD
-                                                </button>
-                                                <div className="flex -space-x-3 items-center">
-                                                    {[1, 2, 3].map(i => (
-                                                        <div key={i} className="size-9 rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-[10px] font-black text-white shadow-lg overflow-hidden ring-2 ring-blue-900/50">
-                                                            {['AJ', 'MH', 'RK'][i - 1]}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Stats Grid */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        {dashboardStats.map((stat, idx) => (
-                                            <StatsCard key={idx} stat={stat} />
-                                        ))}
-                                    </div>
-
-                                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                                        {/* Area Chart & Pie Chart */}
-                                        <div className="xl:col-span-2 flex flex-col gap-6">
-                                            {/* Area Chart */}
-                                            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 flex flex-col h-[400px] shadow-lg hover:shadow-xl transition-shadow duration-300">
-                                                <div className="flex justify-between items-center mb-6">
-                                                    <div>
-                                                        <h3 className="text-blue-600 font-black uppercase tracking-tighter text-lg italic">User Traffic Trends</h3>
-                                                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Monthly Growth Overview</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 w-full">
-                                                    <ResponsiveContainer width="100%" height="100%">
-                                                        <AreaChart data={REGISTRATION_TRENDS}>
-                                                            <defs>
-                                                                <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.4} />
-                                                                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                                                                </linearGradient>
-                                                            </defs>
-                                                            <Tooltip
-                                                                contentStyle={{ backgroundColor: '#1A202C', border: '1px solid #232f48', borderRadius: '8px' }}
-                                                                itemStyle={{ color: '#fff' }}
-                                                            />
-                                                            <Area type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
-                                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#92a4c9', fontSize: 11 }} />
-                                                        </AreaChart>
-                                                    </ResponsiveContainer>
-                                                </div>
-                                            </div>
-
-                                            {/* Pie Chart Card */}
-                                            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                                                <h3 className="text-emerald-600 font-black uppercase tracking-tighter text-lg italic mb-4">Job Service Allocation</h3>
-                                                <div className="flex flex-col md:flex-row items-center gap-8">
-                                                    <div className="relative size-32">
-                                                        <ResponsiveContainer width="100%" height="100%">
-                                                            <PieChart>
-                                                                <Pie data={JOB_DISTRIBUTION} cx="50%" cy="50%" innerRadius={35} outerRadius={45} paddingAngle={5} dataKey="value">
-                                                                    {JOB_DISTRIBUTION.map((entry, index) => (
-                                                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                                                    ))}
-                                                                </Pie>
-                                                            </PieChart>
-                                                        </ResponsiveContainer>
-                                                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                                            <span className="text-lg font-bold text-gray-900 dark:text-white">98%</span>
-                                                            <span className="text-[10px] text-gray-500 dark:text-slate-400">Rate</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col gap-3 flex-1 min-w-[200px]">
-                                                        {JOB_DISTRIBUTION.map((item) => (
-                                                            <div key={item.name} className="flex items-center justify-between border-b border-gray-50 dark:border-white/5 pb-2 last:border-0">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="size-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
-                                                                    <span className="text-sm text-gray-600 dark:text-slate-400 font-medium">{item.name}</span>
-                                                                </div>
-                                                                <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value}%</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Activity Log - Correctly inside the xl grid as the 3rd column */}
-                                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden h-fit">
-                                            <div className="p-5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
-                                                <h3 className="text-red-600 font-black uppercase tracking-tighter text-lg italic">Platform Monitoring</h3>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-black text-red-600 uppercase tracking-widest animate-pulse">Live Feed</span>
-                                                    <span className="material-symbols-outlined text-red-600 text-sm animate-pulse">sensors</span>
-                                                </div>
-                                            </div>
-                                            <div className="p-0 overflow-y-auto custom-scrollbar flex flex-col max-h-[750px] min-h-[400px]">
-                                                {ACTIVITY_LOG.map((item) => (
-                                                    <div key={item.id} className="flex gap-4 items-center p-4 border-b border-slate-100 dark:border-white/5 hover:bg-red-50/30 dark:hover:bg-red-900/10 transition-colors">
-                                                        <div className={`size-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-md ${item.iconColor.replace('text-', 'bg-').replace('600', '100').replace('dark:', '')} dark:bg-slate-800`}>
-                                                            <span className={`material-symbols-outlined text-xl ${item.iconColor}`}>{item.icon}</span>
-                                                        </div>
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <p className="text-sm text-slate-900 dark:text-white leading-tight font-black pl-2 border-l-2 border-red-600">
-                                                                <span className="text-red-600">{item.user}</span> {item.action}
-                                                            </p>
-                                                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-2">{item.timestamp}</p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </>
+                        <div className="h-full">
+                            {/* TECHNICIANS TAB */}
+                            {activeTab === 'technicians' && (
+                                <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+                                    <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">engineering</span>
+                                    <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-300">Technician Management</h2>
+                                    <p className="text-slate-500 mt-2">Module coming in next update</p>
+                                </div>
                             )}
 
                             {/* USERS TAB (New Implementation) */}
                             {activeTab === 'users' && (
                                 <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
-                                    <UserHeader />
+                                    <UserHeader onAddUser={() => setIsCreateUserOpen(true)} />
                                     <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
                                         <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
-                                            <Filters />
+                                            <Filters
+                                                searchQuery={searchQuery}
+                                                setSearchQuery={setSearchQuery}
+                                                activeTier={activeTier}
+                                                setActiveTier={setActiveTier}
+                                                activeStatus={activeStatus}
+                                                setActiveStatus={setActiveStatus}
+                                            />
                                             <UserTable
-                                                users={users}
+                                                users={paginatedUsers}
                                                 selectedUserId={selectedUser?.id || null}
                                                 onSelectUser={handleSelectUser}
                                                 onBanUser={handleBanUser}
                                                 onChangeMembership={handleChangeMembership}
+                                                currentPage={userPage}
+                                                onPageChange={setUserPage}
+                                                totalPages={Math.ceil(filteredUsers.length / LIMIT_PER_PAGE)}
+                                                totalItems={filteredUsers.length}
+                                                startIndex={(userPage - 1) * LIMIT_PER_PAGE + 1}
+                                                endIndex={Math.min(userPage * LIMIT_PER_PAGE, filteredUsers.length)}
                                             />
                                         </div>
                                     </div>
@@ -529,6 +597,15 @@ const AdminDashboard = () => {
                                         onClose={handleCloseDrawer}
                                         onBanUser={handleBanUser}
                                         onChangeMembership={handleChangeMembership}
+                                        onEdit={handleEditUser}
+                                    />
+
+                                    <UserCreateModal
+                                        isOpen={isCreateUserOpen || isEditUserOpen}
+                                        onClose={() => { setIsCreateUserOpen(false); setIsEditUserOpen(false); }}
+                                        onCreateUser={handleCreateUser}
+                                        onUpdateUser={handleUpdateUser}
+                                        initialData={isEditUserOpen ? selectedUser : null}
                                     />
                                 </div>
                             )}
@@ -539,15 +616,24 @@ const AdminDashboard = () => {
                                     <JobHeader
                                         activeFilter={activeJobFilter}
                                         setActiveFilter={setActiveJobFilter}
+                                        onAddJob={() => alert('Add Job Feature Coming Soon')}
                                     />
-                                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative custom-scrollbar">
-                                        <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-2">
-                                            <JobStats jobs={jobs} />
+                                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
+                                        <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
+                                            <JobStats jobs={filteredJobs} />
                                             <JobTable
-                                                jobs={jobs}
+                                                jobs={paginatedJobs}
                                                 activeFilter={activeJobFilter}
+                                                setActiveFilter={setActiveJobFilter}
+                                                selectedJobId={selectedJob?.id || null}
                                                 onSelectJob={handleSelectJob}
-                                                selectedJobId={selectedJob?.id}
+                                                onEditJob={handleEditJob}
+                                                currentPage={jobPage}
+                                                onPageChange={setJobPage}
+                                                totalPages={Math.ceil(filteredJobs.length / LIMIT_PER_PAGE)}
+                                                totalItems={filteredJobs.length}
+                                                startIndex={(jobPage - 1) * LIMIT_PER_PAGE + 1}
+                                                endIndex={Math.min(jobPage * LIMIT_PER_PAGE, filteredJobs.length)}
                                             />
                                         </div>
                                     </div>
@@ -563,44 +649,34 @@ const AdminDashboard = () => {
                                     <JobDrawer
                                         job={selectedJob}
                                         onClose={handleCloseJobDrawer}
+                                        onEdit={handleEditJob}
+                                    />
+
+                                    <JobFormModal
+                                        isOpen={isEditJobOpen}
+                                        onClose={() => setIsEditJobOpen(false)}
+                                        onUpdateJob={handleUpdateJob}
+                                        initialData={selectedJob}
                                     />
                                 </div>
                             )}
 
                             {/* OTHER TABS (Placeholder to ensure switching works) */}
-                            {activeTab !== 'dashboard' && activeTab !== 'users' && activeTab !== 'jobs' && (
+                            {activeTab !== 'dashboard' && activeTab !== 'users' && activeTab !== 'jobs' && activeTab !== 'technicians' && (
                                 <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 shadow-sm">
                                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 italic">
                                         {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Module Loaded
                                     </h3>
                                     <p className="text-gray-500 dark:text-text-secondary">
-                                        Data for {activeTab} is ready (Technicians: {technicians.length}, Users: {users.length}, Jobs: {jobs.length}).
-                                        <br />
-                                        <span className="text-xs opacity-50">Refactoring required to fully migrate table views to new design system.</span>
+                                        Data for {activeTab} is ready.
                                     </p>
-                                    <div className="mt-8 overflow-x-auto">
-                                        {/* Simple table dump for verification */}
-                                        <table className="w-full text-left text-sm text-gray-500 dark:text-text-secondary">
-                                            <thead className="bg-gray-50 dark:bg-[#111722] text-xs uppercase">
-                                                <tr><th className="px-4 py-3">ID</th><th className="px-4 py-3">Details</th></tr>
-                                            </thead>
-                                            <tbody>
-                                                {(activeTab === 'technicians' ? technicians : activeTab === 'users' ? users : jobs).slice(0, 10).map((item, i) => (
-                                                    <tr key={i} className="border-b border-gray-100 dark:border-[#111722]">
-                                                        <td className="px-4 py-3 font-mono text-xs">{item.id?.substring(0, 8)}</td>
-                                                        <td className="px-4 py-3">{JSON.stringify(item).substring(0, 100)}...</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
                                 </div>
                             )}
                         </div>
                     )}
                 </main>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

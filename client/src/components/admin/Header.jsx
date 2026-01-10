@@ -11,12 +11,14 @@ const THEME_COLORS = [
 
 import { useTheme } from '../../context/ThemeContext';
 
-export const Header = ({ sidebarOpen, setSidebarOpen, activeTab, onLogout }) => {
+export const Header = ({ sidebarOpen, setSidebarOpen, activeTab, onLogout, searchQuery, setSearchQuery }) => {
     const { isDarkMode, currentColor, toggleTheme, setThemeColor } = useTheme();
     const [showThemePopup, setShowThemePopup] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
     const themePopupRef = useRef(null);
     const userMenuRef = useRef(null);
+    const notificationRef = useRef(null);
 
     // Close popups when clicking outside
     useEffect(() => {
@@ -27,9 +29,85 @@ export const Header = ({ sidebarOpen, setSidebarOpen, activeTab, onLogout }) => 
             if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
                 setShowUserMenu(false);
             }
+            if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+                setShowNotifications(false);
+            }
         };
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Time State
+    const [currentTime, setCurrentTime] = useState(new Date());
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Network State
+    const [networkStatus, setNetworkStatus] = useState({
+        online: navigator.onLine,
+        type: 'Wifi', // Default fallback
+        downlink: 10 // Default fallback
+    });
+
+    useEffect(() => {
+        const updateNetwork = () => {
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            setNetworkStatus({
+                online: navigator.onLine,
+                type: connection ? connection.effectiveType.toUpperCase() : 'WIFI',
+                downlink: connection ? connection.downlink : 10
+            });
+        };
+
+        window.addEventListener('online', updateNetwork);
+        window.addEventListener('offline', updateNetwork);
+        if (navigator.connection) {
+            navigator.connection.addEventListener('change', updateNetwork);
+        }
+        updateNetwork(); // Initial check
+
+        return () => {
+            window.removeEventListener('online', updateNetwork);
+            window.removeEventListener('offline', updateNetwork);
+            if (navigator.connection) {
+                navigator.connection.removeEventListener('change', updateNetwork);
+            }
+        };
+    }, []);
+
+    // Location State
+    const [location, setLocation] = useState({ city: null, error: null });
+    useEffect(() => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    // Mock reverse geocoding for privacy/no-key usage:
+                    // Simple logic to show coords if we can't get city easily without keys
+                    // For now, we'll try a public IP-based check as backup or just show Lat/Lng
+                    // But to be "cool", let's format it nice:
+                    setLocation({ city: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, error: null });
+
+                    // Optional: Try to fetch city name from free open API
+                    try {
+                        const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+                        const data = await res.json();
+                        if (data.city || data.locality) {
+                            setLocation({ city: data.city || data.locality, error: null });
+                        }
+                    } catch (e) {
+                        // Fallback to coords
+                    }
+                },
+                (error) => {
+                    setLocation({ city: null, error: error.message });
+                }
+            );
+        } else {
+            setLocation({ city: null, error: "Not supported" });
+        }
     }, []);
 
     return (
@@ -44,27 +122,111 @@ export const Header = ({ sidebarOpen, setSidebarOpen, activeTab, onLogout }) => 
                 </button>
             </div>
 
-            <div className="flex items-center gap-4 md:gap-6 w-full max-w-2xl">
+            <div className="flex items-center gap-4 md:gap-6 w-full max-w-5xl">
                 <h2 className="text-gray-900 dark:text-white text-lg font-bold leading-tight hidden md:block whitespace-nowrap truncate">
                     {activeTab === 'dashboard' ? 'Dashboard Overview' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                 </h2>
+
+                {/* Status Bar (Network, Location, Time) */}
+                <div className="hidden xl:flex items-center gap-4 bg-gray-50 dark:bg-slate-800/50 px-4 py-2 rounded-xl border border-gray-100 dark:border-slate-700">
+                    {/* Network */}
+                    <div className="flex items-center gap-2" title="Network Strength">
+                        <span className={`material-symbols-outlined text-[18px] ${networkStatus.online ? 'text-emerald-500' : 'text-red-500'}`}>
+                            {networkStatus.online ? 'signal_cellular_alt' : 'signal_cellular_off'}
+                        </span>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Network</span>
+                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none">
+                                {networkStatus.online ? `${networkStatus.type} (${networkStatus.downlink}Mbps)` : 'Offline'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="w-px h-6 bg-gray-200 dark:bg-slate-700"></div>
+
+                    {/* Location */}
+                    <div className="flex items-center gap-2" title="Current Location">
+                        <span className="material-symbols-outlined text-[18px] text-blue-500">near_me</span>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Location</span>
+                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none max-w-[100px] truncate">
+                                {location.error ? 'Location Off' : location.city || 'Locating...'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="w-px h-6 bg-gray-200 dark:bg-slate-700"></div>
+
+                    {/* Time */}
+                    <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px] text-purple-500">schedule</span>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Time</span>
+                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none">
+                                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="flex w-full flex-1 items-center rounded-xl h-11 bg-gray-100/50 dark:bg-[#232f48]/50 border border-transparent focus-within:border-primary/30 focus-within:bg-white dark:focus-within:bg-[#1A202C] focus-within:shadow-lg focus-within:shadow-primary/5 transition-all duration-300 px-3 overflow-hidden">
                     <span className="material-symbols-outlined text-gray-400 dark:text-[#92a4c9] text-[20px]">search</span>
                     <input
                         className="w-full bg-transparent text-gray-900 dark:text-white border-none focus:ring-0 placeholder:text-gray-400 dark:placeholder:text-[#92a4c9] px-3 text-sm focus:outline-none h-full truncate"
                         placeholder="Search for job ID, user, or technician..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
             </div>
 
             <div className="flex items-center gap-2 md:gap-3">
-                <motion.button
-                    whileHover={{ scale: 1.05, y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center justify-center rounded-xl size-10 bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 hover:text-primary hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 shadow-sm"
-                >
-                    <span className="material-symbols-outlined text-[20px]">notifications</span>
-                </motion.button>
+                <div className="relative" ref={notificationRef}>
+                    <motion.button
+                        whileHover={{ scale: 1.05, y: -1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setShowNotifications(!showNotifications)}
+                        className={`flex items-center justify-center rounded-xl size-10 bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 hover:text-primary hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 shadow-sm ${showNotifications ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : ''}`}
+                    >
+                        <span className="material-symbols-outlined text-[20px]">notifications</span>
+                        <span className="absolute top-2 right-2.5 size-2 bg-red-500 rounded-full border border-white dark:border-slate-900"></span>
+                    </motion.button>
+
+                    <AnimatePresence>
+                        {showNotifications && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 8 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 8 }}
+                                transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                                className="absolute right-0 top-full mt-3 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl shadow-blue-500/20 dark:shadow-black/70 border border-slate-200 dark:border-slate-700 backdrop-blur-xl bg-white/95 dark:bg-slate-900/95 p-4 z-50 overflow-hidden"
+                            >
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="font-bold text-slate-800 dark:text-white">Notifications</h3>
+                                    <button className="text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline">Mark all read</button>
+                                </div>
+                                <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                                    {[
+                                        { title: 'New Job Request', desc: 'Job #1234 req by John', time: '5m ago', icon: 'work' },
+                                        { title: 'Payment Received', desc: '₹1,200 received', time: '1h ago', icon: 'payments' },
+                                        { title: 'New User', desc: 'Sarah registered', time: '2h ago', icon: 'person_add' }
+                                    ].map((notif, i) => (
+                                        <div key={i} className="flex gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer group">
+                                            <div className="size-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0">
+                                                <span className="material-symbols-outlined text-sm">{notif.icon}</span>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{notif.title}</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400">{notif.desc}</p>
+                                                <p className="text-[10px] text-slate-400 mt-1">{notif.time}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 <div className="relative" ref={themePopupRef}>
                     <motion.button

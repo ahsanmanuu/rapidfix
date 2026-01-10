@@ -18,14 +18,14 @@ const JobHeader = ({ activeFilter, setActiveFilter }) => {
                 <p className="text-gray-500 dark:text-text-secondary text-sm font-medium">Manage and monitor service lifecycle in real-time.</p>
             </div>
 
-            <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 p-1 rounded-xl w-fit">
+            <div className="flex flex-wrap items-center gap-2 bg-gray-100 dark:bg-white/5 p-1 rounded-xl w-full md:w-auto overflow-x-auto">
                 {filters.map((filter) => (
                     <button
                         key={filter.id}
                         onClick={() => setActiveFilter(filter.id)}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${activeFilter === filter.id
-                                ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm'
-                                : 'text-gray-500 dark:text-text-secondary hover:text-gray-900 dark:hover:text-white'
+                        className={`px-3 md:px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all duration-200 ${activeFilter === filter.id
+                            ? 'bg-white dark:bg-primary text-primary dark:text-white shadow-sm'
+                            : 'text-gray-500 dark:text-text-secondary hover:text-gray-900 dark:hover:text-white'
                             }`}
                     >
                         {filter.label}
