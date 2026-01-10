@@ -51,13 +51,30 @@ class SessionManager {
             const session = {
                 token,
                 userId,
-                role,
                 deviceId,
                 createdAt: new Date().toISOString(),
                 expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
             };
+
+            // Only include role for local JSON DB (Supabase sessions table doesn't have role column)
+            if (process.env.USE_SUPABASE !== 'true') {
+                session.role = role;
+            }
+
             const dbSess = this._mapToDb(session);
-            const saved = await this.db.add(dbSess);
+
+            // WORKAROUND: Use local JSON for admin sessions when using Supabase to avoid FK constraint
+            // Supabase sessions table has FK to users table, but admins are in admins table
+            let saved;
+            if (process.env.USE_SUPABASE === 'true' && role === 'admin') {
+                // Use local JSON Database for admin sessions
+                const LocalDatabase = require('./Database');
+                const localDb = new LocalDatabase('sessions');
+                saved = await localDb.add(dbSess);
+            } else {
+                saved = await this.db.add(dbSess);
+            }
+
             const result = this._mapFromDb(saved);
 
             if (this.io) {
