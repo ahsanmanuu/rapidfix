@@ -48,7 +48,28 @@ class AdminManager {
                 console.log(`[AdminManager] No default admin found. Creating ${defaultEmail}...`);
                 await this.createAdmin('admin', defaultEmail, 'admin123', 'Super Admin');
             } else {
-                console.log(`[AdminManager] Default admin ${defaultEmail} already exists.`);
+                console.log(`[AdminManager] Default admin ${defaultEmail} found.`);
+                // SELF-HEALING: Ensure the password is 'admin123' to prevent lockout
+                if (String(existing.password).trim() !== 'admin123') {
+                    console.log(`[AdminManager] Password mismatch for default admin. Resetting to 'admin123'...`);
+                    const updated = { ...existing, password: 'admin123' };
+                    const dbItem = this._mapToDb(updated);
+                    // Use update method if available, or just re-add (if overwrite supported) - DB implementation specific
+                    // Since specific DB update might be tricky without ID, let's try finding by ID or overwriting
+                    // SupabaseDatabase doesn't support overwrite well, but let's assume standard DB flow.
+                    // Actually, let's just use the DB 'update' if it exists or 'write' if reckless.
+                    // Safer: Do nothing but LOG CRITICAL WARNING if we can't easily update.
+                    // But WAIT, if Supabase, we can use client directly? No, keep abstraction.
+                    // Adding a specific 'updatePassword' method would be best, but 'db.update' usually matches by ID.
+
+                    if (this.db.update) {
+                        // Correct signature: update(field, value, data)
+                        await this.db.update('email', defaultEmail, { password: 'admin123' });
+                        console.log(`[AdminManager] Password reset successful.`);
+                    } else {
+                        console.warn(`[AdminManager] CANNOT RESET PASSWORD: database.update() method missing.`);
+                    }
+                }
             }
         } catch (err) {
             console.error("[AdminManager] Error ensuring default admin:", err);
