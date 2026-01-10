@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -73,14 +74,19 @@ const sessionManager = new SessionManager();
 const superAdminManager = new SuperAdminManager();
 const chatManager = new ChatManager();
 const offerManager = new OfferManager();
+const StorageManager = require('./managers/StorageManager');
 const NotificationManager = require('./managers/NotificationManager');
 const notificationManager = new NotificationManager();
+const storageManager = new StorageManager();
+
+// Link JobManager to Socket.io for automatic broadcasts
+jobManager.setSocketIO(io);
 
 
 // VERSION CHECK - Verify Render has latest code
 app.get('/api/version', (req, res) => {
   res.json({
-    version: '2.0-SUPABASE-WITH-ASYNC',
+    version: '2.1-SUPABASE-STORAGE',
     deployed: new Date().toISOString(),
     config: {
       USE_SUPABASE: process.env.USE_SUPABASE || 'NOT_SET',
@@ -112,31 +118,19 @@ app.post('/api/technicians/register', techUploads, async (req, res) => {
     // 1. Create Technician (Get ID)
     const tech = await technicianManager.createTechnician(name, email, phone, serviceType, parsedLocation, password, experience, addressDetails);
 
-    // 2. Handle Files
+    // 2. Handle Files and Upload via StorageManager
     const docPaths = {};
     if (req.files) {
-      const techDir = path.join(__dirname, 'uploads', 'technicians', tech.id);
-      if (!fs.existsSync(techDir)) {
-        fs.mkdirSync(techDir, { recursive: true });
-      }
-
-      const moveFile = (fieldname) => {
+      const uploadPromises = Object.keys(req.files).map(async (fieldname) => {
         if (req.files[fieldname] && req.files[fieldname][0]) {
           const file = req.files[fieldname][0];
-          const oldPath = file.path;
-          const ext = path.extname(file.originalname);
-          const newFilename = `${fieldname}${ext}`;
-          const newPath = path.join(techDir, newFilename);
-
-          fs.renameSync(oldPath, newPath);
-          docPaths[fieldname] = `/uploads/technicians/${tech.id}/${newFilename}`;
+          // Format: technicianId/filename
+          const customName = `${tech.id}-${fieldname}${path.extname(file.originalname)}`;
+          const url = await storageManager.upload(file, 'technicians', customName);
+          docPaths[fieldname] = url;
         }
-      };
-
-      moveFile('photo');
-      moveFile('pan');
-      moveFile('aadhar');
-      moveFile('dl');
+      });
+      await Promise.all(uploadPromises);
     }
 
     // 3. Update Technician with Doc Paths
@@ -250,12 +244,20 @@ app.get('/api/rides/technician/:id', (req, res) => {
 });
 
 // --- User Routes ---
-app.post('/api/users/register', async (req, res) => {
+app.post('/api/users/register', upload.single('photo'), async (req, res) => {
   try {
     console.log('[REGISTER] Starting registration...');
     console.log('[REGISTER] USE_SUPABASE:', process.env.USE_SUPABASE);
+    console.log('[REGISTER] Body:', req.body); // Log body (multipart fields)
 
-    const { name, email, phone, password, location } = req.body;
+    // Note: When using multer, fields are in req.body
+    const { name, email, phone, password } = req.body;
+    let { location } = req.body;
+
+    // Parse location if sent as string (Multipart form-data sends everything as strings)
+    if (typeof location === 'string') {
+      try { location = JSON.parse(location); } catch (e) { console.error("Loc parse error", e); }
+    }
 
     // Mandatory Location Check
     if (!location || !location.latitude || !location.longitude) {
@@ -263,8 +265,16 @@ app.post('/api/users/register', async (req, res) => {
     }
 
     console.log('[REGISTER] Creating user:', email);
+
+    // Upload Photo if present
+    let photoUrl = null;
+    if (req.file) {
+      const customName = `user-${Date.now()}-${req.file.originalname}`;
+      photoUrl = await storageManager.upload(req.file, 'avatars', customName);
+    }
+
     // Save User with Location
-    const user = await userManager.createUser(name, email, phone, password, location);
+    const user = await userManager.createUser(name, email, phone, password, location, photoUrl);
     console.log('[REGISTER] User created successfully:', user.id);
 
     // Also save to Location Manager specifically
@@ -679,6 +689,7 @@ app.post('/api/complaints', async (req, res) => {
     const complaint = await complaintManager.createComplaint(userId, technicianId, subject, description);
     res.json({ success: true, complaint });
   } catch (error) {
+    console.error('[API] Complaint Create Error:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });
@@ -693,76 +704,36 @@ app.get('/api/complaints', async (req, res) => {
 // --- Job Routes ---
 app.post('/api/jobs', async (req, res) => {
   try {
-    const { userId, serviceType, description, location, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted } = req.body;
+    console.log('[API] POST /jobs payload:', JSON.stringify(req.body, null, 2));
+    const { userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted } = req.body;
 
-    // 1. Create the Job
-    const job = await jobManager.createJob(userId, serviceType, description, location, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted);
+    // 1. Create the Job (JobManager now handles assignment automatically)
+    const job = await jobManager.createJob(userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted);
 
-    // 2. Assignment Logic
-    if (technicianId) {
-      // Manual Assignment from Frontend
-      await jobManager.assignTechnician(job.id, technicianId);
-      job.technicianId = technicianId;
-      job.status = 'accepted';
-
-      // [REAL-TIME] Update Tech Status & Broadcast
-      await technicianManager.updateStatus(technicianId, 'engaged');
-      io.emit('technician_status_update', { technicianId, status: 'engaged' });
-
-      io.to(`tech_${technicianId}`).emit('new_job_assigned', job);
-    } else if (location && location.latitude && location.longitude) {
-      // Auto-Assign Logic if no tech selected
-      let nearbyTechnicians = await technicianManager.searchTechnicians(location.latitude, location.longitude, serviceType);
-
-      // 1. Filter by Availability
-      nearbyTechnicians = nearbyTechnicians.filter(t => t.status !== 'engaged');
-
-      if (nearbyTechnicians.length > 0) {
-        const candidates = await Promise.all(nearbyTechnicians.map(async tech => {
-          const stats = await jobManager.getJobStats(tech.id);
-          const rating = tech.rating || 0;
-          const cancelRatio = stats.ratio;
-          const price = tech.visitingCharges || 99999;
-          return { ...tech, stats, cancelRatio, price };
-        }));
-
-        candidates.sort((a, b) => {
-          const aIsTopTier = a.rating >= 4.0 && a.cancelRatio <= 0.15;
-          const bIsTopTier = b.rating >= 4.0 && b.cancelRatio <= 0.15;
-          if (aIsTopTier && !bIsTopTier) return -1;
-          if (!aIsTopTier && bIsTopTier) return 1;
-          if (a.price !== b.price) return a.price - b.price;
-          return (a.distance || 0) - (b.distance || 0);
-        });
-
-        const bestTech = candidates[0];
-
-        console.log(`[SmartAssign] Selected ${bestTech.name}`);
-
-        await jobManager.assignTechnician(job.id, bestTech.id);
-        job.technicianId = bestTech.id;
-        job.status = 'accepted';
-
-        await technicianManager.updateStatus(bestTech.id, 'engaged');
-        io.emit('technician_status_update', { technicianId: bestTech.id, status: 'engaged' });
-        io.to(`tech_${bestTech.id}`).emit('new_job_assigned', job);
-      }
-    }
-
-    // [NOTIFICATION] Job Created -> Notify Admin
+    // [NOTIFICATION] Job Created (Generic)
     notificationManager.createNotification('admin', 'admin', 'New Job Request', `Job #${job.id} created by User`, 'job_created', job.id);
-
-    // [NOTIFICATION] If Assigned -> Notify Technician
-    if (job.technicianId) {
-      notificationManager.createNotification(job.technicianId, 'technician', 'New Job Assigned', `You have been assigned Job #${job.id}`, 'job_assigned', job.id);
-    }
 
     res.json({ success: true, job });
   } catch (error) {
-    console.error("Create Job Error", error);
+    console.error('[API] Job Create Error:', error);
     res.status(400).json({ success: false, error: error.message });
   }
 });
+
+// --- Background Worker: Unassigned Job Scanner ---
+setInterval(async () => {
+  try {
+    const unassignedJobs = await jobManager.getUnassignedJobs();
+    if (unassignedJobs.length > 0) {
+      console.log(`[Worker] Found ${unassignedJobs.length} unassigned jobs. Running auto-assignment...`);
+      for (const job of unassignedJobs) {
+        await jobManager.autoAssignJob(job.id);
+      }
+    }
+  } catch (err) {
+    console.error('[Worker] Error in unassigned scan:', err);
+  }
+}, 30000); // Scan every 30 seconds
 
 app.get('/api/jobs', async (req, res) => {
   const jobs = await jobManager.getAllJobs();

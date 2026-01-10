@@ -55,58 +55,67 @@ const DashboardFinance = ({ user }) => {
                     <Card sx={{
                         background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
                         color: 'white',
-                        borderRadius: '24px',
+                        borderRadius: '20px', // Slightly smaller radius
                         overflow: 'hidden',
                         position: 'relative',
-                        mb: 4,
-                        boxShadow: '0 20px 40px rgba(99, 102, 241, 0.2)'
+                        mb: 3, // Reduced margin
+                        boxShadow: '0 10px 20px rgba(99, 102, 241, 0.15)' // Reduce shadow intensity
                     }}>
-                        <CardContent sx={{ p: 4, position: 'relative', zIndex: 1 }}>
-                            <Grid container alignItems="center" spacing={3}>
-                                <Grid item xs={12} md={8}>
-                                    <Typography variant="h3" fontWeight="bold" gutterBottom sx={{ color: 'white' }}>
-                                        Upgrade to Premium 💎
-                                    </Typography>
-                                    <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)', mb: 3 }}>
+                        <CardContent sx={{ p: 3, position: 'relative', zIndex: 1, '&:last-child': { pb: 3 } }}>
+                            <Grid container alignItems="center" spacing={2}>
+                                <Grid item xs={12} md={9}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                                        <Typography variant="h5" fontWeight="bold" sx={{ color: 'white' }}>
+                                            Upgrade to Premium 💎
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mb: 2, maxWidth: '600px', lineHeight: 1.5 }}>
                                         Get exclusive benefits, priority support, and lower response times for just ₹499/month.
                                     </Typography>
-                                    <Box sx={{ display: 'flex', gap: 2 }}>
-                                        <Button
-                                            variant="contained"
-                                            sx={{
-                                                bgcolor: 'white',
-                                                color: '#6366f1',
-                                                fontWeight: 'bold',
-                                                '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
-                                                px: 4,
-                                                borderRadius: '12px'
-                                            }}
-                                            onClick={async () => {
-                                                try {
-                                                    const res = await api.post('/membership/pay', { userId: user.id, amount: 499 });
-                                                    if (res.data.success) {
-                                                        alert("Welcome to Premium! Your membership is now active.");
-                                                        window.location.reload();
-                                                    }
-                                                } catch (e) {
-                                                    alert(e.response?.data?.error || "Payment failed");
+                                    <Button
+                                        variant="contained"
+                                        size="medium" // Reduce button size
+                                        sx={{
+                                            bgcolor: 'white',
+                                            color: '#6366f1',
+                                            fontWeight: 'bold',
+                                            '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' },
+                                            px: 3,
+                                            py: 0.8,
+                                            borderRadius: '8px',
+                                            textTransform: 'none',
+                                            fontSize: '0.9rem'
+                                        }}
+                                        onClick={async () => {
+                                            try {
+                                                const res = await api.post('/membership/pay', { userId: user.id, amount: 499 });
+                                                if (res.data.success) {
+                                                    alert("Welcome to Premium! Your membership is now active.");
+                                                    window.location.reload();
                                                 }
-                                            }}
-                                        >
-                                            Upgrade Now
-                                        </Button>
-                                    </Box>
+                                            } catch (e) {
+                                                alert(e.response?.data?.error || "Payment failed");
+                                            }
+                                        }}
+                                    >
+                                        Upgrade Now
+                                    </Button>
                                 </Grid>
-                                <Grid item xs={12} md={4} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'center' }}>
-                                    <Avatar sx={{ width: 120, height: 120, bgcolor: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
-                                        <Typography variant="h2">✨</Typography>
+                                <Grid item xs={12} md={3} sx={{ display: { xs: 'none', md: 'flex' }, justifyContent: 'flex-end', pr: 2 }}>
+                                    <Avatar sx={{
+                                        width: 80, height: 80, // Reduced from 120
+                                        bgcolor: 'rgba(255,255,255,0.2)',
+                                        backdropFilter: 'blur(10px)',
+                                        fontSize: '2rem'
+                                    }}>
+                                        ✨
                                     </Avatar>
                                 </Grid>
                             </Grid>
                         </CardContent>
-                        {/* Decorative blobs */}
-                        <Box sx={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-                        <Box sx={{ position: 'absolute', bottom: -20, left: '20%', width: 100, height: 100, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
+                        {/* Decorative blobs - reduced and repositioned */}
+                        <Box sx={{ position: 'absolute', top: -30, right: -30, width: 120, height: 120, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
+                        <Box sx={{ position: 'absolute', bottom: -20, left: '15%', width: 60, height: 60, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: '50%' }} />
                     </Card>
                 </Grid>
             )}

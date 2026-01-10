@@ -1,0 +1,28 @@
+[
+  {
+    "name": "azam",
+    "email": "az@gmail.com",
+    "phone": "1234567890",
+    "location": {
+      "latitude": 25.6234486,
+      "longitude": 85.1323779
+    },
+    "password": "sczone",
+    "experience": "7",
+    "rating": 0,
+    "status": "engaged",
+    "service_type": "Electrician",
+    "address_details": {
+      "country": "India",
+      "state": "bihar",
+      "city": "darbhanga",
+      "pincode": "846001"
+    },
+    "documents": {
+      "photo": "/uploads/technicians/undefined-photo.jpg",
+      "pan": "/uploads/technicians/undefined-pan.jpg",
+      "aadhar": "/uploads/technicians/undefined-aadhar.jpg"
+    },
+    "joined_at": "2026-01-10T06:40:25.889Z"
+  }
+]

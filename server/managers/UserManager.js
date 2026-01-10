@@ -33,7 +33,7 @@ class UserManager {
         return mapped;
     }
 
-    async createUser(name, email, phone, password, location) {
+    async createUser(name, email, phone, password, location, photoUrl = null) {
         const existing = await this.db.find('email', email);
         if (existing) {
             throw new Error('User already exists');
@@ -46,7 +46,7 @@ class UserManager {
             password, // In a real app, hash this!
             location, // { latitude, longitude }
             role: 'user',
-            photo: null, // Default photo
+            photo: photoUrl, // Use uploaded photo URL or null
             status: 'Active', // Default status
             membership: 'Free', // Default tier
             created_at: new Date().toISOString()

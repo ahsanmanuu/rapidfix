@@ -212,7 +212,8 @@ const DashboardHome = ({ jobs = [] }) => {
             }
         } catch (e) {
             console.error("Booking failed", e);
-            alert("Failed to book.");
+            const errorMsg = e.response?.data?.error || e.message || "Unknown error";
+            alert(`Failed to book: ${errorMsg}`);
         }
     };
 
@@ -225,7 +226,7 @@ const DashboardHome = ({ jobs = [] }) => {
         {
             icon: <AccountBalanceWallet fontSize="large" sx={{ color: '#fff' }} />,
             title: 'Wallet Balance',
-            value: `₹${walletBalance.toFixed(2)}`,
+            value: `₹${(typeof walletBalance === 'object' ? (walletBalance.balance || 0) : walletBalance).toFixed(2)}`,
             subValue: 'Add money to wallet',
             bgcolor: 'linear-gradient(135deg, #FF512F 0%, #DD2476 100%)' // Crimson/Pink gradient
         },
@@ -261,7 +262,7 @@ const DashboardHome = ({ jobs = [] }) => {
             {/* ... Welcome & Existing Stats ... */}
             <Grid item xs={12}>
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant="h5" fontWeight="bold" gutterBottom>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
                         Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋
                     </Typography>
                     <Typography variant="body2" color="textSecondary">
@@ -301,32 +302,87 @@ const DashboardHome = ({ jobs = [] }) => {
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Quick Book Professional</Typography>
                 <Grid container spacing={2}>
                     {quickServices.map((service, idx) => (
-                        <Grid item xs={6} sm={4} md={2} key={idx}>
+                        <Grid item xs={6} sm={4} md={3} key={idx}>
                             <Card
                                 onClick={() => handleBookNow(service.title === 'A.C. Technician' ? 'AC Technician' : service.title.replace(' Tech', ' Technician'))}
                                 sx={{
                                     borderRadius: '16px',
                                     textAlign: 'center',
                                     cursor: 'pointer',
-                                    transition: 'transform 0.2s, box-shadow 0.2s',
-                                    '&:hover': { transform: 'translateY(-5px)', boxShadow: theme.shadows[4] }
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                    border: '1px solid transparent',
+                                    '&:hover': {
+                                        transform: 'translateY(-5px)',
+                                        boxShadow: '0 12px 24px -4px rgba(0,0,0,0.1)',
+                                        borderColor: theme.palette.primary.main
+                                    }
                                 }}>
-                                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                                     <Avatar sx={{
                                         bgcolor: service.bg,
                                         color: service.color,
-                                        width: 40,
-                                        height: 40,
-                                        margin: '0 auto 8px'
+                                        width: 48,
+                                        height: 48,
+                                        margin: '0 auto 12px',
+                                        transition: 'transform 0.3s',
+                                        '.MuiCard-root:hover &': {
+                                            transform: 'scale(1.1) rotate(5deg)'
+                                        }
                                     }}>
                                         {/* Scale down icon inside */}
                                         {React.cloneElement(service.icon, { fontSize: "medium" })}
                                     </Avatar>
-                                    <Typography variant="caption" fontWeight="bold" display="block" sx={{ fontSize: '0.75rem', lineHeight: 1.2 }}>{service.title}</Typography>
+                                    <Typography variant="body2" fontWeight="700" display="block" sx={{ fontSize: '0.85rem', color: theme.palette.text.primary }}>{service.title}</Typography>
                                 </CardContent>
                             </Card>
                         </Grid>
                     ))}
+
+                    {/* Other Actions Card */}
+                    <Grid item xs={12} sm={4} md={6}>
+                        <Card sx={{
+                            borderRadius: '16px',
+                            height: '100%',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}>
+                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, width: '100%' }}>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={6}>
+                                        <Button
+                                            fullWidth
+                                            variant="outlined"
+                                            color="secondary"
+                                            startIcon={<AccountBalanceWallet />}
+                                            onClick={() => setOpenOfferModal(true)}
+                                            sx={{ borderRadius: '12px', height: '100%', py: 1.5, borderColor: theme.palette.secondary.main, textTransform: 'none', justifyContent: 'flex-start', px: 2 }}
+                                        >
+                                            <Box sx={{ textAlign: 'left' }}>
+                                                <Typography variant="subtitle2" fontWeight="bold">Make Offer</Typography>
+                                                <Typography variant="caption" display="block" sx={{ lineHeight: 1, opacity: 0.7 }}>Post Custom Job</Typography>
+                                            </Box>
+                                        </Button>
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Button
+                                            fullWidth
+                                            variant="outlined"
+                                            color="primary"
+                                            startIcon={<Chat />}
+                                            sx={{ borderRadius: '12px', height: '100%', py: 1.5, textTransform: 'none', justifyContent: 'flex-start', px: 2 }}
+                                        >
+                                            <Box sx={{ textAlign: 'left' }}>
+                                                <Typography variant="subtitle2" fontWeight="bold">Support</Typography>
+                                                <Typography variant="caption" display="block" sx={{ lineHeight: 1, opacity: 0.7 }}>Get Help</Typography>
+                                            </Box>
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </CardContent>
+                        </Card>
+                    </Grid>
                 </Grid>
             </Grid>
 
@@ -334,106 +390,77 @@ const DashboardHome = ({ jobs = [] }) => {
                 <DashboardOffers />
             </Grid>
 
-            {/* Quick Actions (Restored Shape, Moved Left) */}
-            <Grid item xs={12} md={4}>
-                <Card sx={{ borderRadius: '16px', height: '100%', display: 'flex', flexDirection: 'column', boxShadow: theme.shadows[2] }}>
-                    <CardContent>
-                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Other Actions</Typography>
-                        <List dense>
-                            <ListItemButton
-                                onClick={() => setOpenOfferModal(true)}
-                                sx={{ mb: 1, bgcolor: theme.palette.secondary.light, borderRadius: '12px', border: `1px dashed ${theme.palette.secondary.main}`, '&:hover': { bgcolor: theme.palette.secondary.light } }}
-                            >
-                                <ListItemIcon sx={{ minWidth: 36 }}><AccountBalanceWallet fontSize="small" color="secondary" /></ListItemIcon>
-                                <ListItemText
-                                    primary={<Typography variant="subtitle2" color="secondary" fontWeight="bold">Make an Offer</Typography>}
-                                    secondary={<Typography variant="caption">Post a custom job</Typography>}
-                                />
-                            </ListItemButton>
+            {/* Quick Actions (Merged above) */}
 
-                            <ListItemButton sx={{ mb: 1, bgcolor: theme.palette.grey[100], borderRadius: '12px' }}>
-                                <ListItemIcon sx={{ minWidth: 36 }}><Chat fontSize="small" /></ListItemIcon>
-                                <ListItemText
-                                    primary={<Typography variant="body2">Contact Support</Typography>}
-                                />
-                            </ListItemButton>
-                            <ListItemButton sx={{ bgcolor: theme.palette.grey[100], borderRadius: '12px' }}>
-                                <ListItemIcon sx={{ minWidth: 36 }}><AccountBalanceWallet fontSize="small" /></ListItemIcon>
-                                <ListItemText
-                                    primary={<Typography variant="body2">Wallet Balance</Typography>}
-                                    secondary={<Typography variant="caption">₹{walletBalance}</Typography>}
-                                />
-                            </ListItemButton>
-                        </List>
-                    </CardContent>
-                </Card>
-            </Grid>
-
-            {/* Recent Activity */}
-            <Grid item xs={12} md={8}>
-                <Card sx={{ borderRadius: '16px', height: '100%', boxShadow: theme.shadows[2] }}>
-                    <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Schedule color="primary" sx={{ mr: 1, fontSize: 20 }} />
-                            <Typography variant="h6" fontWeight="bold">Recent Activity</Typography>
-                        </Box>
-                        <List dense>
-                            {safeJobs.slice(0, 3).map((job, idx) => (
-                                <Box key={job.id}>
-                                    <ListItem alignItems="flex-start" disablePadding sx={{ py: 1 }}>
-                                        <ListItemAvatar sx={{ minWidth: 48 }}>
+            {/* Recent Activity (Moved to Top & Made Horizontal) */}
+            <Grid item xs={12}>
+                <Card sx={{ borderRadius: '16px', boxShadow: theme.shadows[1], mb: 1, backgroundColor: 'transparent', backgroundImage: 'none', boxShadow: 'none' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, px: 1 }}>
+                        <Schedule color="primary" sx={{ mr: 1, fontSize: 20 }} />
+                        <Typography variant="h6" fontWeight="bold">Recent Activity</Typography>
+                    </Box>
+                    <Box sx={{
+                        display: 'flex',
+                        gap: 2,
+                        overflowX: 'auto',
+                        pb: 1,
+                        '::-webkit-scrollbar': { height: '6px' },
+                        '::-webkit-scrollbar-track': { background: '#f1f1f1', borderRadius: '4px' },
+                        '::-webkit-scrollbar-thumb': { background: '#ccc', borderRadius: '4px' }
+                    }}>
+                        {safeJobs.slice(0, 5).map((job) => (
+                            <Card key={job.id} sx={{
+                                minWidth: 280,
+                                borderRadius: '12px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                border: '1px solid ' + theme.palette.divider,
+                                flexShrink: 0
+                            }}>
+                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <Avatar sx={{
-                                                width: 36, height: 36,
-                                                bgcolor: job.status === 'completed' ? theme.palette.success.light :
-                                                    job.status === 'in-progress' ? theme.palette.primary.light :
-                                                        theme.palette.warning.light,
-                                                color: job.status === 'completed' ? theme.palette.success.dark :
-                                                    job.status === 'in-progress' ? theme.palette.primary.dark :
-                                                        theme.palette.warning.dark
+                                                width: 32, height: 32,
+                                                bgcolor: theme.palette.primary.light,
+                                                color: theme.palette.primary.dark
                                             }}>
                                                 <WorkIcon fontSize="small" />
                                             </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={<Typography variant="subtitle2" fontWeight="semi-bold">{job.serviceType}</Typography>}
-                                            secondary={
-                                                <Box component="span">
-                                                    <Typography component="span" variant="caption" color="textSecondary" display="block" noWrap>
-                                                        {job.description}
-                                                    </Typography>
-                                                    <Typography component="span" variant="caption" color="textSecondary" sx={{ fontSize: '0.7rem' }}>
-                                                        {new Date(job.createdAt).toLocaleDateString()}
-                                                    </Typography>
-                                                </Box>
-                                            }
-                                        />
+                                            <Typography variant="subtitle2" fontWeight="bold">{job.serviceType}</Typography>
+                                        </Box>
                                         <Chip
                                             label={job.status}
                                             size="small"
                                             sx={{
                                                 height: 20,
                                                 fontSize: '0.65rem',
+                                                fontWeight: 'bold',
+                                                textTransform: 'uppercase',
                                                 bgcolor: job.status === 'completed' ? theme.palette.success.light :
                                                     job.status === 'in-progress' ? theme.palette.primary.light :
                                                         theme.palette.warning.light,
                                                 color: job.status === 'completed' ? theme.palette.success.dark :
                                                     job.status === 'in-progress' ? theme.palette.primary.dark :
-                                                        theme.palette.warning.dark,
-                                                fontWeight: 'bold',
-                                                textTransform: 'uppercase'
+                                                        theme.palette.warning.dark
                                             }}
                                         />
-                                    </ListItem>
-                                    {idx < 2 && <Divider variant="inset" component="li" />}
-                                </Box>
-                            ))}
-                            {safeJobs.length === 0 && (
-                                <Typography variant="caption" align="center" color="textSecondary" sx={{ py: 2, display: 'block' }}>
-                                    No recent activity.
-                                </Typography>
-                            )}
-                        </List>
-                    </CardContent>
+                                    </Box>
+                                    <Typography variant="body2" color="textSecondary" noWrap title={job.description} sx={{ mb: 1 }}>
+                                        {job.description}
+                                    </Typography>
+                                    <Typography variant="caption" color="textSecondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                        <AccessTime fontSize="inherit" />
+                                        {new Date(job.createdAt).toLocaleDateString()} • {new Date(job.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        ))}
+                        {safeJobs.length === 0 && (
+                            <Box sx={{ width: '100%', py: 3, textAlign: 'center', bgcolor: '#f9f9f9', borderRadius: '12px' }}>
+                                <Typography variant="body2" color="textSecondary">No recent activity found.</Typography>
+                            </Box>
+                        )}
+                    </Box>
                 </Card>
             </Grid>
 

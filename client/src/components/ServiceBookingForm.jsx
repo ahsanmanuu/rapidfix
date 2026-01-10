@@ -39,6 +39,33 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
         }
     }, [preselectedTechnician]);
 
+    // Auto-detect location on mount if address is empty
+    useEffect(() => {
+        if (!formData.address && !formData.location && navigator.geolocation) {
+            // Re-use logic from handleDetectLocation but silently (no alert on error)
+            navigator.geolocation.getCurrentPosition(
+                async (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const data = await response.json();
+                        if (data && data.display_name) {
+                            setFormData(prev => ({
+                                ...prev,
+                                location: { latitude, longitude },
+                                address: data.display_name
+                            }));
+                            setLocationStatus('success');
+                        }
+                    } catch (error) {
+                        // Silent fail on auto-detect
+                    }
+                },
+                (err) => { /* Silent fail */ }
+            );
+        }
+    }, []); // Run once on mount
+
     // ... (other useEffects)
 
     const handleChange = (e) => {
@@ -106,6 +133,11 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
             alert("Please enter an address or detect your location.");
             return;
         }
+        // [NEW] Nudge for coordinates if only address is typed
+        if (formData.address && !formData.location) {
+            const proceed = window.confirm("You've entered an address but haven't detected your precise location. Precise location helps us find the best nearby technician. Proceed anyway?");
+            if (!proceed) return;
+        }
         setLoading(true);
         setTimeout(() => {
             setLoading(false);
@@ -128,16 +160,16 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
     // ...
 
     return (
-        <div className="max-w-[680px] w-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border-2 border-red-500 overflow-visible mx-auto font-sans relative z-30">
+        <div className="max-w-[680px] w-full bg-white rounded-2xl md:rounded-[2.5rem] shadow-xl md:shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 md:border-2 md:border-red-500 overflow-hidden mx-auto font-sans relative z-30">
             {/* [NEW] Expert Booking Banner */}
             {preselectedTechnician && (
-                <div className="bg-blue-50/50 border-b border-blue-100 p-4 rounded-t-xl flex items-center justify-center gap-2 text-blue-700">
-                    <CheckCircle size={18} className="fill-blue-100" />
-                    <span className="font-semibold text-sm">Booking Expert: {preselectedTechnician.name}</span>
+                <div className="bg-blue-50/50 border-b border-blue-100 p-3 md:p-4 rounded-t-xl flex items-center justify-center gap-2 text-blue-700">
+                    <CheckCircle size={18} className="fill-blue-100 shrink-0" />
+                    <span className="font-semibold text-xs md:text-sm">Booking Expert: {preselectedTechnician.name}</span>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="p-14 md:p-28 space-y-8 pt-10"> {/* Adjusted padding-top if banner exists */}
+            <form onSubmit={handleSubmit} className="p-4 md:p-10 space-y-5 md:space-y-8 pt-4 md:pt-8 bg-white/50 backdrop-blur-sm"> {/* Refined padding */}
 
                 {/* Service Type (Custom Dropdown) */}
                 <div className="flex flex-col gap-2.5 relative z-50">

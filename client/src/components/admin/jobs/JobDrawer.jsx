@@ -28,7 +28,7 @@ const JobDrawer = ({ job, onClose }) => {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
                     <div className="flex flex-col gap-8">
                         {/* Summary Card */}
                         <div className="bg-gray-50 dark:bg-white/5 rounded-3xl p-6 border border-gray-100 dark:border-white/5">

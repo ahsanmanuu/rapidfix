@@ -21,6 +21,16 @@ const Register = () => {
     const [errors, setErrors] = useState({});
     const [success, setSuccess] = useState(false);
     const [showLocationPopup, setShowLocationPopup] = useState(false);
+    const [photo, setPhoto] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(null);
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setPhoto(file);
+            setPhotoPreview(URL.createObjectURL(file));
+        }
+    };
 
     useEffect(() => {
         // Attempt to get location immediately
@@ -115,17 +125,31 @@ const Register = () => {
         if (!validate()) return;
 
         setLoading(true);
-        // Exclude confirmPassword from data sent to API
-        const { confirmPassword, ...registerData } = formData;
 
-        // Add location to payload
-        const payload = {
-            ...registerData,
-            location
-        };
+        // Use FormData for file upload support
+        const formDataPayload = new FormData();
+        formDataPayload.append('name', formData.name);
+        formDataPayload.append('email', formData.email);
+        formDataPayload.append('phone', formData.phone);
+        formDataPayload.append('password', formData.password);
+
+        // Location must be stringified for FormData
+        if (location) {
+            formDataPayload.append('location', JSON.stringify(location));
+        } else {
+            // Redundant safeguard, validation should catch this
+            setErrors(prev => ({ ...prev, location: 'Location missing' }));
+            setLoading(false);
+            return;
+        }
+
+        if (photo) {
+            formDataPayload.append('photo', photo);
+        }
 
         try {
-            const response = await api.post('/users/register', payload);
+            // content-type header is auto-set by browser for FormData
+            const response = await api.post('/users/register', formDataPayload);
             if (response.data.success) {
                 setSuccess(true);
                 setUser(response.data.user, response.data.sessionToken);
@@ -134,6 +158,7 @@ const Register = () => {
                 }, 2000);
             }
         } catch (err) {
+            console.error("Reg Error", err);
             setErrors(prev => ({ ...prev, general: err.response?.data?.error || 'Registration failed' }));
             setLoading(false);
         }
@@ -174,6 +199,35 @@ const Register = () => {
                         </div>
                         <h2>Create Account</h2>
                         <p>Sign up to get started</p>
+                    </div>
+
+                    <div className="flex justify-center mb-6">
+                        <div className="relative group cursor-pointer w-24 h-24">
+                            <input
+                                type="file"
+                                id="photo-upload"
+                                accept="image/*"
+                                onChange={handlePhotoChange}
+                                className="hidden"
+                            />
+                            <label htmlFor="photo-upload" className="cursor-pointer block w-full h-full">
+                                <div className={`w-full h-full rounded-full border-4 border-[#e0e5ec] shadow-[inset_5px_5px_10px_#bec3cf,inset_-5px_-5px_10px_#ffffff] flex items-center justify-center overflow-hidden transition-all group-hover:border-blue-200 ${photoPreview ? 'p-0' : 'p-4'}`}>
+                                    {photoPreview ? (
+                                        <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <svg className="text-slate-400 w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    )}
+                                </div>
+                                <div className="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-1.5 shadow-lg transform scale-75 group-hover:scale-90 transition-transform">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                </div>
+                            </label>
+                        </div>
                     </div>
 
                     <form className="login-form" onSubmit={handleSubmit} noValidate>

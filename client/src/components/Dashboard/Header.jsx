@@ -32,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import axios from '../../services/api'; // Assuming default axios verify later
 import { useSocket } from '../../context/SocketContext';
+import useSupabaseRealtime from '../../hooks/useSupabaseRealtime';
 
 const Header = ({ handleDrawerToggle, onLogout, setActiveTab, user }) => {
     const theme = useTheme();
@@ -54,6 +55,14 @@ const Header = ({ handleDrawerToggle, onLogout, setActiveTab, user }) => {
     useEffect(() => {
         if (user?.id) fetchNotifications();
     }, [user]);
+
+    // [NEW] Supabase Realtime for Notifications
+    useSupabaseRealtime('notifications', (payload) => {
+        if (user && payload.new && payload.new.userId === user.id) {
+            setNotifications(prev => [payload.new, ...prev]);
+            setUnreadCount(prev => prev + 1);
+        }
+    }, 'INSERT');
 
     // Real-time Listener
     useEffect(() => {
@@ -89,8 +98,9 @@ const Header = ({ handleDrawerToggle, onLogout, setActiveTab, user }) => {
         try {
             const res = await axios.get(`/notifications/${user.id}`);
             if (res.data.success) {
-                setNotifications(res.data.notifications);
-                setUnreadCount(res.data.notifications.filter(n => !n.read).length);
+                const notifs = Array.isArray(res.data.notifications) ? res.data.notifications : [];
+                setNotifications(notifs);
+                setUnreadCount(notifs.filter(n => !n.read).length);
             }
         } catch (error) {
             console.error("Failed to fetch notifications", error);

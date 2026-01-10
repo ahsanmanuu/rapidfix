@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
+import useSupabaseRealtime from '../../hooks/useSupabaseRealtime';
 import FeedbackModal from './FeedbackModal';
 import api from '../../services/api';
 import { createJob, getMyJobs } from '../../services/api';
@@ -60,13 +61,24 @@ const DashboardJobs = ({ user }) => {
         }
     };
 
+    // [NEW] Supabase Realtime for Jobs
+    useSupabaseRealtime('jobs', (payload) => {
+        if (user) fetchJobs(user.id);
+    });
+
     const handleBookService = async (e) => {
         e.preventDefault();
         try {
+            const userLoc = user?.location || {};
             const jobData = {
                 ...newJob,
                 userId: user.id,
-                location: user?.location || { latitude: 0, longitude: 0 }
+                location: userLoc.latitude ? {
+                    latitude: userLoc.latitude,
+                    longitude: userLoc.longitude,
+                    address: userLoc.address || userLoc.display_name || ''
+                } : { latitude: 0, longitude: 0 },
+                address: userLoc.address || userLoc.city || userLoc.display_name || 'User Dashboard Request'
             };
 
             await createJob(jobData);
@@ -74,7 +86,8 @@ const DashboardJobs = ({ user }) => {
             setNewJob({ serviceType: 'Electrician', description: '', location: '', contactName: user.name, contactPhone: user.phone });
             fetchJobs(user.id);
         } catch (err) {
-            alert('Failed to book service');
+            console.error("Booking failed:", err);
+            alert(`Failed to book service: ${err.response?.data?.error || err.message}`);
         }
     };
 
@@ -103,8 +116,8 @@ const DashboardJobs = ({ user }) => {
 
     return (
         <Grid container spacing={3}>
-            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h2">My Service Requests</Typography>
+            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="h4" fontWeight="bold">My Requests</Typography>
                 <Button
                     variant="contained"
                     color="primary"
@@ -119,8 +132,8 @@ const DashboardJobs = ({ user }) => {
             {showBooking && (
                 <Grid item xs={12}>
                     <Card sx={{ borderRadius: '16px', border: `1px solid ${theme.palette.primary.main}` }}>
-                        <CardContent>
-                            <Typography variant="h3" sx={{ mb: 3 }}>Book a Technician</Typography>
+                        <CardContent sx={{ p: 2 }}>
+                            <Typography variant="h5" sx={{ mb: 2 }}>Book a Technician</Typography>
                             <form onSubmit={handleBookService}>
                                 <Grid container spacing={2}>
                                     <Grid item xs={12} md={6}>
@@ -201,14 +214,14 @@ const DashboardJobs = ({ user }) => {
                                             <Avatar sx={{
                                                 bgcolor: theme.palette.primary.light,
                                                 color: theme.palette.primary.dark,
-                                                width: 50, height: 50
+                                                width: 40, height: 40
                                             }}>
-                                                {job.serviceType.includes('Electric') ? <ElectricBolt /> : <Build />}
+                                                {job.serviceType.includes('Electric') ? <ElectricBolt fontSize="small" /> : <Build fontSize="small" />}
                                             </Avatar>
                                         </Grid>
                                         <Grid item xs>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                <Typography variant="h4">{job.serviceType}</Typography>
+                                                <Typography variant="h6" fontWeight="bold">{job.serviceType}</Typography>
                                                 <Chip
                                                     label={job.status}
                                                     size="small"

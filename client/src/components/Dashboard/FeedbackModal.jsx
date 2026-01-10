@@ -97,27 +97,27 @@ const FeedbackModal = ({ job, onClose, onSubmit }) => {
                     </div>
 
                     {/* Recommendation NPS */}
-                    <div className="p-3 rounded-lg border border-slate-100 bg-blue-50/30">
-                        <div className="flex justify-between items-center mb-2">
-                            <h4 className="font-bold text-slate-700 text-xs">Recommend to a friend?</h4>
-                            <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">{recommend}/10</span>
+                    <div className="p-3 md:p-4 rounded-xl border border-slate-100 bg-blue-50/30">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wide">Recommend to a friend?</h4>
+                            <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md shadow-sm">{recommend}/10</span>
                         </div>
-                        <div className="flex justify-between gap-1">
+                        <div className="flex flex-wrap justify-center gap-1.5 md:gap-2">
                             {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
                                 <button
                                     key={num}
                                     type="button"
                                     onClick={() => setRecommend(num)}
-                                    className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold transition-all ${recommend === num
-                                        ? 'bg-blue-600 text-white shadow-md scale-110'
-                                        : 'bg-white border border-slate-200 text-slate-500 hover:bg-white hover:border-blue-300'
+                                    className={`w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-[10px] md:text-xs font-bold transition-all duration-200 ${recommend === num
+                                        ? 'bg-blue-600 text-white shadow-md scale-110 ring-2 ring-blue-200'
+                                        : 'bg-white border border-slate-200 text-slate-500 hover:bg-white hover:border-blue-300 hover:shadow-sm'
                                         }`}
                                 >
                                     {num}
                                 </button>
                             ))}
                         </div>
-                        <div className="flex justify-between text-[9px] text-slate-400 mt-1 font-medium uppercase tracking-wide px-0.5">
+                        <div className="flex justify-between text-[9px] text-slate-400 mt-2 font-medium uppercase tracking-wide px-1">
                             <span>No</span>
                             <span>Yes</span>
                         </div>

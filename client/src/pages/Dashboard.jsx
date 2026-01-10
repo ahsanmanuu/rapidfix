@@ -111,11 +111,29 @@ const Dashboard = () => {
             }
         };
 
+        const handleRealtimeUpdate = (data) => {
+            console.log("Realtime Update Received:", data);
+            fetchJobs(user.id);
+            // Also refresh profile if needed
+            fetchProfile(user.id);
+        };
+
         socket.on('account_status_change', handleStatusChange);
         socket.on('membership_update', handleMembershipUpdate);
+
+        // Listen to generic job updates (covers creation, status change, acceptance)
+        socket.on('job_updated', handleRealtimeUpdate);
+        socket.on('job_status_change', handleRealtimeUpdate);
+        socket.on('new_job', handleRealtimeUpdate);
+        socket.on('notification', handleRealtimeUpdate); // Catch-all for notifications
+
         return () => {
             socket.off('account_status_change', handleStatusChange);
             socket.off('membership_update', handleMembershipUpdate);
+            socket.off('job_updated', handleRealtimeUpdate);
+            socket.off('job_status_change', handleRealtimeUpdate);
+            socket.off('new_job', handleRealtimeUpdate);
+            socket.off('notification', handleRealtimeUpdate);
         };
     }, [socket]);
 
@@ -172,6 +190,7 @@ const Dashboard = () => {
             >
                 <div className="animate-fade-in h-full">
                     {activeTab === 'home' && <DashboardHome user={user} jobs={jobs} />}
+                    {activeTab === 'history' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} />}
                     {activeTab === 'jobs' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} />}
                     {activeTab === 'profile' && <DashboardProfile />}
                     {activeTab === 'chat' && <ChatInterface user={user} />}

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "1768024885513",
+    "name": "admin",
+    "email": "admin@fixofy.com",
+    "password": "admin123",
+    "role": "Super Admin",
+    "createdAt": "2026-01-10T06:01:25.513Z"
+  },
+  {
+    "email": "super@fixofy.com",
+    "password": "admin123",
+    "role": "superadmin",
+    "created_at": "2026-01-10T06:01:25.636Z"
+  }
+]

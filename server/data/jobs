@@ -1,0 +1,25 @@
+[
+  {
+    "description": "Quick Tile Booking",
+    "location": {
+      "latitude": 25.6234486,
+      "longitude": 85.1323779,
+      "address": "Current Location"
+    },
+    "offerPrice": null,
+    "status": "accepted",
+    "reason": null,
+    "otp": null,
+    "technician_id": null,
+    "service_type": "Electrician",
+    "contact_name": "mohammad ahsan siddiqui",
+    "contact_phone": "1234567890",
+    "scheduled_date": "2026-01-10",
+    "scheduled_time": "13:13",
+    "is_custom_offer": false,
+    "visiting_charges": 299,
+    "agreement_accepted": true,
+    "created_at": "2026-01-10T07:44:06.203Z",
+    "updated_at": "2026-01-10T07:44:06.224Z"
+  }
+]

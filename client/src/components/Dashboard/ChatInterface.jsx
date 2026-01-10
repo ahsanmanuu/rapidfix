@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSocket } from '../../context/SocketContext';
+import useSupabaseRealtime from '../../hooks/useSupabaseRealtime';
 import {
     Box,
     Card,
@@ -34,6 +35,23 @@ const ChatInterface = ({ user }) => {
             };
         }
     }, [socket, roomId]);
+
+    // [NEW] Supabase Realtime Hook for Chat
+    useSupabaseRealtime('chats', (payload) => {
+        if (payload.new) {
+            const msg = payload.new;
+            // Check if message belongs to this room (user-admin pair usually)
+            // Simple check: if sender or receiver matches current user
+            if (msg.senderId === user.id || msg.receiverId === user.id) {
+                // Avoid duplicates if socket also sends (or just rely on Supabase)
+                // For now, we add if not present by ID
+                setMessages(prev => {
+                    if (prev.some(m => m.id === msg.id)) return prev;
+                    return [...prev, msg];
+                });
+            }
+        }
+    }, 'INSERT');
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

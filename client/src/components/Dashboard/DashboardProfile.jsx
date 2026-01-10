@@ -99,22 +99,22 @@ const DashboardProfile = () => {
         <Grid container spacing={3} justifyContent="center" alignItems="center" sx={{ minHeight: 'calc(100vh - 150px)' }}>
             <Grid item xs={12} md={8} lg={6}>
                 <Card sx={{ borderRadius: '16px', border: `1px solid ${theme.palette.divider}`, boxShadow: theme.shadows[3] }}>
-                    <CardContent sx={{ p: 4 }}>
-                        <Typography variant="h3" sx={{ mb: 4, textAlign: 'center' }}>Profile Settings</Typography>
+                    <CardContent sx={{ p: 3 }}>
+                        <Typography variant="h5" sx={{ mb: 3, textAlign: 'center', fontWeight: 'bold' }}>Profile Settings</Typography>
 
                         <form onSubmit={handleSubmit}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 5 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
                                 <Box sx={{ position: 'relative' }}>
                                     <Avatar
                                         src={formData.photo}
                                         sx={{
-                                            width: 100,
-                                            height: 100,
+                                            width: 80,
+                                            height: 80,
                                             border: `4px solid ${theme.palette.primary.light}`,
                                             bgcolor: theme.palette.grey[200]
                                         }}
                                     >
-                                        <Person sx={{ fontSize: 60, color: theme.palette.grey[400] }} />
+                                        <Person sx={{ fontSize: 40, color: theme.palette.grey[400] }} />
                                     </Avatar>
                                     <Box
                                         sx={{

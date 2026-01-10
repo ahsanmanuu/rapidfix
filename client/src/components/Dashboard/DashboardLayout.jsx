@@ -6,7 +6,7 @@ import Sidebar from './Sidebar';
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open }) => ({
     flexGrow: 1,
-    padding: theme.spacing(3),
+    padding: theme.spacing(0),
     transition: theme.transitions.create(['margin', 'width'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
@@ -79,7 +79,13 @@ const DashboardLayout = ({ user, activeTab, setActiveTab, onLogout, children }) 
             />
 
             {/* Main Content */}
-            <Main open={sidebarOpen} sx={{ pt: 12, pb: 4, minHeight: '100vh', bgcolor: '#f4f6f8' }}>
+            <Main open={sidebarOpen} sx={{
+                pt: { xs: 10, md: 12 },
+                pb: 4,
+                px: { xs: 2, md: 3 }, // Added horizontal padding
+                minHeight: '100vh',
+                bgcolor: '#f4f6f8'
+            }}>
                 {children}
             </Main>
         </Box>

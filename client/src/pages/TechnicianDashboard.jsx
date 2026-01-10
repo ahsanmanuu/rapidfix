@@ -12,6 +12,7 @@ import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
 import Navbar from '../components/Navbar'; // Use main Navbar if preferred, or custom sidebar
 import { useAuth } from '../context/AuthContext';
+import useSupabaseRealtime from '../hooks/useSupabaseRealtime';
 
 import GoogleMapReact from 'google-map-react';
 import LiveRideModal from '../components/Dashboard/LiveRideModal';
@@ -312,6 +313,14 @@ const TechnicianDashboard = () => {
             }
         };
     }, [user, socket, activeChatUser]);
+
+    // [NEW] Supabase Realtime for Technician Jobs
+    useSupabaseRealtime('jobs', (payload) => {
+        // Refresh data on ANY job change relevant to this technician
+        // We could filter strictly by technicianId if Supabase policies allows
+        // For simplicity, we just fetch all data again to be safe
+        fetchAllData();
+    });
 
     useEffect(() => {
         // Auto scroll chat
@@ -714,7 +723,7 @@ const TechnicianDashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
                 <SmallBox
                     title="Total Balance"
-                    value={`₹${stats.earnings.toLocaleString()}`}
+                    value={`₹${(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}`}
                     icon={Wallet}
                     color="bg-emerald-600"
                     onClick={() => setActiveTab('wallet')}
@@ -722,8 +731,8 @@ const TechnicianDashboard = () => {
                 {/* NEW: Monthly Earnings */}
                 <SmallBox
                     title="This Month's Earnings"
-                    value={`₹${stats.monthlyEarnings?.toLocaleString() || 0}`}
-                    icon={TrendingUp}
+                    value={`₹${(typeof stats.monthlyEarnings === 'object' ? stats.monthlyEarnings.amount : stats.monthlyEarnings)?.toLocaleString() || 0}`}
+                    icon={TrendingUp} // Fixed Icon variable usage if needed, assuming TrendingUp is imported
                     color="bg-emerald-500"
                     footerText="Since 1st of Month"
                     onClick={() => setActiveTab('wallet')}
@@ -1161,7 +1170,7 @@ const TechnicianDashboard = () => {
                             >
                                 {activeTab === 'wallet' && (
                                     <div className="text-center py-10">
-                                        <h3 className="text-2xl font-bold text-emerald-600 mb-2">₹{stats.earnings.toLocaleString()}</h3>
+                                        <h3 className="text-2xl font-bold text-emerald-600 mb-2">₹{(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}</h3>
                                         <p className="text-gray-500">Current Balance</p>
                                         <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow">Withdraw Funds</button>
                                     </div>

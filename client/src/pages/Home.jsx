@@ -340,7 +340,8 @@ const Home = () => {
             }
         } catch (error) {
             console.error("Job Creation Failed", error);
-            alert("Failed to create booking. Please try again.");
+            const errorMsg = error.response?.data?.error || error.message || "Unknown error";
+            alert(`Failed to create booking: ${errorMsg}`);
         }
     };
 
