@@ -218,15 +218,15 @@ const DashboardHome = ({ jobs = [] }) => {
     };
 
 
-    const safeJobs = jobs || [];
-    const activeJobs = safeJobs.filter(j => ['pending', 'accepted', 'in-progress'].includes(j.status)).length;
-    const pendingReview = safeJobs.filter(j => j.status === 'completed' && !j.feedbackGiven).length;
+    const safeJobs = Array.isArray(jobs) ? jobs : [];
+    const activeJobs = safeJobs.filter(j => ['pending', 'accepted', 'in-progress'].includes(j?.status)).length;
+    const pendingReview = safeJobs.filter(j => j?.status === 'completed' && !j?.feedbackGiven).length;
 
     const cards = [
         {
             icon: <AccountBalanceWallet fontSize="large" sx={{ color: '#fff' }} />,
             title: 'Wallet Balance',
-            value: `₹${(typeof walletBalance === 'object' ? (walletBalance.balance || 0) : walletBalance).toFixed(2)}`,
+            value: `₹${(Number(typeof walletBalance === 'object' ? (walletBalance.balance || 0) : walletBalance) || 0).toFixed(2)}`,
             subValue: 'Add money to wallet',
             bgcolor: 'linear-gradient(135deg, #FF512F 0%, #DD2476 100%)' // Crimson/Pink gradient
         },

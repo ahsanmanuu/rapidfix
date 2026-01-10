@@ -146,7 +146,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/10 rounded-full animate-ping pointer-events-none" />
 
                                 {/* Tech Markers using OverlayView for Custom UI */}
-                                {!searching && technicians && technicians
+                                {!searching && Array.isArray(technicians) && technicians
                                     .filter(tech => tech.distance <= 2.0)
                                     .map((tech) => {
                                         let photoUrl = tech.documents?.photo
@@ -240,7 +240,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                 <div className="flex items-center gap-2 mt-1">
                                     <span className={`flex h-2 w-2 md:h-2.5 md:w-2.5 rounded-full ${searching ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`}></span>
                                     <p className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wide">
-                                        {searching ? "Live Scanning" : `${technicians.length} professionals found`}
+                                        {searching ? "Live Scanning" : `${Array.isArray(technicians) ? technicians.length : 0} professionals found`}
                                     </p>
                                 </div>
                             </div>
@@ -259,8 +259,8 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                         </div>
                                     </div>
                                 ))
-                            ) : technicians.filter(t => t.distance <= 2.0).length > 0 ? (
-                                technicians
+                            ) : (Array.isArray(technicians) ? technicians.filter(t => t.distance <= 2.0) : []).length > 0 ? (
+                                (Array.isArray(technicians) ? technicians : [])
                                     .filter(tech => tech.distance <= 2.0)
                                     .map((tech, idx) => {
                                         let photoUrl = tech.documents?.photo

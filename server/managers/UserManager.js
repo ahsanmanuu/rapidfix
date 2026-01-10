@@ -3,149 +3,198 @@ const Database = require('./DatabaseLoader');
 class UserManager {
     constructor() {
         this.db = new Database('users');
+        this.io = null;
+    }
+
+    setSocketIO(io) {
+        this.io = io;
     }
 
     // Helper to map DB snake_case to App camelCase
     _mapFromDb(user) {
         if (!user) return null;
-        const { membership_expiry, created_at, updated_at, ...rest } = user;
-        return {
-            ...rest,
-            membershipExpiry: membership_expiry,
-            createdAt: created_at,
-            updatedAt: updated_at
-        };
+        try {
+            const { membership_expiry, created_at, updated_at, ...rest } = user;
+            return {
+                ...rest,
+                membershipExpiry: membership_expiry,
+                createdAt: created_at,
+                updatedAt: updated_at
+            };
+        } catch (err) {
+            console.error("[UserManager] Error mapping from DB:", err);
+            return user;
+        }
     }
 
     // Helper to map App camelCase to DB snake_case
     _mapToDb(user) {
         if (!user) return null;
-        const { membershipExpiry, createdAt, updatedAt, id, ...rest } = user;
-
-        const mapped = { ...rest };
-        if (membershipExpiry !== undefined) mapped.membership_expiry = membershipExpiry;
-        if (createdAt !== undefined) mapped.created_at = createdAt;
-        if (updatedAt !== undefined) mapped.updated_at = updatedAt;
-
-        // Don't map ID if it's meant to be generated, but if used for lookup it's fine.
-        // Usually we don't write ID back to DB for existing records.
-
-        return mapped;
+        try {
+            const { membershipExpiry, createdAt, updatedAt, id, ...rest } = user;
+            const mapped = { ...rest };
+            if (membershipExpiry !== undefined) mapped.membership_expiry = membershipExpiry;
+            if (createdAt !== undefined) mapped.created_at = createdAt;
+            if (updatedAt !== undefined) mapped.updated_at = updatedAt;
+            if (id !== undefined) mapped.id = id;
+            return mapped;
+        } catch (err) {
+            console.error("[UserManager] Error mapping to DB:", err);
+            return user;
+        }
     }
 
     async createUser(name, email, phone, password, location, photoUrl = null) {
-        const existing = await this.db.find('email', email);
-        if (existing) {
-            throw new Error('User already exists');
+        try {
+            const existing = await this.db.find('email', email);
+            if (existing) {
+                throw new Error('User already exists');
+            }
+
+            const newUser = {
+                name,
+                email,
+                phone,
+                password,
+                location,
+                role: 'user',
+                photo: photoUrl,
+                status: 'Active',
+                membership: 'Free',
+                created_at: new Date().toISOString()
+            };
+
+            const created = await this.db.add(newUser);
+            const user = this._mapFromDb(created);
+
+            if (this.io) {
+                this.io.emit('new_user_registered', user);
+            }
+
+            return user;
+        } catch (err) {
+            console.error("[UserManager] Error creating user:", err);
+            throw err;
         }
-
-        const newUser = {
-            name,
-            email,
-            phone,
-            password, // In a real app, hash this!
-            location, // { latitude, longitude }
-            role: 'user',
-            photo: photoUrl, // Use uploaded photo URL or null
-            status: 'Active', // Default status
-            membership: 'Free', // Default tier
-            created_at: new Date().toISOString()
-        };
-
-        const created = await this.db.add(newUser);
-        return this._mapFromDb(created);
     }
 
     async updateUser(id, updates) {
-        // updates can include name, photo, password, location, membership, membershipExpiry
-        const dbUpdates = this._mapToDb(updates);
-        dbUpdates.updated_at = new Date().toISOString();
+        try {
+            const dbUpdates = this._mapToDb(updates);
+            dbUpdates.updated_at = new Date().toISOString();
 
-        const result = await this.db.update('id', id, dbUpdates);
-        return this._mapFromDb(result);
+            const result = await this.db.update('id', id, dbUpdates);
+            const user = this._mapFromDb(result);
+
+            if (this.io) {
+                this.io.to(`user_${id}`).emit('profile_updated', user);
+                this.io.emit('admin_user_update', user);
+            }
+            return user;
+        } catch (err) {
+            console.error(`[UserManager] Error updating user ${id}:`, err);
+            throw err;
+        }
     }
 
     async login(email, password) {
-        const user = await this.db.find('email', email);
-        if (user && user.password === password) {
-            const appUser = this._mapFromDb(user);
-            const { password, ...userWithoutPass } = appUser;
-            return userWithoutPass;
+        try {
+            const user = await this.db.find('email', email);
+            if (user && user.password === password) {
+                const { password, ...userWithoutPass } = this._mapFromDb(user);
+                return userWithoutPass;
+            }
+            return null;
+        } catch (err) {
+            console.error("[UserManager] Login error:", err);
+            return null;
         }
-        return null;
     }
 
     async getUser(id) {
-        const user = await this.db.find('id', id);
-        if (user) {
-            const appUser = this._mapFromDb(user);
-            const { password, ...userWithoutPass } = appUser;
-            return userWithoutPass;
+        try {
+            const user = await this.db.find('id', id);
+            if (user) {
+                const { password, ...userWithoutPass } = this._mapFromDb(user);
+                return userWithoutPass;
+            }
+            return null;
+        } catch (err) {
+            console.error(`[UserManager] Error getting user ${id}:`, err);
+            return null;
         }
-        return null;
     }
 
     async getAllUsers() {
-        const users = await this.db.read();
-        return users.map(u => {
-            const appUser = this._mapFromDb(u);
-            const { password, ...rest } = appUser;
-            return rest;
-        });
+        try {
+            const users = await this.db.read();
+            return users.map(u => {
+                const { password, ...rest } = this._mapFromDb(u);
+                return rest;
+            });
+        } catch (err) {
+            console.error("[UserManager] Error getting all users:", err);
+            return [];
+        }
     }
 
     async setStatus(id, status) {
-        // Robust update: Find first, then update
-        const users = await this.db.read();
-        const target = users.find(u => String(u.id) === String(id));
-
-        if (target) {
-            const result = await this.db.update('id', target.id, { status, updated_at: new Date().toISOString() });
-            return this._mapFromDb(result);
-        }
-        return null; // User not found
-    }
-
-    async checkAndSyncMembership(id) {
-        const user = await this.db.find('id', id);
-        if (!user) return null;
-
-        const appUser = this._mapFromDb(user);
-
-        // If Premium, check for expiry
-        if (appUser.membership === 'Premium' && appUser.membershipExpiry) {
-            const expiry = new Date(appUser.membershipExpiry);
-            const now = new Date();
-
-            if (now > expiry) {
-                console.log(`[UserManager] Membership expired for user ${id}. Downgrading to Free.`);
-                const updated = await this.db.update('id', id, {
-                    membership: 'Free',
-                    updated_at: new Date().toISOString()
-                });
-                const mappedUpdated = this._mapFromDb(updated);
-                return { ...mappedUpdated, statusChanged: true, newTier: 'Free' };
+        try {
+            const result = await this.db.update('id', id, {
+                status,
+                updated_at: new Date().toISOString()
+            });
+            const user = this._mapFromDb(result);
+            if (this.io) {
+                this.io.to(`user_${id}`).emit('profile_updated', user);
+                this.io.emit('admin_user_update', user);
             }
+            return user;
+        } catch (err) {
+            console.error(`[UserManager] Error setting status for user ${id}:`, err);
+            return null;
         }
-        return appUser;
     }
 
     async setMembership(id, tier, expiryDate = null) {
-        // Robust update: Find first, then update
-        const users = await this.db.read();
-        const target = users.find(u => String(u.id) === String(id));
-
-        if (target) {
+        try {
             const updates = {
                 membership: tier,
                 updated_at: new Date().toISOString()
             };
             if (expiryDate) updates.membership_expiry = expiryDate;
 
-            const result = await this.db.update('id', target.id, updates);
-            return this._mapFromDb(result);
+            const result = await this.db.update('id', id, updates);
+            const user = this._mapFromDb(result);
+            if (this.io) {
+                this.io.to(`user_${id}`).emit('membership_updated', { membership: tier, expiry: expiryDate });
+                this.io.emit('admin_user_update', user);
+            }
+            return user;
+        } catch (err) {
+            console.error(`[UserManager] Error setting membership for user ${id}:`, err);
+            return null;
         }
-        return null;
+    }
+
+    async checkAndSyncMembership(userId) {
+        try {
+            const user = await this.getUser(userId);
+            if (!user) return null;
+
+            if (user.membership === 'Premium' && user.membershipExpiry) {
+                const expiry = new Date(user.membershipExpiry);
+                if (expiry < new Date()) {
+                    console.log(`[UserManager] Membership expired for ${userId}. Downgrading to Free.`);
+                    const updated = await this.setMembership(userId, 'Free', null);
+                    return { ...updated, statusChanged: true, newTier: 'Free' };
+                }
+            }
+            return { ...user, statusChanged: false };
+        } catch (err) {
+            console.error(`[UserManager] Error syncing membership for ${userId}:`, err);
+            return null;
+        }
     }
 }
 

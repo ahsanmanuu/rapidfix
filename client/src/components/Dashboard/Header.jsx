@@ -211,11 +211,11 @@ const Header = ({ handleDrawerToggle, onLogout, setActiveTab, user }) => {
                 >
                     <Box sx={{ p: 2, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography variant="h4">Notifications</Typography>
-                        <Typography variant="caption" color="primary" sx={{ cursor: 'pointer' }} onClick={() => notifications.forEach(n => handleMarkRead(n.id))}>Mark all read</Typography>
+                        <Typography variant="caption" color="primary" sx={{ cursor: 'pointer' }} onClick={() => Array.isArray(notifications) && notifications.forEach(n => handleMarkRead(n.id))}>Mark all read</Typography>
                     </Box>
                     <Divider />
                     <List sx={{ p: 0 }}>
-                        {notifications.length === 0 ? (
+                        {!Array.isArray(notifications) || notifications.length === 0 ? (
                             <Box sx={{ p: 3, textAlign: 'center' }}>
                                 <Typography variant="body2" color="textSecondary">No new notifications</Typography>
                             </Box>

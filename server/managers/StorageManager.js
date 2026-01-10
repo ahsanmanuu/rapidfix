@@ -5,6 +5,7 @@ const { createClient } = require('@supabase/supabase-js');
 class StorageManager {
     constructor() {
         this.useSupabase = process.env.USE_SUPABASE === 'true';
+        this.io = null;
 
         if (this.useSupabase) {
             if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
@@ -19,32 +20,36 @@ class StorageManager {
         }
     }
 
-    /**
-     * Upload a file
-     * @param {Object} fileObject - Multer file object
-     * @param {string} folder - Target folder (bucket/path prefix)
-     * @param {string} customName - Optional custom filename
-     * @returns {Promise<string>} Public URL or Local Path
-     */
+    setSocketIO(io) {
+        this.io = io;
+    }
+
     async upload(fileObject, folder, customName = null) {
-        if (!fileObject) return null;
+        try {
+            if (!fileObject) return null;
+            const filename = customName || `${Date.now()}-${fileObject.originalname.replace(/\s+/g, '-')}`;
 
-        const filename = customName || `${Date.now()}-${fileObject.originalname.replace(/\s+/g, '-')}`;
+            let url;
+            if (this.useSupabase) {
+                url = await this._uploadToSupabase(fileObject, folder, filename);
+            } else {
+                url = await this._uploadToLocal(fileObject, folder, filename);
+            }
 
-        if (this.useSupabase) {
-            return this._uploadToSupabase(fileObject, folder, filename);
-        } else {
-            return this._uploadToLocal(fileObject, folder, filename);
+            if (this.io) {
+                this.io.emit('file_uploaded', { folder, filename, url });
+            }
+            return url;
+        } catch (err) {
+            console.error("[StorageManager] Error uploading file:", err);
+            throw err;
         }
     }
 
     async _uploadToSupabase(file, folder, filename) {
         try {
             const bucket = folder === 'technicians' ? 'technician-documents' : 'user-avatars';
-            // Determine content type
             const contentType = file.mimetype;
-
-            // Read file from temp path
             const fileContent = fs.readFileSync(file.path);
 
             const { data, error } = await this.supabase.storage
@@ -56,40 +61,44 @@ class StorageManager {
 
             if (error) throw error;
 
-            // Get Public URL
             const { data: urlData } = this.supabase.storage
                 .from(bucket)
                 .getPublicUrl(`${folder}/${filename}`);
 
-            // Cleanup local temp file
             try { fs.unlinkSync(file.path); } catch (e) { }
-
             return urlData.publicUrl;
         } catch (error) {
             console.error("[StorageManager] Supabase Upload Error:", error);
-            // Fallback? Or throw? Throwing ensures we know it failed.
             throw error;
         }
     }
 
     async _uploadToLocal(file, folder, filename) {
-        const uploadDir = path.join(__dirname, '..', 'uploads', folder);
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
+        try {
+            const uploadDir = path.join(__dirname, '..', 'uploads', folder);
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            const newPath = path.join(uploadDir, filename);
+            fs.renameSync(file.path, newPath);
+            return `/uploads/${folder}/${filename}`;
+        } catch (err) {
+            console.error("[StorageManager] Local Upload Error:", err);
+            throw err;
         }
-
-        const newPath = path.join(uploadDir, filename);
-        fs.renameSync(file.path, newPath);
-
-        // Return relative path for Serving
-        return `/uploads/${folder}/${filename}`;
     }
 
     async delete(url) {
-        // Implementation for cleanup if needed
-        // For now, logging to avoid complexity
-        console.log(`[StorageManager] Delete requested for ${url}`);
-        return true;
+        try {
+            console.log(`[StorageManager] Delete requested for ${url}`);
+            if (this.io) {
+                this.io.emit('file_deleted', { url });
+            }
+            return true;
+        } catch (err) {
+            console.error(`[StorageManager] Error deleting file ${url}:`, err);
+            return false;
+        }
     }
 }
 

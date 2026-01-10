@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -6,7 +7,6 @@ const http = require('http');
 const { Server } = require('socket.io');
 const multer = require('multer');
 const fs = require('fs');
-const path = require('path');
 
 const UserManager = require('./managers/UserManager');
 const TechnicianManager = require('./managers/TechnicianManager');
@@ -17,48 +17,31 @@ const ComplaintManager = require('./managers/ComplaintManager');
 const JobManager = require('./managers/JobManager');
 const FinanceManager = require('./managers/FinanceManager');
 const RideManager = require('./managers/RideManager');
-// ...
-
-// Ensure RideManager has getRidesByTechnician logic (I will assume it does or check later, but standard pattern suggests it should or I might need to add it to Manager too).
-// Actually, let me check strictness. The user wants "fetch all his data".
-// I'll add the route.
-
-// --- Ride Routes --- (Usually near other routes)
-// ... existing session routes ... 
-
 const SuperAdminManager = require('./managers/SuperAdminManager');
 const SessionManager = require('./managers/SessionManager');
+const ChatManager = require('./managers/ChatManager');
+const OfferManager = require('./managers/OfferManager');
+const StorageManager = require('./managers/StorageManager');
+const NotificationManager = require('./managers/NotificationManager');
+const BroadcastManager = require('./managers/BroadcastManager');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-// Serve uploads folder statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Serve Request client build (Production)
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
-// Catch-all route to serve index.html for non-API requests (SPA support)
-// Place this AFTER all API routes
-// We will insert the catch-all handler at the very end of the file or after routes.
-// But for now, let's just add the static middleware here.
-
-
-// Configure Multer
 const upload = multer({ dest: 'uploads/temp/' });
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // In production, restrict this
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
-
-const ChatManager = require('./managers/ChatManager');
-const OfferManager = require('./managers/OfferManager');
 
 // Initialize Managers
 const userManager = new UserManager();
@@ -74,13 +57,25 @@ const sessionManager = new SessionManager();
 const superAdminManager = new SuperAdminManager();
 const chatManager = new ChatManager();
 const offerManager = new OfferManager();
-const StorageManager = require('./managers/StorageManager');
-const NotificationManager = require('./managers/NotificationManager');
 const notificationManager = new NotificationManager();
 const storageManager = new StorageManager();
+const broadcastManager = new BroadcastManager();
 
-// Link JobManager to Socket.io for automatic broadcasts
-jobManager.setSocketIO(io);
+// Link Managers to Socket.io for automatic broadcasts
+const allManagers = [
+  userManager, technicianManager, adminManager, feedbackManager,
+  locationManager, complaintManager, jobManager, financeManager,
+  rideManager, sessionManager, superAdminManager, chatManager,
+  offerManager, notificationManager, storageManager, broadcastManager
+];
+
+allManagers.forEach(m => {
+  if (m && typeof m.setSocketIO === 'function') {
+    m.setSocketIO(io);
+  } else if (m) {
+    m.io = io; // Fallback: set it anyway if method doesn't exist yet
+  }
+});
 
 
 // VERSION CHECK - Verify Render has latest code
@@ -278,10 +273,10 @@ app.post('/api/users/register', upload.single('photo'), async (req, res) => {
     console.log('[REGISTER] User created successfully:', user.id);
 
     // Also save to Location Manager specifically
-    locationManager.saveUserRealtimeLocation(user.id, location);
+    await locationManager.saveUserRealtimeLocation(user.id, location);
 
     // Auto-Login: Create Session
-    const session = sessionManager.createSession(user.id, 'user', null); // deviceId could be passed if critical
+    const session = await sessionManager.createSession(user.id, 'user', null); // deviceId could be passed if critical
 
     res.json({ success: true, user, sessionToken: session.token });
   } catch (error) {
@@ -291,62 +286,67 @@ app.post('/api/users/register', upload.single('photo'), async (req, res) => {
 });
 
 app.post('/api/users/login', async (req, res) => {
-  const { email, password, deviceId, location } = req.body;
-  const user = await userManager.login(email, password);
-  if (user) {
-    if (user.status === 'Banned') {
-      return res.status(403).json({
-        success: false,
-        error: 'Your profile has been blacklisted. Please contact support.',
-        status: 'Banned'
+  try {
+    const { email, password, deviceId, location } = req.body;
+    const user = await userManager.login(email, password);
+    if (user) {
+      if (user.status === 'Banned') {
+        return res.status(403).json({
+          success: false,
+          error: 'Your profile has been blacklisted. Please contact support.',
+          status: 'Banned'
+        });
+      }
+
+      // Capture location during login if provided
+      if (location) {
+        await userManager.updateUser(user.id, { location });
+        await locationManager.saveUserRealtimeLocation(user.id, location);
+      }
+
+      // [AUTO-LIFE] Check and Sync Membership Expiry
+      const syncedUser = await userManager.checkAndSyncMembership(user.id);
+      if (syncedUser && syncedUser.statusChanged && syncedUser.newTier === 'Free') {
+        await notificationManager.createNotification(user.id, 'user', 'Membership Expired', 'Your Premium membership has expired. You have been switched to the Free tier.', 'membership_expired', user.id);
+      }
+
+      // Create Session
+      const session = await sessionManager.createSession(user.id, 'user', deviceId);
+      res.json({
+        success: true,
+        user: { ...user, ...syncedUser, location: location || user.location }, // Return fresh location and membership
+        sessionToken: session.token
       });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
-
-    // Capture location during login if provided
-    if (location) {
-      await userManager.updateUser(user.id, { location });
-      locationManager.saveUserRealtimeLocation(user.id, location);
-    }
-
-    // [AUTO-LIFE] Check and Sync Membership Expiry
-    const syncedUser = await userManager.checkAndSyncMembership(user.id);
-    if (syncedUser.statusChanged && syncedUser.newTier === 'Free') {
-      notificationManager.createNotification(user.id, 'user', 'Membership Expired', 'Your Premium membership has expired. You have been switched to the Free tier.', 'membership_expired', user.id);
-    }
-
-    // Create Session
-    const session = sessionManager.createSession(user.id, 'user', deviceId);
-    res.json({
-      success: true,
-      user: { ...user, ...syncedUser, location: location || user.location }, // Return fresh location and membership
-      sessionToken: session.token
-    });
-  } else {
-    res.status(401).json({ success: false, error: 'Invalid credentials' });
+  } catch (err) {
+    console.error("[Server] User Login Error:", err);
+    res.status(500).json({ success: false, error: 'Internal server error during login' });
   }
 });
 
-app.post('/api/users/logout', (req, res) => {
+app.post('/api/users/logout', async (req, res) => {
   const { token } = req.body;
   if (token) {
-    sessionManager.deleteSession(token);
+    await sessionManager.deleteSession(token);
   }
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
-app.get('/api/users/:id', (req, res) => {
+app.get('/api/users/:id', async (req, res) => {
   // Always sync membership on fetch to ensure dashboard matches DB
-  const syncedUser = userManager.checkAndSyncMembership(req.params.id);
+  const syncedUser = await userManager.checkAndSyncMembership(req.params.id);
   if (syncedUser) {
     if (syncedUser.statusChanged && syncedUser.newTier === 'Free') {
-      notificationManager.createNotification(req.params.id, 'user', 'Membership Expired', 'Your Premium membership has reached its end date. You are now on the Free tier.', 'membership_expired', req.params.id);
+      await notificationManager.createNotification(req.params.id, 'user', 'Membership Expired', 'Your Premium membership has reached its end date. You are now on the Free tier.', 'membership_expired', req.params.id);
       io.to(`user_${req.params.id}`).emit('membership_update', { user: syncedUser });
     }
     res.json({ success: true, user: syncedUser });
   } else res.status(404).json({ success: false, error: 'User not found' });
 });
 
-app.put('/api/users/:id', (req, res) => {
+app.put('/api/users/:id', async (req, res) => {
   try {
     const { name, photo, password, location } = req.body;
     const updates = {};
@@ -355,7 +355,7 @@ app.put('/api/users/:id', (req, res) => {
     if (password) updates.password = password;
     if (location) updates.location = location;
 
-    const user = userManager.updateUser(req.params.id, updates);
+    const user = await userManager.updateUser(req.params.id, updates);
     if (user) {
       res.json({ success: true, user });
     } else {
@@ -490,15 +490,15 @@ app.get('/api/notifications/:userId', (req, res) => {
   }
 });
 
-app.put('/api/notifications/:id/read', (req, res) => {
-  notificationManager.markRead(req.params.id);
+app.put('/api/notifications/:id/read', async (req, res) => {
+  await notificationManager.markRead(req.params.id);
   res.json({ success: true });
 });
 
 // --- Super Admin Routes ---
-app.post('/api/superadmin/login', (req, res) => {
+app.post('/api/superadmin/login', async (req, res) => {
   const { email, password } = req.body;
-  const admin = superAdminManager.login(email, password);
+  const admin = await superAdminManager.login(email, password);
   if (admin) {
     res.json({ success: true, superadmin: admin });
   } else {
@@ -620,12 +620,12 @@ app.put('/api/admin/users/:id/unban', async (req, res) => {
   }
 });
 
-app.put('/api/admin/users/:id/membership', (req, res) => {
+app.put('/api/admin/users/:id/membership', async (req, res) => {
   try {
     const id = String(req.params.id).trim();
     const { tier } = req.body; // 'Free' or 'Premium'
 
-    const user = userManager.setMembership(id, tier);
+    const user = await userManager.setMembership(id, tier);
     if (user) {
       // Send full user object for easier state merging
       io.to(`user_${user.id}`).emit('membership_update', { user });
@@ -804,7 +804,7 @@ app.put('/api/jobs/:id/status', async (req, res) => {
         io.to(`tech_${techId}`).emit('wallet_updated', { amount });
 
         // [NEW] Auto-End Active Ride Session
-        const rides = rideManager.getRidesByTechnician(techId);
+        const rides = await rideManager.getRidesByTechnician(techId);
         const activeRide = rides.find(r => r.jobId === job.id && r.status === 'in_progress');
         if (activeRide) {
           await rideManager.completeRide(activeRide.id);
@@ -831,14 +831,14 @@ app.put('/api/jobs/:id/status', async (req, res) => {
     // [NOTIFICATION] Persist Updates
     // 1. Notify User
     if (job.userId) {
-      notificationManager.createNotification(job.userId, 'user', `Job ${status}`, `Your job #${job.id} is now ${status}`, `job_${status}`, job.id);
+      await notificationManager.createNotification(job.userId, 'user', `Job ${status}`, `Your job #${job.id} is now ${status}`, `job_${status}`, job.id);
     }
     // 2. Notify Technician (if not the one triggering it, or just for record)
     if (job.technicianId) {
-      notificationManager.createNotification(job.technicianId, 'technician', `Job ${status}`, `Job #${job.id} marked as ${status}`, `job_${status}`, job.id);
+      await notificationManager.createNotification(job.technicianId, 'technician', `Job ${status}`, `Job #${job.id} marked as ${status}`, `job_${status}`, job.id);
     }
     // 3. Notify Admin
-    notificationManager.createNotification('admin', 'admin', `Job ${status}`, `Job #${job.id} updated to ${status}`, `job_status_update`, job.id);
+    await notificationManager.createNotification('admin', 'admin', `Job ${status}`, `Job #${job.id} updated to ${status}`, `job_status_update`, job.id);
 
     res.json({ success: true, job });
   }
@@ -846,11 +846,11 @@ app.put('/api/jobs/:id/status', async (req, res) => {
 });
 
 // --- Technician Status & Profile Routes ---
-app.put('/api/technicians/:id/status', (req, res) => {
+app.put('/api/technicians/:id/status', async (req, res) => {
   const { status, location } = req.body;
-  const tech = technicianManager.updateStatus(req.params.id, status);
+  const tech = await technicianManager.updateStatus(req.params.id, status);
   if (tech) {
-    if (location) technicianManager.updateLocation(req.params.id, location);
+    if (location) await technicianManager.updateLocation(req.params.id, location);
     io.emit('technician_status_update', { technicianId: tech.id, status: tech.status, location: tech.location });
     res.json({ success: true, technician: tech });
   } else {
@@ -903,9 +903,9 @@ app.get('/api/technicians/:id/stats/monthly', async (req, res) => {
 });
 
 // --- Chat Routes [NEW] ---
-app.post('/api/chat/send', (req, res) => {
+app.post('/api/chat/send', async (req, res) => {
   const { senderId, receiverId, message, senderName } = req.body;
-  const chat = chatManager.sendMessage(senderId, receiverId, message, senderName);
+  const chat = await chatManager.sendMessage(senderId, receiverId, message, senderName);
 
   // Realtime Socket
   io.emit('receive_message', chat); // Broadcast to all for simplicity or use specific rooms if implemented
@@ -946,34 +946,34 @@ app.get('/api/finance/user/:id', (req, res) => {
   res.json({ success: true, bills });
 });
 
-app.get('/api/finance/wallet/:userId', (req, res) => { // [NEW] Get Balance
-  const balance = financeManager.getBalance(req.params.userId);
-  const transactions = financeManager.getTransactionsByUser(req.params.userId);
+app.get('/api/finance/wallet/:userId', async (req, res) => { // [NEW] Get Balance
+  const balance = await financeManager.getBalance(req.params.userId);
+  const transactions = await financeManager.getTransactionsByUser(req.params.userId);
   res.json({ success: true, balance, transactions });
 });
 
-app.post('/api/finance/wallet/add', (req, res) => { // [NEW] Add Funds
+app.post('/api/finance/wallet/add', async (req, res) => { // [NEW] Add Funds
   const { userId, amount, description } = req.body;
-  const transaction = financeManager.createTransaction(userId, null, 'credit', amount, description || 'Added to wallet');
-  const newBalance = financeManager.getBalance(userId);
+  const transaction = await financeManager.createTransaction(userId, null, 'credit', amount, description || 'Added to wallet');
+  const newBalance = await financeManager.getBalance(userId);
   res.json({ success: true, transaction, newBalance });
 });
 
 // --- Membership Lifecycle Routes ---
-app.post('/api/membership/pay', (req, res) => {
+app.post('/api/membership/pay', async (req, res) => {
   try {
     const { userId, amount } = req.body;
 
     // 1. Process Payment in Finance
-    const paymentResult = financeManager.processMembershipPayment(userId, amount);
+    const paymentResult = await financeManager.processMembershipPayment(userId, amount);
 
     if (paymentResult.success) {
       // 2. Update User Membership
-      const user = userManager.setMembership(userId, paymentResult.tier, paymentResult.expiryDate);
+      const user = await userManager.setMembership(userId, paymentResult.tier, paymentResult.expiryDate);
 
       // 3. Notify & Emit
       io.to(`user_${userId}`).emit('membership_update', { user });
-      notificationManager.createNotification(userId, 'user', 'Membership Restored', `Your Premium membership has been activated until ${new Date(paymentResult.expiryDate).toLocaleDateString()}.`, 'membership_restored', userId);
+      await notificationManager.createNotification(userId, 'user', 'Membership Restored', `Your Premium membership has been activated until ${new Date(paymentResult.expiryDate).toLocaleDateString()}.`, 'membership_restored', userId);
 
       res.json({ success: true, user, transaction: paymentResult.transaction });
     } else {
@@ -1002,9 +1002,7 @@ app.put('/api/rides/:id/complete', async (req, res) => {
   else res.status(404).json({ success: false, error: 'Ride not found' });
 });
 
-// --- Broadcast Routes [NEW] ---
-const BroadcastManager = require('./managers/BroadcastManager');
-const broadcastManager = new BroadcastManager();
+// --- Broadcast Routes ---
 
 app.post('/api/broadcasts', async (req, res) => {
   try {
@@ -1028,15 +1026,20 @@ app.get('/api/broadcasts', async (req, res) => {
 
 // --- Admin Dashboard Routes ---
 app.post('/api/admin/login', async (req, res) => {
-  const { email, password, deviceId } = req.body;
-  const admin = await adminManager.login(email, password);
+  try {
+    const { email, password, deviceId } = req.body;
+    const admin = await adminManager.login(email, password);
 
-  if (admin) {
-    // Create Session
-    const session = await sessionManager.createSession(admin.id, 'admin', deviceId);
-    res.json({ success: true, admin, sessionToken: session.token });
-  } else {
-    res.status(401).json({ success: false, error: 'Invalid admin credentials' });
+    if (admin) {
+      // Create Session
+      const session = await sessionManager.createSession(admin.id, 'admin', deviceId);
+      res.json({ success: true, admin, sessionToken: session.token });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid admin credentials' });
+    }
+  } catch (err) {
+    console.error("[Server] Admin Login Error:", err);
+    res.status(500).json({ success: false, error: 'Internal server error during admin login' });
   }
 });
 
@@ -1089,21 +1092,21 @@ app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
   }
 });
 
-app.get('/api/admin/technicians', verifyAdmin, (req, res) => {
-  const technicians = technicianManager.getAllTechnicians();
+app.get('/api/admin/technicians', verifyAdmin, async (req, res) => {
+  const technicians = await technicianManager.getAllTechnicians();
   res.json({ success: true, technicians });
 });
 
-app.post('/api/admin/technicians/:id/verify', verifyAdmin, (req, res) => {
+app.post('/api/admin/technicians/:id/verify', verifyAdmin, async (req, res) => {
   const { status } = req.body; // 'approved', 'rejected', 'pending'
-  const tech = technicianManager.updateStatus(req.params.id, status);
+  const tech = await technicianManager.updateStatus(req.params.id, status);
   if (tech) res.json({ success: true, technician: tech });
   else res.status(404).json({ success: false, error: 'Technician not found' });
 });
 
-app.post('/api/admin/technicians/:id/membership', verifyAdmin, (req, res) => {
+app.post('/api/admin/technicians/:id/membership', verifyAdmin, async (req, res) => {
   const { membership } = req.body; // 'free', 'silver', 'gold', 'premium'
-  const tech = technicianManager.updateMembership(req.params.id, membership);
+  const tech = await technicianManager.updateMembership(req.params.id, membership);
   if (tech) {
     res.json({ success: true, technician: tech });
   } else {
@@ -1111,25 +1114,24 @@ app.post('/api/admin/technicians/:id/membership', verifyAdmin, (req, res) => {
   }
 });
 
-app.get('/api/admin/users', verifyAdmin, (req, res) => {
-  const users = userManager.getAllUsers();
+app.get('/api/admin/users', verifyAdmin, async (req, res) => {
+  const users = await userManager.getAllUsers();
   res.json({ success: true, users });
 });
 
-app.get('/api/admin/jobs', verifyAdmin, (req, res) => {
-  const jobs = jobManager.getAllJobs();
+app.get('/api/admin/jobs', verifyAdmin, async (req, res) => {
+  const jobs = await jobManager.getAllJobs();
   res.json({ success: true, jobs });
 });
 
-app.get('/api/admin/feedbacks', verifyAdmin, (req, res) => {
+app.get('/api/admin/feedbacks', verifyAdmin, async (req, res) => {
   // Collect all feedbacks from all technicians
-  // FeedbackManager structure might need 'getAllFeedback'
-  const allFeedback = feedbackManager.getAllFeedback ? feedbackManager.getAllFeedback() : [];
+  const allFeedback = await feedbackManager.getAllFeedback();
   res.json({ success: true, feedbacks: allFeedback });
 });
 
-app.get('/api/admin/transactions', verifyAdmin, (req, res) => {
-  const transactions = financeManager.getAllTransactions();
+app.get('/api/admin/transactions', verifyAdmin, async (req, res) => {
+  const transactions = await financeManager.getAllTransactions();
   res.json({ success: true, transactions });
 });
 
@@ -1149,7 +1151,7 @@ app.get('/api/admin/wallet/status', verifyAdmin, (req, res) => {
   res.json({ success: true, enabled: systemSettings.walletEnabled });
 });
 
-app.post('/api/admin/users/:id/membership', verifyAdmin, (req, res) => {
+app.post('/api/admin/users/:id/membership', verifyAdmin, async (req, res) => {
   const { membership } = req.body; // 'free', 'premium'
   // Assuming UserManager has an update method. If not, we might need to add one.
   // For now, let's try to update using a direct DB update or similar if exposed, 
@@ -1158,7 +1160,7 @@ app.post('/api/admin/users/:id/membership', verifyAdmin, (req, res) => {
 
   // Fallback: Read, Modify, Save (Not safe for concurrency but works for MVP)
   // Use the generic updateUser method to persist changes
-  const updatedUser = userManager.updateUser(req.params.id, { membership: req.body.membership });
+  const updatedUser = await userManager.updateUser(req.params.id, { membership: req.body.membership });
   if (updatedUser) {
     res.json({ success: true, user: updatedUser });
   } else {

@@ -101,7 +101,7 @@ const ChatInterface = ({ user }) => {
                 )}
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {messages.map((msg, index) => {
+                    {Array.isArray(messages) && messages.map((msg, index) => {
                         const isMe = msg.senderId === user.id;
                         return (
                             <Box key={index} sx={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>

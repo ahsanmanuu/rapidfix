@@ -3,30 +3,53 @@ const Database = require('./DatabaseLoader');
 class LocationManager {
     constructor() {
         this.db = new Database('locations');
+        this.io = null;
+    }
+
+    setSocketIO(io) {
+        this.io = io;
     }
 
     async addLocation(city, area, pincode) {
-        const existing = (await this.db.read()).find(l => l.pincode === pincode);
-        if (existing) {
-            throw new Error('Location already exists');
-        }
+        try {
+            const all = await this.db.read();
+            const existing = all.find(l => l.pincode === pincode);
+            if (existing) throw new Error('Location already exists');
 
-        const location = {
-            city,
-            area,
-            pincode,
-            active: true,
-            created_at: new Date().toISOString()
-        };
-        return await this.db.add(location);
+            const location = {
+                city,
+                area,
+                pincode,
+                active: true,
+                created_at: new Date().toISOString()
+            };
+            const result = await this.db.add(location);
+            if (this.io) {
+                this.io.emit('new_service_location_added', result);
+            }
+            return result;
+        } catch (err) {
+            console.error("[LocationManager] Error adding service location:", err);
+            throw err;
+        }
     }
 
     async getAllLocations() {
-        return await this.db.read();
+        try {
+            return await this.db.read();
+        } catch (err) {
+            console.error("[LocationManager] Error getting all locations:", err);
+            return [];
+        }
     }
 
     async removeLocation(id) {
-        return await this.db.delete('id', id);
+        try {
+            return await this.db.delete('id', id);
+        } catch (err) {
+            console.error(`[LocationManager] Error removing location ${id}:`, err);
+            return false;
+        }
     }
 
     async saveUserRealtimeLocation(userId, coords) {
@@ -37,10 +60,13 @@ class LocationManager {
                 latitude: coords.latitude,
                 longitude: coords.longitude
             };
-            return await this.db.add(locationEntry);
-        } catch (error) {
-            console.error('Error adding to locations:', error);
-            // Don't throw - this is not critical
+            const result = await this.db.add(locationEntry);
+            if (this.io) {
+                this.io.emit('user_location_update', { userId, location: coords });
+            }
+            return result;
+        } catch (err) {
+            console.error(`[LocationManager] Error saving user location for ${userId}:`, err);
             return null;
         }
     }

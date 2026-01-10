@@ -800,7 +800,7 @@ const TechnicianDashboard = () => {
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-100">
-                                {filteredJobs.map(job => renderJobItem(job))}
+                                {Array.isArray(filteredJobs) && filteredJobs.map(job => renderJobItem(job))}
                             </div>
                         )}
                         <div className="p-4 border-t border-gray-100 text-center">
@@ -817,7 +817,7 @@ const TechnicianDashboard = () => {
                     {offers.length > 0 && (
                         <Card title="Special Offers For You" headerColor="border-t-yellow-500">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {offers.map((offer, i) => (
+                                {(offers || []).map((offer, i) => (
                                     <div key={i} className="border border-yellow-100 bg-yellow-50 p-4 rounded-lg flex items-start gap-3">
                                         <Zap className="text-yellow-600 mt-1" size={20} />
                                         <div>
@@ -851,7 +851,7 @@ const TechnicianDashboard = () => {
                                 ];
 
                                 const data = metrics.map(m => {
-                                    if (feedbacks.length === 0) return { ...m, v: 0 };
+                                    if (!Array.isArray(feedbacks) || feedbacks.length === 0) return { ...m, v: 0, raw: "0.0" };
                                     const sum = feedbacks.reduce((acc, f) => {
                                         const val = f.ratings?.[m.key] || 0;
                                         return acc + Number(val);
@@ -876,7 +876,7 @@ const TechnicianDashboard = () => {
                             })()}
                             <h4 className="font-semibold text-gray-700 mt-6 mb-3 text-sm">Recent Reviews</h4>
                             <div className="space-y-3">
-                                {feedbacks.slice(0, 3).map((f, i) => (
+                                {(Array.isArray(feedbacks) ? feedbacks : []).slice(0, 3).map((f, i) => (
                                     <div key={i} className="bg-gray-50 p-3 rounded text-xs border border-gray-100">
                                         <div className="flex text-amber-400 mb-1">
                                             {[...Array(5)].map((_, i) => <Star key={i} size={8} fill="currentColor" />)}
@@ -926,7 +926,7 @@ const TechnicianDashboard = () => {
                                     <span className="w-2 h-2 bg-green-500 rounded-full" />
                                 </div>
                                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                    {chatMessages.map((msg, i) => (
+                                    {(Array.isArray(chatMessages) ? chatMessages : []).map((msg, i) => (
                                         <div key={i} className={`flex ${msg.senderId === user.id ? 'justify-end' : 'justify-start'}`}>
                                             <div className={`max-w-[70%] p-3 rounded-lg text-sm ${msg.senderId === user.id ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
                                                 {msg.message}

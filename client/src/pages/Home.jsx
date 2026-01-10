@@ -169,7 +169,8 @@ const Home = () => {
                 const res = await getTopRatedTechnicians();
                 if (res.data.success) {
                     const serverUrl = 'http://localhost:3000';
-                    const profiles = res.data.technicians.map(t => ({
+                    const technicians = Array.isArray(res.data.technicians) ? res.data.technicians : [];
+                    const profiles = technicians.map(t => ({
                         id: t._id,
                         name: t.name,
                         role: t.expertise || t.serviceType || 'Master Technician',
@@ -198,9 +199,9 @@ const Home = () => {
     useEffect(() => {
         if (socket) {
             const handleStatusUpdate = ({ technicianId, status }) => {
-                setTechnicianProfiles(prev => prev.map(t =>
+                setTechnicianProfiles(prev => Array.isArray(prev) ? prev.map(t =>
                     t.id === technicianId ? { ...t, status: status } : t
-                ));
+                ) : []);
             };
             socket.on('technician_status_update', handleStatusUpdate);
             return () => socket.off('technician_status_update', handleStatusUpdate);
@@ -227,12 +228,12 @@ const Home = () => {
 
     // Auto-advance Technician Profile (Fixed with dependency and bound check)
     useEffect(() => {
-        if (technicianProfiles.length === 0) return;
+        if (!Array.isArray(technicianProfiles) || technicianProfiles.length === 0) return;
         const timer = setInterval(() => {
             setCurrentTechIndex((prev) => (prev + 1) % technicianProfiles.length);
         }, 6000);
         return () => clearInterval(timer);
-    }, [technicianProfiles.length]);
+    }, [Array.isArray(technicianProfiles) ? technicianProfiles.length : 0]);
 
     // Auto-Sync Location for Logged-In Users
     useEffect(() => {
@@ -706,7 +707,7 @@ const Home = () => {
                                             : `Book ${(technicianProfiles[currentTechIndex]?.name || '').split(' ')[0]} Now`}
                                     </Button>
                                     <div className="flex gap-2 items-center justify-center sm:justify-start pt-2 sm:pt-0">
-                                        {technicianProfiles.map((_, idx) => (
+                                        {(Array.isArray(technicianProfiles) ? technicianProfiles : []).map((_, idx) => (
                                             <button
                                                 key={idx}
                                                 onClick={() => setCurrentTechIndex(idx)}

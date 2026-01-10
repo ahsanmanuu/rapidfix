@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 const Wallet = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const [finance, setFinance] = useState({ balance: 0, transactions: [] });
 
     useEffect(() => {
         if (!user) {
@@ -39,14 +40,14 @@ const Wallet = () => {
                 <div className="mt-6">
                     <div className="text-sm text-gray-400">Current Balance</div>
                     <div className={`text-4xl font-bold ${finance.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        ${finance.balance.toFixed(2)}
+                        ${(finance.balance || 0).toFixed(2)}
                     </div>
                 </div>
             </div>
 
             <h2 className="text-2xl font-bold mb-6">Transaction History</h2>
             <div className="space-y-4">
-                {finance.transactions.length === 0 ? (
+                {!Array.isArray(finance.transactions) || finance.transactions.length === 0 ? (
                     <p className="text-gray-400">No transactions found.</p>
                 ) : (
                     finance.transactions.map(tx => (

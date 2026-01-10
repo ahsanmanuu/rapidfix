@@ -39,9 +39,9 @@ const DashboardJobs = ({ user }) => {
     useEffect(() => {
         if (socket) {
             socket.on('job_status_updated', (updatedJob) => {
-                setJobs(prevJobs => prevJobs.map(job =>
+                setJobs(prevJobs => Array.isArray(prevJobs) ? prevJobs.map(job =>
                     job.id === updatedJob.id ? updatedJob : job
-                ));
+                ) : []);
             });
             return () => {
                 socket.off('job_status_updated');
@@ -53,7 +53,8 @@ const DashboardJobs = ({ user }) => {
         try {
             const res = await getMyJobs(userId);
             if (res.data.success) {
-                const sorted = res.data.jobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                const jobsData = Array.isArray(res.data.jobs) ? res.data.jobs : [];
+                const sorted = jobsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 setJobs(sorted);
             }
         } catch (err) {
@@ -205,7 +206,7 @@ const DashboardJobs = ({ user }) => {
 
             <Grid item xs={12}>
                 <Grid container spacing={2}>
-                    {(jobs || []).map(job => (
+                    {Array.isArray(jobs) && jobs.map(job => (
                         <Grid item xs={12} key={job.id}>
                             <Card sx={{ borderRadius: '16px', '&:hover': { boxShadow: theme.shadows[4] } }}>
                                 <CardContent>

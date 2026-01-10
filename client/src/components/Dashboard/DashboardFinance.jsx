@@ -33,7 +33,7 @@ const DashboardFinance = ({ user }) => {
         try {
             const res = await api.get(`/finance/user/${user.id}`);
             if (res.data.success) {
-                setBills(res.data.bills);
+                setBills(Array.isArray(res.data.bills) ? res.data.bills : []);
             }
         } catch (error) {
             console.error("Failed to fetch bills", error);
@@ -167,7 +167,7 @@ const DashboardFinance = ({ user }) => {
                                     <CardContent>
                                         <Typography variant="body2" sx={{ opacity: 0.7 }}>Total Spent</Typography>
                                         <Typography variant="h2" sx={{ color: '#fff', mt: 1 }}>
-                                            ₹{bills.reduce((acc, curr) => acc + curr.amount, 0).toFixed(2)}
+                                            ₹{(Array.isArray(bills) ? bills : []).reduce((acc, curr) => acc + (curr.amount || 0), 0).toFixed(2)}
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -177,7 +177,7 @@ const DashboardFinance = ({ user }) => {
                                     <CardContent>
                                         <Typography variant="body2" sx={{ opacity: 0.7 }}>Total Invoices</Typography>
                                         <Typography variant="h2" sx={{ color: '#fff', mt: 1 }}>
-                                            {bills.length}
+                                            {Array.isArray(bills) ? bills.length : 0}
                                         </Typography>
                                     </CardContent>
                                 </Card>
@@ -201,7 +201,7 @@ const DashboardFinance = ({ user }) => {
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {bills.map((bill) => (
+                                            {Array.isArray(bills) && bills.map((bill) => (
                                                 <TableRow key={bill.id} hover>
                                                     <TableCell>{new Date(bill.createdAt).toLocaleDateString()}</TableCell>
                                                     <TableCell>{bill.description}</TableCell>

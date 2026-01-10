@@ -18,60 +18,90 @@ class Database {
         }
     }
 
-    read() {
+    async read() {
         try {
-            const data = fs.readFileSync(this.filepath, 'utf8');
+            if (!fs.existsSync(this.filepath)) {
+                await fs.promises.writeFile(this.filepath, JSON.stringify([], null, 2));
+                return [];
+            }
+            const data = await fs.promises.readFile(this.filepath, 'utf8');
             return JSON.parse(data);
         } catch (error) {
-            console.error(`Error reading database ${this.filename}:`, error);
+            console.error(`[Database:${this.filename}] Read Error:`, error);
             return [];
         }
     }
 
-    write(data) {
+    async write(data) {
         try {
-            fs.writeFileSync(this.filepath, JSON.stringify(data, null, 2));
+            await fs.promises.writeFile(this.filepath, JSON.stringify(data, null, 2));
             return true;
         } catch (error) {
-            console.error(`Error writing database ${this.filename}:`, error);
+            console.error(`[Database:${this.filename}] Write Error:`, error);
             return false;
         }
     }
 
-    add(item) {
-        const data = this.read();
-        data.push(item);
-        this.write(data);
-        return item;
-    }
-
-    update(idField, idValue, updateData) {
-        const data = this.read();
-        const index = data.findIndex(item => item[idField] == idValue);
-        if (index !== -1) {
-            data[index] = { ...data[index], ...updateData };
-            this.write(data);
-            return data[index];
+    async add(item) {
+        try {
+            const data = await this.read();
+            data.push(item);
+            await this.write(data);
+            return item;
+        } catch (err) {
+            console.error(`[Database:${this.filename}] Add Error:`, err);
+            throw err;
         }
-        return null;
     }
 
-    delete(idField, idValue) {
-        const data = this.read();
-        const filtered = data.filter(item => item[idField] != idValue);
-        this.write(filtered);
-        return filtered.length !== data.length;
+    async update(idField, idValue, updateData) {
+        try {
+            const data = await this.read();
+            const index = data.findIndex(item => item[idField] == idValue);
+            if (index !== -1) {
+                data[index] = { ...data[index], ...updateData };
+                await this.write(data);
+                return data[index];
+            }
+            return null;
+        } catch (err) {
+            console.error(`[Database:${this.filename}] Update Error:`, err);
+            return null;
+        }
     }
 
-    find(field, value) {
-        const data = this.read();
-        return data.find(item => item[field] == value);
+    async delete(idField, idValue) {
+        try {
+            const data = await this.read();
+            const filtered = data.filter(item => item[idField] != idValue);
+            if (filtered.length === data.length) return false;
+            await this.write(filtered);
+            return true;
+        } catch (err) {
+            console.error(`[Database:${this.filename}] Delete Error:`, err);
+            return false;
+        }
     }
 
-    findAll(field, value) {
-        const data = this.read();
-        if (!field) return data;
-        return data.filter(item => item[field] == value);
+    async find(field, value) {
+        try {
+            const data = await this.read();
+            return data.find(item => item[field] == value) || null;
+        } catch (err) {
+            console.error(`[Database:${this.filename}] Find Error:`, err);
+            return null;
+        }
+    }
+
+    async findAll(field, value) {
+        try {
+            const data = await this.read();
+            if (!field) return data;
+            return data.filter(item => item[field] == value);
+        } catch (err) {
+            console.error(`[Database:${this.filename}] FindAll Error:`, err);
+            return [];
+        }
     }
 }
 
