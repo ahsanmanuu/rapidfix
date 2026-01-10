@@ -433,7 +433,7 @@ const AdminDashboard = () => {
                                     <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6">User Registration Trends</h3>
                                     <div className="flex-1 min-h-0">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <AreaChart data={stats.registrationTrends}>
+                                            <AreaChart data={stats.registrationTrends || []}>
                                                 <defs>
                                                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
                                                         <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
@@ -457,7 +457,7 @@ const AdminDashboard = () => {
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
                                                 <Pie
-                                                    data={stats.jobDistribution}
+                                                    data={stats.jobDistribution || []}
                                                     cx="50%"
                                                     cy="50%"
                                                     innerRadius={60}

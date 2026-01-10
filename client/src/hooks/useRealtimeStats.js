@@ -11,6 +11,7 @@ export const useRealtimeStats = () => {
         trends: { users: 0, jobs: 0, revenue: 0 },
         jobDistribution: [],
         registrationTrends: [],
+        technicianTrends: [], // Fix: Initialize to empty array
         activityLog: [],
         detailed: null // Start as null to indicate loading state
     });
