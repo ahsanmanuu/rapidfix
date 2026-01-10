@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Root for Fixofy Monorepo",
     "scripts": {
-        "start": "node server/index.js",
+        "start": "cd server && node index.js",
         "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client"
     },
     "engines": {
