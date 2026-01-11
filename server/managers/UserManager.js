@@ -1,5 +1,7 @@
 const Database = require('./DatabaseLoader');
 
+const { geocodeAddress } = require('../utils/geocoder');
+
 class UserManager {
     constructor() {
         this.db = new Database('users');
@@ -14,12 +16,13 @@ class UserManager {
     _mapFromDb(user) {
         if (!user) return null;
         try {
-            const { membership_expiry, created_at, updated_at, ...rest } = user;
+            const { membership_expiry, created_at, updated_at, fixed_address, ...rest } = user;
             return {
                 ...rest,
                 membershipExpiry: membership_expiry || user.membershipExpiry,
                 createdAt: created_at || user.createdAt,
-                updatedAt: updated_at || user.updatedAt
+                updatedAt: updated_at || user.updatedAt,
+                fixedAddress: fixed_address || user.fixedAddress,
             };
         } catch (err) {
             console.error("[UserManager] Error mapping from DB:", err);
@@ -31,11 +34,12 @@ class UserManager {
     _mapToDb(user) {
         if (!user) return null;
         try {
-            const { membershipExpiry, createdAt, updatedAt, id, ...rest } = user;
+            const { membershipExpiry, createdAt, updatedAt, fixedAddress, id, ...rest } = user;
             const mapped = { ...rest };
             if (membershipExpiry !== undefined) mapped.membership_expiry = membershipExpiry;
             if (createdAt !== undefined) mapped.created_at = createdAt;
             if (updatedAt !== undefined) mapped.updated_at = updatedAt;
+            if (fixedAddress !== undefined) mapped.fixed_address = fixedAddress;
             if (id !== undefined) mapped.id = id;
             return mapped;
         } catch (err) {
@@ -44,11 +48,36 @@ class UserManager {
         }
     }
 
-    async createUser(name, email, phone, password, location, photoUrl = null) {
+    async createUser(name, email, phone, password, locationInput, photoUrl = null) {
         try {
             const existing = await this.db.find('email', email);
             if (existing) {
                 throw new Error('User already exists');
+            }
+
+            let lat = null;
+            let lng = null;
+            let city = null;
+            let fixedAddress = null;
+
+            // Handle Location Input (String or Object)
+            if (locationInput) {
+                if (typeof locationInput === 'string') {
+                    // It's a city/address string
+                    city = locationInput;
+                    const coords = await geocodeAddress(locationInput);
+                    if (coords) {
+                        lat = coords.lat;
+                        lng = coords.lng;
+                        fixedAddress = coords.displayName;
+                    }
+                } else if (typeof locationInput === 'object') {
+                    // It's { latitude, longitude, address }
+                    lat = locationInput.latitude;
+                    lng = locationInput.longitude;
+                    fixedAddress = locationInput.address;
+                    // Try to infer city if not provided? For now keep simple
+                }
             }
 
             const newUser = {
@@ -56,12 +85,16 @@ class UserManager {
                 email,
                 phone,
                 password,
-                location,
                 role: 'user',
                 photo: photoUrl,
                 status: 'Active',
                 membership: 'Free',
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                // Location Fields
+                latitude: lat,
+                longitude: lng,
+                city: city,
+                fixed_address: fixedAddress
             };
 
             const created = await this.db.add(newUser);
@@ -140,6 +173,27 @@ class UserManager {
 
     async updateUser(id, data) {
         try {
+            // Handle Location Input in Update (copying logic from createUser)
+            if (data.location) {
+                if (typeof data.location === 'string') {
+                    // Geocode city/address
+                    const coords = await geocodeAddress(data.location);
+                    if (coords) {
+                        data.latitude = coords.lat;
+                        data.longitude = coords.lng;
+                        data.city = data.location;
+                        data.fixed_address = coords.displayName;
+                    }
+                } else if (typeof data.location === 'object') {
+                    data.latitude = data.location.latitude;
+                    data.longitude = data.location.longitude;
+                    data.city = data.location.city;
+                    data.fixed_address = data.location.fixedAddress || data.location.address;
+                }
+                // Cleanup custom field before mapping to DB
+                delete data.location;
+            }
+
             const updates = {
                 ...this._mapToDb(data),
                 updated_at: new Date().toISOString()

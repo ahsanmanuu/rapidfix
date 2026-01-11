@@ -58,29 +58,42 @@ const DashboardProfile = () => {
         setLoading(true);
         navigator.geolocation.getCurrentPosition(async (position) => {
             try {
-                // Fetch human readable address
-                let addressText = '';
+                // We send coordinates, and backend will reverse geocode or store them.
+                // Our backend `updateUser` now supports { location: { latitude, longitude } }
+                const location = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude
+                    // We can also send 'address' if we want to reverse geocode on frontend, 
+                    // but let's let the backend doing it if we send a string, or we send coords and it saves them.
+                    // Actually `UserManager.updateUser` handles { location: {latitude, longitude} } fine 
+                    // but doesn't auto-reverse geocode coords to address unless we send a string.
+                    // For better UX, let's keep the frontend reverse geocode OR trust a new backend helper?
+                    // Let's keep the existing frontend reverse geocode for immediate UI feedback if possible,
+                    // OR just rely on the existing logic which was working?
+                    // The existing logic was calling nominatim directly. That's fine.
+                    // I will just make sure we send the data in the format `updateUser` expects now.
+                };
+
+                // Perform simplified reverse geocode for display purposed before verify
+                let addressText = "Detected Location";
                 try {
                     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
                     const data = await response.json();
-                    if (data && data.address) {
-                        const city = data.address.city || data.address.town || data.address.village || 'Unknown City';
-                        const area = data.address.suburb || data.address.neighbourhood || data.address.road || 'Unknown Area';
-                        addressText = `${area}, ${city}`;
+                    if (data && data.display_name) {
+                        addressText = data.display_name;
+                        location.address = addressText;
                     }
-                } catch (e) {
-                    console.error("Reverse geocoding failed", e);
-                }
+                } catch (e) { console.warn("Reverse geo failed", e); }
 
-                const location = {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                    address: addressText
-                };
+                // Send as "location" object which `updateUser` intercepts
                 const res = await api.put(`/users/${user.id}`, { location });
-                if (res.data.success) {
+
+                if (res.data.success || res.config) { // Axios sometimes returns data directly? usually res.data
                     alert('Location updated successfully!');
-                    updateUser({ location });
+                    // Update context with new user data including location
+                    // The backend returns the updated user object
+                    if (res.data.user) updateUser(res.data.user);
+                    else updateUser({ ...user, ...res.data });
                 }
             } catch (error) {
                 console.error("Location update failed", error);

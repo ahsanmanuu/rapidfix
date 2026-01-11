@@ -1,4 +1,5 @@
 import ErrorBoundary from './components/ErrorBoundary';
+import LocationPromptModal from './components/LocationPromptModal';
 import { useState } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Home from './pages/Home';
@@ -30,6 +31,7 @@ function App() {
       <SocketProvider user={user}>
         <ErrorBoundary>
           <div className="min-h-screen">
+            <LocationPromptModal />
             {!isDashboard && <Navbar />}
             <Routes>
               <Route path="/" element={<Home />} />

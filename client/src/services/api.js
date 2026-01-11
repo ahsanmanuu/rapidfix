@@ -44,6 +44,7 @@ api.interceptors.response.use(
 
 export const getAvailableJobs = (serviceType) => api.get(`/jobs/available?serviceType=${serviceType}`);
 export const getUserProfile = (userId) => api.get(`/users/${userId}`);
+export const updateMyProfile = (userId, data) => api.put(`/users/${userId}`, data); // General user update
 export const getMyJobs = (userId) => api.get(`/jobs/user/${userId}`);
 export const getJobsByTechnician = (techId) => api.get(`/jobs/technician/${techId}`);
 export const createJob = (data) => api.post('/jobs', data);

@@ -1,5 +1,7 @@
 const Database = require('./DatabaseLoader');
 
+const { geocodeAddress } = require('../utils/geocoder');
+
 class TechnicianManager {
     constructor() {
         this.db = new Database('technicians');
@@ -14,7 +16,7 @@ class TechnicianManager {
     _mapFromDb(tech) {
         if (!tech) return null;
         try {
-            const { service_type, address_details, review_count, membership_since, joined_at, updated_at, documents, ...rest } = tech;
+            const { service_type, address_details, review_count, membership_since, joined_at, updated_at, documents, base_address, service_radius, ...rest } = tech;
             return {
                 ...rest,
                 serviceType: service_type,
@@ -23,7 +25,9 @@ class TechnicianManager {
                 membershipSince: membership_since,
                 joinedAt: joined_at,
                 updatedAt: updated_at,
-                documents: documents || {}
+                documents: documents || {},
+                baseAddress: base_address,
+                serviceRadius: service_radius || 10
             };
         } catch (err) {
             console.error("[TechnicianManager] Error mapping from DB:", err);
@@ -35,7 +39,7 @@ class TechnicianManager {
     _mapToDb(tech) {
         if (!tech) return null;
         try {
-            const { serviceType, addressDetails, reviewCount, membershipSince, joinedAt, updatedAt, documents, id, ...rest } = tech;
+            const { serviceType, addressDetails, reviewCount, membershipSince, joinedAt, updatedAt, documents, baseAddress, serviceRadius, id, ...rest } = tech;
             const mapped = { ...rest };
             if (serviceType !== undefined) mapped.service_type = serviceType;
             if (addressDetails !== undefined) mapped.address_details = addressDetails;
@@ -44,6 +48,8 @@ class TechnicianManager {
             if (joinedAt !== undefined) mapped.joined_at = joinedAt;
             if (updatedAt !== undefined) mapped.updated_at = updatedAt;
             if (documents !== undefined) mapped.documents = documents;
+            if (baseAddress !== undefined) mapped.base_address = baseAddress;
+            if (serviceRadius !== undefined) mapped.service_radius = serviceRadius;
             if (id !== undefined) mapped.id = id;
             return mapped;
         } catch (err) {
@@ -52,7 +58,7 @@ class TechnicianManager {
         }
     }
 
-    async createTechnician(name, email, phone, serviceType, location, password, experience, addressDetails) {
+    async createTechnician(name, email, phone, serviceType, locationInput, password, experience, addressDetails) {
         try {
             if (!name || !email || !password) {
                 throw new Error("Missing required fields: name, email, or password");
@@ -63,19 +69,43 @@ class TechnicianManager {
                 throw new Error('Technician already exists with this email');
             }
 
+            let lat = null;
+            let lng = null;
+            let baseAddress = null;
+
+            // Handle Location Input
+            if (locationInput) {
+                if (typeof locationInput === 'string') {
+                    baseAddress = locationInput;
+                    const coords = await geocodeAddress(locationInput);
+                    if (coords) {
+                        lat = coords.lat;
+                        lng = coords.lng;
+                    }
+                } else if (typeof locationInput === 'object') {
+                    lat = locationInput.latitude;
+                    lng = locationInput.longitude;
+                    baseAddress = locationInput.address || addressDetails;
+                }
+            }
+
             const newTechnician = {
                 name,
                 email,
                 phone,
-                location,
-                password,
+                password, // Stored as plain text per previous code pattern (should be hashed in production!)
                 experience,
                 rating: 0,
                 status: 'available',
                 service_type: serviceType,
                 address_details: addressDetails,
                 documents: {},
-                joined_at: new Date().toISOString()
+                joined_at: new Date().toISOString(),
+                // Location Fields
+                latitude: lat,
+                longitude: lng,
+                base_address: baseAddress,
+                service_radius: 10 // Default 10km radius
             };
 
             const created = await this.db.add(newTechnician);
@@ -138,7 +168,7 @@ class TechnicianManager {
         }
     }
 
-    async searchTechnicians(userLat, userLon, serviceType, radius = 2.0) {
+    async searchTechnicians(userLat, userLon, serviceType, radius = 10.0) {
         try {
             const lat = parseFloat(userLat);
             const lon = parseFloat(userLon);
@@ -150,9 +180,15 @@ class TechnicianManager {
                 .filter(t => t.serviceType && t.serviceType.toLowerCase().trim() === type);
 
             const nearbyTechs = techs.map(tech => {
-                if (!tech.location) return null;
-                let tLat = tech.location.latitude ?? tech.location.lat;
-                let tLon = tech.location.longitude ?? tech.location.lng;
+                // Check if we have valid coordinates
+                let tLat = tech.latitude;
+                let tLon = tech.longitude;
+
+                // Fallback to legacy location object if exists
+                if ((tLat === undefined || tLon === undefined) && tech.location && typeof tech.location === 'object') {
+                    tLat = tech.location.latitude ?? tech.location.lat;
+                    tLon = tech.location.longitude ?? tech.location.lng;
+                }
 
                 if (typeof tLat === 'string') tLat = parseFloat(tLat);
                 if (typeof tLon === 'string') tLon = parseFloat(tLon);
@@ -164,7 +200,7 @@ class TechnicianManager {
 
                 return {
                     ...rest,
-                    location: { latitude: tLat, longitude: tLon, address: tech.location.address || '' },
+                    location: { latitude: tLat, longitude: tLon, address: tech.baseAddress || '' },
                     distance: parseFloat(dist.toFixed(1))
                 };
             }).filter(item => item !== null && item.distance <= radius);
@@ -253,6 +289,23 @@ class TechnicianManager {
         try {
             const techRaw = await this.db.find('id', id);
             if (!techRaw) return null;
+
+            // Handle Location Input
+            if (updates.location) {
+                if (typeof updates.location === 'string') {
+                    updates.baseAddress = updates.location;
+                    const coords = await geocodeAddress(updates.location);
+                    if (coords) {
+                        updates.latitude = coords.lat;
+                        updates.longitude = coords.lng;
+                    }
+                } else if (typeof updates.location === 'object') {
+                    updates.latitude = updates.location.latitude;
+                    updates.longitude = updates.location.longitude;
+                    updates.baseAddress = updates.location.address || updates.location.baseAddress;
+                }
+                delete updates.location;
+            }
 
             const dbUpdates = this._mapToDb(updates);
             const currentDocs = techRaw.documents || {};

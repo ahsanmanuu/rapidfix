@@ -413,16 +413,9 @@ const TechnicianDashboard = () => {
         e.preventDefault();
         setProfileLoading(true);
         try {
-            // Mock Upload if real upload not ready entirely on frontend side
-            // We need to use FormData for files if backend supports it OR just send JSON if only updating password
-            // For now, let's assume JSON for password, and specific flow for file
-            // But our endpoint expects JSON for password. photo upload needs mulitpart/form-data.
-            // Simplified:
             const changes = {};
             if (profileForm.password) changes.password = profileForm.password;
 
-            // Note: File upload logic requires valid file handling (FileReader or pure FormData)
-            // Simulating update for now
             const res = await api.put(`/technicians/${user.id}/profile`, changes);
             if (res.data.success) {
                 alert("Profile Updated Successfully!");
@@ -434,6 +427,40 @@ const TechnicianDashboard = () => {
         } finally {
             setProfileLoading(false);
         }
+    };
+
+    const handleLocationUpdate = () => {
+        if (!navigator.geolocation) return;
+        setProfileLoading(true);
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            try {
+                let addressText = "Detected Location";
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+                    const data = await response.json();
+                    if (data?.display_name) addressText = data.display_name;
+                } catch (e) { }
+
+                const updateData = {
+                    location: {
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude,
+                        address: addressText
+                    }
+                };
+
+                const res = await api.put(`/technicians/${user.id}/profile`, updateData);
+                if (res.data.success) {
+                    alert("Base Location Updated Successfully!");
+                    updateUser(res.data.technician);
+                }
+            } catch (e) {
+                console.error("Loc update failed", e);
+                alert("Failed to update location");
+            } finally {
+                setProfileLoading(false);
+            }
+        });
     };
 
     const renderJobItem = (job) => (
