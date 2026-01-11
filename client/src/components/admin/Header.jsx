@@ -11,7 +11,7 @@ const THEME_COLORS = [
 
 import { useTheme } from '../../context/ThemeContext';
 
-export const Header = ({ sidebarOpen, setSidebarOpen, activeTab, onLogout, searchQuery, setSearchQuery }) => {
+export const Header = ({ sidebarOpen, toggleSidebar, activeTab, onLogout, searchQuery, setSearchQuery }) => {
     const { isDarkMode, currentColor, toggleTheme, setThemeColor } = useTheme();
     const [showThemePopup, setShowThemePopup] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -116,7 +116,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen, activeTab, onLogout, searc
             <div className="flex items-center gap-4 lg:hidden">
                 <button
                     className="p-2 -ml-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    onClick={toggleSidebar}
                 >
                     <span className="material-symbols-outlined">menu</span>
                 </button>
