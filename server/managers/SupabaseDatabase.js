@@ -20,21 +20,41 @@ class SupabaseDatabase {
     }
 
     /**
+     * Helper to execute operations with retry logic
+     * @param {Function} operation - Async function to execute
+     * @param {number} maxRetries - Maximum number of retries
+     * @param {number} delay - Delay between retries in ms
+     */
+    async _executeWithRetry(operation, maxRetries = 3, delay = 500) {
+        let lastError;
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                return await operation();
+            } catch (error) {
+                lastError = error;
+                console.warn(`[Supabase] Operation failed (attempt ${i + 1}/${maxRetries}):`, error.message);
+                // Don't retry if it's a known non-transient error (like 409 Conflict or 400 Bad Request)
+                // But for now, we'll confirm retry on connection issues. 
+                // Postgres errors often don't have standard HTTP codes here.
+                if (i < maxRetries - 1) await new Promise(res => setTimeout(res, delay));
+            }
+        }
+        throw lastError;
+    }
+
+    /**
      * Read all records from the table
      * @returns {Promise<Array>} Array of records
      */
     async read() {
-        try {
+        return this._executeWithRetry(async () => {
             const { data, error } = await this.client
                 .from(this.table)
                 .select('*');
 
             if (error) throw error;
             return data || [];
-        } catch (error) {
-            console.error(`Error reading from ${this.table}:`, error);
-            return [];
-        }
+        });
     }
 
     /**
@@ -55,7 +75,7 @@ class SupabaseDatabase {
      * @returns {Promise<Object>} Created record with UUID
      */
     async add(item) {
-        try {
+        return this._executeWithRetry(async () => {
             // Store original ID as legacy_id for migration tracking
             if (item.id) {
                 item.legacy_id = item.id;
@@ -70,10 +90,7 @@ class SupabaseDatabase {
 
             if (error) throw error;
             return data;
-        } catch (error) {
-            console.error(`Error adding to ${this.table}:`, error);
-            throw error;
-        }
+        });
     }
 
     /**
@@ -84,7 +101,7 @@ class SupabaseDatabase {
      * @returns {Promise<Object|null>} Updated record or null
      */
     async update(idField, idValue, updateData) {
-        try {
+        return this._executeWithRetry(async () => {
             // Remove id from updateData to prevent conflicts
             const { id, ...cleanUpdate } = updateData;
 
@@ -104,10 +121,7 @@ class SupabaseDatabase {
             }
 
             return data;
-        } catch (error) {
-            console.error(`Error updating ${this.table}:`, error);
-            return null;
-        }
+        });
     }
 
     /**
@@ -118,12 +132,15 @@ class SupabaseDatabase {
      */
     async delete(idField, idValue) {
         try {
-            const { error } = await this.client
-                .from(this.table)
-                .delete()
-                .eq(idField, idValue);
+            return await this._executeWithRetry(async () => {
+                const { error } = await this.client
+                    .from(this.table)
+                    .delete()
+                    .eq(idField, idValue);
 
-            return !error;
+                if (error) throw error;
+                return true;
+            });
         } catch (error) {
             console.error(`Error deleting from ${this.table}:`, error);
             return false;
@@ -137,15 +154,18 @@ class SupabaseDatabase {
      * @returns {Promise<Object|null>} Found record or null
      */
     async find(field, value) {
+        // find doesn't throw usually, but let's wrap logic to catch connection errors
         try {
-            const { data, error } = await this.client
-                .from(this.table)
-                .select('*')
-                .eq(field, value)
-                .maybeSingle(); // Returns null if not found, doesn't throw
+            return await this._executeWithRetry(async () => {
+                const { data, error } = await this.client
+                    .from(this.table)
+                    .select('*')
+                    .eq(field, value)
+                    .maybeSingle();
 
-            if (error) throw error;
-            return data;
+                if (error) throw error;
+                return data;
+            });
         } catch (error) {
             console.error(`Error finding in ${this.table}:`, error);
             return null;
@@ -160,16 +180,18 @@ class SupabaseDatabase {
      */
     async findAll(field, value) {
         try {
-            let query = this.client.from(this.table).select('*');
+            return await this._executeWithRetry(async () => {
+                let query = this.client.from(this.table).select('*');
 
-            if (field && value !== undefined) {
-                query = query.eq(field, value);
-            }
+                if (field && value !== undefined) {
+                    query = query.eq(field, value);
+                }
 
-            const { data, error } = await query;
+                const { data, error } = await query;
 
-            if (error) throw error;
-            return data || [];
+                if (error) throw error;
+                return data || [];
+            });
         } catch (error) {
             console.error(`Error finding all in ${this.table}:`, error);
             return [];
@@ -183,34 +205,33 @@ class SupabaseDatabase {
      */
     async query(options = {}) {
         try {
-            let query = this.client.from(this.table).select('*');
+            return await this._executeWithRetry(async () => {
+                let query = this.client.from(this.table).select('*');
 
-            // Filters: { field: value, field2: value2 }
-            if (options.filters) {
-                Object.entries(options.filters).forEach(([key, val]) => {
-                    query = query.eq(key, val);
-                });
-            }
+                if (options.filters) {
+                    Object.entries(options.filters).forEach(([key, val]) => {
+                        query = query.eq(key, val);
+                    });
+                }
 
-            // Sorting: { field: 'name', order: 'asc' }
-            if (options.sort) {
-                query = query.order(options.sort.field, {
-                    ascending: options.sort.order !== 'desc'
-                });
-            }
+                if (options.sort) {
+                    query = query.order(options.sort.field, {
+                        ascending: options.sort.order !== 'desc'
+                    });
+                }
 
-            // Pagination: { limit: 10, offset: 0 }
-            if (options.limit) {
-                query = query.limit(options.limit);
-            }
-            if (options.offset) {
-                query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
-            }
+                if (options.limit) {
+                    query = query.limit(options.limit);
+                }
+                if (options.offset) {
+                    query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
+                }
 
-            const { data, error } = await query;
+                const { data, error } = await query;
 
-            if (error) throw error;
-            return data || [];
+                if (error) throw error;
+                return data || [];
+            });
         } catch (error) {
             console.error(`Error querying ${this.table}:`, error);
             return [];
@@ -234,21 +255,23 @@ class SupabaseDatabase {
      */
     async uploadFile(bucket, path, file) {
         try {
-            const { data, error } = await this.client.storage
-                .from(bucket)
-                .upload(path, file, {
-                    cacheControl: '3600',
-                    upsert: true
-                });
+            // Retry uploads too, as they are network heavy
+            return await this._executeWithRetry(async () => {
+                const { data, error } = await this.client.storage
+                    .from(bucket)
+                    .upload(path, file, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
 
-            if (error) throw error;
+                if (error) throw error;
 
-            // Get public URL
-            const { data: urlData } = this.client.storage
-                .from(bucket)
-                .getPublicUrl(path);
+                const { data: urlData } = this.client.storage
+                    .from(bucket)
+                    .getPublicUrl(path);
 
-            return urlData.publicUrl;
+                return urlData.publicUrl;
+            });
         } catch (error) {
             console.error(`Error uploading file to ${bucket}:`, error);
             throw error;
@@ -263,11 +286,14 @@ class SupabaseDatabase {
      */
     async deleteFile(bucket, path) {
         try {
-            const { error } = await this.client.storage
-                .from(bucket)
-                .remove([path]);
+            return await this._executeWithRetry(async () => {
+                const { error } = await this.client.storage
+                    .from(bucket)
+                    .remove([path]);
 
-            return !error;
+                if (error) throw error;
+                return true;
+            });
         } catch (error) {
             console.error(`Error deleting file from ${bucket}:`, error);
             return false;
