@@ -5,7 +5,11 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn("⚠️ Supabase URL or Anon Key is missing! Realtime features may not work.");
+    console.error("⚠️ Supabase URL or Anon Key is missing! The app will not function correctly.");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Export null if keys are missing to prevent crash at module load time.
+// Consumers (like AuthContext) will crash when trying to use it, but ErrorBoundary will catch that.
+export const supabase = (supabaseUrl && supabaseAnonKey)
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : null;

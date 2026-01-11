@@ -11,9 +11,24 @@ Update your Render deployment to use Supabase instead of JSON files.
    - https://dashboard.render.com
    - Select your Fixofy service
 
-2. **Click "Environment" tab (left sidebar)**
+3. **Go to "Settings" tab (left sidebar)**
+4. **Scroll down to "Build & Deploy"**
+5. **Verify these EXACT settings:**
 
-3. **Add these 3 variables:**
+   - **Root Directory:** `.` (Keep it empty! Do NOT set to `server`)
+     > ⚠️ **CRITICAL:** If this is set to `server`, the frontend will NOT build, causing a blank page. The build command needs to run from the root to build both.
+
+   - **Build Command:** `npm run build`
+     > (This runs: `npm install --prefix server && npm install --prefix client && npm run build --prefix client`)
+
+   - **Start Command:** `npm start`
+     > (This runs: `cd server && node index.js`)
+
+6. **Click "Save Changes" if you modified anything.**
+
+7. **Click "Environment" tab (left sidebar)**
+
+8. **Add these 3 variables:**
 
    **Variable 1:**
    - Key: `SUPABASE_URL`
@@ -28,6 +43,17 @@ Update your Render deployment to use Supabase instead of JSON files.
    **Variable 3:**
    - Key: `USE_SUPABASE`
    - Value: `true`
+   - Click "Add"
+
+   **Variable 4 (Client-Side):**
+   - Key: `VITE_SUPABASE_URL`
+   - Value: `https://cmyazetngnfesfmeohuj.supabase.co`
+   - Click "Add"
+
+   **Variable 5 (Client-Side):**
+   - Key: `VITE_SUPABASE_ANON_KEY`
+   - Value: `(Use your 'anon' / 'public' key)`
+   - > ⚠️ **IMPORTANT:** Use the **Publishable** key here! Do NOT use the Secret key. This key is safe to be seen in the browser.
    - Click "Add"
 
 4. **Click "Save Changes"**
