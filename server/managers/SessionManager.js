@@ -53,21 +53,18 @@ class SessionManager {
                 userId,
                 deviceId,
                 createdAt: new Date().toISOString(),
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                role // Always store role in object, even if DB ignores it
             };
-
-            // Only include role for local JSON DB (Supabase sessions table doesn't have role column)
-            if (process.env.USE_SUPABASE !== 'true') {
-                session.role = role;
-            }
 
             const dbSess = this._mapToDb(session);
 
-            // WORKAROUND: Use local JSON for admin sessions when using Supabase to avoid FK constraint
-            // Supabase sessions table has FK to users table, but admins are in admins table
+            // WORKAROUND: Use local JSON for admin AND technician sessions when using Supabase
+            // Supabase sessions table has FK to 'users' table, so it rejects admins/techs
             let saved;
-            if (process.env.USE_SUPABASE === 'true' && role === 'admin') {
-                // Use local JSON Database for admin sessions
+            if (process.env.USE_SUPABASE === 'true' && (role === 'admin' || role === 'technician')) {
+                // Use local JSON Database for admin/tech sessions
+                console.log(`[SessionManager] Using LocalDB for ${role} session to bypass FK constraints`);
                 const LocalDatabase = require('./Database');
                 const localDb = new LocalDatabase('sessions');
                 saved = await localDb.add(dbSess);
@@ -79,7 +76,10 @@ class SessionManager {
 
             if (this.io) {
                 this.io.to(`user_${userId}`).emit('new_session_created', { deviceId });
-                this.io.emit('admin_session_update', result);
+                // If it's an admin, we might broadly notify, but specific user notification is better
+                if (role === 'admin') {
+                    this.io.emit('admin_session_update', result);
+                }
             }
 
             return result;
@@ -91,12 +91,21 @@ class SessionManager {
 
     async validateSession(token) {
         try {
-            const session = await this.db.find('token', token);
+            // 1. Try Main DB (Supabase/JSON)
+            let session = await this.db.find('token', token);
+
+            // 2. Fallback: If using Supabase, check Local JSON (for admins/techs)
+            if (!session && process.env.USE_SUPABASE === 'true') {
+                const LocalDatabase = require('./Database');
+                const localDb = new LocalDatabase('sessions');
+                session = await localDb.find('token', token);
+            }
+
             if (!session) return null;
             const mapped = this._mapFromDb(session);
 
             if (new Date(mapped.expiresAt) < new Date()) {
-                await this.db.delete('token', token);
+                await this.deleteSession(token); // Use deleteSession method to handle hybrid deletion
                 return null;
             }
 
@@ -109,7 +118,18 @@ class SessionManager {
 
     async deleteSession(token) {
         try {
-            return await this.db.delete('token', token);
+            // Try deleting from Main DB
+            const mainResult = await this.db.delete('token', token);
+
+            // If using Supabase, also try deleting from Local JSON
+            if (process.env.USE_SUPABASE === 'true') {
+                const LocalDatabase = require('./Database');
+                const localDb = new LocalDatabase('sessions');
+                const localResult = await localDb.delete('token', token);
+                return mainResult || localResult;
+            }
+
+            return mainResult;
         } catch (err) {
             console.error("[SessionManager] Error deleting session:", err);
             return false;
