@@ -22,8 +22,9 @@ export const Sidebar = ({ activeTab, setActiveTab, isOpen, setIsOpen }) => {
                             {/* Logo with gradient background */}
                             <div className="relative">
                                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl blur-md opacity-75"></div>
-                                <div className="relative bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl size-10 flex items-center justify-center shadow-lg">
-                                    <span className="material-symbols-outlined text-white text-2xl font-bold">build_circle</span>
+                                <div className="relative bg-white dark:bg-slate-900 rounded-xl size-10 flex items-center justify-center shadow-lg overflow-hidden border border-white/20">
+                                    <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                                    <span className="material-symbols-outlined text-blue-500 text-2xl font-bold hidden">build_circle</span>
                                 </div>
                             </div>
                             <div className="flex flex-col">

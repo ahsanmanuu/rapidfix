@@ -127,42 +127,49 @@ export const Header = ({ sidebarOpen, toggleSidebar, activeTab, onLogout, search
                     {activeTab === 'dashboard' ? 'Dashboard Overview' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                 </h2>
 
-                {/* Status Bar (Network, Location, Time) */}
-                <div className="hidden xl:flex items-center gap-4 bg-gray-50 dark:bg-slate-800/50 px-4 py-2 rounded-xl border border-gray-100 dark:border-slate-700">
+                {/* Status Bar (Network, Location, Time) - Desktop & Mobile */}
+                <div className={`
+                    fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-gray-200 dark:border-slate-800 p-2 
+                    flex justify-between items-center px-4 md:px-6 shadow-lg md:shadow-none md:static md:bg-transparent md:dark:bg-transparent md:border-none md:p-0 md:z-auto
+                    xl:flex xl:items-center xl:gap-4 xl:bg-gray-50 xl:dark:bg-slate-800/50 xl:px-4 xl:py-2 xl:rounded-xl xl:border xl:border-gray-100 xl:dark:border-slate-700
+                    ${/* Hide on desktop-tablet (md-lg) but show on mobile (default) and XL (xl) */ ''}
+                    md:hidden xl:flex
+                `}>
                     {/* Network */}
                     <div className="flex items-center gap-2" title="Network Strength">
                         <span className={`material-symbols-outlined text-[18px] ${networkStatus.online ? 'text-emerald-500' : 'text-red-500'}`}>
                             {networkStatus.online ? 'signal_cellular_alt' : 'signal_cellular_off'}
                         </span>
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Network</span>
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none">
-                                {networkStatus.online ? `${networkStatus.type} (${networkStatus.downlink}Mbps)` : 'Offline'}
+                            <span className="hidden xl:block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Network</span>
+                            <span className="text-[10px] md:text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none">
+                                {networkStatus.online ? <span className="xl:hidden">On</span> : 'Off'}
+                                <span className="hidden xl:inline">{networkStatus.online ? `${networkStatus.type} (${networkStatus.downlink}Mbps)` : 'line'}</span>
                             </span>
                         </div>
                     </div>
 
-                    <div className="w-px h-6 bg-gray-200 dark:bg-slate-700"></div>
+                    <div className="hidden xl:block w-px h-6 bg-gray-200 dark:bg-slate-700"></div>
 
                     {/* Location */}
                     <div className="flex items-center gap-2" title="Current Location">
                         <span className="material-symbols-outlined text-[18px] text-blue-500">near_me</span>
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Location</span>
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none max-w-[100px] truncate">
-                                {location.error ? 'Location Off' : location.city || 'Locating...'}
+                            <span className="hidden xl:block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Location</span>
+                            <span className="text-[10px] md:text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none max-w-[80px] xl:max-w-[100px] truncate">
+                                {location.error ? 'Off' : location.city || '...'}
                             </span>
                         </div>
                     </div>
 
-                    <div className="w-px h-6 bg-gray-200 dark:bg-slate-700"></div>
+                    <div className="hidden xl:block w-px h-6 bg-gray-200 dark:bg-slate-700"></div>
 
                     {/* Time */}
                     <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-[18px] text-purple-500">schedule</span>
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Time</span>
-                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none">
+                            <span className="hidden xl:block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Time</span>
+                            <span className="text-[10px] md:text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none">
                                 {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                         </div>
