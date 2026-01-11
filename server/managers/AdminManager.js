@@ -4,6 +4,7 @@ class AdminManager {
     constructor() {
         this.db = new Database('admins');
         this.io = null;
+        this.geocoder = require('../utils/geocoder'); // Lazy load or require at top if preferred, but doing here for safety
         this.ensureDefaultAdmin();
     }
 
@@ -141,6 +142,83 @@ class AdminManager {
             console.error("[AdminManager] Login error:", err);
             return null;
         }
+    }
+
+    async updateProfile(id, updates) {
+        try {
+            const admin = await this.db.find('id', id);
+            if (!admin) throw new Error('Admin not found');
+
+            const { location, ...otherUpdates } = updates;
+            let finalUpdates = { ...otherUpdates };
+
+            // Handle Location Update
+            if (location) {
+                if (typeof location === 'string') {
+                    const coords = await this.geocoder.geocodeAddress(location);
+                    if (coords) {
+                        finalUpdates.latitude = coords.latitude;
+                        finalUpdates.longitude = coords.longitude;
+                        finalUpdates.office_address = location; // Or coords.display_name if we want better
+                    }
+                } else if (typeof location === 'object') {
+                    if (location.latitude) finalUpdates.latitude = location.latitude;
+                    if (location.longitude) finalUpdates.longitude = location.longitude;
+                    if (location.address) finalUpdates.office_address = location.address;
+                }
+            }
+
+            const merged = { ...admin, ...finalUpdates };
+            const dbItem = this._mapToDb(merged);
+
+            // DatabaseLoader 'update' usually takes (field, value, updates)
+            // If checking ID:
+            await this.db.update('id', id, this._mapToDb(finalUpdates));
+
+            const updated = await this.db.find('id', id);
+            const result = this._mapFromDb(updated);
+
+            if (this.io) {
+                this.io.emit('admin_updated', { id, ...result });
+                if (finalUpdates.latitude && finalUpdates.longitude) {
+                    this.io.emit('admin_location_update', { id, latitude: finalUpdates.latitude, longitude: finalUpdates.longitude });
+                }
+            }
+            return result;
+        } catch (err) {
+            console.error("[AdminManager] Update error:", err);
+            throw err;
+        }
+    }
+
+    async searchAdmins(lat, lng, radiusKm = 50) {
+        try {
+            const all = await this.db.read();
+            if (!lat || !lng) return all.map(this._mapFromDb);
+
+            return all.map(a => this._mapFromDb(a)).filter(a => {
+                if (!a.latitude || !a.longitude) return false;
+                const dist = this._calculateDistance(lat, lng, a.latitude, a.longitude);
+                a.distance = parseFloat(dist.toFixed(1));
+                return dist <= radiusKm;
+            });
+        } catch (e) { return []; }
+    }
+
+    _calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of the earth in km
+        const dLat = this._deg2rad(lat2 - lat1);
+        const dLon = this._deg2rad(lon2 - lon1);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(this._deg2rad(lat1)) * Math.cos(this._deg2rad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
+    }
+
+    _deg2rad(deg) {
+        return deg * (Math.PI / 180);
     }
 }
 

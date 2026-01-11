@@ -4,6 +4,7 @@ class SuperAdminManager {
     constructor() {
         this.db = new Database('admins');
         this.io = null;
+        this.geocoder = require('../utils/geocoder');
         this.initialize();
     }
 
@@ -62,6 +63,49 @@ class SuperAdminManager {
         } catch (err) {
             console.error("[SuperAdminManager] Login error:", err);
             return null;
+        }
+    }
+
+    async updateProfile(id, updates) {
+        // Similar implementation to AdminManager but strictly for SuperAdmin role checks if needed
+        // For simplicity, reusing logic but ensuring we verify it's a superadmin
+        try {
+            const admin = await this.getSuperAdmin(id);
+            if (!admin) throw new Error('SuperAdmin not found');
+
+            const { location, ...otherUpdates } = updates;
+            let finalUpdates = { ...otherUpdates };
+
+            if (location) {
+                if (typeof location === 'string') {
+                    const coords = await this.geocoder.geocodeAddress(location);
+                    if (coords) {
+                        finalUpdates.latitude = coords.latitude;
+                        finalUpdates.longitude = coords.longitude;
+                        finalUpdates.office_address = location;
+                    }
+                } else if (typeof location === 'object') {
+                    if (location.latitude) finalUpdates.latitude = location.latitude;
+                    if (location.longitude) finalUpdates.longitude = location.longitude;
+                    if (location.address) finalUpdates.office_address = location.address;
+                }
+            }
+
+            // We need to map correctly for DB
+            // Assuming direct update works on the 'admins' table
+            await this.db.update('id', id, finalUpdates);
+
+            const updated = await this.getSuperAdmin(id);
+            if (this.io) {
+                this.io.emit('superadmin_updated', { id, ...updated });
+                if (finalUpdates.latitude) {
+                    this.io.emit('admin_location_update', { id, role: 'superadmin', latitude: finalUpdates.latitude, longitude: finalUpdates.longitude });
+                }
+            }
+            return updated;
+        } catch (err) {
+            console.error(err);
+            throw err;
         }
     }
 

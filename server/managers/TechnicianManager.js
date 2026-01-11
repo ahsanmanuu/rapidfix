@@ -319,6 +319,15 @@ class TechnicianManager {
             if (this.io) {
                 this.io.to(`tech_${id}`).emit('profile_updated', tech);
                 this.io.emit('admin_tech_update', tech);
+                // Check if lat/long is present in internal tech object (mapped ref)
+                if (tech.latitude && tech.longitude) {
+                    this.io.emit('technician_location_update', {
+                        id: id,
+                        latitude: tech.latitude,
+                        longitude: tech.longitude,
+                        status: tech.status
+                    });
+                }
             }
             return tech;
         } catch (err) {
