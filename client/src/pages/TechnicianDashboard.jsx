@@ -138,7 +138,8 @@ const TechnicianDashboard = () => {
         pendingJobs: 0,
         rejectedJobs: 0,
         rating: 0,
-        totalReviews: 0
+        totalReviews: 0,
+        onTime: 100 // Default to 100%
     });
     const [feedbacks, setFeedbacks] = useState([]);
     const [myJobs, setMyJobs] = useState([]);
@@ -345,12 +346,19 @@ const TechnicianDashboard = () => {
 
             const feed = feedbackRes.data.feedbacks || [];
             let avgRating = 0;
+            let onTimePct = 100;
+
             if (feed.length > 0) {
                 const total = feed.reduce((sum, f) => {
                     const cats = Object.values(f.ratings || {});
                     return sum + (cats.length ? cats.reduce((a, b) => a + b, 0) / cats.length : 0);
                 }, 0);
                 avgRating = (total / feed.length).toFixed(1);
+
+                // Calculate On-Time Record based on Timeliness rating
+                const timelinessSum = feed.reduce((sum, f) => sum + (f.ratings?.punctuality || f.ratings?.timeliness || 5), 0);
+                const avgTimeliness = timelinessSum / feed.length;
+                onTimePct = Math.round((avgTimeliness / 5) * 100);
             }
 
             setStats({
@@ -360,6 +368,7 @@ const TechnicianDashboard = () => {
                 rejectedJobs: rejected,
                 rating: avgRating,
                 totalReviews: feed.length,
+                onTime: onTimePct,
                 monthlyEarnings: monthlyStatsRes?.data?.earnings || 0,
                 monthlyJobs: monthlyStatsRes?.data?.jobs || 0
             });
@@ -791,9 +800,16 @@ const TechnicianDashboard = () => {
                 />
                 <SmallBox
                     title="My Rating"
-                    value={stats.rating}
+                    value={`${stats.rating}/5`}
                     icon={Star}
                     color="bg-rose-500"
+                    onClick={() => setActiveTab('feedback')}
+                />
+                <SmallBox
+                    title="On-Time Record"
+                    value={`${stats.onTime}%`}
+                    icon={Clock}
+                    color="bg-cyan-500"
                     onClick={() => setActiveTab('feedback')}
                 />
             </div>
