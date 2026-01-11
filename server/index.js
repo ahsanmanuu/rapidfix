@@ -387,12 +387,12 @@ app.post('/api/technicians/login', async (req, res) => {
 
 app.post('/api/technicians/search', async (req, res) => {
   try {
-    const { latitude, longitude, serviceType } = req.body;
+    const { latitude, longitude, serviceType, radius } = req.body;
     if (!latitude || !longitude || !serviceType) {
       return res.status(400).json({ success: false, error: 'Missing location or service type' });
     }
 
-    const technicians = await technicianManager.searchTechnicians(latitude, longitude, serviceType);
+    const technicians = await technicianManager.searchTechnicians(latitude, longitude, serviceType, radius);
     res.json({ success: true, count: technicians.length, technicians });
   } catch (error) {
     console.error('Search error:', error);

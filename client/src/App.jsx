@@ -31,7 +31,7 @@ function App() {
       <SocketProvider user={user}>
         <ErrorBoundary>
           <div className="min-h-screen">
-            <LocationPromptModal />
+            {/* <LocationPromptModal /> Removed as per user request */}
             {!isDashboard && <Navbar />}
             <Routes>
               <Route path="/" element={<Home />} />

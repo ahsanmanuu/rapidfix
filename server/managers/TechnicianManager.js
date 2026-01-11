@@ -226,7 +226,7 @@ class TechnicianManager {
         }
     }
 
-    async searchTechnicians(userLat, userLon, serviceType, radius = 10.0) {
+    async searchTechnicians(userLat, userLon, serviceType, radius = 2.0) {
         try {
             const lat = parseFloat(userLat);
             const lon = parseFloat(userLon);
