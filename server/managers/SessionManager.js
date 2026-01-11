@@ -53,22 +53,31 @@ class SessionManager {
                 userId,
                 deviceId,
                 createdAt: new Date().toISOString(),
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                role // Always store role in object, even if DB ignores it
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
             };
+
+            // Workaround for Hybrid System:
+            // 1. If not using Supabase (Local JSON), always store role.
+            // 2. If using Supabase, 'sessions' table usually lacks 'role' column (causing error).
+            //    BUT, for Admin/Techs using LocalDB workaround, we WANT 'role'.
+
+            const useLocalDbForRole = process.env.USE_SUPABASE === 'true' && (role === 'admin' || role === 'technician');
+
+            if (process.env.USE_SUPABASE !== 'true' || useLocalDbForRole) {
+                session.role = role;
+            }
 
             const dbSess = this._mapToDb(session);
 
-            // WORKAROUND: Use local JSON for admin AND technician sessions when using Supabase
-            // Supabase sessions table has FK to 'users' table, so it rejects admins/techs
             let saved;
-            if (process.env.USE_SUPABASE === 'true' && (role === 'admin' || role === 'technician')) {
+            if (useLocalDbForRole) {
                 // Use local JSON Database for admin/tech sessions
                 console.log(`[SessionManager] Using LocalDB for ${role} session to bypass FK constraints`);
                 const LocalDatabase = require('./Database');
                 const localDb = new LocalDatabase('sessions');
                 saved = await localDb.add(dbSess);
             } else {
+                // Using Main DB (Supabase for users) - dbSess will NOT have 'role' here due to logic above
                 saved = await this.db.add(dbSess);
             }
 
