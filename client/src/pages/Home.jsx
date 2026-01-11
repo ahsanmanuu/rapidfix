@@ -178,10 +178,10 @@ const Home = () => {
                         image: t.documents?.photo
                             ? (t.documents.photo.startsWith('http') ? t.documents.photo : `${serverUrl}${t.documents.photo}`)
                             : (fallbackProfiles && fallbackProfiles[0] ? fallbackProfiles[0].image : ''),
-                        rating: t.rating || '4.8/5',
-                        reviewCount: t.reviewCount || '50+',
-                        jobs: t.completedJobs || '100+',
-                        onTime: '99%',
+                        rating: t.rating ? `${t.rating}/5` : '4.8/5', // Use API rating
+                        reviewCount: t.reviewCount ? `${t.reviewCount}+` : '50+',
+                        jobs: t.jobsCompleted ? `${t.jobsCompleted}+` : '100+', // Use API jobs
+                        onTime: t.onTimeRecord ? `${t.onTimeRecord}%` : '99%', // Use API onTime
                         description: t.bio || `Professional ${t.serviceType} with a track record of excellence.`,
                         // Ensure detailedRatings exists
                         detailedRatings: t.detailedRatings || { behavior: 5, expertise: 5, professionalism: 5, timelieness: 5 }
@@ -692,7 +692,7 @@ const Home = () => {
                                 </div>
 
                                 {/* Detailed Ratings Grid - Realtime Fetched Data */}
-                                <div className="grid grid-cols-2 gap-x-6 gap-y-2 mb-6 p-5 bg-slate-800/50 rounded-xl border border-white/5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mb-6 p-5 bg-slate-800/50 rounded-xl border border-white/5">
                                     <RatingRow color="cyan" icon={UserCheck} label="Behavior" score={technicianProfiles[currentTechIndex]?.detailedRatings?.behavior || 5} />
                                     <RatingRow color="amber" icon={Smile} label="Attitude" score={technicianProfiles[currentTechIndex]?.detailedRatings?.attitude || 5} />
                                     <RatingRow color="emerald" icon={BookOpen} label="Knowledge" score={technicianProfiles[currentTechIndex]?.detailedRatings?.expertise || 5} />

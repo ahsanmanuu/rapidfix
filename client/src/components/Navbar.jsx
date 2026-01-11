@@ -71,45 +71,24 @@ const Navbar = () => {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-14">
+                                <div className="flex items-center gap-6">
                                     <Link
                                         to="/login"
-                                        className={`px-8 py-3 rounded-full font-bold text-sm transition-all duration-300 hover:scale-105 active:scale-95 border ${scrolled
-                                            ? 'border-slate-300 text-slate-700 hover:border-blue-600 hover:text-blue-600 hover:bg-blue-50'
-                                            : 'border-white/40 text-white hover:bg-white hover:text-slate-900'
-                                            }`}
+                                        className={`font-semibold text-sm transition-colors ${scrolled ? 'text-slate-600 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
                                     >
                                         Log In
                                     </Link>
                                     <Link
                                         to="/register"
-                                        className={`
-                                            group relative px-8 py-3 rounded-full font-bold text-sm shadow-sm
-                                            transition-all duration-300 hover:scale-105 active:scale-95
-                                            border flex items-center gap-2 overflow-hidden
-                                            ${scrolled
-                                                ? 'border-blue-600 text-blue-600 hover:bg-blue-50'
-                                                : 'border-white text-white hover:bg-white/10'}
-                                        `}
+                                        className={`px-6 py-2.5 rounded-full font-bold text-sm shadow-lg shadow-blue-500/30 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-blue-500/40 ${scrolled ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-blue-600 hover:bg-blue-50'}`}
                                     >
-                                        <span className="relative z-10 flex items-center gap-2">
-                                            <User size={18} className="group-hover:rotate-12 transition-transform duration-300" />
-                                            Register
-                                        </span>
+                                        Register
                                     </Link>
                                     <Link
                                         to="/join-partner"
-                                        className={`
-                                            hidden xl:flex
-                                            px-6 py-3 rounded-full font-bold text-sm border-2 transition-all duration-300
-                                            hover:scale-105 active:scale-95 flex items-center gap-2
-                                            ${scrolled
-                                                ? 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
-                                                : 'border-white text-white hover:bg-white hover:text-slate-900'
-                                            }
-                                        `}
+                                        className={`hidden xl:flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm border transition-all duration-300 hover:bg-white/10 ${scrolled ? 'border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900' : 'border-white/20 text-white hover:border-white/40'}`}
                                     >
-                                        <Briefcase size={18} />
+                                        <Briefcase size={16} />
                                         <span>Join as Partner</span>
                                     </Link>
                                 </div>
