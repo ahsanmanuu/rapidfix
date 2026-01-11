@@ -99,6 +99,20 @@ class ComplaintManager {
             return null;
         }
     }
+
+    // [New] Helper for Auto-Assignment Algo
+    async getComplaintStats(technicianId) {
+        try {
+            const complaints = await this.db.findAll('technician_id', technicianId);
+            return {
+                total: complaints.length,
+                open: complaints.filter(c => c.status === 'open').length
+            };
+        } catch (err) {
+            console.error(`[ComplaintManager] Error getting complaint stats for ${technicianId}:`, err);
+            return { total: 0, open: 0 };
+        }
+    }
 }
 
 module.exports = ComplaintManager;

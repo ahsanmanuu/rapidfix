@@ -43,8 +43,24 @@ export const SocketProvider = ({ children, user }) => {
                 // General Broadcast Listener
                 newSocket.on('general_broadcast', (data) => {
                     console.log('📢 Broadcast received:', data);
-                    // Simple alert for now, can be replaced with a Toast component later
                     alert(`📢 IMPORTANT: ${data.title}\n\n${data.message}`);
+                });
+
+                // [FIX] Real-time Personal Notifications
+                newSocket.on('new_notification', (data) => {
+                    console.log('🔔 Notification received:', data);
+                    // Use browser API if available, fallback to alert
+                    if (Notification.permission === "granted") {
+                        new Notification(data.title, { body: data.message });
+                    } else if (Notification.permission !== "denied") {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === "granted") {
+                                new Notification(data.title, { body: data.message });
+                            }
+                        });
+                    }
+                    // Simple fallback Alert for visibility
+                    // alert(`🔔 ${data.title}: ${data.message}`); 
                 });
             });
 

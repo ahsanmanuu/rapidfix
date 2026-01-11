@@ -2,6 +2,8 @@ const Database = require('./DatabaseLoader');
 const UserManager = require('./UserManager');
 const TechnicianManager = require('./TechnicianManager');
 const NotificationManager = require('./NotificationManager');
+const FinanceManager = require('./FinanceManager');
+const ComplaintManager = require('./ComplaintManager');
 
 class JobManager {
     constructor() {
@@ -9,6 +11,8 @@ class JobManager {
         this.userManager = new UserManager();
         this.techManager = new TechnicianManager();
         this.notificationManager = new NotificationManager();
+        this.financeManager = new FinanceManager();
+        this.complaintManager = new ComplaintManager();
         this.io = null; // Will be set via server/index.js
     }
 
@@ -112,11 +116,10 @@ class JobManager {
     }
 
     async autoAssignJob(jobId) {
-        console.log(`[JobManager] Starting AutoAssign for Job #${jobId}`);
+        console.log(`[JobManager] Starting Advanced AutoAssign for Job #${jobId}`);
         try {
             const job = await this.getJob(jobId);
             if (!job || job.technicianId || job.status !== 'pending') {
-                console.log(`[JobManager] Job #${jobId} already assigned or not pending. Skipping.`);
                 return job;
             }
 
@@ -124,42 +127,102 @@ class JobManager {
 
             // 1. Direct Assignment if Requested
             if (requestedTechId) {
-                console.log(`[JobManager] Specific Tech Requested for #${jobId}: ${requestedTechId}`);
-                const result = await this.assignTechnician(jobId, requestedTechId);
-                return result;
+                return await this.assignTechnician(jobId, requestedTechId);
             }
 
-            // 2. Progressive Search Radii
+            // 2. Advanced Search & Filter
             if (location && (location.latitude || location.lat) && (location.longitude || location.lng)) {
                 const lat = location.latitude || location.lat;
                 const lon = location.longitude || location.lng;
-                // [FIX] STRICTLY restricted radius to 2km ONLY as per user request
-                const radii = [2.0];
 
-                for (const radius of radii) {
-                    console.log(`[JobManager] Searching technicians in ${radius}km for Job #${jobId}`);
-                    let nearbyTechnicians = await this.techManager.searchTechnicians(lat, lon, serviceType, radius);
-                    nearbyTechnicians = nearbyTechnicians.filter(t => t.status === 'available');
+                // Get Potential Candidates (Available + Nearby + Service Match)
+                const radius = 25.0; // Expanded search radius to find candidates, then filter
+                let candidates = await this.techManager.searchTechnicians(lat, lon, serviceType, radius);
+                candidates = candidates.filter(t => t.status === 'available');
 
-                    if (nearbyTechnicians.length > 0) {
-                        // Pick best candidate (rating, then distance)
-                        nearbyTechnicians.sort((a, b) => (b.rating || 0) - (a.rating || 0) || (a.distance - b.distance));
-                        const bestTech = nearbyTechnicians[0];
+                // Pre-Fetch Data required for filtering
+                const platformEarnings = await this.financeManager.getPlatformMonthlyEarnings();
+                const allJobsThisMonth = await this._getMonthlyJobCountGlobal();
 
-                        console.log(`[JobManager] Auto-pairing Job #${jobId} with ${bestTech.name} (${bestTech.distance}km)`);
-                        const result = await this.assignTechnician(jobId, bestTech.id);
-                        return result;
+                const qualifiedTechs = [];
+
+                for (const tech of candidates) {
+                    // --- CRITERIA CHECKS ---
+
+                    // 1. Rating > 3.5
+                    if ((tech.rating || 0) <= 3.5) continue;
+
+                    // 2. Job Rejection Rate < 40%
+                    const jobStats = await this.getJobStats(tech.id);
+                    // jobStats.ratio is rejection ratio (0.0 to 1.0)
+                    if (jobStats.ratio >= 0.40) continue;
+
+                    // 3. Completion Rate > 50% ("Served more than 50%")
+                    // Completion = Completed / Assigned
+                    const completionRate = jobStats.total > 0 ? (jobStats.completed / jobStats.total) : 1; // Give benefit of doubt to new techs
+                    if (completionRate <= 0.50) continue;
+
+                    // 4. Complaints < 30%
+                    const complaintStats = await this.complaintManager.getComplaintStats(tech.id);
+                    const complaintRate = jobStats.completed > 0 ? (complaintStats.total / jobStats.completed) : 0;
+                    if (complaintRate >= 0.30) continue;
+
+                    // 5. Monthly Job Volume Cap (Did not serve 10% of total jobs in a month)
+                    // "did not served 10% job" -> Assume: Tech's Jobs / Total Global Jobs < 10%
+                    const techMonthlyJobs = await this._getMonthlyJobCount(tech.id);
+                    const volumeShare = allJobsThisMonth > 0 ? (techMonthlyJobs / allJobsThisMonth) : 0;
+                    if (volumeShare >= 0.10) {
+                        console.log(`[AutoAssign] Skipping ${tech.name}: Over volume cap (${(volumeShare * 100).toFixed(1)}%)`);
+                        continue;
                     }
+
+                    // 6. Monthly Earning Cap (Earning is not more than 80%)
+                    // Assume: Tech Earnings / Total Platform Earnings < 80% (Anti-Monopoly)
+                    const techEarnings = await this.financeManager.getMonthlyEarnings(tech.id);
+                    const earningShare = platformEarnings > 0 ? (techEarnings / platformEarnings) : 0;
+                    if (earningShare >= 0.80) {
+                        console.log(`[AutoAssign] Skipping ${tech.name}: Over earning cap (${(earningShare * 100).toFixed(1)}%)`);
+                        continue;
+                    }
+
+                    qualifiedTechs.push(tech);
                 }
-                console.log(`[JobManager] No eligible technicians found within 25km for Job #${jobId}`);
-            } else {
-                console.warn(`[JobManager] Cannot auto-assign Job #${jobId}: Missing location coordinates.`);
+
+                if (qualifiedTechs.length > 0) {
+                    // Sort by Rating (High) -> Distance (Low)
+                    qualifiedTechs.sort((a, b) => (b.rating || 0) - (a.rating || 0) || (a.distance - b.distance));
+                    const bestTech = qualifiedTechs[0];
+
+                    console.log(`[JobManager] Auto-pairing Job #${jobId} with ${bestTech.name} (Qualified Candidate)`);
+                    const result = await this.assignTechnician(jobId, bestTech.id);
+                    return result;
+                } else {
+                    console.log(`[JobManager] No qualified technicians found for Job #${jobId} after filtering.`);
+                }
             }
             return job;
         } catch (err) {
             console.error(`[JobManager] AutoAssign Critical Failure for Job #${jobId}:`, err);
             return null;
         }
+    }
+
+    // New Helpers for Algo
+    async _getMonthlyJobCount(technicianId) {
+        try {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+            const jobs = await this.db.findAll('technician_id', technicianId);
+            return jobs.filter(j => j.created_at >= startOfMonth).length;
+        } catch (e) { return 0; }
+    }
+    async _getMonthlyJobCountGlobal() {
+        try {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+            const jobs = await this.db.read();
+            return jobs.filter(j => j.created_at >= startOfMonth).length;
+        } catch (e) { return 1; }
     }
 
     async assignTechnician(jobId, technicianId) {
@@ -286,9 +349,10 @@ class JobManager {
         try {
             const jobs = await this.getJobsByTechnician(technicianId);
             const total = jobs.length;
-            if (total === 0) return { total: 0, rejected: 0, ratio: 0 };
+            if (total === 0) return { total: 0, rejected: 0, completed: 0, ratio: 0 };
             const rejected = jobs.filter(j => j.status === 'rejected' || j.status === 'cancelled').length;
-            return { total, rejected, ratio: rejected / total };
+            const completed = jobs.filter(j => j.status === 'completed').length;
+            return { total, rejected, completed, ratio: rejected / total };
         } catch (err) {
             console.error(`[JobManager] Error getting stats for tech ${technicianId}:`, err);
             return { total: 0, rejected: 0, ratio: 0 };

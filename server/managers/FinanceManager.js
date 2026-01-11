@@ -160,6 +160,38 @@ class FinanceManager {
             throw err;
         }
     }
+
+    // [New] Helper for Auto-Assignment Algo
+    async getMonthlyEarnings(userId) {
+        try {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+            const txns = await this.db.findAll('user_id', userId);
+            return txns
+                .filter(t => t.type === 'credit' && t.created_at >= startOfMonth)
+                .reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+        } catch (err) {
+            console.error(`[FinanceManager] Error getting monthly earnings for ${userId}:`, err);
+            return 0;
+        }
+    }
+
+    // [New] Helper for Auto-Assignment Algo
+    async getPlatformMonthlyEarnings() {
+        try {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+            const allTxns = await this.db.read();
+            return allTxns
+                .filter(t => t.type === 'credit' && t.created_at >= startOfMonth) // Assuming credit to users/techs reflects earnings distributed
+                .reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
+        } catch (err) {
+            console.error("[FinanceManager] Error getting platform monthly earnings:", err);
+            return 1; // Prevent division by zero
+        }
+    }
 }
 
 module.exports = FinanceManager;
