@@ -167,12 +167,16 @@ class JobManager {
                     const complaintRate = jobStats.completed > 0 ? (complaintStats.total / jobStats.completed) : 0;
                     if (complaintRate >= 0.30) continue;
 
-                    // 5. Monthly Job Volume Cap (Did not serve 10% of total jobs in a month)
-                    // "did not served 10% job" -> Assume: Tech's Jobs / Total Global Jobs < 10%
+                    // 5. Monthly Job Volume Cap
+                    // Rule: Max 10% for Standard, 100% (No Cap) for Premium
+                    const isPremium = tech.membership === 'Premium' || tech.subscription === 'premium';
+                    const volumeCap = isPremium ? 1.0 : 0.10;
+
                     const techMonthlyJobs = await this._getMonthlyJobCount(tech.id);
                     const volumeShare = allJobsThisMonth > 0 ? (techMonthlyJobs / allJobsThisMonth) : 0;
-                    if (volumeShare >= 0.10) {
-                        console.log(`[AutoAssign] Skipping ${tech.name}: Over volume cap (${(volumeShare * 100).toFixed(1)}%)`);
+
+                    if (volumeShare >= volumeCap) {
+                        console.log(`[AutoAssign] Skipping ${tech.name}: Over volume cap (${(volumeShare * 100).toFixed(1)}% / ${(volumeCap * 100).toFixed(1)}%)`);
                         continue;
                     }
 
