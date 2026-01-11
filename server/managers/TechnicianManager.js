@@ -80,7 +80,10 @@ class TechnicianManager {
             if (latitude !== undefined) locObj.latitude = latitude;
             if (longitude !== undefined) locObj.longitude = longitude;
             if (baseAddress !== undefined) locObj.address = baseAddress;
-            if (serviceRadius !== undefined) locObj.serviceRadius = serviceRadius;
+            if (serviceRadius !== undefined) {
+                locObj.serviceRadius = serviceRadius;
+                mapped.service_radius = serviceRadius; // Sync column
+            }
 
             // Only set location if it has meaningful data
             if (Object.keys(locObj).length > 0) {
@@ -143,7 +146,8 @@ class TechnicianManager {
                     longitude: lng,
                     address: baseAddress,
                     serviceRadius: 2
-                }
+                },
+                service_radius: 2 // Explicitly set column default to 2km
             };
 
             const created = await this.db.add(newTechnician);
