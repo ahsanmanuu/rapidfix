@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 
 const UserCreateModal = ({ isOpen, onClose, onCreateUser, initialData, onUpdateUser }) => {
+    const { user: currentUser } = useAuth();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
         confirmPassword: '',
         role: 'user',
-        membership: 'Free'
+        membership: 'Free',
+        location: ''
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    const canEditLocation = currentUser && (
+        currentUser.role === 'superadmin' ||
+        (currentUser.role === 'admin' && formData.role === 'technician')
+    );
 
     React.useEffect(() => {
         if (initialData) {
@@ -20,7 +28,8 @@ const UserCreateModal = ({ isOpen, onClose, onCreateUser, initialData, onUpdateU
                 password: '',
                 confirmPassword: '',
                 role: initialData.role || 'user',
-                membership: initialData.membership || 'Free'
+                membership: initialData.membership || 'Free',
+                location: initialData.baseAddress || initialData.fixedAddress || initialData.city || ''
             });
         } else {
             setFormData({
@@ -29,7 +38,8 @@ const UserCreateModal = ({ isOpen, onClose, onCreateUser, initialData, onUpdateU
                 password: '',
                 confirmPassword: '',
                 role: 'user',
-                membership: 'Free'
+                membership: 'Free',
+                location: ''
             });
         }
     }, [initialData, isOpen]);
@@ -153,52 +163,70 @@ const UserCreateModal = ({ isOpen, onClose, onCreateUser, initialData, onUpdateU
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Role</label>
-                                <select
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none"
-                                    value={formData.role}
-                                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                >
-                                    <option value="user">User</option>
-                                    <option value="technician">Technician</option>
-                                    <option value="admin">Admin</option>
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Membership</label>
-                                <select
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none"
-                                    value={formData.membership}
-                                    onChange={(e) => setFormData({ ...formData, membership: e.target.value })}
-                                >
-                                    <option value="Free">Free</option>
-                                    <option value="Premium">Premium</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="px-5 py-2.5 rounded-xl font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Role</label>
+                            <select
+                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none"
+                                value={formData.role}
+                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                             >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold hover:shadow-lg hover:shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                            >
-                                {loading && <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                                {loading ? (initialData ? 'Updating...' : 'Creating...') : (initialData ? 'Update User' : 'Create User')}
-                            </button>
+                                <option value="user">User</option>
+                                <option value="technician">Technician</option>
+                                <option value="admin">Admin</option>
+                            </select>
                         </div>
-                    </form>
+                        <div className="space-y-1">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Membership</label>
+                            <select
+                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all appearance-none"
+                                value={formData.membership}
+                                onChange={(e) => setFormData({ ...formData, membership: e.target.value })}
+                            >
+                                <option value="Free">Free</option>
+                                <option value="Premium">Premium</option>
+                            </select>
+                        </div>
                 </div>
-            </div>
+
+                {/* Location Editing (Role Based) */}
+                {canEditLocation && (
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                            Registered Location {initialData ? '(Update to Move)' : '(Optional)'}
+                        </label>
+                        <input
+                            type="text"
+                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                            placeholder="City or Full Address (Auto-Geocoded)"
+                            value={formData.location}
+                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                        />
+                        <p className="text-[10px] text-slate-400">
+                            Changing this will update the "Base Location" used for job assignments.
+                        </p>
+                    </div>
+                )}
+
+                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-5 py-2.5 rounded-xl font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold hover:shadow-lg hover:shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                        {loading && <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                        {loading ? (initialData ? 'Updating...' : 'Creating...') : (initialData ? 'Update User' : 'Create User')}
+                    </button>
+                </div>
+            </form>
+        </div >
+            </div >
         </>
     );
 };

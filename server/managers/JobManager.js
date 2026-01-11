@@ -136,7 +136,8 @@ class JobManager {
                 const lon = location.longitude || location.lng;
 
                 // Get Potential Candidates (Available + Nearby + Service Match)
-                const radius = 25.0; // Expanded search radius to find candidates, then filter
+                // [FIX] STRICTLY restricted radius to 2km ONLY as per user request
+                const radius = 2.0;
                 let candidates = await this.techManager.searchTechnicians(lat, lon, serviceType, radius);
                 candidates = candidates.filter(t => t.status === 'available');
 

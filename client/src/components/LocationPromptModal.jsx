@@ -11,7 +11,8 @@ const LocationPromptModal = () => {
 
     useEffect(() => {
         // Check if user is logged in but has no location
-        if (user && (!user.latitude || !user.longitude || !user.city)) {
+        // [FIX] Restrict to 'user' role only. Techs/Admins set location via other means.
+        if (user && user.role === 'user' && (!user.latitude || !user.longitude || !user.city)) {
             // Slight delay to not be jarring
             const timer = setTimeout(() => setIsOpen(true), 1500);
             return () => clearTimeout(timer);
