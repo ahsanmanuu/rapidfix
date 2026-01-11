@@ -22,7 +22,7 @@ class TechnicianManager {
             let lat = tech.latitude;
             let lng = tech.longitude;
             let addr = base_address;
-            let rad = service_radius || 10;
+            let rad = service_radius || 2; // Default 2km
 
             if (location && typeof location === 'object') {
                 if (location.latitude) lat = location.latitude;
@@ -142,7 +142,7 @@ class TechnicianManager {
                     latitude: lat,
                     longitude: lng,
                     address: baseAddress,
-                    serviceRadius: 10
+                    serviceRadius: 2
                 }
             };
 
