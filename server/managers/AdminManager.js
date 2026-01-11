@@ -164,7 +164,13 @@ class AdminManager {
                 } else if (typeof location === 'object') {
                     if (location.latitude) finalUpdates.latitude = location.latitude;
                     if (location.longitude) finalUpdates.longitude = location.longitude;
-                    if (location.address) finalUpdates.office_address = location.address;
+
+                    if (!location.address) {
+                        const addressName = await this.geocoder.reverseGeocode(finalUpdates.latitude, finalUpdates.longitude);
+                        if (addressName) finalUpdates.office_address = addressName;
+                    } else {
+                        finalUpdates.office_address = location.address;
+                    }
                 }
             }
 

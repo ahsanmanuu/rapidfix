@@ -34,4 +34,28 @@ async function geocodeAddress(address) {
     }
 }
 
-module.exports = { geocodeAddress };
+
+/**
+ * Reverse geocode coordinates to an address string.
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @returns {Promise<string|null>} - Formatted address or null.
+ */
+async function reverseGeocode(lat, lng) {
+    if (!lat || !lng) return null;
+    try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+        const response = await axios.get(url, {
+            headers: { 'User-Agent': 'FixofyApp/1.0 (ahsan@example.com)' }
+        });
+        if (response.data && response.data.display_name) {
+            return response.data.display_name;
+        }
+        return null;
+    } catch (error) {
+        console.error("Reverse geocoding failed:", error.message);
+        return null;
+    }
+}
+
+module.exports = { geocodeAddress, reverseGeocode };

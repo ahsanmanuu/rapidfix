@@ -302,7 +302,13 @@ class TechnicianManager {
                 } else if (typeof updates.location === 'object') {
                     updates.latitude = updates.location.latitude;
                     updates.longitude = updates.location.longitude;
-                    updates.baseAddress = updates.location.address || updates.location.baseAddress;
+
+                    if (!updates.location.address && !updates.location.baseAddress) {
+                        const addressName = await reverseGeocode(updates.latitude, updates.longitude);
+                        if (addressName) updates.baseAddress = addressName;
+                    } else {
+                        updates.baseAddress = updates.location.address || updates.location.baseAddress;
+                    }
                 }
                 delete updates.location;
             }
