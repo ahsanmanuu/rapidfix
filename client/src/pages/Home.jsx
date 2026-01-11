@@ -575,30 +575,37 @@ const Home = () => {
 
             {/* --- Features Grid (Moved Outside) --- */}
             <div className="container mx-auto px-4 relative z-20 mb-24">
-                <div className="flex flex-wrap justify-center items-center gap-3 mx-auto w-full">
-                    <div className="w-[170px] shrink-0 h-[50px] flex flex-row items-center justify-center gap-3 p-2 bg-white rounded-lg border border-slate-100 shadow-sm transition-transform hover:-translate-y-1 duration-300">
-                        <div className="p-1.5 bg-blue-50 rounded-full text-blue-600 shrink-0">
-                            <ShieldCheck size={18} />
+                <div className="flex flex-wrap justify-center items-center gap-4 mx-auto w-full">
+                    {/* Verified Experts - Blue Gradient */}
+                    <div className="w-[170px] md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-3 p-2 rounded-xl shadow-lg shadow-blue-500/20 bg-gradient-to-r from-blue-600 to-cyan-500 transition-transform hover:-translate-y-1 duration-300">
+                        <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white shrink-0">
+                            <ShieldCheck size={20} />
                         </div>
-                        <p className="text-xs font-bold text-slate-900 leading-tight">Verified Experts</p>
+                        <p className="text-sm font-bold text-white leading-tight">Verified Experts</p>
                     </div>
-                    <div className="w-[170px] shrink-0 h-[50px] flex flex-row items-center justify-center gap-3 p-2 bg-white rounded-lg border border-slate-100 shadow-sm transition-transform hover:-translate-y-1 duration-300">
-                        <div className="p-1.5 bg-blue-50 rounded-full text-blue-600 shrink-0">
-                            <Clock size={18} />
+
+                    {/* On-Time Service - Green Gradient */}
+                    <div className="w-[170px] md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-3 p-2 rounded-xl shadow-lg shadow-emerald-500/20 bg-gradient-to-r from-emerald-500 to-green-500 transition-transform hover:-translate-y-1 duration-300">
+                        <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white shrink-0">
+                            <Clock size={20} />
                         </div>
-                        <p className="text-xs font-bold text-slate-900 leading-tight">On-Time Service</p>
+                        <p className="text-sm font-bold text-white leading-tight">On-Time Service</p>
                     </div>
-                    <div className="w-[170px] shrink-0 h-[50px] flex flex-row items-center justify-center gap-3 p-2 bg-white rounded-lg border border-slate-100 shadow-sm transition-transform hover:-translate-y-1 duration-300">
-                        <div className="p-1.5 bg-blue-50 rounded-full text-blue-600 shrink-0">
-                            <Wallet size={18} />
+
+                    {/* Min. Visit Price - Amber Gradient */}
+                    <div className="w-[170px] md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-3 p-2 rounded-xl shadow-lg shadow-amber-500/20 bg-gradient-to-r from-amber-500 to-orange-500 transition-transform hover:-translate-y-1 duration-300">
+                        <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white shrink-0">
+                            <Wallet size={20} />
                         </div>
-                        <p className="text-xs font-bold text-slate-900 leading-tight">Min. Visit Price</p>
+                        <p className="text-sm font-bold text-white leading-tight">Min. Visit Price</p>
                     </div>
-                    <div className="w-[170px] shrink-0 h-[50px] flex flex-row items-center justify-center gap-3 p-2 bg-white rounded-lg border border-slate-100 shadow-sm transition-transform hover:-translate-y-1 duration-300">
-                        <div className="p-1.5 bg-blue-50 rounded-full text-blue-600 shrink-0">
-                            <ThumbsUp size={18} />
+
+                    {/* Top Rated - Purple Gradient */}
+                    <div className="w-[170px] md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-3 p-2 rounded-xl shadow-lg shadow-violet-500/20 bg-gradient-to-r from-violet-600 to-purple-600 transition-transform hover:-translate-y-1 duration-300">
+                        <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white shrink-0">
+                            <ThumbsUp size={20} />
                         </div>
-                        <p className="text-xs font-bold text-slate-900 leading-tight">Top Rated</p>
+                        <p className="text-sm font-bold text-white leading-tight">Top Rated</p>
                     </div>
                 </div>
             </div>
@@ -608,7 +615,7 @@ const Home = () => {
             {/* --- Services Grid --- */}
             <section className="pt-24 pb-2 container mx-auto px-4">
                 <div className="text-center mb-20">
-                    <h2 className="text-4xl font-extrabold mb-4 text-slate-900 tracking-tight">Our Professional Services</h2>
+                    <h2 className="text-4xl font-extrabold mb-4 text-slate-900 tracking-tight">Instant Book Our Professional Services</h2>
                     <p className="text-slate-500 text-lg mx-auto text-center w-full block px-4">Expert solutions for every corner of your home.</p>
                 </div>
 
@@ -624,7 +631,7 @@ const Home = () => {
                         { id: 'Biometrics Technician', icon: <Fingerprint size={18} />, title: "Biometrics Technician", desc: "Access Control", color: "text-purple-600", bg: "bg-purple-50" },
                         { id: 'Printer Technician', icon: <Printer size={18} />, title: "Printer Technician", desc: "Repair & Fix", color: "text-slate-600", bg: "bg-slate-50" },
                     ].map((service) => (
-                        <div key={service.id} onClick={() => handleBookNow(service.id)} className="w-[170px] shrink-0">
+                        <div key={service.id} onClick={() => handleBookNow(service.id)} className="w-[170px] md:w-[240px] shrink-0">
                             <ServiceCard icon={service.icon} title={service.title} desc={service.desc} color={service.color} bg={service.bg} />
                         </div>
                     ))}
@@ -632,7 +639,7 @@ const Home = () => {
             </section>
 
             {/* --- Technician of the Month --- */}
-            <section className="pt-24 pb-24 bg-slate-900 text-white relative overflow-hidden mt-[25px] mb-32 mx-4 shadow-2xl">
+            <section className="pt-24 pb-24 bg-slate-900 text-white relative mt-[25px] mb-32 mx-4 shadow-2xl rounded-3xl">
                 <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-blue-900/30 to-transparent -skew-x-12 translate-x-20"></div>
                 <div className="container mx-auto px-8 relative z-10">
                     <AnimatePresence mode="wait">
@@ -650,14 +657,15 @@ const Home = () => {
                                         <img
                                             src={(technicianProfiles && technicianProfiles[currentTechIndex]) ? technicianProfiles[currentTechIndex].image : (fallbackProfiles && fallbackProfiles[0] ? fallbackProfiles[0].image : '')}
                                             alt="Technician of the Month"
-                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                            className="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-110"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                     </div>
-                                    <div className="absolute bottom-8 left-8 bg-slate-900/90 backdrop-blur-md p-5 shadow-xl border border-white/10">
+                                    {/* Moved badge OUTSIDE the overflow-hidden container to prevent clipping */}
+                                    <div className="absolute bottom-4 left-4 z-20 bg-slate-900/95 backdrop-blur-md p-5 shadow-xl border border-white/10 rounded-2xl transform transition-transform hover:scale-105">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <Star size={18} className="text-yellow-400 fill-yellow-400" />
-                                            <span className="font-bold text-white text-lg">{technicianProfiles[currentTechIndex]?.rating || '4.8'} Rating</span>
+                                            <Star size={20} className="text-yellow-400 fill-yellow-400" />
+                                            <span className="font-bold text-white text-xl">{technicianProfiles[currentTechIndex]?.rating || '4.8'} Rating</span>
                                         </div>
                                         <p className="text-xs text-slate-400 font-medium">Based on {technicianProfiles[currentTechIndex]?.reviewCount || '0'} reviews</p>
                                     </div>
@@ -770,14 +778,14 @@ const FeatureBox = ({ icon, title, desc }) => (
 const ServiceCard = ({ icon, title, desc, color, bg }) => (
     <motion.div
         whileHover={{ y: -2 }}
-        className="flex flex-row items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer h-[50px] group overflow-hidden"
+        className="flex flex-row items-center gap-3 bg-white p-2 md:p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer h-[50px] md:h-[80px] group overflow-hidden"
     >
-        <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0 border border-black/5`}>
-            <div className={`${color} scale-75`}>{icon}</div>
+        <div className={`w-8 h-8 md:w-12 md:h-12 rounded-lg ${bg} flex items-center justify-center shrink-0 border border-black/5 transition-transform group-hover:scale-110`}>
+            <div className={`${color} scale-75 md:scale-110`}>{icon}</div>
         </div>
         <div className="flex flex-col justify-center min-w-0">
-            <h3 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">{title}</h3>
-            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide truncate">{desc}</p>
+            <h3 className="text-xs md:text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">{title}</h3>
+            <p className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide truncate">{desc}</p>
         </div>
     </motion.div>
 );
