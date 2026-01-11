@@ -30,32 +30,8 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-
-// [DEBUG] Verify Client Path on Startup
-const clientBuildPath = path.join(__dirname, '../client/dist');
-const indexHtmlPath = path.join(clientBuildPath, 'index.html');
-
-console.log('--- Static File Serving Debug Info ---');
-console.log('Current __dirname:', __dirname);
-console.log('Expected Client Build Path:', clientBuildPath);
-console.log('Expected Index HTML Path:', indexHtmlPath);
-
-if (fs.existsSync(indexHtmlPath)) {
-  console.log('✅ Success: index.html found!');
-} else {
-  console.error('❌ Error: index.html NOT found! The client build might be missing or in the wrong place.');
-  // List contents of parent directory to help debug
-  try {
-    const parent = path.join(__dirname, '../');
-    console.log(`Contents of ${parent}:`, fs.readdirSync(parent));
-    if (fs.existsSync(path.join(__dirname, '../client'))) {
-      console.log(`Contents of ../client:`, fs.readdirSync(path.join(__dirname, '../client')));
-    }
-  } catch (e) { console.error('Error listing directories:', e); }
-}
-
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(clientBuildPath));
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
 const upload = multer({ dest: 'uploads/temp/' });
 
@@ -1438,13 +1414,7 @@ app.post('/api/admin/users/:id/membership', verifyAdmin, async (req, res) => {
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
 app.get('*', (req, res) => {
-  console.log(`[Catch-All] Serving React App for path: ${req.path}`);
-  if (fs.existsSync(indexHtmlPath)) {
-    res.sendFile(indexHtmlPath);
-  } else {
-    console.error('[Catch-All] ❌ Critical Error: index.html missing when trying to serve route!');
-    res.status(500).send('Server Error: Frontend build missing');
-  }
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
 server.listen(port, () => {
