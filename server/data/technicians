@@ -19,10 +19,54 @@
       "pincode": "846001"
     },
     "documents": {
-      "photo": "/uploads/technicians/undefined-photo.jpg",
-      "pan": "/uploads/technicians/undefined-pan.jpg",
+      "photo": "/uploads/test/photo.jpg",
+      "pan": "/uploads/test/pan.pdf",
       "aadhar": "/uploads/technicians/undefined-aadhar.jpg"
     },
     "joined_at": "2026-01-10T06:40:25.889Z"
+  },
+  {
+    "name": "Test User",
+    "email": "test-1768144645140@example.com",
+    "phone": "1234567890",
+    "password": "password123",
+    "experience": "5",
+    "rating": 0,
+    "status": "available",
+    "service_type": "Electrician",
+    "address_details": {
+      "city": "Delhi",
+      "country": "India"
+    },
+    "documents": {},
+    "joined_at": "2026-01-11T15:17:26.340Z",
+    "latitude": null,
+    "longitude": null,
+    "base_address": "Delhi",
+    "service_radius": 10
+  },
+  {
+    "id": "1768144694320",
+    "name": "Test User",
+    "email": "test-1768144693267@example.com",
+    "phone": "1234567890",
+    "password": "password123",
+    "experience": "5",
+    "rating": 0,
+    "status": "available",
+    "service_type": "Electrician",
+    "address_details": {
+      "city": "Delhi",
+      "country": "India"
+    },
+    "documents": {
+      "photo": "/uploads/test/photo.jpg",
+      "pan": "/uploads/test/pan.pdf"
+    },
+    "joined_at": "2026-01-11T15:18:14.320Z",
+    "latitude": null,
+    "longitude": null,
+    "base_address": "Delhi",
+    "service_radius": 10
   }
 ]

@@ -90,6 +90,7 @@ class TechnicianManager {
             }
 
             const newTechnician = {
+                id: Date.now().toString(),
                 name,
                 email,
                 phone,
@@ -119,6 +120,26 @@ class TechnicianManager {
         } catch (err) {
             console.error("[TechnicianManager] Error creating technician:", err);
             throw err;
+        }
+    }
+
+    async updateTechnicianDocuments(id, docPaths) {
+        try {
+            const tech = await this.db.find('id', id);
+            if (!tech) return null;
+
+            const currentDocs = tech.documents || {};
+            const newDocs = { ...currentDocs, ...docPaths };
+
+            // Ensure we map to DB format (snake_case if needed)
+            const updates = { documents: newDocs };
+            const dbUpdates = this._mapToDb(updates);
+
+            const result = await this.db.update('id', id, dbUpdates);
+            return this._mapFromDb(result);
+        } catch (err) {
+            console.error("[TechnicianManager] Error updating documents:", err);
+            return null;
         }
     }
 
