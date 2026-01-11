@@ -16,7 +16,21 @@ class TechnicianManager {
     _mapFromDb(tech) {
         if (!tech) return null;
         try {
-            const { service_type, address_details, review_count, membership_since, joined_at, updated_at, documents, base_address, service_radius, ...rest } = tech;
+            const { service_type, address_details, review_count, membership_since, joined_at, updated_at, documents, location, base_address, service_radius, ...rest } = tech;
+
+            // Extract details from location JSONB if available
+            let lat = tech.latitude;
+            let lng = tech.longitude;
+            let addr = base_address;
+            let rad = service_radius || 10;
+
+            if (location && typeof location === 'object') {
+                if (location.latitude) lat = location.latitude;
+                if (location.longitude) lng = location.longitude;
+                if (location.address) addr = location.address;
+                if (location.serviceRadius) rad = location.serviceRadius;
+            }
+
             return {
                 ...rest,
                 serviceType: service_type,
@@ -26,8 +40,11 @@ class TechnicianManager {
                 joinedAt: joined_at,
                 updatedAt: updated_at,
                 documents: documents || {},
-                baseAddress: base_address,
-                serviceRadius: service_radius || 10
+                location: location || {}, // Keep original json too if needed
+                latitude: lat,
+                longitude: lng,
+                baseAddress: addr,
+                serviceRadius: rad
             };
         } catch (err) {
             console.error("[TechnicianManager] Error mapping from DB:", err);
@@ -39,7 +56,13 @@ class TechnicianManager {
     _mapToDb(tech) {
         if (!tech) return null;
         try {
-            const { serviceType, addressDetails, reviewCount, membershipSince, joinedAt, updatedAt, documents, baseAddress, serviceRadius, id, ...rest } = tech;
+            // Destructure known app properties
+            const {
+                serviceType, addressDetails, reviewCount, membershipSince, joinedAt, updatedAt,
+                documents, baseAddress, serviceRadius, id, latitude, longitude, location,
+                ...rest
+            } = tech;
+
             const mapped = { ...rest };
             if (serviceType !== undefined) mapped.service_type = serviceType;
             if (addressDetails !== undefined) mapped.address_details = addressDetails;
@@ -48,9 +71,22 @@ class TechnicianManager {
             if (joinedAt !== undefined) mapped.joined_at = joinedAt;
             if (updatedAt !== undefined) mapped.updated_at = updatedAt;
             if (documents !== undefined) mapped.documents = documents;
-            if (baseAddress !== undefined) mapped.base_address = baseAddress;
-            if (serviceRadius !== undefined) mapped.service_radius = serviceRadius;
             if (id !== undefined) mapped.id = id;
+
+            // Construct Location JSONB
+            // We prioritize existing location object, then overlay updates
+            let locObj = (location && typeof location === 'object') ? { ...location } : {};
+
+            if (latitude !== undefined) locObj.latitude = latitude;
+            if (longitude !== undefined) locObj.longitude = longitude;
+            if (baseAddress !== undefined) locObj.address = baseAddress;
+            if (serviceRadius !== undefined) locObj.serviceRadius = serviceRadius;
+
+            // Only set location if it has meaningful data
+            if (Object.keys(locObj).length > 0) {
+                mapped.location = locObj;
+            }
+
             return mapped;
         } catch (err) {
             console.error("[TechnicianManager] Error mapping to DB:", err);
@@ -102,11 +138,12 @@ class TechnicianManager {
                 address_details: addressDetails,
                 documents: {},
                 joined_at: new Date().toISOString(),
-                // Location Fields
-                latitude: lat,
-                longitude: lng,
-                base_address: baseAddress,
-                service_radius: 10 // Default 10km radius
+                location: {
+                    latitude: lat,
+                    longitude: lng,
+                    address: baseAddress,
+                    serviceRadius: 10
+                }
             };
 
             const created = await this.db.add(newTechnician);
