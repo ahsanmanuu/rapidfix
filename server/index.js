@@ -371,10 +371,11 @@ app.put('/api/users/:id', async (req, res) => {
 // app.post('/api/technicians/register', ... ) replaced.
 
 app.post('/api/technicians/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, latitude, longitude } = req.body;
 
   console.log('--- Tech Login Request ---');
-  const technician = await technicianManager.login(email, password);
+  // Pass dynamic location to login
+  const technician = await technicianManager.login(email, password, latitude, longitude);
 
   if (technician) {
     // Create Session

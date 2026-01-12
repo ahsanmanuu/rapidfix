@@ -16,19 +16,40 @@ class TechnicianManager {
     _mapFromDb(tech) {
         if (!tech) return null;
         try {
-            const { service_type, address_details, review_count, membership_since, joined_at, updated_at, documents, location, base_address, service_radius, ...rest } = tech;
+            const {
+                service_type, address_details, review_count, membership_since,
+                joined_at, updated_at, documents, location, base_address, service_radius,
+                registered_latitude, registered_longitude, latitude, longitude,
+                ...rest
+            } = tech;
 
-            // Extract details from location JSONB if available
-            let lat = tech.latitude;
-            let lng = tech.longitude;
+            // Extract details - WE NOW PREFER TOP-LEVEL COLUMNS
+            // Dynamic Location (Current)
+            let lat = latitude;
+            let lng = longitude;
+
+            // Static Location (Registered Base)
+            let regLat = registered_latitude;
+            let regLng = registered_longitude;
+
             let addr = base_address;
             let rad = service_radius || 2; // Default 2km
 
-            if (location && typeof location === 'object') {
+            // Fallback for Dynamic: If no top-level lat/long, try JSON or Registered
+            if ((lat === undefined || lat === null) && location && typeof location === 'object') {
                 if (location.latitude) lat = location.latitude;
                 if (location.longitude) lng = location.longitude;
-                if (location.address) addr = location.address;
-                if (location.serviceRadius) rad = location.serviceRadius;
+            }
+            // If still null, fallback to registered (assuming they haven't moved or just registered)
+            if (lat === undefined || lat === null) {
+                lat = regLat;
+                lng = regLng;
+            }
+
+            // Fallback for Address/Radius
+            if (location && typeof location === 'object') {
+                if (!addr && location.address) addr = location.address;
+                if (!rad && location.serviceRadius) rad = location.serviceRadius;
             }
 
             return {
@@ -41,8 +62,15 @@ class TechnicianManager {
                 updatedAt: updated_at,
                 documents: documents || {},
                 location: location || {}, // Keep original json too if needed
+
+                // Dynamic (Current Position)
                 latitude: lat,
                 longitude: lng,
+
+                // Static (Home Base)
+                registeredLatitude: regLat,
+                registeredLongitude: regLng,
+
                 baseAddress: addr,
                 serviceRadius: rad
             };
@@ -59,7 +87,9 @@ class TechnicianManager {
             // Destructure known app properties
             const {
                 serviceType, addressDetails, reviewCount, membershipSince, joinedAt, updatedAt,
-                documents, baseAddress, serviceRadius, id, latitude, longitude, location,
+                documents, baseAddress, serviceRadius, id,
+                latitude, longitude, registeredLatitude, registeredLongitude,
+                location,
                 ...rest
             } = tech;
 
@@ -73,22 +103,13 @@ class TechnicianManager {
             if (documents !== undefined) mapped.documents = documents;
             if (id !== undefined) mapped.id = id;
 
-            // Construct Location JSONB
-            // We prioritize existing location object, then overlay updates
-            let locObj = (location && typeof location === 'object') ? { ...location } : {};
-
-            if (latitude !== undefined) locObj.latitude = latitude;
-            if (longitude !== undefined) locObj.longitude = longitude;
-            if (baseAddress !== undefined) locObj.address = baseAddress;
-            if (serviceRadius !== undefined) {
-                locObj.serviceRadius = serviceRadius;
-                mapped.service_radius = serviceRadius; // Sync column
-            }
-
-            // Only set location if it has meaningful data
-            if (Object.keys(locObj).length > 0) {
-                mapped.location = locObj;
-            }
+            // Direct Columns
+            if (latitude !== undefined) mapped.latitude = latitude;
+            if (longitude !== undefined) mapped.longitude = longitude;
+            if (registeredLatitude !== undefined) mapped.registered_latitude = registeredLatitude;
+            if (registeredLongitude !== undefined) mapped.registered_longitude = registeredLongitude;
+            if (baseAddress !== undefined) mapped.base_address = baseAddress;
+            if (serviceRadius !== undefined) mapped.service_radius = serviceRadius;
 
             return mapped;
         } catch (err) {
@@ -141,16 +162,19 @@ class TechnicianManager {
                 address_details: addressDetails,
                 documents: {},
                 joined_at: new Date().toISOString(),
-                location: {
-                    latitude: lat,
-                    longitude: lng,
-                    address: baseAddress,
-                    serviceRadius: 2
-                },
-                service_radius: 2 // Explicitly set column default to 2km
+
+                // Set both Static and Dynamic to the same initial value
+                latitude: lat,
+                longitude: lng,
+                registeredLatitude: lat,
+                registeredLongitude: lng,
+
+                baseAddress: baseAddress,
+                serviceRadius: 2
             };
 
-            const created = await this.db.add(newTechnician);
+            const dbRecord = this._mapToDb(newTechnician);
+            const created = await this.db.add(dbRecord);
             const tech = this._mapFromDb(created);
 
             if (this.io) {
@@ -184,7 +208,7 @@ class TechnicianManager {
         }
     }
 
-    async login(email, password) {
+    async login(email, password, currentLat, currentLng) {
         try {
             if (!email || !password) return null;
             const cleanEmail = email.trim().toLowerCase();
@@ -193,7 +217,19 @@ class TechnicianManager {
             if (!tech) return null;
 
             if (tech.password === password) {
-                const { password, ...techWithoutPass } = this._mapFromDb(tech);
+                // Prepare return object
+                let techObj = this._mapFromDb(tech);
+
+                // Update Dynamic Location if provided
+                if (currentLat && currentLng) {
+                    // Fire and forget update (awaiting it might slow down login slightly, but safer to await)
+                    await this.updateLocation(tech.id, { latitude: currentLat, longitude: currentLng });
+                    // Update the object in memory to return fresh state
+                    techObj.latitude = currentLat;
+                    techObj.longitude = currentLng;
+                }
+
+                const { password, ...techWithoutPass } = techObj;
                 return techWithoutPass;
             }
             return null;
@@ -239,22 +275,15 @@ class TechnicianManager {
             const allTechs = await this.db.read();
             const techs = allTechs
                 .map(t => this._mapFromDb(t))
-                .filter(t => t.serviceType && t.serviceType.toLowerCase().trim() === type);
+                .filter(t => t.service_type && t.service_type.toLowerCase().trim() === type || // DB field fallback
+                    t.serviceType && t.serviceType.toLowerCase().trim() === type);
 
             const nearbyTechs = techs.map(tech => {
-                // Check if we have valid coordinates
+                // PRIORITIZE DYNAMIC LOCATION
                 let tLat = tech.latitude;
                 let tLon = tech.longitude;
 
-                // Fallback to legacy location object if exists
-                if ((tLat === undefined || tLon === undefined) && tech.location && typeof tech.location === 'object') {
-                    tLat = tech.location.latitude ?? tech.location.lat;
-                    tLon = tech.location.longitude ?? tech.location.lng;
-                }
-
-                if (typeof tLat === 'string') tLat = parseFloat(tLat);
-                if (typeof tLon === 'string') tLon = parseFloat(tLon);
-
+                // Checking valid numbers
                 if (tLat === undefined || tLon === undefined || isNaN(tLat) || isNaN(tLon)) return null;
 
                 const dist = this.calculateDistance(lat, lon, tLat, tLon);
@@ -321,9 +350,27 @@ class TechnicianManager {
 
     async updateLocation(id, location) {
         try {
-            const result = await this.db.update('id', id, { location });
+            // Support both objects {latitude, longitude} and raw args if needed, but here assuming object
+            let updates = {};
+
+            if (location.latitude !== undefined) updates.latitude = location.latitude;
+            if (location.longitude !== undefined) updates.longitude = location.longitude;
+
+            // If it's the "registered" location update requested specifically (rarely used directly)
+            if (location.registeredLatitude !== undefined) updates.registered_latitude = location.registeredLatitude;
+            if (location.registeredLongitude !== undefined) updates.registered_longitude = location.registeredLongitude;
+
+            const result = await this.db.update('id', id, updates);
+
             if (this.io) {
-                this.io.emit('technician_location_update', { technicianId: id, location });
+                // Emit event for real-time tracking (Maps)
+                this.io.emit('technician_location_update', {
+                    technicianId: id,
+                    location: {
+                        latitude: location.latitude,
+                        longitude: location.longitude
+                    }
+                });
             }
             return result;
         } catch (err) {
@@ -352,27 +399,30 @@ class TechnicianManager {
             const techRaw = await this.db.find('id', id);
             if (!techRaw) return null;
 
-            // Handle Location Input
+            // Handle Location Input - For Profile Updates, this usually implies Changing Home Base (Registered)
+            // But if we want it to be current... typically "Profile" address is "Registered" address.
+            // Let's assume Profile Address = Registered Location.
+
             if (updates.location) {
                 if (typeof updates.location === 'string') {
                     updates.baseAddress = updates.location;
                     const coords = await geocodeAddress(updates.location);
                     if (coords) {
-                        updates.latitude = coords.lat;
-                        updates.longitude = coords.lng;
+                        updates.registeredLatitude = coords.lat;
+                        updates.registeredLongitude = coords.lng;
+                        // Also update current if they are moving base? Maybe not always.
+                        // Let's safe-bet: changing profile address updates registered location.
                     }
                 } else if (typeof updates.location === 'object') {
-                    updates.latitude = updates.location.latitude;
-                    updates.longitude = updates.location.longitude;
+                    // Direct override
+                    if (updates.location.latitude) updates.registeredLatitude = updates.location.latitude;
+                    if (updates.location.longitude) updates.registeredLongitude = updates.location.longitude;
 
-                    if (!updates.location.address && !updates.location.baseAddress) {
-                        const addressName = await reverseGeocode(updates.latitude, updates.longitude);
-                        if (addressName) updates.baseAddress = addressName;
-                    } else {
+                    if (!updates.baseAddress && (updates.location.address || updates.location.baseAddress)) {
                         updates.baseAddress = updates.location.address || updates.location.baseAddress;
                     }
                 }
-                delete updates.location;
+                delete updates.location; // handled
             }
 
             const dbUpdates = this._mapToDb(updates);
@@ -387,15 +437,6 @@ class TechnicianManager {
             if (this.io) {
                 this.io.to(`tech_${id}`).emit('profile_updated', tech);
                 this.io.emit('admin_tech_update', tech);
-                // Check if lat/long is present in internal tech object (mapped ref)
-                if (tech.latitude && tech.longitude) {
-                    this.io.emit('technician_location_update', {
-                        id: id,
-                        latitude: tech.latitude,
-                        longitude: tech.longitude,
-                        status: tech.status
-                    });
-                }
             }
             return tech;
         } catch (err) {

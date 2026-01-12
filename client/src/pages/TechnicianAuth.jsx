@@ -95,10 +95,29 @@ const TechnicianAuth = () => {
         e.preventDefault();
         setLoading(true);
         setAlertMessage(null);
+
+        // Get Location for Dynamic Update
+        let loc = null;
+        try {
+            if (navigator.geolocation) {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+                });
+                loc = {
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude
+                };
+            }
+        } catch (err) {
+            console.warn("Could not fetch location for login sync:", err);
+            // We proceed without location if it fails (don't block login)
+        }
+
         try {
             const payload = {
                 email: loginData.email.trim(),
-                password: loginData.password.trim()
+                password: loginData.password.trim(),
+                ...loc // Spread latitude and longitude if available
             };
             const res = await api.post('/technicians/login', payload);
             if (res.data.success) {
