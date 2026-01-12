@@ -21,6 +21,11 @@ import JobTable from '../components/admin/jobs/JobTable';
 import JobDrawer from '../components/admin/jobs/JobDrawer';
 import UserCreateModal from '../components/admin/users/UserCreateModal';
 import JobFormModal from '../components/admin/jobs/JobFormModal';
+import TechnicianStats from '../components/admin/technicians/TechnicianStats';
+import TechnicianHeader from '../components/admin/technicians/TechnicianHeader';
+import TechnicianFilters from '../components/admin/technicians/TechnicianFilters';
+import TechnicianTable from '../components/admin/technicians/TechnicianTable';
+import TechnicianDrawer from '../components/admin/technicians/TechnicianDrawer';
 
 // Mock Data & Constants
 const ACTIVITY_LOG = [
@@ -261,6 +266,66 @@ const AdminDashboard = () => {
 
     // Data State
     const [technicians, setTechnicians] = useState([]);
+
+    // Technician Panel State
+    const [technicianPage, setTechnicianPage] = useState(1);
+    const [activeTechStatus, setActiveTechStatus] = useState('All');
+    const [activeTechService, setActiveTechService] = useState('All');
+    const [selectedTechnician, setSelectedTechnician] = useState(null);
+    const [isTechDrawerOpen, setIsTechDrawerOpen] = useState(false);
+
+    // Derived State - Filtered Technicians
+    const filteredTechnicians = technicians.filter(tech => {
+        const matchesSearch = searchQuery === '' ||
+            tech.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            tech.email?.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesStatus = activeTechStatus === 'All' || tech.status === activeTechStatus;
+        const matchesService = activeTechService === 'All' || tech.serviceType === activeTechService;
+
+        return matchesSearch && matchesStatus && matchesService;
+    });
+
+    const paginatedTechnicians = filteredTechnicians.slice((technicianPage - 1) * LIMIT_PER_PAGE, technicianPage * LIMIT_PER_PAGE);
+
+    const handleSelectTechnician = (tech) => {
+        setSelectedTechnician(tech);
+        setIsTechDrawerOpen(true);
+    };
+
+    const handleCloseTechDrawer = () => {
+        setIsTechDrawerOpen(false);
+        setTimeout(() => setSelectedTechnician(null), 300);
+    };
+
+    const handleBanTechnician = async (tech) => {
+        try {
+            if (tech.status === 'Banned') {
+                await unbanUser(tech.id);
+            } else {
+                await banUser(tech.id);
+            }
+            // Refresh technicians
+            const res = await api.get('/admin/technicians');
+            setTechnicians(res.data.technicians || []);
+
+            // Update selected technician if open
+            if (selectedTechnician && selectedTechnician.id === tech.id) {
+                setSelectedTechnician(prev => ({
+                    ...prev,
+                    status: tech.status === 'Banned' ? 'Active' : 'Banned'
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to toggle ban status:', error);
+            alert('Failed to update technician status');
+        }
+    };
+
+    const handleVerifyTechnician = async (tech) => {
+        // Placeholder for verification logic - potentially updateUserStatus or similar
+        alert(`Verifying ${tech.name}... (Feature pending backend support)`);
+    };
 
     // Derived State - Filtered Users
     const filteredUsers = users.filter(user => {
@@ -547,10 +612,69 @@ const AdminDashboard = () => {
                         <div className="h-full">
                             {/* TECHNICIANS TAB */}
                             {activeTab === 'technicians' && (
-                                <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
-                                    <span className="material-symbols-outlined text-6xl text-slate-300 mb-4">engineering</span>
-                                    <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-300">Technician Management</h2>
-                                    <p className="text-slate-500 mt-2">Module coming in next update</p>
+                                <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
+                                    <TechnicianHeader onAddTechnician={() => alert("Add Technician feature coming soon")} />
+
+                                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
+                                        <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
+                                            <TechnicianStats technicians={technicians} />
+
+                                            <TechnicianFilters
+                                                searchQuery={searchQuery}
+                                                setSearchQuery={setSearchQuery}
+                                                activeStatus={activeTechStatus}
+                                                setActiveStatus={setActiveTechStatus}
+                                                activeService={activeTechService}
+                                                setActiveService={setActiveTechService}
+                                            />
+
+                                            <TechnicianTable
+                                                technicians={paginatedTechnicians}
+                                                selectedTechId={selectedTechnician?.id}
+                                                onSelectTech={handleSelectTechnician}
+                                                onBanTech={handleBanTechnician}
+                                                onDeleteTech={(tech) => alert(`Delete ${tech.name}`)}
+                                            />
+
+                                            {/* Pagination (Simple Implementation) */}
+                                            {filteredTechnicians.length > LIMIT_PER_PAGE && (
+                                                <div className="flex justify-center mt-4 gap-2">
+                                                    <button
+                                                        disabled={technicianPage === 1}
+                                                        onClick={() => setTechnicianPage(p => p - 1)}
+                                                        className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg disabled:opacity-50"
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    <span className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg">
+                                                        Page {technicianPage} of {Math.ceil(filteredTechnicians.length / LIMIT_PER_PAGE)}
+                                                    </span>
+                                                    <button
+                                                        disabled={technicianPage === Math.ceil(filteredTechnicians.length / LIMIT_PER_PAGE)}
+                                                        onClick={() => setTechnicianPage(p => p + 1)}
+                                                        className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg disabled:opacity-50"
+                                                    >
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Drawer Backdrop */}
+                                    {isTechDrawerOpen && (
+                                        <div
+                                            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
+                                            onClick={handleCloseTechDrawer}
+                                        />
+                                    )}
+
+                                    <TechnicianDrawer
+                                        technician={selectedTechnician}
+                                        onClose={handleCloseTechDrawer}
+                                        onBanTech={handleBanTechnician}
+                                        onVerifyTech={handleVerifyTechnician}
+                                    />
                                 </div>
                             )}
 
