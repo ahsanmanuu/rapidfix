@@ -46,25 +46,25 @@ const Navbar = () => {
 
                             {user ? (
                                 <div className="flex items-center gap-4">
-                                    <Link to="/wallet" className="flex items-center gap-2 font-medium text-slate-600 hover:text-slate-900">
+                                    <Link to="/wallet" className={`flex items-center gap-2 font-medium transition-colors ${scrolled ? 'text-slate-600 hover:text-slate-900' : 'text-white/90 hover:text-white'}`}>
                                         <Wallet size={20} />
                                         <span>Wallet</span>
                                     </Link>
                                     <Link
                                         to={user.role === 'technician' ? '/technician-dashboard' : '/dashboard'}
-                                        className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                                        className={`p-2 rounded-full transition-colors ${scrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-white/20 hover:bg-white/30 text-white'}`}
                                         title="Dashboard"
                                     >
                                         <LayoutDashboard size={20} />
                                     </Link>
-                                    <div className="flex items-center gap-3 px-4 pl-2 border-l border-slate-200">
+                                    <div className={`flex items-center gap-3 px-4 pl-2 border-l ${scrolled ? 'border-slate-200' : 'border-white/20'}`}>
                                         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-sm text-blue-700 font-bold border-2 border-white shadow-sm">
                                             {user.name && user.name.length > 0 ? user.name.charAt(0) : 'U'}
                                         </div>
                                     </div>
                                     <button
                                         onClick={handleLogout}
-                                        className="p-3 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                        className={`p-3 rounded-full transition-colors ${scrolled ? 'text-slate-400 hover:bg-red-50 hover:text-red-600' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
                                         title="Logout"
                                     >
                                         <LogOut size={20} />
@@ -80,13 +80,19 @@ const Navbar = () => {
                                     </Link>
                                     <Link
                                         to="/register"
-                                        className={`px-6 py-2.5 rounded-full font-bold text-sm shadow-lg shadow-blue-500/30 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-blue-500/40 ${scrolled ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-blue-600 hover:bg-blue-50'}`}
+                                        className={`px-6 py-2.5 rounded-full font-bold text-sm shadow-lg transition-all duration-300 hover:-translate-y-0.5 ${scrolled
+                                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/30'
+                                            : 'bg-white text-blue-600 hover:bg-blue-50 shadow-black/20'
+                                            }`}
                                     >
                                         Register
                                     </Link>
                                     <Link
                                         to="/join-partner"
-                                        className={`hidden xl:flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm border transition-all duration-300 hover:bg-white/10 ${scrolled ? 'border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900' : 'border-white/20 text-white hover:border-white/40'}`}
+                                        className={`hidden xl:flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm border transition-all duration-300 ${scrolled
+                                            ? 'border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900 hover:bg-slate-50'
+                                            : 'border-white/30 text-white hover:border-white/60 hover:bg-white/10'
+                                            }`}
                                     >
                                         <Briefcase size={16} />
                                         <span>Join as Partner</span>

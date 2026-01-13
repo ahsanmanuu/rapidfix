@@ -496,8 +496,8 @@ const Home = () => {
                             style={{ backgroundImage: `url(${(slides && slides[currentSlide]) ? slides[currentSlide].image : ''})` }}
                         />
                         {/* Lighter Gradient Overlay for Light Theme readability if needed, or keeping it dark for contrast with white text */}
-                        {/* Red Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-red-950/95 via-red-900/60 to-red-900/20"></div>
+                        {/* Red Gradient Overlay - Darkened for better text contrast */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-red-950 via-red-950/80 to-red-900/40"></div>
                     </motion.div>
                 </AnimatePresence>
 
@@ -621,7 +621,7 @@ const Home = () => {
                 </div>
 
                 {/* Grid for mobile, Flex for desktop */}
-                <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 md:gap-6 px-2 md:px-12 w-full">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 px-2 md:px-12 w-full max-w-7xl mx-auto">
                     {[
                         { id: 'Electrician', icon: <Zap size={18} />, title: "Electrician", desc: "Wiring & Safety", color: "text-amber-500", bg: "bg-amber-50" },
                         { id: 'Plumber', icon: <Droplet size={18} />, title: "Plumber", desc: "Pipes & Leaks", color: "text-cyan-600", bg: "bg-cyan-50" },
@@ -632,7 +632,7 @@ const Home = () => {
                         { id: 'Biometrics Technician', icon: <Fingerprint size={18} />, title: "Biometrics Technician", desc: "Access Control", color: "text-purple-600", bg: "bg-purple-50" },
                         { id: 'Printer Technician', icon: <Printer size={18} />, title: "Printer Technician", desc: "Repair & Fix", color: "text-slate-600", bg: "bg-slate-50" },
                     ].map((service) => (
-                        <div key={service.id} onClick={() => handleBookNow(service.id)} className="w-full md:w-[240px] shrink-0">
+                        <div key={service.id} onClick={() => handleBookNow(service.id)} className="w-full shrink-0">
                             <ServiceCard icon={service.icon} title={service.title} desc={service.desc} color={service.color} bg={service.bg} />
                         </div>
                     ))}
@@ -708,7 +708,7 @@ const Home = () => {
                                     <Button
                                         onClick={() => handleBookNow(technicianProfiles[currentTechIndex]?.serviceType || 'Electrician', technicianProfiles[currentTechIndex])}
                                         disabled={technicianProfiles[currentTechIndex]?.status === 'engaged'}
-                                        className={`px-10 py-4 bg-transparent text-white border-2 border-white font-bold shadow-lg shadow-white/10 transform transition 
+                                        className={`px-10 py-4 bg-transparent text-white border-2 border-white font-bold shadow-lg shadow-white/10 transform transition w-full sm:w-auto
                                             ${technicianProfiles[currentTechIndex]?.status === 'engaged' ? 'opacity-50 cursor-not-allowed hover:none' : 'hover:bg-white hover:text-slate-900 hover:-translate-y-1'}`}
                                     >
                                         {technicianProfiles[currentTechIndex]?.status === 'engaged'
