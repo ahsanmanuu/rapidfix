@@ -293,12 +293,24 @@ const TechnicianDashboard = () => {
                 // Toast logic here if needed
                 fetchAllData();
             });
-            // [NEW] Listen for profile updates (e.g. Status change to 'engaged')
-            socket.on('profile_updated', (updatedTech) => {
+
+            // [NEW] Robust Profile/Status Updates
+            const handleProfileUpdate = (updatedTech) => {
                 console.log("Profile Updated via Socket:", updatedTech);
                 updateUser(updatedTech); // Updates Auth Context
-                fetchAllData();          // Refreshes jobs/stats
-            });
+                fetchAllData(true);      // Refresh data but flag to preserve status if needed
+            };
+
+            const handleStatusOnlyUpdate = ({ technicianId, status }) => {
+                if (user.id === technicianId) {
+                    console.log("Status Only Update via Socket:", status);
+                    updateUser({ ...user, status });
+                }
+            };
+
+            socket.on('profile_updated', handleProfileUpdate);
+            socket.on('technician_status_update', handleStatusOnlyUpdate);
+
             socket.on('receive_message', (msg) => {
                 if (msg.receiverId === user.id) {
                     // Update chat if open, or show notification
@@ -317,6 +329,7 @@ const TechnicianDashboard = () => {
                 socket.off('job_status_updated');
                 socket.off('feedback_received');
                 socket.off('profile_updated');
+                socket.off('technician_status_update');
                 socket.off('receive_message');
             }
         };

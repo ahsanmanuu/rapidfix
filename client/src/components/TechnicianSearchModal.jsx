@@ -83,20 +83,35 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
     }, [isOpen, performSearch]);
 
     // Real-time Updates (Status & Location)
+    // Real-time Updates (Status & Location)
     useEffect(() => {
         if (!socket || !isOpen) return;
-        const handleUpdate = () => {
-            console.log("Realtime update received (Location or Status)");
-            performSearch();
+
+        const handleStatusUpdate = ({ technicianId, status }) => {
+            setTechnicians(prev => prev.map(t =>
+                t.id === technicianId ? { ...t, status } : t
+            ));
         };
-        socket.on('technician_status_update', handleUpdate);
-        socket.on('technician_location_update', handleUpdate); // [NEW] Live movement
+
+        const handleLocationUpdate = ({ technicianId, location }) => {
+            setTechnicians(prev => prev.map(t =>
+                t.id === technicianId ? {
+                    ...t,
+                    location: { ...t.location, ...location },
+                    latitude: location.latitude,
+                    longitude: location.longitude
+                } : t
+            ));
+        };
+
+        socket.on('technician_status_update', handleStatusUpdate);
+        socket.on('technician_location_update', handleLocationUpdate);
 
         return () => {
-            socket.off('technician_status_update', handleUpdate);
-            socket.off('technician_location_update', handleUpdate);
+            socket.off('technician_status_update', handleStatusUpdate);
+            socket.off('technician_location_update', handleLocationUpdate);
         };
-    }, [socket, isOpen, performSearch]);
+    }, [socket, isOpen]);
 
     // Real-time Updates
 
