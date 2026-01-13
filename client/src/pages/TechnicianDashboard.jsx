@@ -293,6 +293,12 @@ const TechnicianDashboard = () => {
                 // Toast logic here if needed
                 fetchAllData();
             });
+            // [NEW] Listen for profile updates (e.g. Status change to 'engaged')
+            socket.on('profile_updated', (updatedTech) => {
+                console.log("Profile Updated via Socket:", updatedTech);
+                updateUser(updatedTech); // Updates Auth Context
+                fetchAllData();          // Refreshes jobs/stats
+            });
             socket.on('receive_message', (msg) => {
                 if (msg.receiverId === user.id) {
                     // Update chat if open, or show notification
@@ -310,6 +316,7 @@ const TechnicianDashboard = () => {
                 socket.off('new_job_assigned');
                 socket.off('job_status_updated');
                 socket.off('feedback_received');
+                socket.off('profile_updated');
                 socket.off('receive_message');
             }
         };
