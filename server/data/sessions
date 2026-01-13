@@ -55,5 +55,12 @@
     "user_id": "9b853644-5773-439f-a590-4cf1ef2062cd",
     "expires_at": "2026-01-18T06:45:49.143Z",
     "created_at": "2026-01-11T06:45:49.143Z"
+  },
+  {
+    "token": "933dda81540e5484ed4168c5c0cd3bddad15f46818e4005d203cbd4c8880af0a",
+    "role": "technician",
+    "user_id": "6211ffe6-25a7-4f7f-b08c-5a63dd3238d7",
+    "expires_at": "2026-01-20T15:13:32.146Z",
+    "created_at": "2026-01-13T15:13:32.146Z"
   }
 ]

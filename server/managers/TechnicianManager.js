@@ -162,6 +162,7 @@ class TechnicianManager {
                 address_details: addressDetails,
                 documents: {},
                 joined_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
 
                 // Set both Static and Dynamic to the same initial value
                 latitude: lat,
@@ -279,9 +280,15 @@ class TechnicianManager {
                     t.serviceType && t.serviceType.toLowerCase().trim() === type);
 
             const nearbyTechs = techs.map(tech => {
-                // PRIORITIZE DYNAMIC LOCATION
-                let tLat = tech.latitude;
-                let tLon = tech.longitude;
+                // PRIORITIZE FIXED/REGISTERED LOCATION
+                let tLat = tech.registeredLatitude;
+                let tLon = tech.registeredLongitude;
+
+                // Fallback to Dynamic if Fixed is missing (Legacy support)
+                if (tLat === undefined || tLon === undefined || tLat === null || tLon === null) {
+                    tLat = tech.latitude;
+                    tLon = tech.longitude;
+                }
 
                 // Checking valid numbers
                 if (tLat === undefined || tLon === undefined || isNaN(tLat) || isNaN(tLon)) return null;
