@@ -34,7 +34,7 @@ class SessionManager {
             const { userId, deviceId, expiresAt, createdAt, id, ...rest } = sess;
             const mapped = { ...rest };
             if (userId !== undefined) mapped.user_id = userId;
-            if (deviceId !== undefined) mapped.device_id = deviceId;
+            // if (deviceId !== undefined) mapped.device_id = deviceId; // TODO: Run 'server/update-sessions-table.sql' on Supabase then uncomment this
             if (expiresAt !== undefined) mapped.expires_at = expiresAt;
             if (createdAt !== undefined) mapped.created_at = createdAt;
             if (id !== undefined) mapped.id = id;
