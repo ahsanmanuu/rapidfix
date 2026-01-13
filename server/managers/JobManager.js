@@ -116,7 +116,7 @@ class JobManager {
     }
 
     async autoAssignJob(jobId) {
-        console.log(`[JobManager] Starting Advanced AutoAssign for Job #${jobId}`);
+        console.log(`[JobManager] Starting Real-Time AutoAssign for Job #${jobId}`);
         try {
             const job = await this.getJob(jobId);
             if (!job || job.technicianId || job.status !== 'pending') {
@@ -125,23 +125,27 @@ class JobManager {
 
             const { location, serviceType, technicianId: requestedTechId } = job;
 
-            // 1. Direct Assignment if Requested
+            // --- CONDITION 2 & 3: Direct Assignment (Quick Booking / Tech of Month) ---
             if (requestedTechId) {
+                console.log(`[JobManager] Condition 2/3 Met: Direct Assignment requested for ${requestedTechId}`);
                 return await this.assignTechnician(jobId, requestedTechId);
             }
 
-            // 2. Advanced Search & Filter
+            // --- CONDITION 1: Auto-Search & Filter ---
             if (location && (location.latitude || location.lat) && (location.longitude || location.lng)) {
                 const lat = location.latitude || location.lat;
                 const lon = location.longitude || location.lng;
 
-                // Get Potential Candidates (Available + Nearby + Service Match)
-                // [FIX] STRICTLY restricted radius to 2km ONLY as per user request
+                // Step A: Search Nearby (Radius 2km)
                 const radius = 2.0;
                 let candidates = await this.techManager.searchTechnicians(lat, lon, serviceType, radius);
+
+                // Filter only available technicians
                 candidates = candidates.filter(t => t.status === 'available');
 
-                // Pre-Fetch Data required for filtering
+                console.log(`[AutoAssign] Found ${candidates.length} candidates within ${radius}km for ${serviceType}`);
+
+                // Pre-Fetch Global Stats for Market Share Calculation
                 const platformEarnings = await this.financeManager.getPlatformMonthlyEarnings();
                 const allJobsThisMonth = await this._getMonthlyJobCountGlobal();
 
@@ -150,60 +154,63 @@ class JobManager {
                 for (const tech of candidates) {
                     // --- CRITERIA CHECKS ---
 
-                    // 1. Rating > 3.5
-                    if ((tech.rating || 0) <= 3.5) continue;
-
-                    // 2. Job Rejection Rate < 40%
-                    const jobStats = await this.getJobStats(tech.id);
-                    // jobStats.ratio is rejection ratio (0.0 to 1.0)
-                    if (jobStats.ratio >= 0.40) continue;
-
-                    // 3. Completion Rate > 50% ("Served more than 50%")
-                    // Completion = Completed / Assigned
-                    const completionRate = jobStats.total > 0 ? (jobStats.completed / jobStats.total) : 1; // Give benefit of doubt to new techs
-                    if (completionRate <= 0.50) continue;
-
-                    // 4. Complaints < 30%
-                    const complaintStats = await this.complaintManager.getComplaintStats(tech.id);
-                    const complaintRate = jobStats.completed > 0 ? (complaintStats.total / jobStats.completed) : 0;
-                    if (complaintRate >= 0.30) continue;
-
-                    // 5. Monthly Job Volume Cap
-                    // Rule: Max 10% for Standard, 100% (No Cap) for Premium
-                    const isPremium = tech.membership === 'Premium' || tech.subscription === 'premium';
-                    const volumeCap = isPremium ? 1.0 : 0.10;
-
-                    const techMonthlyJobs = await this._getMonthlyJobCount(tech.id);
-                    const volumeShare = allJobsThisMonth > 0 ? (techMonthlyJobs / allJobsThisMonth) : 0;
-
-                    if (volumeShare >= volumeCap) {
-                        console.log(`[AutoAssign] Skipping ${tech.name}: Over volume cap (${(volumeShare * 100).toFixed(1)}% / ${(volumeCap * 100).toFixed(1)}%)`);
+                    // 1. Check Star Rating (>= 3.0 OR New/0)
+                    const rating = tech.rating || 0;
+                    if (rating > 0 && rating < 3.0) {
+                        console.log(`[AutoAssign] Skipping ${tech.name}: Low Rating (${rating})`);
                         continue;
                     }
 
-                    // 6. Monthly Earning Cap (Earning is not more than 80%)
-                    // Assume: Tech Earnings / Total Platform Earnings < 80% (Anti-Monopoly)
-                    const techEarnings = await this.financeManager.getMonthlyEarnings(tech.id);
-                    const earningShare = platformEarnings > 0 ? (techEarnings / platformEarnings) : 0;
-                    if (earningShare >= 0.80) {
-                        console.log(`[AutoAssign] Skipping ${tech.name}: Over earning cap (${(earningShare * 100).toFixed(1)}%)`);
+                    // 2. Check Job Rejection Rate (< 20% in CURRENT MONTH)
+                    const jobStats = await this.getJobStats(tech.id, true); // true = current month only
+                    // jobStats.ratio is rejection ratio (0.0 to 1.0)
+                    // We allow if total jobs is low (< 3) so we don't block new techs on 1 rejection immediately
+                    if (jobStats.total >= 3 && jobStats.ratio >= 0.20) {
+                        console.log(`[AutoAssign] Skipping ${tech.name}: High Monthly Rejection Rate (${(jobStats.ratio * 100).toFixed(1)}%)`);
+                        continue;
+                    }
+
+                    // 3. Market Share / Workload Caps
+                    // Condition: Free < 20%, Premium < 80% (Using Job Volume)
+                    const isPremium = tech.membership === 'Premium' || tech.subscription === 'premium';
+                    const volumeCap = isPremium ? 0.80 : 0.20;
+
+                    const techMonthlyJobs = await this._getMonthlyJobCount(tech.id);
+                    // Avoid division by zero
+                    const volumeShare = allJobsThisMonth > 0 ? (techMonthlyJobs / allJobsThisMonth) : 0;
+
+                    // Only apply cap if there is significant volume (e.g., > 10 jobs in system)
+                    if (allJobsThisMonth > 10 && volumeShare >= volumeCap) {
+                        console.log(`[AutoAssign] Skipping ${tech.name}: Over volume cap (${(volumeShare * 100).toFixed(1)}% / ${(volumeCap * 100).toFixed(1)}%)`);
                         continue;
                     }
 
                     qualifiedTechs.push(tech);
                 }
 
+                // If found, pick the best one
                 if (qualifiedTechs.length > 0) {
-                    // Sort by Rating (High) -> Distance (Low)
-                    qualifiedTechs.sort((a, b) => (b.rating || 0) - (a.rating || 0) || (a.distance - b.distance));
+                    // Sort Priority:
+                    // 1. Rating (Desc)
+                    // 2. Premium Status (Privilege) - Optional but good for business
+                    // 3. Distance (Asc)
+                    qualifiedTechs.sort((a, b) => {
+                        const scoreA = (a.rating || 0) + (a.membership === 'Premium' ? 1 : 0);
+                        const scoreB = (b.rating || 0) + (b.membership === 'Premium' ? 1 : 0);
+                        return (scoreB - scoreA) || (a.distance - b.distance);
+                    });
+
                     const bestTech = qualifiedTechs[0];
 
-                    console.log(`[JobManager] Auto-pairing Job #${jobId} with ${bestTech.name} (Qualified Candidate)`);
-                    const result = await this.assignTechnician(jobId, bestTech.id);
-                    return result;
+                    console.log(`[JobManager] Auto-pairing Job #${jobId} with ${bestTech.name} (Dist: ${bestTech.distance}km, Rate: ${bestTech.rating})`);
+
+                    // Assign
+                    return await this.assignTechnician(jobId, bestTech.id);
                 } else {
                     console.log(`[JobManager] No qualified technicians found for Job #${jobId} after filtering.`);
                 }
+            } else {
+                console.log(`[JobManager] AutoAssign skipped: Missing location data for Job #${jobId}`);
             }
             return job;
         } catch (err) {
@@ -350,13 +357,21 @@ class JobManager {
         }
     }
 
-    async getJobStats(technicianId) {
+    async getJobStats(technicianId, monthOnly = false) {
         try {
             const jobs = await this.getJobsByTechnician(technicianId);
-            const total = jobs.length;
+            let filteredJobs = jobs; // Default to all
+
+            if (monthOnly) {
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                filteredJobs = jobs.filter(j => j.createdAt >= startOfMonth || j.created_at >= startOfMonth);
+            }
+
+            const total = filteredJobs.length;
             if (total === 0) return { total: 0, rejected: 0, completed: 0, ratio: 0 };
-            const rejected = jobs.filter(j => j.status === 'rejected' || j.status === 'cancelled').length;
-            const completed = jobs.filter(j => j.status === 'completed').length;
+            const rejected = filteredJobs.filter(j => j.status === 'rejected' || j.status === 'cancelled').length;
+            const completed = filteredJobs.filter(j => j.status === 'completed').length;
             return { total, rejected, completed, ratio: rejected / total };
         } catch (err) {
             console.error(`[JobManager] Error getting stats for tech ${technicianId}:`, err);
