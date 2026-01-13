@@ -106,7 +106,7 @@ const TestimonialSlider = () => {
 
     return (
         <div className="w-full max-w-6xl mx-auto px-4 py-8 relative">
-            <h2 className="text-center text-4xl font-extrabold text-slate-900 mb-16 tracking-tight">
+            <h2 className="text-center text-2xl md:text-4xl font-extrabold text-slate-900 mb-8 md:mb-16 tracking-tight">
                 Trusted by Experts & Homeowners
             </h2>
 
@@ -139,15 +139,15 @@ const TestimonialSlider = () => {
                             initial="enter"
                             animate="center"
                             exit="exit"
-                            className="bg-white rounded-[2rem] shadow-2xl p-10 md:p-14 relative border border-slate-100" // Cleaner border, larger padding
+                            className="bg-white rounded-[2rem] shadow-2xl p-6 md:p-14 relative border border-slate-100" // Cleaner border, larger padding
                             style={{
                                 boxShadow: "0 20px 60px -15px rgba(0, 0, 0, 0.05)" // Very soft, premium shadow
                             }}
                         >
-                            <div className="flex flex-col md:flex-row items-center gap-10 md:gap-14">
+                            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-14">
                                 {/* Photo Circle - Larger and Centered */}
                                 <div className="shrink-0 relative">
-                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg relative z-10 mx-auto">
+                                    <div className="w-24 h-24 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg relative z-10 mx-auto">
                                         <img
                                             src={currentData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentData.name)}&background=random`}
                                             alt={currentData.name}
@@ -160,25 +160,25 @@ const TestimonialSlider = () => {
 
                                 {/* Content */}
                                 <div className="flex-1 text-center md:text-left flex flex-col justify-center">
-                                    <div className="flex items-center justify-center md:justify-start gap-1 mb-5">
+                                    <div className="flex items-center justify-center md:justify-start gap-1 mb-3 md:mb-5">
                                         {[...Array(5)].map((_, i) => (
                                             <Star
                                                 key={i}
-                                                size={22}
-                                                className={i < Math.round(currentData.rating) ? "text-amber-400 fill-amber-400" : "text-slate-200"}
+                                                size={18}
+                                                className={`md:w-[22px] md:h-[22px] ${i < Math.round(currentData.rating) ? "text-amber-400 fill-amber-400" : "text-slate-200"}`}
                                             />
                                         ))}
                                     </div>
 
-                                    <div className="relative mb-6">
-                                        <h3 className="text-xl md:text-2xl font-bold text-slate-800 leading-normal">
+                                    <div className="relative mb-4 md:mb-6">
+                                        <h3 className="text-lg md:text-2xl font-bold text-slate-800 leading-normal">
                                             "{currentData.comment}"
                                         </h3>
                                     </div>
 
                                     <div>
-                                        <p className="font-bold text-slate-900 text-lg mb-0.5">{currentData.name}</p>
-                                        <p className="text-slate-500 text-base font-medium">{currentData.role}</p>
+                                        <p className="font-bold text-slate-900 text-base md:text-lg mb-0.5">{currentData.name}</p>
+                                        <p className="text-slate-500 text-sm md:text-base font-medium">{currentData.role}</p>
                                     </div>
                                 </div>
                             </div>
@@ -188,7 +188,7 @@ const TestimonialSlider = () => {
             </div>
 
             {/* Thumbnails Navigation */}
-            <div className="mt-16 flex justify-center items-center gap-5 flex-wrap">
+            <div className="mt-8 md:mt-16 flex justify-center items-center gap-3 md:gap-5 flex-wrap">
                 {testimonials.map((item, idx) => (
                     <button
                         key={item.id}
@@ -196,7 +196,7 @@ const TestimonialSlider = () => {
                         className={`relative group transition-all duration-300 ${currentIndex === idx ? 'scale-110 opacity-100' : 'opacity-40 hover:opacity-100 hover:scale-105'}`}
                         aria-label={`View testimonial by ${item.name}`}
                     >
-                        <div className={`w-14 h-14 rounded-full overflow-hidden border-2 cursor-pointer transition-colors ${currentIndex === idx ? 'border-blue-600 ring-4 ring-blue-50' : 'border-transparent'}`}>
+                        <div className={`w-10 h-10 md:w-14 md:h-14 rounded-full overflow-hidden border-2 cursor-pointer transition-colors ${currentIndex === idx ? 'border-blue-600 ring-4 ring-blue-50' : 'border-transparent'}`}>
                             <img
                                 src={item.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=random`}
                                 alt={item.name}

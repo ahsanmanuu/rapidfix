@@ -512,10 +512,10 @@ const Home = () => {
                             <span className="px-4 py-1.5 rounded-full bg-red-600/20 border border-red-500/30 text-red-200 text-xs font-bold uppercase tracking-wider mb-6 inline-block backdrop-blur-md">
                                 ✨ #1 Home Service Platform
                             </span>
-                            <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 text-white drop-shadow-lg tracking-tight">
+                            <h1 className="text-3xl md:text-7xl font-extrabold leading-tight mb-4 md:mb-6 text-white drop-shadow-lg tracking-tight">
                                 {(slides && slides[currentSlide]) ? slides[currentSlide].title : 'Fixofy Services'}
                             </h1>
-                            <p className="text-xl text-slate-200 mb-10 max-w-xl font-medium drop-shadow-md leading-relaxed">
+                            <p className="text-base md:text-xl text-slate-200 mb-8 md:mb-10 max-w-xl font-medium drop-shadow-md leading-relaxed">
                                 {(slides && slides[currentSlide]) ? slides[currentSlide].subtitle : 'Expert solutions for your home.'}
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto" style={{ flexDirection: 'column', gap: '1rem' }} data-version="nuclear-v4">
@@ -576,9 +576,9 @@ const Home = () => {
 
             {/* --- Features Grid (Moved Outside) --- */}
             <div className="container mx-auto px-4 relative z-20 mb-24">
-                <div className="flex flex-wrap justify-center items-center gap-4 mx-auto w-full">
+                <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center items-center gap-3 md:gap-4 mx-auto w-full">
                     {/* Verified Experts - Blue Gradient */}
-                    <div className="w-[170px] md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-3 p-2 rounded-xl shadow-lg shadow-blue-500/20 bg-gradient-to-r from-blue-600 to-cyan-500 transition-transform hover:-translate-y-1 duration-300">
+                    <div className="w-full md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-2 md:gap-3 p-2 rounded-xl shadow-lg shadow-blue-500/20 bg-gradient-to-r from-blue-600 to-cyan-500 transition-transform hover:-translate-y-1 duration-300">
                         <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white shrink-0">
                             <ShieldCheck size={20} />
                         </div>
@@ -586,7 +586,7 @@ const Home = () => {
                     </div>
 
                     {/* On-Time Service - Green Gradient */}
-                    <div className="w-[170px] md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-3 p-2 rounded-xl shadow-lg shadow-emerald-500/20 bg-gradient-to-r from-emerald-500 to-green-500 transition-transform hover:-translate-y-1 duration-300">
+                    <div className="w-full md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-2 md:gap-3 p-2 rounded-xl shadow-lg shadow-emerald-500/20 bg-gradient-to-r from-emerald-500 to-green-500 transition-transform hover:-translate-y-1 duration-300">
                         <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white shrink-0">
                             <Clock size={20} />
                         </div>
@@ -594,7 +594,7 @@ const Home = () => {
                     </div>
 
                     {/* Min. Visit Price - Amber Gradient */}
-                    <div className="w-[170px] md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-3 p-2 rounded-xl shadow-lg shadow-amber-500/20 bg-gradient-to-r from-amber-500 to-orange-500 transition-transform hover:-translate-y-1 duration-300">
+                    <div className="w-full md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-2 md:gap-3 p-2 rounded-xl shadow-lg shadow-amber-500/20 bg-gradient-to-r from-amber-500 to-orange-500 transition-transform hover:-translate-y-1 duration-300">
                         <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white shrink-0">
                             <Wallet size={20} />
                         </div>
@@ -602,7 +602,7 @@ const Home = () => {
                     </div>
 
                     {/* Top Rated - Purple Gradient */}
-                    <div className="w-[170px] md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-3 p-2 rounded-xl shadow-lg shadow-violet-500/20 bg-gradient-to-r from-violet-600 to-purple-600 transition-transform hover:-translate-y-1 duration-300">
+                    <div className="w-full md:w-[200px] shrink-0 h-[60px] flex flex-row items-center justify-center gap-2 md:gap-3 p-2 rounded-xl shadow-lg shadow-violet-500/20 bg-gradient-to-r from-violet-600 to-purple-600 transition-transform hover:-translate-y-1 duration-300">
                         <div className="p-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white shrink-0">
                             <ThumbsUp size={20} />
                         </div>
@@ -616,12 +616,12 @@ const Home = () => {
             {/* --- Services Grid --- */}
             <section className="pt-24 pb-2 container mx-auto px-4">
                 <div className="text-center mb-20">
-                    <h2 className="text-4xl font-extrabold mb-4 text-slate-900 tracking-tight">Instant Book Our Professional Services</h2>
-                    <p className="text-slate-500 text-lg mx-auto text-center w-full block px-4">Expert solutions for every corner of your home.</p>
+                    <h2 className="text-2xl md:text-4xl font-extrabold mb-4 text-slate-900 tracking-tight">Instant Book Our Professional Services</h2>
+                    <p className="text-slate-500 text-base md:text-lg mx-auto text-center w-full block px-4">Expert solutions for every corner of your home.</p>
                 </div>
 
-                {/* Flexbox alignment for dynamic centering */}
-                <div className="flex flex-wrap justify-center gap-3 md:gap-6 px-2 md:px-12 w-full">
+                {/* Grid for mobile, Flex for desktop */}
+                <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-3 md:gap-6 px-2 md:px-12 w-full">
                     {[
                         { id: 'Electrician', icon: <Zap size={18} />, title: "Electrician", desc: "Wiring & Safety", color: "text-amber-500", bg: "bg-amber-50" },
                         { id: 'Plumber', icon: <Droplet size={18} />, title: "Plumber", desc: "Pipes & Leaks", color: "text-cyan-600", bg: "bg-cyan-50" },
@@ -632,7 +632,7 @@ const Home = () => {
                         { id: 'Biometrics Technician', icon: <Fingerprint size={18} />, title: "Biometrics Technician", desc: "Access Control", color: "text-purple-600", bg: "bg-purple-50" },
                         { id: 'Printer Technician', icon: <Printer size={18} />, title: "Printer Technician", desc: "Repair & Fix", color: "text-slate-600", bg: "bg-slate-50" },
                     ].map((service) => (
-                        <div key={service.id} onClick={() => handleBookNow(service.id)} className="w-[170px] md:w-[240px] shrink-0">
+                        <div key={service.id} onClick={() => handleBookNow(service.id)} className="w-full md:w-[240px] shrink-0">
                             <ServiceCard icon={service.icon} title={service.title} desc={service.desc} color={service.color} bg={service.bg} />
                         </div>
                     ))}
@@ -674,9 +674,9 @@ const Home = () => {
                             </div>
                             <div className="md:w-1/2 space-y-8">
                                 <div>
-                                    <h4 className="text-blue-400 font-bold uppercase tracking-widest text-sm mb-3">Technician of the Month • {technicianProfiles[currentTechIndex]?.serviceType}</h4>
-                                    <h2 className="text-5xl font-extrabold mb-6 tracking-tight">Meet {technicianProfiles[currentTechIndex]?.name}</h2>
-                                    <p className="text-slate-300 text-xl leading-relaxed font-light">
+                                    <h4 className="text-blue-400 font-bold uppercase tracking-widest text-xs md:text-sm mb-2 md:mb-3">Technician of the Month • {technicianProfiles[currentTechIndex]?.serviceType}</h4>
+                                    <h2 className="text-3xl md:text-5xl font-extrabold mb-4 md:mb-6 tracking-tight">Meet {technicianProfiles[currentTechIndex]?.name}</h2>
+                                    <p className="text-slate-300 text-base md:text-xl leading-relaxed font-light">
                                         {technicianProfiles[currentTechIndex]?.description}
                                     </p>
                                 </div>
@@ -755,13 +755,13 @@ const FeatureBox = ({ icon, title, desc }) => (
 const ServiceCard = ({ icon, title, desc, color, bg }) => (
     <motion.div
         whileHover={{ y: -2 }}
-        className="flex flex-row items-center gap-3 bg-white p-2 md:p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer h-[50px] md:h-[80px] group overflow-hidden"
+        className="flex flex-row items-center gap-2 md:gap-3 bg-white p-2 md:p-3 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all cursor-pointer min-h-[60px] md:h-[80px] group overflow-hidden"
     >
         <div className={`w-8 h-8 md:w-12 md:h-12 rounded-lg ${bg} flex items-center justify-center shrink-0 border border-black/5 transition-transform group-hover:scale-110`}>
             <div className={`${color} scale-75 md:scale-110`}>{icon}</div>
         </div>
         <div className="flex flex-col justify-center min-w-0">
-            <h3 className="text-xs md:text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">{title}</h3>
+            <h3 className="text-xs md:text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 md:truncate leading-tight">{title}</h3>
             <p className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide truncate">{desc}</p>
         </div>
     </motion.div>
