@@ -11,6 +11,7 @@ import UserLoginModal from '../components/UserLoginModal';
 import api, { createJob, getTopRatedTechnicians } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext'; // [NEW]
+import TestimonialSlider from '../components/TestimonialSlider';
 
 // --- Hero Slides Data ---
 const slides = [
@@ -731,34 +732,10 @@ const Home = () => {
             </section >
 
             {/* --- Testimonials --- */}
-            < section className="py-32 container mx-auto px-4 bg-slate-50 mb-48" >
-                <div className="text-center mb-44">
-                    <h2 className="text-4xl font-extrabold mb-4 text-slate-900">What Our Clients Say</h2>
-                    <p className="text-slate-500 text-lg">Trusted by thousands of homeowners across the city.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                    <TestimonialCard
-                        name="Sarah Jenkins"
-                        role="Homeowner"
-                        review="Fixofy saved my weekend! The plumber arrived in 45 minutes and fixed a burst pipe that was flooding my kitchen."
-                        rating={5}
-                    />
-                    <TestimonialCard
-                        name="Michael Chen"
-                        role="Business Owner"
-                        review="We use Fixofy for all our office maintenance. The detailed dashboard makes tracking expenses and repairs so easy."
-                        rating={5}
-                    />
-                    <TestimonialCard
-                        name="Priya Patel"
-                        role="Interior Designer"
-                        review="The painters from Fixofy were meticulous, clean, and finished ahead of schedule. Highly recommended!"
-                        rating={5}
-                    />
-                </div>
-            </section >
-        </div >
+            <section className="bg-slate-50 mb-24">
+                <TestimonialSlider />
+            </section>
+        </div>
     );
 };
 

@@ -952,7 +952,55 @@ app.get('/api/admin/stats', async (req, res) => {
   }
 });
 
-// --- Feedback Routes ---
+
+// --- Feedback & Testimonial Routes ---
+
+// [NEW] Public Testimonials Endpoint
+app.get('/api/testimonials', async (req, res) => {
+  try {
+    // 1. Get all feedback
+    const feedbacks = await feedbackManager.getAllFeedback();
+
+    // 2. Filter for high quality (e.g. avg rating >= 4)
+    const highQuality = feedbacks.filter(f => {
+      if (!f.ratings) return false;
+      const scores = Object.values(f.ratings);
+      if (scores.length === 0) return false;
+      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+      return avg >= 4 & f.comment && f.comment.length > 10;
+    });
+
+    // 3. Enrich with User Info (Name, Photo, Job Title if possible)
+    const testimonials = await Promise.all(highQuality.map(async f => {
+      const user = await userManager.getUser(f.userId);
+      // Determine a title using user role or previous jobs? For now mock or use generically
+      // Or maybe check if they are a business client? 
+      // Simplified: Just use Name and generic title
+
+      const scores = Object.values(f.ratings);
+      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+
+      return {
+        id: f.id,
+        name: user ? user.name : 'Happy Client',
+        role: user ? (user.role === 'user' ? 'Homeowner' : 'Client') : 'Customer', // Could be enriched if we had Company field
+        photo: user ? user.photo : null,
+        comment: f.comment,
+        rating: Math.round(avg * 10) / 10, // 1 decimal
+        date: f.createdAt
+      };
+    }));
+
+    // Limit to latest 10
+    const sorted = testimonials.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
+
+    res.json({ success: true, testimonials: sorted });
+  } catch (error) {
+    console.error("Testimonials Error", error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
 app.post('/api/feedback', async (req, res) => {
   const { userId, technicianId, ratings, comment } = req.body;
   // ratings: object { time, attitude, communication, etc. }

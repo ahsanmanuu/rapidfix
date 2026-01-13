@@ -60,6 +60,7 @@ export const completeRide = (rideId) => api.put(`/rides/${rideId}/complete`);
 export const getRidesByTechnician = (techId) => api.get(`/rides/technician/${techId}`);
 
 export const getOffers = () => api.get('/offers');
+export const getTestimonials = () => api.get('/testimonials'); // [NEW] Public Testimonials
 export const getWalletBalance = (userId) => api.get(`/finance/wallet/${userId}`);
 export const addFunds = (userId, amount) => api.post('/finance/wallet/add', { userId, amount });
 
