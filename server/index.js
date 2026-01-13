@@ -78,6 +78,36 @@ allManagers.forEach(m => {
 });
 
 
+
+// Start Authentication Middleware
+const authenticateSession = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      // Optional: Allow non-authenticated for some paths if needed, but for now strict
+      return res.status(401).json({ success: false, error: 'No session token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ success: false, error: 'Invalid token format' });
+    }
+
+    const session = await sessionManager.validateSession(token);
+    if (!session) {
+      return res.status(401).json({ success: false, error: 'Session expired or invalid' });
+    }
+
+    // Attach user context
+    req.user = { id: session.userId, role: session.role };
+    next();
+  } catch (error) {
+    console.error('Auth Middleware Error:', error);
+    res.status(500).json({ success: false, error: 'Internal auth error' });
+  }
+};
+// End Authentication Middleware
+
 // VERSION CHECK - Verify Render has latest code
 app.get('/api/version', (req, res) => {
   res.json({
@@ -334,7 +364,7 @@ app.post('/api/users/logout', async (req, res) => {
   res.json({ success: true, message: 'Logged out successfully' });
 });
 
-app.get('/api/users/:id', async (req, res) => {
+app.get('/api/users/:id', authenticateSession, async (req, res) => {
   // Always sync membership on fetch to ensure dashboard matches DB
   const syncedUser = await userManager.checkAndSyncMembership(req.params.id);
   if (syncedUser) {
@@ -346,7 +376,7 @@ app.get('/api/users/:id', async (req, res) => {
   } else res.status(404).json({ success: false, error: 'User not found' });
 });
 
-app.put('/api/users/:id', async (req, res) => {
+app.put('/api/users/:id', authenticateSession, async (req, res) => {
   try {
     const { name, photo, password, location } = req.body;
     const updates = {};
@@ -983,7 +1013,7 @@ app.get('/api/complaints', async (req, res) => {
 
 // --- Job Routes ---
 // --- Job Routes ---
-app.post('/api/jobs', async (req, res) => {
+app.post('/api/jobs', authenticateSession, async (req, res) => {
   try {
     console.log('[API] POST /jobs payload:', JSON.stringify(req.body, null, 2));
     const { userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted } = req.body;
