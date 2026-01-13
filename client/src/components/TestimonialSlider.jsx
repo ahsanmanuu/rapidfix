@@ -105,32 +105,32 @@ const TestimonialSlider = () => {
     const currentData = testimonials[currentIndex];
 
     return (
-        <div className="w-full max-w-5xl mx-auto px-4 py-16">
-            <h2 className="text-center text-3xl font-extrabold text-slate-900 mb-12 tracking-tight">
+        <div className="w-full max-w-6xl mx-auto px-4 py-8 relative">
+            <h2 className="text-center text-4xl font-extrabold text-slate-900 mb-16 tracking-tight">
                 Trusted by Experts & Homeowners
             </h2>
 
-            <div className="relative flex items-center justify-center min-h-[400px]">
+            <div className="relative flex items-center justify-center min-h-[350px]">
 
-                {/* Nav Buttons (Desktop) */}
+                {/* Nav Buttons (Desktop) - Positioned further out */}
                 <button
                     onClick={() => swipe(-1)}
-                    className="absolute left-0 md:-left-12 z-20 p-3 rounded-full bg-white shadow-lg text-slate-600 hover:text-blue-600 hover:scale-110 transition-all border border-slate-100 hidden md:block"
+                    className="absolute left-0 md:-left-4 z-20 p-4 rounded-full bg-white shadow-xl text-slate-400 hover:text-blue-600 hover:scale-110 transition-all border border-slate-100 hidden md:flex items-center justify-center"
                     aria-label="Previous testimonial"
                 >
-                    <ChevronLeft size={24} />
+                    <ChevronLeft size={28} />
                 </button>
 
                 <button
                     onClick={() => swipe(1)}
-                    className="absolute right-0 md:-right-12 z-20 p-3 rounded-full bg-white shadow-lg text-slate-600 hover:text-blue-600 hover:scale-110 transition-all border border-slate-100 hidden md:block"
+                    className="absolute right-0 md:-right-4 z-20 p-4 rounded-full bg-white shadow-xl text-slate-400 hover:text-blue-600 hover:scale-110 transition-all border border-slate-100 hidden md:flex items-center justify-center"
                     aria-label="Next testimonial"
                 >
-                    <ChevronRight size={24} />
+                    <ChevronRight size={28} />
                 </button>
 
                 {/* Main Card */}
-                <div className="relative w-full max-w-3xl perspective-1000">
+                <div className="relative w-full max-w-4xl perspective-1000">
                     <AnimatePresence initial={false} custom={direction} mode='wait'>
                         <motion.div
                             key={currentIndex}
@@ -139,47 +139,46 @@ const TestimonialSlider = () => {
                             initial="enter"
                             animate="center"
                             exit="exit"
-                            className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 relative border border-white/40"
+                            className="bg-white rounded-[2rem] shadow-2xl p-10 md:p-14 relative border border-slate-100" // Cleaner border, larger padding
                             style={{
-                                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255,255,255,0.5) inset"
+                                boxShadow: "0 20px 60px -15px rgba(0, 0, 0, 0.05)" // Very soft, premium shadow
                             }}
                         >
-                            <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-                                {/* Photo Circle */}
+                            <div className="flex flex-col md:flex-row items-center gap-10 md:gap-14">
+                                {/* Photo Circle - Larger and Centered */}
                                 <div className="shrink-0 relative">
-                                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative z-10">
+                                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg relative z-10 mx-auto">
                                         <img
                                             src={currentData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentData.name)}&background=random`}
                                             alt={currentData.name}
                                             className="w-full h-full object-cover"
                                         />
                                     </div>
-                                    {/* Decorative Pattern behind photo */}
-                                    <div className="absolute -top-4 -left-4 w-full h-full rounded-full border-2 border-blue-100 dark:border-blue-900/20 -z-0 scale-125 animate-pulse-slow"></div>
+                                    {/* Decorative Pattern - Subtle */}
+                                    <div className="absolute -top-4 -left-4 w-full h-full rounded-full border border-blue-100 -z-0 scale-110"></div>
                                 </div>
 
                                 {/* Content */}
-                                <div className="flex-1 text-center md:text-left">
-                                    <div className="flex items-center justify-center md:justify-start gap-1 mb-4">
+                                <div className="flex-1 text-center md:text-left flex flex-col justify-center">
+                                    <div className="flex items-center justify-center md:justify-start gap-1 mb-5">
                                         {[...Array(5)].map((_, i) => (
                                             <Star
                                                 key={i}
-                                                size={20}
+                                                size={22}
                                                 className={i < Math.round(currentData.rating) ? "text-amber-400 fill-amber-400" : "text-slate-200"}
                                             />
                                         ))}
                                     </div>
 
                                     <div className="relative mb-6">
-                                        <Quote className="absolute -top-2 -left-2 text-blue-100 w-8 h-8 -z-10 rotate-180" />
-                                        <h3 className="text-xl md:text-2xl font-bold text-slate-800 leading-snug">
+                                        <h3 className="text-xl md:text-2xl font-bold text-slate-800 leading-normal">
                                             "{currentData.comment}"
                                         </h3>
                                     </div>
 
                                     <div>
-                                        <p className="font-bold text-slate-900 text-lg">{currentData.name}</p>
-                                        <p className="text-slate-500 text-sm font-medium">{currentData.role}</p>
+                                        <p className="font-bold text-slate-900 text-lg mb-0.5">{currentData.name}</p>
+                                        <p className="text-slate-500 text-base font-medium">{currentData.role}</p>
                                     </div>
                                 </div>
                             </div>
@@ -189,19 +188,19 @@ const TestimonialSlider = () => {
             </div>
 
             {/* Thumbnails Navigation */}
-            <div className="mt-12 flex justify-center items-center gap-4 flex-wrap">
+            <div className="mt-16 flex justify-center items-center gap-5 flex-wrap">
                 {testimonials.map((item, idx) => (
                     <button
                         key={item.id}
                         onClick={() => jumpTo(idx)}
-                        className={`relative group transition-all duration-300 ${currentIndex === idx ? 'scale-110' : 'opacity-50 hover:opacity-100 hover:scale-105'}`}
+                        className={`relative group transition-all duration-300 ${currentIndex === idx ? 'scale-110 opacity-100' : 'opacity-40 hover:opacity-100 hover:scale-105'}`}
                         aria-label={`View testimonial by ${item.name}`}
                     >
-                        <div className={`w-12 h-12 rounded-full overflow-hidden border-2 cursor-pointer transition-colors ${currentIndex === idx ? 'border-blue-500 shadow-md shadow-blue-500/30' : 'border-transparent group-hover:border-slate-300'}`}>
+                        <div className={`w-14 h-14 rounded-full overflow-hidden border-2 cursor-pointer transition-colors ${currentIndex === idx ? 'border-blue-600 ring-4 ring-blue-50' : 'border-transparent'}`}>
                             <img
                                 src={item.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=random`}
                                 alt={item.name}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
                             />
                         </div>
                     </button>
