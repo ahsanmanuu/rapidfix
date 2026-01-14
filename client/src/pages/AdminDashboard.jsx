@@ -147,7 +147,24 @@ const AdminDashboard = () => {
     useEffect(() => {
         fetchUsers();
         fetchJobs();
-    }, []); // Initial load only for now, or add dependency on 'stats' to auto-refresh tables too
+
+        if (socket) {
+            const handleRefresh = () => {
+                fetchUsers();
+                fetchJobs();
+            };
+
+            socket.on('admin_job_update', handleRefresh);
+            socket.on('job_status_updated_admin', handleRefresh);
+            socket.on('admin_user_update', handleRefresh);
+
+            return () => {
+                socket.off('admin_job_update', handleRefresh);
+                socket.off('job_status_updated_admin', handleRefresh);
+                socket.off('admin_user_update', handleRefresh);
+            };
+        }
+    }, [socket]);
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 

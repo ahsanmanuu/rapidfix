@@ -440,11 +440,19 @@ const TechnicianDashboard = () => {
             }
         };
 
+        const handleWalletUpdate = (data) => {
+            if (data.balance !== undefined) {
+                setStats(prev => ({ ...prev, earnings: { ...prev.earnings, balance: data.balance } }));
+            }
+        };
+
         socket.on('technician_status_update', handleStatusUpdate);
         socket.on('job_updated', handleJobUpdate);
         socket.on('job_status_updated', handleJobUpdate);
         socket.on('new_job_assigned', handleJobUpdate);
-        socket.on('stats_updated', handleStatsUpdate); // [NEW]
+        socket.on('stats_updated', handleStatsUpdate);
+        socket.on('wallet_updated', handleWalletUpdate);
+        socket.on('payment_received', handleWalletUpdate);
 
         return () => {
             socket.off('technician_status_update', handleStatusUpdate);
@@ -452,6 +460,8 @@ const TechnicianDashboard = () => {
             socket.off('job_status_updated', handleJobUpdate);
             socket.off('new_job_assigned', handleJobUpdate);
             socket.off('stats_updated', handleStatsUpdate);
+            socket.off('wallet_updated', handleWalletUpdate);
+            socket.off('payment_received', handleWalletUpdate);
         };
     }, [socket, user]);
 

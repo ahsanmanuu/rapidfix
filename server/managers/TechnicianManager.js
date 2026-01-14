@@ -541,6 +541,7 @@ class TechnicianManager {
 
             if (this.io) {
                 this.io.to(`tech_${id}`).emit('stats_updated', updatedTech);
+                this.io.emit('admin_tech_update', updatedTech); // [NEW] Notify Admin
             }
             return updatedTech;
         } catch (err) {

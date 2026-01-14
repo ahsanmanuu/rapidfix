@@ -1128,77 +1128,10 @@ app.put('/api/jobs/:id/status', async (req, res) => {
   const currentJob = await jobManager.getJob(req.params.id);
   if (!currentJob) return res.status(404).json({ success: false, error: 'Job not found' });
 
-  // 2. Update Job Status
+  // 2. Update Job Status (Side effects are now handled inside JobManager)
   const job = await jobManager.updateStatus(req.params.id, status, details);
 
   if (job) {
-    const techId = job.technicianId || details?.technicianId || currentJob.technicianId;
-
-    // 3. Handle Side Effects based on Status
-    if (status === 'accepted') {
-      // Technician is now BUSY/ENGAGED
-      if (techId) {
-        await technicianManager.updateStatus(techId, 'engaged');
-        io.emit('technician_status_update', { technicianId: techId, status: 'engaged' });
-      }
-    }
-    else if (status === 'in_progress') {
-      // Technician is working
-      if (techId) {
-        await technicianManager.updateStatus(techId, 'engaged'); // Ensure engaged
-        io.emit('technician_status_update', { technicianId: techId, status: 'engaged' });
-      }
-    }
-    else if (status === 'completed') {
-      // Job Done -> Tech Available + Payment
-      if (techId) {
-        await technicianManager.updateStatus(techId, 'available');
-        io.emit('technician_status_update', { technicianId: techId, status: 'available' });
-
-        // Process Payment (Credit Tech)
-        const amount = job.offerPrice || job.visitingCharges || 0;
-        await financeManager.processPayment(techId, amount * 0.9, 'credit', `Job Compensation #${job.id}`);
-
-        // Notify Tech about money
-        io.to(`tech_${techId}`).emit('wallet_updated', { amount });
-
-        // [NEW] Auto-End Active Ride Session
-        const rides = await rideManager.getRidesByTechnician(techId);
-        const activeRide = rides.find(r => r.jobId === job.id && r.status === 'in_progress');
-        if (activeRide) {
-          await rideManager.completeRide(activeRide.id);
-          io.to(`user_${job.userId}`).emit('ride_ended', { rideId: activeRide.id });
-          io.to(`tech_${techId}`).emit('ride_ended', { rideId: activeRide.id });
-        }
-      }
-    }
-    else if (status === 'rejected' || status === 'cancelled') {
-      const techId = job.technicianId || currentJob.technicianId;
-      if (techId) {
-        await technicianManager.updateStatus(techId, 'available');
-        io.emit('technician_status_update', { technicianId: techId, status: 'available' });
-      }
-    }
-
-    // 4. Notify Parties
-    if (job.userId) io.to(`user_${job.userId}`).emit('job_status_updated', job);
-    if (job.technicianId) io.to(`tech_${job.technicianId}`).emit('job_status_updated', job);
-
-    // Notify Admins & Super Admins
-    io.emit('job_status_updated_admin', job);
-
-    // [NOTIFICATION] Persist Updates
-    // 1. Notify User
-    if (job.userId) {
-      await notificationManager.createNotification(job.userId, 'user', `Job ${status}`, `Your job #${job.id} is now ${status}`, `job_${status}`, job.id);
-    }
-    // 2. Notify Technician (if not the one triggering it, or just for record)
-    if (job.technicianId) {
-      await notificationManager.createNotification(job.technicianId, 'technician', `Job ${status}`, `Job #${job.id} marked as ${status}`, `job_${status}`, job.id);
-    }
-    // 3. Notify Admin
-    await notificationManager.createNotification('admin', 'admin', `Job ${status}`, `Job #${job.id} updated to ${status}`, `job_status_update`, job.id);
-
     res.json({ success: true, job });
   }
   else res.status(500).json({ success: false, error: 'Failed to update job' });
@@ -1228,16 +1161,31 @@ app.put('/api/technicians/:id/profile', async (req, res) => {
   }
 });
 
-// [NEW] Monthly Stats Endpoint
-// [NEW] Monthly Stats Endpoint
-app.get('/api/technicians/:id/stats/monthly', async (req, res) => {
+// [NEW] Basic Stats Endpoint for Technician Dashboard
+app.get('/api/technicians/:id/stats', async (req, res) => {
   try {
     const techId = req.params.id;
+    const tech = await technicianManager.getTechnician(techId);
+    if (!tech) return res.status(404).json({ success: false, error: 'Technician not found' });
+
+    // 1. Job Stats
+    const stats = {
+      totalJobs: tech.totalJobs || 0,
+      completedJobs: tech.completedJobs || 0,
+      rejectedJobs: tech.rejectedJobs || 0,
+      pendingJobs: tech.pendingJobs || 0,
+      acceptedJobs: tech.acceptedJobs || 0,
+      rating: tech.rating || 0,
+      reviewCount: tech.reviewCount || 0
+    };
+
+    // 2. Earnings
+    const balance = await financeManager.getBalance(techId);
+
+    // Monthly Earnings (Calculated from transactions)
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-
-    // 1. Calculate Monthly Earnings
     const transactions = await financeManager.getTransactionsByUser(techId);
     const monthlyEarnings = transactions.reduce((sum, t) => {
       const tDate = new Date(t.createdAt);
@@ -1247,19 +1195,25 @@ app.get('/api/technicians/:id/stats/monthly', async (req, res) => {
       return sum;
     }, 0);
 
-    // 2. Calculate Monthly Completed Jobs
-    const jobs = await jobManager.getJobsByTechnician(techId);
-    const monthlyJobs = jobs.filter(j => {
-      const jDate = new Date(j.createdAt); // Or use updatedAt for completion time
-      return j.status === 'completed' && jDate.getMonth() === currentMonth && jDate.getFullYear() === currentYear;
-    }).length;
+    res.json({
+      success: true,
+      stats: {
+        ...stats,
+        earnings: {
+          balance: balance,
+          monthly: monthlyEarnings
+        },
+        monthlyEarnings: monthlyEarnings // Flat version for simplicity
+      }
+    });
 
-    res.json({ success: true, earnings: monthlyEarnings, jobs: monthlyJobs });
   } catch (error) {
-    console.error("Stats Error", error);
+    console.error("Technician Stats Error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// [NEW] Monthly Stats Endpoint
 
 // --- Chat Routes [NEW] ---
 app.post('/api/chat/send', async (req, res) => {

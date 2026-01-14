@@ -326,10 +326,17 @@ class JobManager {
                 if (enriched.technicianId) {
                     this.io.to(`tech_${enriched.technicianId}`).emit('job_status_updated', enriched);
 
-                    // [NEW] Update Stats & Technician Status
+                    // [REFACTORED] Centralized Side Effects
                     if (status === 'completed') {
                         await this.techManager.updateStats(enriched.technicianId, { type: 'complete' });
                         await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
+
+                        // Process Payment (Credit Tech) - 90% of price
+                        const amount = enriched.offerPrice || enriched.visitingCharges || 0;
+                        if (amount > 0) {
+                            await this.financeManager.processPayment(enriched.technicianId, amount * 0.9, 'credit', `Job Compensation #${enriched.id}`);
+                            this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
+                        }
                     } else if (status === 'rejected') {
                         await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
                         await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
@@ -337,12 +344,22 @@ class JobManager {
                         await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
                         await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
                     } else if (status === 'in_progress') {
-                        // "Start Journey" implies Engagement
                         await this.techManager.updateStatus(enriched.technicianId, 'engaged');
                     }
                 }
                 this.io.emit('admin_job_update', enriched);
+                this.io.emit('job_status_updated_admin', enriched); // Sync with Admin listener
             }
+
+            // [NEW] Persist Notifications
+            if (enriched.userId) {
+                await this.notificationManager.createNotification(enriched.userId, 'user', `Job ${status.replace('_', ' ')}`, `Your job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
+            }
+            if (enriched.technicianId) {
+                await this.notificationManager.createNotification(enriched.technicianId, 'technician', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
+            }
+            // Admin Notification
+            await this.notificationManager.createNotification('admin', 'admin', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} updated to ${status}`, `job_status_update`, enriched.id);
             return enriched;
         } catch (err) {
             console.error(`[JobManager] Error updating status for job ${id}:`, err);
