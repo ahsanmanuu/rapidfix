@@ -912,7 +912,7 @@ const TechnicianDashboard = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="space-y-4">
+                            <div className="space-y-4 pt-4">
                                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 h-full">
                                     <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                                         <Briefcase size={16} /> Service Details
@@ -927,66 +927,52 @@ const TechnicianDashboard = () => {
                                     </div>
                                 </div>
                             </div>
-                    </div>
 
-                    {
-                    viewJob.location && viewJob.location.latitude && (
-                        <div className="mt-6">
-                            <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                                <MapPin size={16} /> Location
-                            </h4>
-                            <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden relative">
-                                <img
-                                    src={`https://maps.googleapis.com/maps/api/staticmap?center=${viewJob.location.latitude},${viewJob.location.longitude}&zoom=15&size=600x300&markers=color:red%7C${viewJob.location.latitude},${viewJob.location.longitude}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`}
-                                    alt="Map"
-                                    className="w-full h-full object-cover"
-                                />
-                                <a
-                                    href={`https://www.google.com/maps?q=${viewJob.location.latitude},${viewJob.location.longitude}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors group"
+                            {viewJob.location && viewJob.location.latitude && (
+                                <div className="mt-6">
+                                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                                        <MapPin size={16} /> Location
+                                    </h4>
+                                    <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden relative">
+                                        <img
+                                            src={`https://maps.googleapis.com/maps/api/staticmap?center=${viewJob.location.latitude},${viewJob.location.longitude}&zoom=15&size=600x300&markers=color:red%7C${viewJob.location.latitude},${viewJob.location.longitude}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`}
+                                            alt="Map"
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <a
+                                            href={`https://www.google.com/maps?q=${viewJob.location.latitude},${viewJob.location.longitude}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors group"
+                                        >
+                                            <span className="bg-white px-4 py-2 rounded-full text-sm font-bold shadow-md group-hover:scale-105 transition-transform">Open in Google Maps</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="mt-8 flex justify-end gap-3">
+                                {['accepted', 'pending'].includes(viewJob.status) && (
+                                    <button
+                                        onClick={() => { handleStartRide(viewJob); setViewJob(null); }}
+                                        className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold flex items-center gap-2 shadow-lg animate-pulse"
+                                    >
+                                        <MapPin size={18} /> Start Riding Now
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setViewJob(null)}
+                                    className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 font-medium"
                                 >
-                                    <span className="bg-white px-4 py-2 rounded-full text-sm font-bold shadow-md group-hover:scale-105 transition-transform">Open in Google Maps</span>
-                                </a>
+                                    Close
+                                </button>
                             </div>
-                        </div>
-                    )
-                }
-
-                <div className="mt-8 flex justify-end gap-3">
-                    {['accepted', 'pending'].includes(viewJob.status) && (
-                        <button
-                            onClick={() => { handleStartRide(viewJob); setViewJob(null); }}
-                            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold flex items-center gap-2 shadow-lg animate-pulse"
-                        >
-                            <MapPin size={18} /> Start Riding Now
-                        </button>
-                    )}
-                    <button
-                        onClick={() => setViewJob(null)}
-                        className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 font-medium"
-                    >
-                        Close
-                    </button>
-                </div>
-            </motion.div >
-        </div >
-    )
-}
-    </AnimatePresence >
-
-    {/* Live Ride Modal */ }
-{
-    rideModalOpen && activeRideJob && (
-        <LiveRideModal
-            job={activeRideJob}
-            technicianId={user.id}
-            userId={activeRideJob.userId}
-            socket={socket}
-            onClose={() => setRideModalOpen(false)}
-        />
-    )
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
 }
 
 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
