@@ -20,6 +20,7 @@ class TechnicianManager {
                 service_type, address_details, review_count, membership_since,
                 joined_at, updated_at, documents, location, base_address, service_radius,
                 registered_latitude, registered_longitude, latitude, longitude,
+                total_jobs, completed_jobs, rejected_jobs, pending_jobs, // [NEW] Stats
                 ...rest
             } = tech;
 
@@ -72,7 +73,14 @@ class TechnicianManager {
                 registeredLongitude: regLng,
 
                 baseAddress: addr,
-                serviceRadius: rad
+                baseAddress: addr,
+                serviceRadius: rad,
+
+                // Stats
+                totalJobs: total_jobs || 0,
+                completedJobs: completed_jobs || 0,
+                rejectedJobs: rejected_jobs || 0,
+                pendingJobs: pending_jobs || 0
             };
         } catch (err) {
             console.error("[TechnicianManager] Error mapping from DB:", err);
@@ -95,7 +103,9 @@ class TechnicianManager {
                 serviceType, addressDetails, reviewCount, membershipSince, joinedAt, updatedAt,
                 documents, baseAddress, serviceRadius, id,
                 latitude, longitude, registeredLatitude, registeredLongitude,
+                latitude, longitude, registeredLatitude, registeredLongitude,
                 location,
+                totalJobs, completedJobs, rejectedJobs, pendingJobs, // [NEW]
                 ...rest
             } = tech;
 
@@ -115,7 +125,14 @@ class TechnicianManager {
             if (registeredLatitude !== undefined) mapped.registered_latitude = registeredLatitude;
             if (registeredLongitude !== undefined) mapped.registered_longitude = registeredLongitude;
             if (baseAddress !== undefined) mapped.base_address = baseAddress;
+            if (baseAddress !== undefined) mapped.base_address = baseAddress;
             if (serviceRadius !== undefined) mapped.service_radius = serviceRadius;
+
+            // Stats
+            if (totalJobs !== undefined) mapped.total_jobs = totalJobs;
+            if (completedJobs !== undefined) mapped.completed_jobs = completedJobs;
+            if (rejectedJobs !== undefined) mapped.rejected_jobs = rejectedJobs;
+            if (pendingJobs !== undefined) mapped.pending_jobs = pendingJobs;
 
             return mapped;
         } catch (err) {
@@ -473,6 +490,47 @@ class TechnicianManager {
             return tech;
         } catch (err) {
             console.error(`[TechnicianManager] Error updating membership for tech ${id}:`, err);
+            return null;
+        }
+    }
+
+    async updateStats(id, { type }) {
+        try {
+            const tech = await this.db.find('id', id);
+            if (!tech) return null;
+
+            let total = tech.total_jobs || 0;
+            let completed = tech.completed_jobs || 0;
+            let rejected = tech.rejected_jobs || 0;
+            let pending = tech.pending_jobs || 0;
+
+            if (type === 'assign') {
+                total += 1;
+                pending += 1;
+            } else if (type === 'complete') {
+                completed += 1;
+                if (pending > 0) pending -= 1;
+            } else if (type === 'reject') {
+                rejected += 1;
+                if (pending > 0) pending -= 1;
+            }
+
+            const updates = {
+                total_jobs: total,
+                completed_jobs: completed,
+                rejected_jobs: rejected,
+                pending_jobs: pending
+            };
+
+            const result = await this.db.update('id', id, updates);
+            const updatedTech = this._mapFromDb(result);
+
+            if (this.io) {
+                this.io.to(`tech_${id}`).emit('stats_updated', updatedTech);
+            }
+            return updatedTech;
+        } catch (err) {
+            console.error(`[TechnicianManager] Error updating stats for tech ${id}:`, err);
             return null;
         }
     }

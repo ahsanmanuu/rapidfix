@@ -252,6 +252,9 @@ class JobManager {
 
             await this.notificationManager.createNotification(technicianId, 'technician', 'New Job Assigned', `Job #${jobId} has been assigned to you.`, 'job_assigned', jobId);
 
+            // [NEW] Update Stats
+            await this.techManager.updateStats(technicianId, { type: 'assign' });
+
             return updatedJob;
         } catch (err) {
             console.error(`[JobManager] Error assigning technician ${technicianId} to job ${jobId}:`, err);
@@ -322,6 +325,13 @@ class JobManager {
                 this.io.to(`user_${enriched.userId}`).emit('job_status_updated', enriched);
                 if (enriched.technicianId) {
                     this.io.to(`tech_${enriched.technicianId}`).emit('job_status_updated', enriched);
+
+                    // [NEW] Update Stats
+                    if (status === 'completed') {
+                        await this.techManager.updateStats(enriched.technicianId, { type: 'complete' });
+                    } else if (status === 'rejected') {
+                        await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
+                    }
                 }
                 this.io.emit('admin_job_update', enriched);
             }
