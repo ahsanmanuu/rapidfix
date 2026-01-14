@@ -191,7 +191,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 30 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                    className="bg-white rounded-2xl md:rounded-3xl shadow-2xl w-full max-w-[95vw] h-[90vh] overflow-hidden flex flex-col md:flex-row relative ring-1 ring-white/20 border-2 border-red-500"
+                    className="bg-white rounded-2xl md:rounded-3xl shadow-2xl w-full max-w-[95vw] h-[90vh] overflow-hidden flex flex-col md:flex-row relative ring-1 ring-slate-200/50"
                 >
                     <button
                         onClick={onClose}
@@ -363,11 +363,11 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                         </div>
 
                         {/* List Content */}
-                        <div className="flex-1 overflow-y-auto px-4 py-4 md:px-8 md:py-8 space-y-4 md:space-y-5 custom-scrollbar bg-slate-50/50">
+                        <div className="flex-1 overflow-y-auto px-5 py-6 md:px-8 md:py-8 space-y-4 md:space-y-6 custom-scrollbar bg-gradient-to-b from-slate-50 to-white">
                             {searching ? (
                                 // Skeletons
                                 [1, 2, 3].map(i => (
-                                    <div key={i} className="bg-white p-4 md:p-6 rounded-3xl border border-slate-100 shadow-sm animate-pulse flex gap-5 items-center">
+                                    <div key={i} className="bg-white p-5 md:p-6 rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm animate-pulse flex gap-4 md:gap-5 items-center">
                                         <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-200 rounded-2xl" />
                                         <div className="flex-1 space-y-3">
                                             <div className="h-4 md:h-5 bg-slate-200 rounded w-2/3" />
@@ -395,13 +395,13 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                 initial={{ opacity: 0, y: 15 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
-                                                className={`group relative bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 border border-red-500 shadow-sm transition-all duration-300 ${tech.distance > 2.0 ? 'opacity-50 border-gray-200' : ''
-                                                    } ${isAvailable ? 'hover:shadow-xl hover:shadow-blue-900/5 hover:border-blue-200 cursor-pointer hover:-translate-y-1' : 'cursor-not-allowed opacity-70 grayscale'}`}
+                                                className={`group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 border shadow-sm hover:shadow-lg transition-all duration-300 ${tech.distance > 2.0 ? 'opacity-60 border-slate-200' : 'border-slate-200 hover:border-blue-300'
+                                                    } ${isAvailable ? 'hover:shadow-blue-500/10 cursor-pointer hover:-translate-y-1' : 'cursor-not-allowed opacity-60 border-slate-100'}`}
                                             >
                                                 <div className="flex gap-4 md:gap-5 items-center">
                                                     {/* List Avatar */}
                                                     <div className="relative flex-shrink-0">
-                                                        <div className={`w-14 h-14 md:w-16 md:h-16 rounded-xl md:rounded-2xl overflow-hidden shadow-md ${isAvailable ? '' : ''}`}>
+                                                        <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden shadow-md border-2 border-white ${isAvailable ? 'ring-2 ring-blue-500/20' : 'ring-2 ring-slate-200'}`}>
                                                             <img
                                                                 src={photoUrl}
                                                                 alt={tech.name}
@@ -417,36 +417,36 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                     </div>
 
                                                     {/* Info */}
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex justify-between items-start mb-1">
-                                                            <h3 className="text-base md:text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors truncate">
+                                                    <div className="flex-1 min-w-0 pl-1">
+                                                        <div className="flex justify-between items-start gap-3 mb-2">
+                                                            <h3 className="text-base md:text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-1 flex-1">
                                                                 {tech.name}
                                                             </h3>
-                                                            <span className="text-[10px] md:text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap ${
-                                                                tech.distance <= 2.0 ? 'text-blue-600 bg-blue-50' : 'text-amber-600 bg-amber-50'
+                                                            <span className="text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-lg whitespace-nowrap flex-shrink-0 ${
+                                                                tech.distance <= 2.0 ? 'text-blue-600 bg-blue-50 ring-1 ring-blue-100' : 'text-amber-600 bg-amber-50 ring-1 ring-amber-100'
                                                             }">
-                                                                {tech.distance} km {tech.distance > 2.0 ? '(Far)' : ''}
+                                                                {tech.distance.toFixed(1)} km {tech.distance > 2.0 ? '• Far' : ''}
                                                             </span>
                                                         </div>
 
-                                                        <div className="flex items-center gap-2 mb-2 md:mb-3">
-                                                            <div className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${statusConfig.bg} ${statusConfig.text}`}>
+                                                        <div className="flex items-center gap-3 mb-3">
+                                                            <div className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide ${statusConfig.bg} ${statusConfig.text} ring-1 ${statusConfig.ringColor || 'ring-current/20'}`}>
                                                                 {statusConfig.label}
                                                             </div>
-                                                            <span className="text-slate-300">|</span>
-                                                            <span className="text-xs font-medium text-slate-500 flex items-center gap-1">
-                                                                <Briefcase size={12} /> {tech.experience ? `${tech.experience} Yrs` : "N/A"}
+                                                            <span className="text-slate-200">•</span>
+                                                            <span className="text-xs font-medium text-slate-600 flex items-center gap-1.5">
+                                                                <Briefcase size={13} className="text-slate-400" /> {tech.experience ? `${tech.experience} Yrs` : "New"}
                                                             </span>
                                                         </div>
 
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-1 text-xs font-medium text-emerald-600">
-                                                                <CheckCircle2 size={12} /> Verified Base
+                                                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                                                            <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                                                                <CheckCircle2 size={14} /> Verified
                                                             </div>
 
                                                             {/* Mini Book Button */}
                                                             {isAvailable && (
-                                                                <button className="px-3 py-1.5 md:px-4 bg-slate-900 text-white text-[10px] md:text-xs font-bold rounded-lg opacity-100 md:opacity-0 group-hover:opacity-100 transition-all transform translate-x-0 md:translate-x-2 md:group-hover:translate-x-0">
+                                                                <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs font-bold rounded-xl opacity-100 md:opacity-0 group-hover:opacity-100 transition-all transform translate-x-0 md:translate-x-2 md:group-hover:translate-x-0 hover:from-blue-700 hover:to-blue-800 shadow-sm hover:shadow-md">
                                                                     Book Now
                                                                 </button>
                                                             )}
