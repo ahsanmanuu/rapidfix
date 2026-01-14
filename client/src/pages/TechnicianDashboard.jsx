@@ -421,11 +421,14 @@ const TechnicianDashboard = () => {
     useEffect(() => {
         if (!socket || !user) return;
 
-        const handleStatusUpdate = (data) => {
-            if (data.technicianId === user.id) {
-                updateUser({ ...user, status: data.status });
+        socket.on('technician_status_update', (data) => {
+            if (data.technicianId === user?.id) {
+                console.log("[Socket] Status update received:", data.status);
+                if (updateProfile) {
+                    updateProfile({ status: data.status });
+                }
             }
-        };
+        });
 
         const handleJobUpdate = (data) => {
             // Refresh data on any job change relevant to this tech
