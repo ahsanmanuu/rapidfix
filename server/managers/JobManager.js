@@ -20,6 +20,14 @@ class JobManager {
         this.io = io;
     }
 
+    setTechnicianManager(techManager) {
+        this.techManager = techManager;
+    }
+
+    setFinanceManager(financeManager) {
+        this.financeManager = financeManager;
+    }
+
     // Helper to map DB snake_case to App camelCase
     _mapFromDb(job) {
         if (!job) return null;
