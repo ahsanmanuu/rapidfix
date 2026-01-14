@@ -170,7 +170,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
 
                                 {/* Tech Markers using OverlayView for Custom UI */}
                                 {!searching && Array.isArray(technicians) && technicians
-                                    .filter(tech => tech.distance <= 2.0)
+                                    .filter(tech => tech.distance <= 50.0)
                                     .map((tech) => {
                                         let photoUrl = tech.documents?.photo
                                             ? (tech.documents.photo.startsWith('http') ? tech.documents.photo : `http://localhost:3000${tech.documents.photo}`)
@@ -282,9 +282,9 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                         </div>
                                     </div>
                                 ))
-                            ) : (Array.isArray(technicians) ? technicians.filter(t => t.distance <= 2.0) : []).length > 0 ? (
+                            ) : (Array.isArray(technicians) ? technicians.filter(t => t.distance <= 50.0) : []).length > 0 ? (
                                 (Array.isArray(technicians) ? technicians : [])
-                                    .filter(tech => tech.distance <= 2.0)
+                                    .filter(tech => tech.distance <= 50.0)
                                     .map((tech, idx) => {
                                         let photoUrl = tech.documents?.photo
                                             ? (tech.documents.photo.startsWith('http') ? tech.documents.photo : `http://localhost:3000${tech.documents.photo}`)

@@ -351,10 +351,11 @@ const TechnicianDashboard = () => {
 
         const resolveAddress = async () => {
             // 1. Resolve Current Location (from lat/lng) for Header
-            if (user.latitude && user.longitude) {
-                const lat = user.latitude;
-                const lng = user.longitude;
+            // Use top-level or nested location object
+            const lat = user.latitude || user.location?.latitude;
+            const lng = user.longitude || user.location?.longitude;
 
+            if (lat && lng) {
                 try {
                     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
                     const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`);
@@ -375,6 +376,8 @@ const TechnicianDashboard = () => {
                         } else {
                             setCurrentLocationName("Unknown Place");
                         }
+                    } else {
+                        setCurrentLocationName("Location not found");
                     }
                 } catch (e) {
                     console.error("Current Loc Error:", e);
@@ -382,12 +385,15 @@ const TechnicianDashboard = () => {
                 }
             } else if (user.city) {
                 setCurrentLocationName(user.city);
+            } else {
+                setCurrentLocationName("No live location");
             }
 
             // 2. Resolve Registered Location (from registeredLatitude/Longitude) for Card
-            if (user.registeredLatitude && user.registeredLongitude) {
-                const rLat = user.registeredLatitude;
-                const rLng = user.registeredLongitude;
+            const rLat = user.registeredLatitude || user.latitude || user.location?.latitude;
+            const rLng = user.registeredLongitude || user.longitude || user.location?.longitude;
+
+            if (rLat && rLng) {
                 try {
                     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
                     const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${rLat},${rLng}&key=${apiKey}`);
@@ -396,13 +402,15 @@ const TechnicianDashboard = () => {
                         // Prefer full address for registration
                         const formatted = data.results[0].formatted_address;
                         setRegisteredAddress(formatted || "Location Found");
+                    } else {
+                        setRegisteredAddress(user.address || user.baseAddress || "Reg. Location not found");
                     }
                 } catch (e) {
                     console.error("Reg Loc Error:", e);
-                    setRegisteredAddress(user.address || "Address Error");
+                    setRegisteredAddress(user.address || user.baseAddress || "Address Error");
                 }
             } else {
-                setRegisteredAddress(user.address || "No Registered Address");
+                setRegisteredAddress(user.address || user.baseAddress || "No Registered Address");
             }
         };
 

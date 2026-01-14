@@ -17,75 +17,66 @@ class TechnicianManager {
     _mapFromDb(tech) {
         if (!tech) return null;
         try {
-            const {
-                service_type, address_details, review_count, membership_since,
-                joined_at, updated_at, documents, location, base_address, service_radius,
-                registered_latitude, registered_longitude, latitude, longitude,
-                total_jobs, completed_jobs, rejected_jobs, pending_jobs, accepted_jobs, // [NEW] Stats
-                membership_expiry, // [NEW] Membership
-                ...rest
-            } = tech;
+            // Support both snake_case (Supabase) and camelCase (Local JSON/Legacy)
+            const serviceType = tech.service_type || tech.serviceType;
+            const addressDetails = tech.address_details || tech.addressDetails;
+            const reviewCount = tech.review_count || tech.reviewCount || tech.totalReviews || 0;
+            const membershipSince = tech.membership_since || tech.membershipSince;
+            const membershipExpiry = tech.membership_expiry || tech.membershipExpiry;
+            const joinedAt = tech.joined_at || tech.joinedAt || tech.createdAt;
+            const updatedAt = tech.updated_at || tech.updatedAt;
 
-            // Extract details - WE NOW PREFER TOP-LEVEL COLUMNS
-            // Dynamic Location (Current)
-            let lat = latitude;
-            let lng = longitude;
+            const totalJobs = tech.total_jobs || tech.totalJobs || 0;
+            const completedJobs = tech.completed_jobs || tech.completedJobs || 0;
+            const rejectedJobs = tech.rejected_jobs || tech.rejectedJobs || 0;
+            const pendingJobs = tech.pending_jobs || tech.pendingJobs || 0;
+            const acceptedJobs = tech.accepted_jobs || tech.acceptedJobs || 0;
 
-            // Static Location (Registered Base)
-            let regLat = registered_latitude;
-            let regLng = registered_longitude;
+            const documents = tech.documents || {};
+            const location = tech.location || {};
+            const baseAddress = tech.base_address || tech.baseAddress;
+            const serviceRadius = tech.service_radius || tech.serviceRadius || 2;
 
-            let addr = base_address;
-            let rad = service_radius || 2; // Default 2km
+            // Coordinates
+            let lat = tech.latitude;
+            let lng = tech.longitude;
+            let regLat = tech.registered_latitude || tech.registeredLatitude;
+            let regLng = tech.registered_longitude || tech.registeredLongitude;
 
-            // Fallback for Dynamic: If no top-level lat/long, try JSON or Registered
-            if ((lat === undefined || lat === null) && location && typeof location === 'object') {
-                if (location.latitude) lat = location.latitude;
-                if (location.longitude) lng = location.longitude;
-            }
-            // If still null, fallback to registered (assuming they haven't moved or just registered)
-            if (lat === undefined || lat === null) {
-                lat = regLat;
-                lng = regLng;
-            }
+            // Fallbacks for Lat/Lng
+            if ((lat === undefined || lat === null) && location.latitude) lat = location.latitude;
+            if ((lng === undefined || lng === null) && location.longitude) lng = location.longitude;
 
-            // Fallback for Address/Radius
-            if (location && typeof location === 'object') {
-                if (!addr && location.address) addr = location.address;
-                if (!rad && location.serviceRadius) rad = location.serviceRadius;
-            }
+            // Fallbacks for Registered Lat/Lng
+            if (regLat === undefined || regLat === null) regLat = lat;
+            if (regLng === undefined || regLng === null) regLng = lng;
+
+            // If still null, try location object for registered too
+            if ((regLat === undefined || regLat === null) && location.latitude) regLat = location.latitude;
+            if ((regLng === undefined || regLng === null) && location.longitude) regLng = location.longitude;
 
             return {
-                ...rest,
-                serviceType: service_type,
-                addressDetails: address_details,
-                reviewCount: review_count,
-                membershipSince: membership_since,
-                joinedAt: joined_at,
-                updatedAt: updated_at,
-                // [NEW]
-                membershipExpiry: membership_expiry,
-                documents: documents || {},
-                location: location || {}, // Keep original json too if needed
-
-                // Dynamic (Current Position)
+                ...tech,
+                serviceType,
+                addressDetails,
+                reviewCount,
+                membershipSince,
+                membershipExpiry,
+                joinedAt,
+                updatedAt,
+                documents,
+                location,
+                baseAddress,
+                serviceRadius,
                 latitude: lat,
                 longitude: lng,
-
-                // Static (Home Base)
                 registeredLatitude: regLat,
                 registeredLongitude: regLng,
-
-                baseAddress: addr,
-                serviceRadius: rad,
-
-                // Stats
-                totalJobs: total_jobs || 0,
-                completedJobs: completed_jobs || 0,
-                completedJobs: completed_jobs || 0,
-                rejectedJobs: rejected_jobs || 0,
-                pendingJobs: pending_jobs || 0,
-                acceptedJobs: accepted_jobs || 0 // [NEW]
+                totalJobs,
+                completedJobs,
+                rejectedJobs,
+                pendingJobs,
+                acceptedJobs
             };
         } catch (err) {
             console.error("[TechnicianManager] Error mapping from DB:", err);
