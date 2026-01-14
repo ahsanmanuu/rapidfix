@@ -47,13 +47,14 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                 async (pos) => {
                     const { latitude, longitude } = pos.coords;
                     try {
-                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+                        const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`);
                         const data = await response.json();
-                        if (data && data.display_name) {
+                        if (data.results?.[0]) {
                             setFormData(prev => ({
                                 ...prev,
                                 location: { latitude, longitude },
-                                address: data.display_name
+                                address: data.results[0].formatted_address
                             }));
                             setLocationStatus('success');
                         }
@@ -61,7 +62,8 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                         // Silent fail on auto-detect
                     }
                 },
-                (err) => { /* Silent fail */ }
+                (err) => { /* Silent fail */ },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         }
     }, []); // Run once on mount
@@ -86,36 +88,37 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                 async (pos) => {
                     const { latitude, longitude } = pos.coords;
                     try {
-                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+                        const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`);
                         const data = await response.json();
 
-                        if (data && data.display_name) {
+                        if (data.results?.[0]) {
                             setFormData(prev => ({
                                 ...prev,
                                 location: { latitude, longitude },
-                                address: data.display_name
+                                address: data.results[0].formatted_address
                             }));
                             setLocationStatus('success');
                         } else {
                             throw new Error("Address not found");
                         }
                     } catch (error) {
-                        console.error("Reverse geocoding failed:", error);
+                        console.error("Geocoding failed:", error);
                         // Fallback if API fails
                         setFormData(prev => ({
                             ...prev,
                             location: { latitude, longitude },
                             address: `Lat: ${latitude.toFixed(4)}, Long: ${longitude.toFixed(4)}`
                         }));
-                        setLocationStatus('success'); // Still success as we got coordinates
+                        setLocationStatus('success');
                     }
                 },
                 (err) => {
                     console.error('Location error', err);
                     setLocationStatus('error');
-                    alert("Could not access location. Please allow location permissions.");
+                    alert("Could not access precise location. Please ensure GPS is enabled and permissions are granted.");
                 },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
         } else {
             setLocationStatus('error');

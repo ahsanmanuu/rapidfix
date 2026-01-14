@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleMap, useJsApiLoader, Marker, OverlayView } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, OverlayView, Circle } from '@react-google-maps/api';
 import { searchTechnicians } from '../services/api';
 import { X, Navigation, AlertCircle, Star, CheckCircle2, CircleDot, Briefcase, MapPin } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
@@ -52,6 +52,8 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
     const [technicians, setTechnicians] = useState([]);
     const [error, setError] = useState(null);
     const [map, setMap] = useState(null);
+    const [accuracy, setAccuracy] = useState(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
@@ -63,14 +65,14 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
 
     const socket = useSocket();
 
-    const performSearch = useCallback(async () => {
-        if (!userLocation || !serviceType) return;
+    const performSearch = useCallback(async (loc = userLocation) => {
+        if (!loc || !serviceType) return;
         setSearching(true);
         setError(null);
         try {
             const res = await searchTechnicians({
-                latitude: userLocation.latitude,
-                longitude: userLocation.longitude,
+                latitude: loc.latitude,
+                longitude: loc.longitude,
                 serviceType
             });
 
@@ -86,6 +88,33 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
             setSearching(false);
         }
     }, [userLocation, serviceType]);
+
+    const handlePrecisionRefresh = () => {
+        if (!navigator.geolocation) return;
+        setIsRefreshing(true);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const { latitude, longitude, accuracy } = pos.coords;
+                setAccuracy(accuracy);
+                setIsRefreshing(false);
+
+                // Update map view
+                if (map) {
+                    map.panTo({ lat: latitude, lng: longitude });
+                    if (accuracy < 100) map.setZoom(15);
+                }
+
+                // Call search with new precise location
+                performSearch({ latitude, longitude });
+            },
+            (err) => {
+                console.error("Precision GPS failed", err);
+                setIsRefreshing(false);
+                alert("Could not get precise GPS lock. Using last known location.");
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -138,12 +167,21 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     className="bg-white rounded-2xl md:rounded-3xl shadow-2xl w-full max-w-[95vw] h-[90vh] overflow-hidden flex flex-col md:flex-row relative ring-1 ring-white/20 border-2 border-red-500"
                 >
-                    {/* Floating Close Button */}
                     <button
                         onClick={onClose}
                         className="absolute top-4 right-4 md:top-6 md:right-6 z-[60] p-2.5 md:p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-xl hover:bg-white text-slate-400 hover:text-rose-500 hover:rotate-90 transition-all duration-300 ring-1 ring-slate-100"
                     >
                         <X size={20} className="md:w-6 md:h-6" />
+                    </button>
+
+                    {/* Precision GPS Refresh Button */}
+                    <button
+                        onClick={handlePrecisionRefresh}
+                        className={`absolute top-4 right-16 md:top-6 md:right-20 z-[60] p-2.5 md:p-3 rounded-full bg-white/90 backdrop-blur-sm shadow-xl text-blue-600 hover:bg-blue-50 transition-all duration-300 ring-1 ring-slate-100 flex items-center gap-2 ${isRefreshing ? 'animate-pulse' : ''}`}
+                        title="Precision GPS Refresh"
+                    >
+                        <Navigation size={20} className={isRefreshing ? 'animate-spin' : ''} />
+                        <span className="hidden md:block text-xs font-bold uppercase tracking-widest">Precision Lock</span>
                     </button>
 
                     {/* --- LEFT: MAP SECTION --- */}
@@ -177,6 +215,25 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                         strokeWeight: 4,
                                     }}
                                 />
+
+                                {/* Accuracy Circle */}
+                                {accuracy && (
+                                    <Circle
+                                        center={{ lat: parseFloat(userLocation.latitude), lng: parseFloat(userLocation.longitude) }}
+                                        radius={accuracy}
+                                        options={{
+                                            fillColor: '#3B82F6',
+                                            fillOpacity: 0.1,
+                                            strokeColor: '#3B82F6',
+                                            strokeOpacity: 0.2,
+                                            strokeWeight: 1,
+                                            clickable: false,
+                                            editable: false,
+                                            draggable: false,
+                                            zIndex: 1
+                                        }}
+                                    />
+                                )}
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/10 rounded-full animate-ping pointer-events-none" />
 
                                 {/* Tech Markers using OverlayView for Custom UI */}
