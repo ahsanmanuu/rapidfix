@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard, Wallet, History, Settings, MessageSquare,
     LogOut, Bell, Search, MapPin, Clock, Calendar,
-    CheckCircle2, XCircle, AlertCircle, TrendingUp, Star,
-    Power, Coffee, Briefcase, Zap, ChevronRight, Menu, X,
-    MoreHorizontal, MoreVertical, User, ChevronDown, Filter, RefreshCw, Send, Image as ImageIcon, Lock, Shield,
-    Activity, ArrowUpRight, ArrowDownRight, DollarSign, PieChart, BarChart2
+    CheckCircle2, XCircle, TrendingUp, Star,
+    Coffee, Briefcase, Zap, Menu, X,
+    MoreVertical, User, ChevronDown, RefreshCw, Send, Image as ImageIcon, Lock, Shield,
+    ArrowUpRight, ArrowDownRight, PieChart
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
@@ -326,6 +326,40 @@ const TechnicianDashboard = () => {
 
     const [statsModalOpen, setStatsModalOpen] = useState(false);
     const [unreadNotifications, setUnreadNotifications] = useState(0);
+    const [registeredAddress, setRegisteredAddress] = useState("Loading...");
+
+    // [NEW] Resolve Registered Address
+    useEffect(() => {
+        if (!user) return;
+        const resolveAddress = async () => {
+            if (user.address && typeof user.address === 'string') {
+                setRegisteredAddress(user.address);
+                return;
+            }
+            if (user.location && (user.location.latitude || user.location.lat)) {
+                const lat = user.location.latitude || user.location.lat;
+                const lng = user.location.longitude || user.location.lng;
+                try {
+                    const apiKey = "AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU";
+                    const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`);
+                    const data = await res.json();
+                    if (data.results?.[0]) {
+                        const locality = data.results[0].address_components.find(c => c.types.includes('locality'))?.long_name;
+                        const city = data.results[0].address_components.find(c => c.types.includes('administrative_area_level_2'))?.long_name;
+                        const formatted = [locality, city].filter(Boolean).join(', ');
+                        setRegisteredAddress(formatted || "Location Found");
+                    } else {
+                        setRegisteredAddress("Unknown Location");
+                    }
+                } catch (e) {
+                    setRegisteredAddress("Location Error");
+                }
+            } else {
+                setRegisteredAddress("No Location");
+            }
+        };
+        resolveAddress();
+    }, [user]);
 
     // Live Data Fetching
     useEffect(() => {
@@ -626,33 +660,60 @@ const renderDashboardContent = () => (
             </div>
 
             {/* Additional Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+            {/* Additional Stats Row - Grid Expanded */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-8">
+                {/* Existing Small Cards */}
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1">
                     <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Briefcase size={20} /></div>
-                    <div>
+                    <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.monthJobs || stats.monthlyJobs || 0}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase">Jobs This Month</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Jobs This Month</div>
                     </div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1">
                     <div className="p-2 bg-rose-50 rounded-lg text-rose-600"><XCircle size={20} /></div>
-                    <div>
+                    <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.rejectedJobs || 0}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase">Rejected Jobs</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Rejected</div>
                     </div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1">
                     <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><CheckCircle2 size={20} /></div>
-                    <div>
+                    <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.completedJobs || 0}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase">Total Completed</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Completed</div>
                     </div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3">
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1">
                     <div className="p-2 bg-amber-50 rounded-lg text-amber-600"><Clock size={20} /></div>
-                    <div>
+                    <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.pendingJobs || 0}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase">Pending Actions</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Pending</div>
+                    </div>
+                </div>
+
+                {/* [NEW] Account Info Cards */}
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-indigo-500">
+                    <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Shield size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-sm font-bold text-gray-800 truncate">{user?.membership || 'Free'}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Membership</div>
+                    </div>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-orange-500">
+                    <div className="p-2 bg-orange-50 rounded-lg text-orange-600"><MapPin size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-sm font-bold text-gray-800 truncate" title={registeredAddress}>{registeredAddress}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Registered Loc</div>
+                    </div>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-pink-500">
+                    <div className="p-2 bg-pink-50 rounded-lg text-pink-600"><Calendar size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-sm font-bold text-gray-800 truncate">
+                            {user?.membershipExpiry ? new Date(user.membershipExpiry).toLocaleDateString() : 'Lifetime'}
+                        </div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Expires On</div>
                     </div>
                 </div>
             </div>
