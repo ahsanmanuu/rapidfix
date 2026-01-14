@@ -21,7 +21,8 @@ class TechnicianManager {
                 service_type, address_details, review_count, membership_since,
                 joined_at, updated_at, documents, location, base_address, service_radius,
                 registered_latitude, registered_longitude, latitude, longitude,
-                total_jobs, completed_jobs, rejected_jobs, pending_jobs, // [NEW] Stats
+                total_jobs, completed_jobs, rejected_jobs, pending_jobs, accepted_jobs, // [NEW] Stats
+                membership_expiry, // [NEW] Membership
                 ...rest
             } = tech;
 
