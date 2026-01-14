@@ -80,6 +80,12 @@ class TechnicianManager {
         }
     }
 
+    _normalizeType(type) {
+        if (!type) return '';
+        // Remove dots, hyphens, and spaces, then lowercase
+        return type.toString().toLowerCase().replace(/[\.\-\s]/g, '');
+    }
+
     // Helper to map App camelCase to DB snake_case
     _mapToDb(tech) {
         if (!tech) return null;
@@ -271,13 +277,15 @@ class TechnicianManager {
         try {
             const lat = parseFloat(userLat);
             const lon = parseFloat(userLon);
-            const type = (serviceType || '').toLowerCase().trim();
+            const type = this._normalizeType(serviceType);
 
             const allTechs = await this.db.read();
             const techs = allTechs
                 .map(t => this._mapFromDb(t))
-                .filter(t => t.service_type && t.service_type.toLowerCase().trim() === type || // DB field fallback
-                    t.serviceType && t.serviceType.toLowerCase().trim() === type);
+                .filter(t => {
+                    const dbType = t.serviceType || t.service_type || '';
+                    return this._normalizeType(dbType) === type;
+                });
 
             const nearbyTechs = techs.map(tech => {
                 // PRIORITIZE FIXED/REGISTERED LOCATION
