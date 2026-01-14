@@ -331,6 +331,8 @@ class JobManager {
                         await this.techManager.updateStats(enriched.technicianId, { type: 'complete' });
                     } else if (status === 'rejected') {
                         await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
+                    } else if (status === 'accepted') { // [NEW]
+                        await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
                     }
                 }
                 this.io.emit('admin_job_update', enriched);

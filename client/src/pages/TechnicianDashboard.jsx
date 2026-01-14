@@ -291,6 +291,7 @@ const TechnicianDashboard = () => {
         completedJobs: user?.completedJobs || 0,
         pendingJobs: user?.pendingJobs || 0,
         rejectedJobs: user?.rejectedJobs || 0,
+        acceptedJobs: user?.acceptedJobs || 0, // [NEW]
         rating: user?.rating || 0,
         totalReviews: user?.reviewCount || 0,
         onTime: 100 // Default to 100%
@@ -435,8 +436,10 @@ const TechnicianDashboard = () => {
         if (user) {
             setStats(prev => ({
                 ...prev,
+                // Stats Sync
                 completedJobs: user.completedJobs !== undefined ? user.completedJobs : prev.completedJobs,
                 rejectedJobs: user.rejectedJobs !== undefined ? user.rejectedJobs : prev.rejectedJobs,
+                acceptedJobs: user.acceptedJobs !== undefined ? user.acceptedJobs : prev.acceptedJobs, // [NEW]
                 pendingJobs: user.pendingJobs !== undefined ? user.pendingJobs : prev.pendingJobs,
                 rating: user.rating !== undefined ? user.rating : prev.rating
             }));
@@ -854,7 +857,7 @@ const TechnicianDashboard = () => {
             </div> {/* Close Unified Grid */}
 
             {/* Additional Stats Row - Grid Expanded */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 sm:gap-6 mb-8">
                 {/* Existing Small Cards */}
                 <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1">
                     <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Briefcase size={20} /></div>
@@ -882,6 +885,14 @@ const TechnicianDashboard = () => {
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.pendingJobs || 0}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Pending</div>
+                    </div>
+
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1">
+                    <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600"><CheckCircle2 size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-xl font-bold text-gray-800">{stats.acceptedJobs || 0}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Accepted</div>
                     </div>
                 </div>
 
@@ -1282,93 +1293,92 @@ const TechnicianDashboard = () => {
                                     <Clock size={10} className="text-gray-400" />
                                     <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 </div>
-                                <div className="text-[9px] sm:text-[10px] text-gray-500 flex items-center justify-end gap-1 max-w-[100px] truncate">
-                                    <MapPin size={10} /> {currentLocationName}
-                                </div>
-                                {/* Network Indicator in Navbar */}
-                                <div className="text-[9px] text-emerald-600 font-bold flex items-center justify-end gap-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Network
-                                </div>
+                                <MapPin size={10} /> {currentLocationName || "Locating..."}
+                            </div>
+                            {/* Network Indicator in Navbar */}
+                            <div className="text-[9px] text-emerald-600 font-bold flex items-center justify-end gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Network
                             </div>
                         </div>
                     </div>
-                </nav>
+            </div>
+        </nav>
 
-                {/* Main Content Scrollable Area */}
-                <main className="flex-1 bg-gray-100 overflow-y-auto pb-20">
-                    <ContentHeader
-                        title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                        breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                    />
+                {/* Main Content Scrollable Area */ }
+    <main className="flex-1 bg-gray-100 overflow-y-auto pb-20">
+        <ContentHeader
+            title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+            breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+        />
 
-                    {/* Dynamic Content Switching */}
-                    {activeTab === 'dashboard' && renderDashboardContent()}
-                    {activeTab === 'chat' && renderChat()}
-                    {activeTab === 'settings' && renderSettings()}
+        {/* Dynamic Content Switching */}
+        {activeTab === 'dashboard' && renderDashboardContent()}
+        {activeTab === 'chat' && renderChat()}
+        {activeTab === 'settings' && renderSettings()}
 
-                    {['jobs', 'wallet', 'history', 'feedback'].includes(activeTab) && (
-                        <div className="p-4 sm:p-6 lg:p-8">
-                            {/* Placeholder for tabs handled within dashboard summary initially, extending them here now */}
-                            <Card
-                                title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                                headerColor="border-t-gray-400"
-                                tools={activeTab === 'jobs' && (
-                                    <select
-                                        value={jobFilter}
-                                        onChange={(e) => setJobFilter(e.target.value)}
-                                        className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none cursor-pointer"
-                                    >
-                                        <option value="all">Active (All)</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="accepted">Accepted</option>
-                                        <option value="in_progress">In Progress</option>
-                                    </select>
-                                )}
-                            >
-                                {activeTab === 'wallet' && (
-                                    <div className="text-center py-10">
-                                        <h3 className="text-2xl font-bold text-emerald-600 mb-2">₹{(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}</h3>
-                                        <p className="text-gray-500">Current Balance</p>
-                                        <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow">Withdraw Funds</button>
-                                    </div>
-                                )}
-                                {activeTab === 'jobs' && (
-                                    <div className="divide-y divide-gray-100">
-                                        {filteredJobs.length === 0 ? (
-                                            <div className="p-20 text-center text-gray-500">
-                                                <Briefcase size={64} className="mx-auto text-gray-200 mb-4" />
-                                                <h3 className="text-xl font-bold text-gray-400">No active contracts</h3>
-                                                <p className="text-gray-400 text-sm mt-1">You are not assigned to any jobs matching this filter.</p>
-                                            </div>
-                                        ) : (
-                                            filteredJobs.map(job => renderJobItem(job))
-                                        )}
-                                    </div>
-                                )}
-                                {['history', 'feedback'].includes(activeTab) && (
-                                    <div className="text-center py-20 bg-gray-50 rounded border border-dashed border-gray-200">
-                                        <Coffee size={48} className="mx-auto text-gray-300 mb-4" />
-                                        <h3 className="text-lg font-medium text-gray-600">Module Loaded</h3>
-                                        <p className="text-gray-400 text-sm">Detailed view for {activeTab} is ready for data population.</p>
-                                    </div>
-                                )}
-                            </Card>
+        {['jobs', 'wallet', 'history', 'feedback'].includes(activeTab) && (
+            <div className="p-4 sm:p-6 lg:p-8">
+                {/* Placeholder for tabs handled within dashboard summary initially, extending them here now */}
+                <Card
+                    title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                    headerColor="border-t-gray-400"
+                    tools={activeTab === 'jobs' && (
+                        <select
+                            value={jobFilter}
+                            onChange={(e) => setJobFilter(e.target.value)}
+                            className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none cursor-pointer"
+                        >
+                            <option value="all">Active (All)</option>
+                            <option value="pending">Pending</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="in_progress">In Progress</option>
+                        </select>
+                    )}
+                >
+                    {activeTab === 'wallet' && (
+                        <div className="text-center py-10">
+                            <h3 className="text-2xl font-bold text-emerald-600 mb-2">₹{(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}</h3>
+                            <p className="text-gray-500">Current Balance</p>
+                            <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow">Withdraw Funds</button>
                         </div>
                     )}
-                </main>
-
-                {/* Footer */}
-                <footer className="bg-white border-t border-gray-200 p-4 text-xs text-gray-500 flex justify-between items-center shrink-0">
-                    <div>
-                        <strong>Copyright &copy; 2024 <span className="text-blue-600">Fixofy.io</span>.</strong> All rights reserved.
-                    </div>
-                    <div className="hidden sm:block">
-                        <b>Version</b> 3.2.0-rc
-                    </div>
-                </footer>
-
+                    {activeTab === 'jobs' && (
+                        <div className="divide-y divide-gray-100">
+                            {filteredJobs.length === 0 ? (
+                                <div className="p-20 text-center text-gray-500">
+                                    <Briefcase size={64} className="mx-auto text-gray-200 mb-4" />
+                                    <h3 className="text-xl font-bold text-gray-400">No active contracts</h3>
+                                    <p className="text-gray-400 text-sm mt-1">You are not assigned to any jobs matching this filter.</p>
+                                </div>
+                            ) : (
+                                filteredJobs.map(job => renderJobItem(job))
+                            )}
+                        </div>
+                    )}
+                    {['history', 'feedback'].includes(activeTab) && (
+                        <div className="text-center py-20 bg-gray-50 rounded border border-dashed border-gray-200">
+                            <Coffee size={48} className="mx-auto text-gray-300 mb-4" />
+                            <h3 className="text-lg font-medium text-gray-600">Module Loaded</h3>
+                            <p className="text-gray-400 text-sm">Detailed view for {activeTab} is ready for data population.</p>
+                        </div>
+                    )}
+                </Card>
             </div>
+        )}
+    </main>
+
+    {/* Footer */ }
+    <footer className="bg-white border-t border-gray-200 p-4 text-xs text-gray-500 flex justify-between items-center shrink-0">
+        <div>
+            <strong>Copyright &copy; 2024 <span className="text-blue-600">Fixofy.io</span>.</strong> All rights reserved.
         </div>
+        <div className="hidden sm:block">
+            <b>Version</b> 3.2.0-rc
+        </div>
+    </footer>
+
+            </div >
+        </div >
     );
 };
 

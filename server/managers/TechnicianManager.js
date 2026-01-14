@@ -62,6 +62,8 @@ class TechnicianManager {
                 membershipSince: membership_since,
                 joinedAt: joined_at,
                 updatedAt: updated_at,
+                // [NEW]
+                membershipExpiry: membership_expiry,
                 documents: documents || {},
                 location: location || {}, // Keep original json too if needed
 
@@ -79,8 +81,10 @@ class TechnicianManager {
                 // Stats
                 totalJobs: total_jobs || 0,
                 completedJobs: completed_jobs || 0,
+                completedJobs: completed_jobs || 0,
                 rejectedJobs: rejected_jobs || 0,
-                pendingJobs: pending_jobs || 0
+                pendingJobs: pending_jobs || 0,
+                acceptedJobs: accepted_jobs || 0 // [NEW]
             };
         } catch (err) {
             console.error("[TechnicianManager] Error mapping from DB:", err);
@@ -104,7 +108,8 @@ class TechnicianManager {
                 documents, baseAddress, serviceRadius, id,
                 latitude, longitude, registeredLatitude, registeredLongitude,
                 location,
-                totalJobs, completedJobs, rejectedJobs, pendingJobs, // [NEW]
+                totalJobs, completedJobs, rejectedJobs, pendingJobs, acceptedJobs, // [NEW] Stats
+                membershipExpiry, // [NEW] Membership
                 ...rest
             } = tech;
 
@@ -113,6 +118,7 @@ class TechnicianManager {
             if (addressDetails !== undefined) mapped.address_details = addressDetails;
             if (reviewCount !== undefined) mapped.review_count = reviewCount;
             if (membershipSince !== undefined) mapped.membership_since = membershipSince;
+            if (membershipExpiry !== undefined) mapped.membership_expiry = membershipExpiry; // [NEW]
             if (joinedAt !== undefined) mapped.joined_at = joinedAt;
             if (updatedAt !== undefined) mapped.updated_at = updatedAt;
             if (documents !== undefined) mapped.documents = documents;
@@ -129,8 +135,10 @@ class TechnicianManager {
             // Stats
             if (totalJobs !== undefined) mapped.total_jobs = totalJobs;
             if (completedJobs !== undefined) mapped.completed_jobs = completedJobs;
+            if (completedJobs !== undefined) mapped.completed_jobs = completedJobs;
             if (rejectedJobs !== undefined) mapped.rejected_jobs = rejectedJobs;
             if (pendingJobs !== undefined) mapped.pending_jobs = pendingJobs;
+            if (acceptedJobs !== undefined) mapped.accepted_jobs = acceptedJobs; // [NEW]
 
             return mapped;
         } catch (err) {
@@ -501,13 +509,21 @@ class TechnicianManager {
             let completed = tech.completed_jobs || 0;
             let rejected = tech.rejected_jobs || 0;
             let pending = tech.pending_jobs || 0;
+            let accepted = tech.accepted_jobs || 0; // [NEW]
 
             if (type === 'assign') {
                 total += 1;
                 pending += 1;
+            } else if (type === 'accept') { // [NEW]
+                accepted += 1;
+                // Pending remains roughly same logic or decrease if distinct phases, 
+                // but usually 'pending' means 'awaiting action'. 
+                // If 'accepted', it might still be active but no longer 'pending decision'.
+                // Let's assume pending decreases when accepted.
+                if (pending > 0) pending -= 1;
             } else if (type === 'complete') {
                 completed += 1;
-                if (pending > 0) pending -= 1;
+                // If 'in_progress' to 'complete', no pending change usually.
             } else if (type === 'reject') {
                 rejected += 1;
                 if (pending > 0) pending -= 1;
@@ -517,7 +533,8 @@ class TechnicianManager {
                 total_jobs: total,
                 completed_jobs: completed,
                 rejected_jobs: rejected,
-                pending_jobs: pending
+                pending_jobs: pending,
+                accepted_jobs: accepted
             };
 
             const result = await this.db.update('id', id, updates);
