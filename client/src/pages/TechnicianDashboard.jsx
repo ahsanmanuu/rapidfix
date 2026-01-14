@@ -1340,8 +1340,7 @@ const TechnicianDashboard = () => {
 
                 </div>
             </div>
-        </div>
-    );
+            );
 };
 
-export default TechnicianDashboard;
+            export default TechnicianDashboard;
