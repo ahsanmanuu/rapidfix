@@ -1511,14 +1511,14 @@ const TechnicianDashboard = () => {
 
                             {/* Time & Location: Enhanced alignment and formatting */}
                             <div className="flex items-center gap-3 sm:gap-4">
-                                <div className="hidden xs:flex flex-col items-end leading-tight">
-                                    <div className="flex items-center gap-1.5 text-gray-700 font-bold tracking-tight">
-                                        <Clock size={12} className="text-blue-500" />
+                                <div className="flex flex-col items-end leading-tight">
+                                    <div className="flex items-center gap-1.5 text-red-600 font-bold tracking-tight">
+                                        <Clock size={12} className="text-red-500" />
                                         <span className="text-[11px] sm:text-xs">
                                             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-1 text-gray-400 mt-0.5">
+                                    <div className="flex items-center gap-1 text-red-400 mt-0.5">
                                         <MapPin size={10} className="shrink-0" />
                                         <span className="text-[9px] sm:text-[10px] max-w-[100px] sm:max-w-[150px] truncate font-medium">
                                             {currentLocationName || "Locating..."}
