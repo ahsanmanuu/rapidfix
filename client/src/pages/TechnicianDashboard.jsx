@@ -63,11 +63,14 @@ const StatCard = ({ title, value, icon: Icon, color, trend, onClick, subtext }) 
 const DashboardStatsModal = ({ isOpen, onClose, stats, type }) => {
     if (!isOpen) return null;
 
+    const totalBalance = typeof stats.earnings === 'object' ? (stats.earnings.balance || 0) : (stats.earnings || 0);
+    const monthlyTotal = typeof stats.monthlyEarnings === 'object' ? (stats.monthlyEarnings.amount || 0) : (stats.monthlyEarnings || 0);
+
     const data = [
-        { name: 'Week 1', value: stats.earnings * 0.2 || 4000 },
-        { name: 'Week 2', value: stats.earnings * 0.25 || 3000 },
-        { name: 'Week 3', value: stats.earnings * 0.3 || 5000 },
-        { name: 'Week 4', value: stats.earnings * 0.25 || 4500 },
+        { name: 'Week 1', value: monthlyTotal * 0.2 || (monthlyTotal > 0 ? 0 : 4000) },
+        { name: 'Week 2', value: monthlyTotal * 0.25 || (monthlyTotal > 0 ? 0 : 3000) },
+        { name: 'Week 3', value: monthlyTotal * 0.3 || (monthlyTotal > 0 ? 0 : 5000) },
+        { name: 'Week 4', value: monthlyTotal * 0.25 || (monthlyTotal > 0 ? 0 : 4500) },
     ];
 
     const pieData = [
@@ -171,7 +174,7 @@ const DashboardStatsModal = ({ isOpen, onClose, stats, type }) => {
                             <div className="p-4 bg-white rounded-lg border border-gray-200">
                                 <div className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Avg. Earnings / Job</div>
                                 <div className="text-2xl font-bold text-blue-600">
-                                    ₹{stats.completedJobs ? Math.round(stats.earnings / stats.completedJobs) : 0}
+                                    ₹{stats.completedJobs ? Math.round(totalBalance / stats.completedJobs) : 0}
                                 </div>
                             </div>
                             <div className="p-4 bg-white rounded-lg border border-gray-200">
@@ -290,14 +293,15 @@ const TechnicianDashboard = () => {
 
     // Data States
     const [stats, setStats] = useState({
-        earnings: 0,
+        earnings: { balance: 0, monthly: 0 },
+        monthlyEarnings: 0,
         completedJobs: user?.completedJobs || 0,
         pendingJobs: user?.pendingJobs || 0,
         rejectedJobs: user?.rejectedJobs || 0,
-        acceptedJobs: user?.acceptedJobs || 0, // [NEW]
+        acceptedJobs: user?.acceptedJobs || 0,
         rating: user?.rating || 0,
         totalReviews: user?.reviewCount || 0,
-        onTime: 100 // Default to 100%
+        onTime: 100
     });
     const [feedbacks, setFeedbacks] = useState([]);
     const [myJobs, setMyJobs] = useState([]);
@@ -1002,7 +1006,7 @@ const TechnicianDashboard = () => {
                     value={`₹${(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}`}
                     icon={Wallet}
                     color="bg-emerald-500"
-                    trend={{ value: 12, positive: true }}
+                    trend={stats.earnings?.balance > 0 ? { value: 12, positive: true } : null}
                     onClick={() => setStatsModalOpen(true)}
                     subtext="Available for withdrawal"
                 />
@@ -1011,7 +1015,7 @@ const TechnicianDashboard = () => {
                     value={`₹${(typeof stats.monthlyEarnings === 'object' ? stats.monthlyEarnings.amount : stats.monthlyEarnings)?.toLocaleString() || 0}`}
                     icon={TrendingUp}
                     color="bg-blue-500"
-                    trend={{ value: 5, positive: true }}
+                    trend={stats.monthlyEarnings > 0 ? { value: 5, positive: true } : null}
                     onClick={() => setStatsModalOpen(true)}
                     subtext="Since 1st of Month"
                 />
