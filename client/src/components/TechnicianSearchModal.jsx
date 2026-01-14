@@ -170,7 +170,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
 
                                 {/* Tech Markers using OverlayView for Custom UI */}
                                 {!searching && Array.isArray(technicians) && technicians
-                                    .filter(tech => tech.distance <= 50.0)
+                                    .filter(tech => tech.distance <= 2.0)
                                     .map((tech) => {
                                         let photoUrl = tech.documents?.photo
                                             ? (tech.documents.photo.startsWith('http') ? tech.documents.photo : `http://localhost:3000${tech.documents.photo}`)
@@ -282,9 +282,9 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                         </div>
                                     </div>
                                 ))
-                            ) : (Array.isArray(technicians) ? technicians.filter(t => t.distance <= 50.0) : []).length > 0 ? (
+                            ) : (Array.isArray(technicians) ? technicians.filter(t => t.distance <= 2.0) : []).length > 0 ? (
                                 (Array.isArray(technicians) ? technicians : [])
-                                    .filter(tech => tech.distance <= 50.0)
+                                    .filter(tech => tech.distance <= 2.0)
                                     .map((tech, idx) => {
                                         let photoUrl = tech.documents?.photo
                                             ? (tech.documents.photo.startsWith('http') ? tech.documents.photo : `http://localhost:3000${tech.documents.photo}`)
@@ -369,7 +369,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                     </div>
                                     <h4 className="text-lg md:text-xl font-bold text-slate-800 mb-2">No Professionals Found</h4>
                                     <p className="text-xs md:text-sm mt-1 max-w-[280px] leading-relaxed text-slate-400">
-                                        We couldn't locate any available {serviceType}s within 50km radius.
+                                        We couldn't locate any available {serviceType}s within 2km radius.
                                     </p>
                                     <button onClick={onClose} className="mt-6 md:mt-8 px-5 py-2.5 md:px-6 md:py-3 bg-blue-50 text-blue-600 font-bold rounded-xl text-xs md:text-sm hover:bg-blue-100 transition-colors">
                                         Expand Search Radius

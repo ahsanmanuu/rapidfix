@@ -102,7 +102,7 @@ const DashboardStatsModal = ({ isOpen, onClose, stats, type }) => {
                             </h3>
                             <div className="h-64">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={data}>
+                                    <AreaChart key={isOpen} data={data}>
                                         <defs>
                                             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
@@ -128,7 +128,7 @@ const DashboardStatsModal = ({ isOpen, onClose, stats, type }) => {
                             </h3>
                             <div className="h-64 relative">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <RePieChart>
+                                    <RePieChart key={isOpen}>
                                         <Pie
                                             data={pieData}
                                             innerRadius={60}
@@ -1000,7 +1000,7 @@ const TechnicianDashboard = () => {
                     icon={Wallet}
                     color="bg-emerald-500"
                     trend={{ value: 12, positive: true }}
-                    onClick={() => { setStatsModalOpen(true); setActiveTab('wallet'); }}
+                    onClick={() => setStatsModalOpen(true)}
                     subtext="Available for withdrawal"
                 />
                 <StatCard
@@ -1105,6 +1105,46 @@ const TechnicianDashboard = () => {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-12">
                 {/* Main Job List & Offers */}
                 <div className="lg:col-span-2 space-y-16">
+                    {/* [NEW] Direct Analytics Curve on Dashboard */}
+                    <Card title="Earnings Dynamics" headerColor="border-t-blue-600" noPadding>
+                        <div className="p-6">
+                            <div className="h-64 sm:h-80">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart
+                                        data={[
+                                            { name: 'Week 1', value: (typeof stats.earnings === 'object' ? stats.earnings.monthly : stats.earnings) * 0.2 || 4000 },
+                                            { name: 'Week 2', value: (typeof stats.earnings === 'object' ? stats.earnings.monthly : stats.earnings) * 0.25 || 3000 },
+                                            { name: 'Week 3', value: (typeof stats.earnings === 'object' ? stats.earnings.monthly : stats.earnings) * 0.3 || 5000 },
+                                            { name: 'Week 4', value: (typeof stats.earnings === 'object' ? stats.earnings.monthly : stats.earnings) * 0.25 || 4500 },
+                                        ]}
+                                    >
+                                        <defs>
+                                            <linearGradient id="dashboardColorPrimary" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#2563EB" stopOpacity={0.15} />
+                                                <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                                        <RechartsTooltip
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="value"
+                                            stroke="#2563EB"
+                                            strokeWidth={4}
+                                            fillOpacity={1}
+                                            fill="url(#dashboardColorPrimary)"
+                                            animationDuration={2000}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </Card>
+
                     <Card
                         title="Active Jobs"
                         headerColor="border-t-blue-500"
@@ -1377,6 +1417,7 @@ const TechnicianDashboard = () => {
                         <img src={user?.documents?.photo || `https://ui-avatars.com/api/?name=${user?.name}`} className="w-9 h-9 rounded-full border border-gray-600" alt="User" />
                         <div className="overflow-hidden">
                             <div className="text-gray-200 text-sm font-medium truncate w-32">{user?.name}</div>
+                            <div className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">{user?.serviceType || 'Professional'}</div>
                             <div className="flex items-center gap-1 text-[10px] text-emerald-400 uppercase font-bold tracking-wider">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online
                             </div>
