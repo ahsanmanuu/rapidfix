@@ -58,6 +58,8 @@ class JobManager {
             if (job.contactName !== undefined) mapped.contact_name = job.contactName;
             if (job.scheduledDate !== undefined) mapped.scheduled_date = job.scheduledDate;
             if (job.scheduledTime !== undefined) mapped.scheduled_time = job.scheduledTime;
+            if (job.reason !== undefined) mapped.reason = job.reason;
+            if (job.otp !== undefined) mapped.otp = job.otp;
 
             if (job.location) {
                 mapped.location = job.location;
@@ -320,6 +322,7 @@ class JobManager {
             const dbUpdates = this._mapToDb(updates);
             const updated = await this.db.update('id', id, dbUpdates);
             const enriched = await this._enrichJob(this._mapFromDb(updated));
+            console.log(`[JobManager] Updated job ${id} to status ${status}. Enriched TechID: ${enriched?.technicianId}`);
 
             if (this.io) {
                 this.io.to(`user_${enriched.userId}`).emit('job_status_updated', enriched);
@@ -338,9 +341,11 @@ class JobManager {
                             this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
                         }
                     } else if (status === 'rejected') {
+                        console.log(`[JobManager] Processing Rejection for Tech: ${enriched.technicianId}`);
                         await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
                         await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
-                    } else if (status === 'accepted') {
+                    }
+                    else if (status === 'accepted') {
                         await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
                         await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
                     } else if (status === 'in_progress') {
