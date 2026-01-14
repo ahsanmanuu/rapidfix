@@ -5,6 +5,7 @@ import { GoogleMap, useJsApiLoader, Marker, OverlayView, Circle } from '@react-g
 import { searchTechnicians } from '../services/api';
 import { X, Navigation, AlertCircle, Star, CheckCircle2, CircleDot, Briefcase, MapPin } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
+import useSupabaseRealtime from '../hooks/useSupabaseRealtime';
 
 const mapContainerStyle = {
     width: '100%',
@@ -152,6 +153,31 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
             socket.off('technician_location_update', handleLocationUpdate);
         };
     }, [socket, isOpen]);
+
+    // Supabase Realtime Subscription for technician updates
+    useSupabaseRealtime('technicians', (payload) => {
+        if (!isOpen) return;
+
+        const { eventType, new: newRecord, old: oldRecord } = payload;
+
+        if (eventType === 'UPDATE' && newRecord) {
+            // Update technician in list
+            setTechnicians(prev => prev.map(t => {
+                if (t.id === newRecord.id) {
+                    return {
+                        ...t,
+                        status: newRecord.status,
+                        location: {
+                            latitude: newRecord.current_latitude,
+                            longitude: newRecord.current_longitude
+                        },
+                        rating: newRecord.rating || t.rating
+                    };
+                }
+                return t;
+            }));
+        }
+    });
 
     // Real-time Updates
 
