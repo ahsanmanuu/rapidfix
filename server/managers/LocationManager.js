@@ -66,7 +66,11 @@ class LocationManager {
             }
             return result;
         } catch (err) {
-            console.error(`[LocationManager] Error saving user location for ${userId}:`, err);
+            if (err.code === '23503') {
+                console.warn(`[LocationManager] Skipped location update: User ${userId} not found in DB.`);
+            } else {
+                console.error(`[LocationManager] Error saving user location for ${userId}:`, err);
+            }
             return null;
         }
     }

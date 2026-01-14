@@ -157,7 +157,7 @@ class JobManager {
                     // 1. Check Star Rating (>= 3.0 OR New/0)
                     const rating = tech.rating || 0;
                     if (rating > 0 && rating < 3.0) {
-                        console.log(`[AutoAssign] Skipping ${tech.name}: Low Rating (${rating})`);
+                        // console.debug(`[AutoAssign] Skipping ${tech.name}: Low Rating (${rating})`);
                         continue;
                     }
 
@@ -166,7 +166,7 @@ class JobManager {
                     // jobStats.ratio is rejection ratio (0.0 to 1.0)
                     // We allow if total jobs is low (< 3) so we don't block new techs on 1 rejection immediately
                     if (jobStats.total >= 3 && jobStats.ratio >= 0.20) {
-                        console.log(`[AutoAssign] Skipping ${tech.name}: High Monthly Rejection Rate (${(jobStats.ratio * 100).toFixed(1)}%)`);
+                        // console.debug(`[AutoAssign] Skipping ${tech.name}: High Monthly Rejection Rate (${(jobStats.ratio * 100).toFixed(1)}%)`);
                         continue;
                     }
 
@@ -181,7 +181,7 @@ class JobManager {
 
                     // Only apply cap if there is significant volume (e.g., > 10 jobs in system)
                     if (allJobsThisMonth > 10 && volumeShare >= volumeCap) {
-                        console.log(`[AutoAssign] Skipping ${tech.name}: Over volume cap (${(volumeShare * 100).toFixed(1)}% / ${(volumeCap * 100).toFixed(1)}%)`);
+                        // console.debug(`[AutoAssign] Skipping ${tech.name}: Over volume cap (${(volumeShare * 100).toFixed(1)}% / ${(volumeCap * 100).toFixed(1)}%)`);
                         continue;
                     }
 
@@ -207,10 +207,10 @@ class JobManager {
                     // Assign
                     return await this.assignTechnician(jobId, bestTech.id);
                 } else {
-                    console.log(`[JobManager] No qualified technicians found for Job #${jobId} after filtering.`);
+                    // console.debug(`[JobManager] No qualified technicians found for Job #${jobId} after filtering.`);
                 }
             } else {
-                console.log(`[JobManager] AutoAssign skipped: Missing location data for Job #${jobId}`);
+                // console.debug(`[JobManager] AutoAssign skipped: Missing location data for Job #${jobId}`);
             }
             return job;
         } catch (err) {
