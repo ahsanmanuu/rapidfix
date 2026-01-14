@@ -298,6 +298,62 @@ const TechnicianDashboard = () => {
     const [feedbacks, setFeedbacks] = useState([]);
     const [myJobs, setMyJobs] = useState([]);
     const [statusLoading, setStatusLoading] = useState(false);
+
+    // [RESTORED] Missing UI State
+    const [rideModalOpen, setRideModalOpen] = useState(false);
+    const [activeRideJob, setActiveRideJob] = useState(null);
+    const [jobFilter, setJobFilter] = useState('all');
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [rejectReason, setRejectReason] = useState("");
+    const [selectedJobId, setSelectedJobId] = useState(null);
+    const [viewJob, setViewJob] = useState(null);
+    const [openMenuJobId, setOpenMenuJobId] = useState(null);
+    const [statsModalOpen, setStatsModalOpen] = useState(false);
+    const [activeChatUser, setActiveChatUser] = useState(null);
+    const [chatMessages, setChatMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState("");
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [profileForm, setProfileForm] = useState({ password: '' });
+    const [registeredAddress, setRegisteredAddress] = useState("Loading location...");
+    const [offers, setOffers] = useState([
+        { title: "Complete 10 Jobs", description: "Get ₹500 bonus", badgeText: "Active" },
+        { title: "Maintain 4.8 Rating", description: "Priority Allocation", badgeText: "Goal" }
+    ]);
+    const [currentLocationName, setCurrentLocationName] = useState("Unknown Location");
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [formattedTime, setFormattedTime] = useState("");
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+    const chatEndRef = useRef(null);
+
+    // Initial Clock & Location
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        if (user?.location) {
+            // Mock Reverse Geocode or use real API if available
+            // For now simple lat/lng string or user city if available
+            setCurrentLocationName(user.city || `${user.location.latitude.toFixed(2)}, ${user.location.longitude.toFixed(2)}`);
+
+            // Restore geocoding logic if intended
+            const fetchAddress = async () => {
+                try {
+                    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${user.location.latitude},${user.location.longitude}&key=AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU`);
+                    const data = await response.json();
+                    if (data.results[0]) {
+                        setRegisteredAddress(data.results[0].formatted_address);
+                        setCurrentLocationName(data.results[0].address_components.find(c => c.types.includes('locality'))?.long_name || "Unknown City");
+                    }
+                } catch (error) {
+                    console.error("Geocoding failed", error);
+                }
+            };
+            fetchAddress();
+        }
+    }, [user]);
     const [offers, setOffers] = useState([]);
 
     // Time & Location
