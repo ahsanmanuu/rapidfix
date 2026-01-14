@@ -330,6 +330,7 @@ class JobManager {
 
                     // [REFACTORED] Centralized Side Effects
                     if (status === 'completed') {
+                        console.log(`[JobManager] Job ${id} completed, updating tech ${enriched.technicianId} stats and status`);
                         await this.techManager.updateStats(enriched.technicianId, { type: 'complete' });
                         await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
 
@@ -340,13 +341,16 @@ class JobManager {
                             this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
                         }
                     } else if (status === 'rejected') {
+                        console.log(`[JobManager] Job ${id} rejected, updating tech ${enriched.technicianId} stats and setting status to available`);
                         await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
                         await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
                     }
                     else if (status === 'accepted') {
+                        console.log(`[JobManager] Job ${id} accepted, updating tech ${enriched.technicianId} stats and setting status to engaged`);
                         await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
                         await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
                     } else if (status === 'in_progress') {
+                        console.log(`[JobManager] Job ${id} in progress, setting tech ${enriched.technicianId} status to engaged`);
                         await this.techManager.updateStatus(enriched.technicianId, 'engaged');
                     }
                 }

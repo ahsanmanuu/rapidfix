@@ -412,6 +412,7 @@ class TechnicianManager {
 
     async updateStatus(id, status) {
         try {
+            console.log(`[TechnicianManager] Updating status for Tech ${id}: ${status}`);
             // [FIX] Data Integrity: Prevent Objects/JSON from being saved as status
             let cleanStatus = status;
             if (typeof status === 'object' && status !== null) {
@@ -426,10 +427,20 @@ class TechnicianManager {
                 } catch (e) { }
             }
 
+            console.log(`[TechnicianManager] Calling DB update with status: ${cleanStatus}`);
             const result = await this.db.update('id', id, { status: String(cleanStatus) });
+
+            if (!result) {
+                console.error(`[TechnicianManager] DB update returned null for Tech ${id}`);
+                return null;
+            }
+
+            console.log(`[TechnicianManager] DB update successful for Tech ${id}, new status: ${result.status}`);
             const tech = this._mapFromDb(result);
+
             if (this.io) {
-                this.io.emit('technician_status_update', { technicianId: id, status });
+                console.log(`[TechnicianManager] Emitting socket events for Tech ${id} status update`);
+                this.io.emit('technician_status_update', { technicianId: id, status: cleanStatus });
                 this.io.to(`tech_${id}`).emit('profile_updated', tech);
             }
             return tech;
