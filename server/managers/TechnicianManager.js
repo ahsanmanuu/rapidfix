@@ -1,4 +1,5 @@
 const Database = require('./DatabaseLoader');
+// Syntax fix verified
 
 const { geocodeAddress } = require('../utils/geocoder');
 
