@@ -336,6 +336,9 @@ class JobManager {
                     } else if (status === 'accepted') {
                         await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
                         await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
+                    } else if (status === 'in_progress') {
+                        // "Start Journey" implies Engagement
+                        await this.techManager.updateStatus(enriched.technicianId, 'engaged');
                     }
                 }
                 this.io.emit('admin_job_update', enriched);
