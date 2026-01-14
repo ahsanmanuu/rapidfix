@@ -6,7 +6,7 @@ import {
     CheckCircle2, XCircle, TrendingUp, Star,
     Coffee, Briefcase, Zap, Menu, X,
     MoreVertical, User, ChevronDown, RefreshCw, Send, Image as ImageIcon, Lock, Shield,
-    ArrowUpRight, ArrowDownRight, PieChart
+    ArrowUpRight, ArrowDownRight, PieChart, Signal
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
@@ -1508,19 +1508,33 @@ const TechnicianDashboard = () => {
 
                             <div className="h-6 w-px bg-gray-200 mx-1 sm:mx-2"></div>
 
-                            {/* Time & Location: Removed 'hidden sm:block' to show on mobile, adjusted layout */}
-                            <div className="text-right flex flex-col items-end">
-                                <div className="text-[10px] sm:text-xs font-bold text-gray-700 flex items-center justify-end gap-1">
-                                    <Clock size={10} className="text-gray-400" />
-                                    <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            {/* Time & Location: Enhanced alignment and formatting */}
+                            <div className="flex items-center gap-3 sm:gap-4">
+                                <div className="hidden xs:flex flex-col items-end leading-tight">
+                                    <div className="flex items-center gap-1.5 text-gray-700 font-bold tracking-tight">
+                                        <Clock size={12} className="text-blue-500" />
+                                        <span className="text-[11px] sm:text-xs">
+                                            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-gray-400 mt-0.5">
+                                        <MapPin size={10} className="shrink-0" />
+                                        <span className="text-[9px] sm:text-[10px] max-w-[100px] sm:max-w-[150px] truncate font-medium">
+                                            {currentLocationName || "Locating..."}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="text-[9px] sm:text-[10px] text-gray-500 flex items-center justify-end gap-1 max-w-[150px] truncate">
-                                    <MapPin size={10} /> {currentLocationName || "Locating..."}
+
+                                {/* Network Indicator: Modern Signal Symbol */}
+                                <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 rounded-lg border border-emerald-100/50 group">
+                                    <div className="relative">
+                                        <Signal size={14} className="text-emerald-600" />
+                                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse border border-white"></span>
+                                    </div>
+                                    <span className="text-[9px] sm:text-[10px] text-emerald-700 font-bold uppercase tracking-wider hidden xs:block">
+                                        Live
+                                    </span>
                                 </div>
-                            </div>
-                            {/* Network Indicator in Navbar */}
-                            <div className="text-[9px] text-emerald-600 font-bold flex items-center justify-end gap-1">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Network
                             </div>
                         </div>
                     </div>
