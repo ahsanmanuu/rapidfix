@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import useSupabaseRealtime from '../../hooks/useSupabaseRealtime';
 import FeedbackModal from './FeedbackModal';
+import FeedbackSuccessModal from './FeedbackSuccessModal';
 import api from '../../services/api';
 import { createJob, getMyJobs } from '../../services/api';
 import {
@@ -27,6 +28,9 @@ const DashboardJobs = ({ user }) => {
     const [showBooking, setShowBooking] = useState(false);
     const [selectedJobForFeedback, setSelectedJobForFeedback] = useState(null);
     const [newJob, setNewJob] = useState({ serviceType: 'Electrician', description: '', location: '', contactName: user?.name || '', contactPhone: user?.phone || '' });
+    const [submittedFeedbackJobs, setSubmittedFeedbackJobs] = useState(new Set());
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [lastSubmittedRating, setLastSubmittedRating] = useState(null);
     const socket = useSocket();
 
     useEffect(() => {
@@ -100,18 +104,25 @@ const DashboardJobs = ({ user }) => {
                 return;
             }
 
+            // Include jobId in the payload
             await api.post('/feedback', {
                 userId: user.id,
                 technicianId: job.technicianId,
+                jobId: job.id,
                 ratings,
                 comment
             });
 
+            // Track as submitted
+            setSubmittedFeedbackJobs(prev => new Set([...prev, jobId]));
             setSelectedJobForFeedback(null);
-            alert('Feedback submitted successfully!');
+
+            // Show success modal with overall rating
+            setLastSubmittedRating(ratings.overall);
+            setShowSuccessModal(true);
         } catch (error) {
             console.error(error);
-            alert('Failed to submit feedback');
+            alert('Failed to submit feedback. Please try again.');
         }
     };
 
@@ -290,18 +301,19 @@ const DashboardJobs = ({ user }) => {
                                         <Box sx={{ mt: 3, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
                                             <Button
                                                 variant="contained"
-                                                color="primary"
+                                                color={submittedFeedbackJobs.has(job.id) ? "success" : "primary"}
                                                 fullWidth
                                                 startIcon={<Star />}
+                                                disabled={submittedFeedbackJobs.has(job.id)}
                                                 onClick={() => setSelectedJobForFeedback(job)}
                                                 sx={{
                                                     fontWeight: 'bold',
                                                     borderRadius: '12px',
-                                                    boxShadow: '0 4px 12px rgba(33, 150, 243, 0.3)',
+                                                    boxShadow: submittedFeedbackJobs.has(job.id) ? 'none' : '0 4px 12px rgba(33, 150, 243, 0.3)',
                                                     py: 1.5
                                                 }}
                                             >
-                                                Rate Service
+                                                {submittedFeedbackJobs.has(job.id) ? 'Rating Submitted ✓' : 'Rate Service'}
                                             </Button>
                                         </Box>
                                     )}
@@ -319,6 +331,12 @@ const DashboardJobs = ({ user }) => {
                     onSubmit={handleSubmitFeedback}
                 />
             )}
+
+            <FeedbackSuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+                rating={lastSubmittedRating}
+            />
         </Grid>
     );
 };

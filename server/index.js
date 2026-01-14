@@ -77,6 +77,13 @@ allManagers.forEach(m => {
   }
 });
 
+// Connect FeedbackManager to TechnicianManager for rating updates
+feedbackManager.setTechnicianManager(technicianManager);
+
+// Connect JobManager to TechnicianManager and FinanceManager
+jobManager.setTechnicianManager(technicianManager);
+jobManager.setFinanceManager(financeManager);
+
 
 
 // Start Authentication Middleware

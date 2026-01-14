@@ -8,6 +8,11 @@ class FeedbackManager {
 
     setSocketIO(io) {
         this.io = io;
+        this.techManager = null; // Will be set by server
+    }
+
+    setTechnicianManager(techManager) {
+        this.techManager = techManager;
     }
 
     _mapFromDb(fb) {
@@ -44,30 +49,70 @@ class FeedbackManager {
         }
     }
 
-    async addFeedback(userId, technicianId, ratings, comment, jobId = null) {
+    async addFeedback(userId, technicianId, jobId, ratings, comment, metadata = {}) {
         try {
+            console.log(`[FeedbackManager] Adding feedback for job ${jobId}, tech ${technicianId}`);
+
             const feedback = {
                 userId,
                 technicianId,
                 jobId,
                 ratings,
                 comment,
+                recommendationScore: metadata.recommendationScore || 0,
+                userName: metadata.userName || '',
+                userPhone: metadata.userPhone || '',
+                userLocation: metadata.userLocation || null,
+                serviceCharges: metadata.serviceCharges || 0,
                 createdAt: new Date().toISOString()
             };
+
             const dbFb = this._mapToDb(feedback);
             const saved = await this.db.add(dbFb);
             const result = this._mapFromDb(saved);
+
+            // Calculate and update average rating for technician
+            const avgRating = await this.calculateAverageRating(technicianId);
+            console.log(`[FeedbackManager] Calculated avg rating for tech ${technicianId}: ${avgRating}`);
+
+            if (this.techManager && avgRating !== null) {
+                await this.techManager.updateRating(technicianId, avgRating);
+                console.log(`[FeedbackManager] Updated technician rating in database`);
+            }
 
             if (this.io) {
                 this.io.emit('new_feedback_received', result);
                 this.io.to(`tech_${technicianId}`).emit('feedback_received', result);
                 this.io.emit('admin_feedback_update', result);
+                this.io.to(`tech_${technicianId}`).emit('rating_updated', { technicianId, rating: avgRating });
             }
 
             return result;
         } catch (err) {
             console.error("[FeedbackManager] Error adding feedback:", err);
             throw err;
+        }
+    }
+
+    async calculateAverageRating(technicianId) {
+        try {
+            const feedbacks = await this.getFeedbackForTechnician(technicianId);
+
+            if (!feedbacks || feedbacks.length === 0) {
+                return 0;
+            }
+
+            // Calculate average from 'overall' rating
+            const totalRating = feedbacks.reduce((sum, fb) => {
+                const overallRating = fb.ratings?.overall || 0;
+                return sum + overallRating;
+            }, 0);
+
+            const avgRating = totalRating / feedbacks.length;
+            return Math.round(avgRating * 10) / 10; // Round to 1 decimal place
+        } catch (err) {
+            console.error(`[FeedbackManager] Error calculating average rating for tech ${technicianId}:`, err);
+            return null;
         }
     }
 

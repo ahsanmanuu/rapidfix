@@ -450,6 +450,30 @@ class TechnicianManager {
         }
     }
 
+    async updateRating(id, rating) {
+        try {
+            console.log(`[TechnicianManager] Updating rating for Tech ${id}: ${rating}`);
+            const result = await this.db.update('id', id, { rating: Number(rating) });
+
+            if (!result) {
+                console.error(`[TechnicianManager] DB update returned null for Tech ${id}`);
+                return null;
+            }
+
+            console.log(`[TechnicianManager] Rating update successful for Tech ${id}, new rating: ${result.rating}`);
+            const tech = this._mapFromDb(result);
+
+            if (this.io) {
+                this.io.emit('technician_rating_updated', { technicianId: id, rating });
+                this.io.to(`tech_${id}`).emit('profile_updated', tech);
+            }
+            return tech;
+        } catch (err) {
+            console.error(`[TechnicianManager] Error updating rating for tech ${id}:`, err);
+            return null;
+        }
+    }
+
     async updateProfile(id, updates) {
         try {
             const techRaw = await this.db.find('id', id);
