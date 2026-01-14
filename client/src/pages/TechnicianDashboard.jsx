@@ -332,34 +332,17 @@ const TechnicianDashboard = () => {
         return () => clearInterval(timer);
     }, []);
 
-    useEffect(() => {
-        if (user?.location) {
-            // Mock Reverse Geocode or use real API if available
-            // For now simple lat/lng string or user city if available
-            setCurrentLocationName(user.city || `${user.location.latitude.toFixed(2)}, ${user.location.longitude.toFixed(2)}`);
 
-            // Restore geocoding logic if intended
-            const fetchAddress = async () => {
-                try {
-                    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${user.location.latitude},${user.location.longitude}&key=AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU`);
-                    const data = await response.json();
-                    if (data.results[0]) {
-                        setRegisteredAddress(data.results[0].formatted_address);
-                        setCurrentLocationName(data.results[0].address_components.find(c => c.types.includes('locality'))?.long_name || "Unknown City");
-                    }
-                } catch (error) {
-                    console.error("Geocoding failed", error);
-                }
-            };
-            fetchAddress();
-        }
-    }, [user]);
 
 
     // [NEW] Resolve Registered Address
     useEffect(() => {
         if (!user) return;
         const resolveAddress = async () => {
+            if (user.city) {
+                setCurrentLocationName(user.city);
+            }
+
             if (user.address && typeof user.address === 'string') {
                 setRegisteredAddress(user.address);
                 return;
@@ -367,6 +350,12 @@ const TechnicianDashboard = () => {
             if (user.location && (user.location.latitude || user.location.lat)) {
                 const lat = user.location.latitude || user.location.lat;
                 const lng = user.location.longitude || user.location.lng;
+
+                // Safe formatting for display
+                if (!user.city && lat && lng) {
+                    setCurrentLocationName(`${Number(lat).toFixed(2)}, ${Number(lng).toFixed(2)}`);
+                }
+
                 try {
                     const apiKey = "AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU";
                     const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`);
@@ -376,6 +365,8 @@ const TechnicianDashboard = () => {
                         const city = data.results[0].address_components.find(c => c.types.includes('administrative_area_level_2'))?.long_name;
                         const formatted = [locality, city].filter(Boolean).join(', ');
                         setRegisteredAddress(formatted || "Location Found");
+                        // Prefer geocoded city name if available
+                        if (locality) setCurrentLocationName(locality);
                     } else {
                         setRegisteredAddress("Unknown Location");
                     }
@@ -384,6 +375,7 @@ const TechnicianDashboard = () => {
                 }
             } else {
                 setRegisteredAddress("No Location");
+                setCurrentLocationName("Location Unavailable");
             }
         };
         resolveAddress();
