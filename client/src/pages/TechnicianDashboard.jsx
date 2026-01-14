@@ -354,35 +354,7 @@ const TechnicianDashboard = () => {
             fetchAddress();
         }
     }, [user]);
-    const [offers, setOffers] = useState([]);
 
-    // Time & Location
-    const [currentTime, setCurrentTime] = useState(new Date());
-    const [currentLocationName, setCurrentLocationName] = useState("Locating...");
-
-    // Chat State
-    const [chatOpen, setChatOpen] = useState(false);
-    const [chatMessages, setChatMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState("");
-    const [activeChatUser, setActiveChatUser] = useState(null); // { id, name }
-    const chatEndRef = useRef(null);
-
-    // Profile Settings State
-    const [profileForm, setProfileForm] = useState({ password: '', photo: null });
-    const [profileLoading, setProfileLoading] = useState(false);
-
-    // [New] Job Management State
-    const [jobFilter, setJobFilter] = useState('all');
-    const [openMenuJobId, setOpenMenuJobId] = useState(null);
-    const [rejectModalOpen, setRejectModalOpen] = useState(false);
-    const [selectedJobId, setSelectedJobId] = useState(null);
-
-    const [rejectReason, setRejectReason] = useState("");
-    const [viewJob, setViewJob] = useState(null); // For View Details Modal
-
-    const [statsModalOpen, setStatsModalOpen] = useState(false);
-    const [unreadNotifications, setUnreadNotifications] = useState(0);
-    const [registeredAddress, setRegisteredAddress] = useState("Loading...");
 
     // [NEW] Resolve Registered Address
     useEffect(() => {
@@ -418,10 +390,7 @@ const TechnicianDashboard = () => {
     }, [user]);
 
     // Live Data Fetching
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
+
 
     // [NEW] Notification Real-time
     useSupabaseRealtime('notifications', (payload) => {
