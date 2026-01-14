@@ -428,6 +428,8 @@ const TechnicianDashboard = () => {
         { title: "Complete 10 Jobs", description: "Get ₹500 bonus", badgeText: "Active" },
         { title: "Maintain 4.8 Rating", description: "Priority Allocation", badgeText: "Goal" }
     ]);
+    const [currentLocationName, setCurrentLocationName] = useState("Unknown Location");
+    const [currentTime, setCurrentTime] = useState(new Date());
     const [formattedTime, setFormattedTime] = useState("");
     const [unreadNotifications, setUnreadNotifications] = useState(0);
     const [liveFeed, setLiveFeed] = useState([]);
@@ -1420,7 +1422,7 @@ const TechnicianDashboard = () => {
                                             className="flex gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100/50 hover:bg-white transition-all group duration-300"
                                         >
                                             <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${item.type?.includes('job') ? 'bg-blue-500' :
-                                                    item.type?.includes('payment') ? 'bg-emerald-500' : 'bg-amber-500'
+                                                item.type?.includes('payment') ? 'bg-emerald-500' : 'bg-amber-500'
                                                 } group-hover:scale-125 transition-transform`} />
                                             <div className="min-w-0">
                                                 <h5 className="text-[11px] font-bold text-slate-800">{item.title}</h5>
