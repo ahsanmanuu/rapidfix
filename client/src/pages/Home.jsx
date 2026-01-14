@@ -391,7 +391,7 @@ const Home = () => {
             }
 
             // Fallback 2: Default Location (New Delhi)
-            alert("Location access failed. Showing technicians in New Delhi (Default).");
+            console.warn("Location access failed. Falling back to default (New Delhi).");
             const defaultLoc = {
                 latitude: 28.6139,
                 longitude: 77.2090,
