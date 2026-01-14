@@ -155,7 +155,9 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
     }, [socket, isOpen]);
 
     // Supabase Realtime Subscription for technician updates
-    useSupabaseRealtime('technicians', (payload) =\u003e {\r\n        const { eventType, new: newRecord } = payload;\r\n        console.log('[TechnicianSearchModal] Supabase update:', newRecord?.id, newRecord?.status);
+    useSupabaseRealtime('technicians', (payload) => {
+        const { eventType, new: newRecord } = payload;
+        console.log('[TechnicianSearchModal] Supabase update:', newRecord?.id, newRecord?.status);
 
         if (eventType === 'UPDATE' && newRecord) {
             // Update technician in list
