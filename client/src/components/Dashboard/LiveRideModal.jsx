@@ -20,7 +20,7 @@ const LiveRideModal = ({ job, technicianId, userId, onClose, socket, onEndRide }
     // Ideally this comes from env
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: "AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU" // Using key found in project
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY // Using key found in project
     });
 
     useEffect(() => {

@@ -44,7 +44,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
 
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: "AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU"
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
     });
 
     const onLoad = useCallback(function callback(map) { setMap(map); }, []);

@@ -288,11 +288,11 @@ const TechnicianDashboard = () => {
     // Data States
     const [stats, setStats] = useState({
         earnings: 0,
-        completedJobs: 0,
-        pendingJobs: 0,
-        rejectedJobs: 0,
-        rating: 0,
-        totalReviews: 0,
+        completedJobs: user?.completedJobs || 0,
+        pendingJobs: user?.pendingJobs || 0,
+        rejectedJobs: user?.rejectedJobs || 0,
+        rating: user?.rating || 0,
+        totalReviews: user?.reviewCount || 0,
         onTime: 100 // Default to 100%
     });
     const [feedbacks, setFeedbacks] = useState([]);
@@ -357,7 +357,7 @@ const TechnicianDashboard = () => {
                 }
 
                 try {
-                    const apiKey = "AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU";
+                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
                     const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`);
                     const data = await res.json();
                     if (data.results?.[0]) {
@@ -429,6 +429,19 @@ const TechnicianDashboard = () => {
             console.error("Failed to fetch dashboard data:", error);
         }
     };
+
+    // [NEW] Sync Stats with User Object (Real-time updates via user prop)
+    useEffect(() => {
+        if (user) {
+            setStats(prev => ({
+                ...prev,
+                completedJobs: user.completedJobs !== undefined ? user.completedJobs : prev.completedJobs,
+                rejectedJobs: user.rejectedJobs !== undefined ? user.rejectedJobs : prev.rejectedJobs,
+                pendingJobs: user.pendingJobs !== undefined ? user.pendingJobs : prev.pendingJobs,
+                rating: user.rating !== undefined ? user.rating : prev.rating
+            }));
+        }
+    }, [user]);
 
     useEffect(() => {
         fetchAllData();
@@ -753,7 +766,7 @@ const TechnicianDashboard = () => {
                                     <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden relative">
                                         {/* Simple Static Map Image or Link */}
                                         <img
-                                            src={`https://maps.googleapis.com/maps/api/staticmap?center=${viewJob.location.latitude},${viewJob.location.longitude}&zoom=15&size=600x300&markers=color:red%7C${viewJob.location.latitude},${viewJob.location.longitude}&key=AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU`}
+                                            src={`https://maps.googleapis.com/maps/api/staticmap?center=${viewJob.location.latitude},${viewJob.location.longitude}&zoom=15&size=600x300&markers=color:red%7C${viewJob.location.latitude},${viewJob.location.longitude}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`}
                                             alt="Map"
                                             className="w-full h-full object-cover"
                                         />

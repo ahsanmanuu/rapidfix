@@ -11,7 +11,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
         if (isOpen && jobDetails?.location?.latitude && jobDetails?.location?.longitude) {
             const fetchAddress = async () => {
                 try {
-                    const apiKey = "AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU";
+                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
                     const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${jobDetails.location.latitude},${jobDetails.location.longitude}&key=${apiKey}`);
                     const data = await res.json();
                     if (data.results && data.results.length > 0) {
