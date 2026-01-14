@@ -1009,26 +1009,60 @@ app.get('/api/testimonials', async (req, res) => {
 });
 
 app.post('/api/feedback', async (req, res) => {
-  const { userId, technicianId, ratings, comment } = req.body;
-  // ratings: object { time, attitude, communication, etc. }
-  const feedback = await feedbackManager.addFeedback(userId, technicianId, ratings, comment);
+  try {
+    const { userId, technicianId, jobId, ratings, comment } = req.body;
+    console.log(`[API] Feedback submission: JobID=${jobId}, TechID=${technicianId}, UserID=${userId}`);
 
-  // [REAL-TIME] Broadcast Updates
-  // 1. To Technician
-  io.to(`tech_${technicianId}`).emit('feedback_received', feedback);
+    // Fetch user and job details for complete metadata
+    const user = await userManager.getUser(userId);
+    const job = jobId ? await jobManager.getJob(jobId) : null;
 
-  // 2. To User
-  io.to(`user_${userId}`).emit('feedback_sent', feedback);
+    // Prepare metadata
+    const metadata = {
+      recommendationScore: ratings.recommendationScore || 0,
+      userName: user?.name || 'Unknown',
+      userPhone: user?.phone || '',
+      userLocation: user?.location || null,
+      serviceCharges: job?.offerPrice || job?.visitingCharges || 0
+    };
 
-  // 3. To Admin/SuperAdmin (using generic admin event)
-  io.emit('admin_feedback_update', feedback);
+    // Add feedback with complete metadata (this also auto-calculates and updates avg rating)
+    const feedback = await feedbackManager.addFeedback(
+      userId,
+      technicianId,
+      jobId,
+      ratings,
+      comment,
+      metadata
+    );
 
-  res.json({ success: true, feedback });
+    console.log(`[API] Feedback created successfully, ID: ${feedback.id}`);
+    res.json({ success: true, feedback });
+  } catch (error) {
+    console.error('[API] Feedback submission error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get feedback submitted by a specific user
+app.get('/api/feedback/user/:userId', async (req, res) => {
+  try {
+    const allFeedback = await feedbackManager.getAllFeedback();
+    const userFeedback = allFeedback.filter(f => f.userId === req.params.userId);
+    res.json({ success: true, feedbacks: userFeedback });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 app.get('/api/feedback/technician/:id', async (req, res) => {
-  const feedbacks = await feedbackManager.getFeedbackForTechnician(req.params.id);
-  res.json({ success: true, feedbacks });
+  try {
+    const feedbacks = await feedbackManager.getFeedbackForTechnician(req.params.id);
+    const avgRating = await feedbackManager.calculateAverageRating(req.params.id);
+    res.json({ success: true, feedbacks, averageRating: avgRating });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // --- Location Routes ---
