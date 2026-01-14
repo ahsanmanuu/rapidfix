@@ -419,16 +419,34 @@ const TechnicianDashboard = () => {
             fetchAllData();
         };
 
+        const handleStatsUpdate = (updatedTech) => {
+            if (updatedTech.id === user.id) {
+                setStats(prev => ({
+                    ...prev,
+                    completedJobs: updatedTech.completedJobs || 0,
+                    pendingJobs: updatedTech.pendingJobs || 0,
+                    rejectedJobs: updatedTech.rejectedJobs || 0,
+                    acceptedJobs: updatedTech.acceptedJobs || 0,
+                    rating: updatedTech.rating || prev.rating,
+                    totalReviews: updatedTech.reviewCount || prev.totalReviews
+                }));
+                // Also persist to auth context if needed, but local state is faster for dashboard
+                updateUser({ ...user, ...updatedTech });
+            }
+        };
+
         socket.on('technician_status_update', handleStatusUpdate);
         socket.on('job_updated', handleJobUpdate);
         socket.on('job_status_updated', handleJobUpdate);
         socket.on('new_job_assigned', handleJobUpdate);
+        socket.on('stats_updated', handleStatsUpdate); // [NEW]
 
         return () => {
             socket.off('technician_status_update', handleStatusUpdate);
             socket.off('job_updated', handleJobUpdate);
             socket.off('job_status_updated', handleJobUpdate);
             socket.off('new_job_assigned', handleJobUpdate);
+            socket.off('stats_updated', handleStatsUpdate);
         };
     }, [socket, user]);
 
@@ -882,39 +900,39 @@ const TechnicianDashboard = () => {
             </div> {/* Close Unified Grid */}
 
             {/* Additional Stats Row - Grid Expanded */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-6 mb-8 px-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 sm:gap-6 mb-8 px-1">
                 {/* Existing Small Cards */}
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
-                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Briefcase size={20} /></div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-[140px] flex-shrink-0">
+                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600 flex-shrink-0"><Briefcase size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.monthJobs || stats.monthlyJobs || 0}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Jobs This Month</div>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
-                    <div className="p-2 bg-rose-50 rounded-lg text-rose-600"><XCircle size={20} /></div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-[140px] flex-shrink-0">
+                    <div className="p-2 bg-rose-50 rounded-lg text-rose-600 flex-shrink-0"><XCircle size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.rejectedJobs || 0}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Rejected</div>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
-                    <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><CheckCircle2 size={20} /></div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-[140px] flex-shrink-0">
+                    <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600 flex-shrink-0"><CheckCircle2 size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.completedJobs || 0}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Completed</div>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
-                    <div className="p-2 bg-amber-50 rounded-lg text-amber-600"><Clock size={20} /></div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-[140px] flex-shrink-0">
+                    <div className="p-2 bg-amber-50 rounded-lg text-amber-600 flex-shrink-0"><Clock size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.pendingJobs || 0}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Pending</div>
                     </div>
 
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
-                    <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600"><CheckCircle2 size={20} /></div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-[140px] flex-shrink-0">
+                    <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600 flex-shrink-0"><CheckCircle2 size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.acceptedJobs || 0}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Accepted</div>
@@ -922,22 +940,22 @@ const TechnicianDashboard = () => {
                 </div>
 
                 {/* [NEW] Account Info Cards */}
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-indigo-500">
-                    <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Shield size={20} /></div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-indigo-500 min-w-[140px] flex-shrink-0">
+                    <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600 flex-shrink-0"><Shield size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-sm font-bold text-gray-800 truncate">{user?.membership || 'Free'}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Membership</div>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-orange-500">
-                    <div className="p-2 bg-orange-50 rounded-lg text-orange-600"><MapPin size={20} /></div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-orange-500 min-w-[140px] flex-shrink-0">
+                    <div className="p-2 bg-orange-50 rounded-lg text-orange-600 flex-shrink-0"><MapPin size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-sm font-bold text-gray-800 truncate" title={registeredAddress}>{registeredAddress}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Registered Loc</div>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-pink-500">
-                    <div className="p-2 bg-pink-50 rounded-lg text-pink-600"><Calendar size={20} /></div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-pink-500 min-w-[140px] flex-shrink-0">
+                    <div className="p-2 bg-pink-50 rounded-lg text-pink-600 flex-shrink-0"><Calendar size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-sm font-bold text-gray-800 truncate">
                             {user?.membershipExpiry ? new Date(user.membershipExpiry).toLocaleDateString() : 'Lifetime'}

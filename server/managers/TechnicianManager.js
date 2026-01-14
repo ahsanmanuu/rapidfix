@@ -135,7 +135,6 @@ class TechnicianManager {
             // Stats
             if (totalJobs !== undefined) mapped.total_jobs = totalJobs;
             if (completedJobs !== undefined) mapped.completed_jobs = completedJobs;
-            if (completedJobs !== undefined) mapped.completed_jobs = completedJobs;
             if (rejectedJobs !== undefined) mapped.rejected_jobs = rejectedJobs;
             if (pendingJobs !== undefined) mapped.pending_jobs = pendingJobs;
             if (acceptedJobs !== undefined) mapped.accepted_jobs = acceptedJobs; // [NEW]
@@ -514,16 +513,15 @@ class TechnicianManager {
             if (type === 'assign') {
                 total += 1;
                 pending += 1;
-            } else if (type === 'accept') { // [NEW]
+            } else if (type === 'accept') {
                 accepted += 1;
-                // Pending remains roughly same logic or decrease if distinct phases, 
-                // but usually 'pending' means 'awaiting action'. 
-                // If 'accepted', it might still be active but no longer 'pending decision'.
-                // Let's assume pending decreases when accepted.
                 if (pending > 0) pending -= 1;
             } else if (type === 'complete') {
                 completed += 1;
-                // If 'in_progress' to 'complete', no pending change usually.
+                // 'accepted' job becomes 'completed'. 'accepted' count remains as historical record of acceptance? 
+                // Usually dashboard stats are 'current state'. 
+                // Let's assume 'Accepted' means 'Currently Active'.
+                if (accepted > 0) accepted -= 1;
             } else if (type === 'reject') {
                 rejected += 1;
                 if (pending > 0) pending -= 1;
