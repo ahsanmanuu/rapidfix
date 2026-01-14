@@ -1371,7 +1371,7 @@ const TechnicianDashboard = () => {
                 {/* Footer */}
                 <footer className="bg-white border-t border-gray-200 p-4 text-xs text-gray-500 flex justify-between items-center shrink-0">
                     <div>
-                        <strong>Copyright &copy; 2024 <span className="text-blue-600">Fixofy.io</span>.</strong> All rights reserved.
+                        <strong>Copyright &copy; 2024 <span className="text-blue-600">Fixofy.io</span>.</strong> All rights reserved. {/* v3.2.0-rc */}
                     </div>
                     <div className="hidden sm:block">
                         <b>Version</b> 3.2.0-rc
