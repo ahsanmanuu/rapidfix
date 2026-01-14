@@ -202,6 +202,101 @@ const ContentHeader = ({ title, breadcrumb }) => (
     </div>
 );
 
+// --- Success Animation Modal (Professional & Modern) ---
+const SuccessAnimationModal = ({ isOpen, onClose, title = "Success!", message = "Your update was saved successfully." }) => {
+    useEffect(() => {
+        if (isOpen) {
+            const timer = setTimeout(() => onClose(), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen, onClose]);
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <style>
+                        {`
+                            @keyframes slide-infinite {
+                                0% { transform: translateX(-100%); }
+                                100% { transform: translateX(100%); }
+                            }
+                            .animate-slide-infinite {
+                                animation: slide-infinite 2s linear infinite;
+                            }
+                        `}
+                    </style>
+                    {/* Backdrop Blur Layer */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[-1]"
+                    />
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 50, scale: 0.9, rotateX: -15 }}
+                        animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: -20, transition: { duration: 0.2 } }}
+                        className="bg-white rounded-[2.5rem] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.3)] p-10 max-w-sm w-full text-center relative overflow-hidden"
+                    >
+                        {/* Decorative Gradient Line */}
+                        <div className="absolute top-0 left-0 w-full h-1.5 bg-gray-100 overflow-hidden">
+                            <div className="h-full w-1/2 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400 animate-slide-infinite" />
+                        </div>
+
+                        <div className="mb-8 relative">
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.1 }}
+                                className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-emerald-200 border-4 border-white"
+                            >
+                                <motion.div
+                                    initial={{ pathLength: 0, opacity: 0 }}
+                                    animate={{ pathLength: 1, opacity: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.3 }}
+                                >
+                                    <CheckCircle2 size={48} className="text-white" />
+                                </motion.div>
+                            </motion.div>
+                        </div>
+
+                        <motion.h3
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="text-3xl font-black text-slate-900 mb-3 tracking-tighter"
+                        >
+                            {title}
+                        </motion.h3>
+
+                        <motion.p
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            className="text-slate-500 text-sm font-semibold leading-relaxed px-2"
+                        >
+                            {message}
+                        </motion.p>
+
+                        <motion.button
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.6 }}
+                            onClick={onClose}
+                            className="mt-10 w-full py-4 bg-slate-950 text-white font-black rounded-2xl hover:bg-slate-800 transition-all shadow-2xl shadow-slate-200 active:scale-95 text-sm uppercase tracking-widest"
+                        >
+                            Confirm
+                        </motion.button>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
 const Card = ({ title, tools, children, noPadding = false, headerColor = "border-t-blue-500", height = "auto" }) => (
     <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 border-t-4 ${headerColor} mb-8 flex flex-col overflow-hidden transition-shadow hover:shadow-xl`} style={{ minHeight: height }}>
         <div className="px-8 py-5 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm">
@@ -317,6 +412,7 @@ const TechnicianDashboard = () => {
     const [viewJob, setViewJob] = useState(null);
     const [openMenuJobId, setOpenMenuJobId] = useState(null);
     const [statsModalOpen, setStatsModalOpen] = useState(false);
+    const [successModal, setSuccessModal] = useState({ isOpen: false, title: '', message: '' });
     const [activeChatUser, setActiveChatUser] = useState(null);
     const [chatMessages, setChatMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
@@ -588,6 +684,11 @@ const TechnicianDashboard = () => {
             const res = await api.put(`/technicians/${user.id}/status`, { status: newStatus });
             if (res.data.success) {
                 updateUser({ ...user, status: newStatus });
+                setSuccessModal({
+                    isOpen: true,
+                    title: "Status Updated",
+                    message: `You are now ${newStatus.toUpperCase()}.`
+                });
             }
         } catch (error) {
             console.error("Status update error", error);
@@ -688,6 +789,17 @@ const TechnicianDashboard = () => {
                     }
                 }
 
+                // Show Success Modal
+                setSuccessModal({
+                    isOpen: true,
+                    title: action === 'reject' ? "Job Rejected" : "Update Successful",
+                    message: action === 'reject'
+                        ? "The job request has been formally declined."
+                        : `The job has been marked as ${status.replace('_', ' ')}.`
+                });
+
+                setRejectModalOpen(false);
+                setRejectReason('');
                 fetchAllData(); // key for stats sync
                 setOpenMenuJobId(null);
             }
@@ -1549,7 +1661,13 @@ const TechnicianDashboard = () => {
                         breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                     />
 
-                    {/* Dynamic Content Switching */}
+                    <SuccessAnimationModal
+                        isOpen={successModal.isOpen}
+                        onClose={() => setSuccessModal({ ...successModal, isOpen: false })}
+                        title={successModal.title}
+                        message={successModal.message}
+                    />
+
                     {activeTab === 'dashboard' && renderDashboardContent()}
                     {activeTab === 'chat' && renderChat()}
                     {activeTab === 'settings' && renderSettings()}
