@@ -27,10 +27,10 @@ import LiveRideModal from '../components/Dashboard/LiveRideModal';
 // --- Modern Stat Card Component ---
 const StatCard = ({ title, value, icon: Icon, color, trend, onClick, subtext }) => (
     <motion.div
-        whileHover={{ y: -5 }}
+        whileHover={{ y: -8, shadow: "0 25px 50px -12px rgb(0 0 0 / 0.25)" }}
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className={`relative overflow-hidden rounded-2xl bg-white shadow-lg border border-gray-100 p-6 cursor-pointer group hover:shadow-xl transition-all duration-300`}
+        className={`relative overflow-hidden rounded-2xl bg-white shadow-xl border border-gray-200/60 p-8 cursor-pointer group hover:shadow-2xl transition-all duration-500`}
     >
         <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-10 ${color} group-hover:scale-150 transition-transform duration-500`} />
 
@@ -203,14 +203,14 @@ const ContentHeader = ({ title, breadcrumb }) => (
 );
 
 const Card = ({ title, tools, children, noPadding = false, headerColor = "border-t-blue-500", height = "auto" }) => (
-    <div className={`bg-white rounded-md shadow-sm border-t-4 ${headerColor} mb-12 flex flex-col`} style={{ minHeight: height }}>
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
-            <div className="flex items-center gap-2 text-gray-400">
+    <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 border-t-4 ${headerColor} mb-8 flex flex-col overflow-hidden transition-shadow hover:shadow-xl`} style={{ minHeight: height }}>
+        <div className="px-8 py-5 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm">
+            <h3 className="text-lg font-bold text-gray-800 tracking-tight">{title}</h3>
+            <div className="flex items-center gap-3 text-gray-400">
                 {tools}
             </div>
         </div>
-        <div className={`flex-1 ${noPadding ? 'p-0' : 'p-8'}`}>
+        <div className={`flex-1 ${noPadding ? 'p-0' : 'p-8 sm:p-10'}`}>
             {children}
         </div>
     </div>
@@ -701,7 +701,7 @@ const TechnicianDashboard = () => {
     // ...
 
     const renderJobItem = (job) => (
-        <div key={job.id} className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-gray-50 transition-colors gap-4">
+        <div key={job.id} className="p-6 sm:p-8 lg:p-10 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-blue-50/30 transition-all duration-300 gap-6 group border-b border-gray-100/50 last:border-0">
             <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl shrink-0">
                     {job.serviceType.charAt(0)}
@@ -801,7 +801,7 @@ const TechnicianDashboard = () => {
     );
 
     const renderDashboardContent = () => (
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div className="p-6 sm:p-10 lg:p-12 max-w-[1600px] mx-auto w-full">
             {/* Rejection Modal */}
             <AnimatePresence>
                 {rejectModalOpen && (
@@ -997,7 +997,8 @@ const TechnicianDashboard = () => {
             </AnimatePresence>
 
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-12">
                 {/* Premium Stats Grid */}
                 {/* Unified Grid for Top Row */}
                 <StatCard
@@ -1037,30 +1038,30 @@ const TechnicianDashboard = () => {
             </div> {/* Close Unified Grid */}
 
             {/* Additional Stats Row - Grid Expanded */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 sm:gap-6 mb-8 px-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-6 sm:gap-8 mb-12 px-1">
                 {/* Existing Small Cards */}
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-[140px] flex-shrink-0">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
                     <div className="p-2 bg-blue-50 rounded-lg text-blue-600 flex-shrink-0"><Briefcase size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.monthJobs || stats.monthlyJobs || 0}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Jobs This Month</div>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-[140px] flex-shrink-0">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
                     <div className="p-2 bg-rose-50 rounded-lg text-rose-600 flex-shrink-0"><XCircle size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.rejectedJobs || 0}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Rejected</div>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-[140px] flex-shrink-0">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
                     <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600 flex-shrink-0"><CheckCircle2 size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.completedJobs || 0}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Completed</div>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-[140px] flex-shrink-0">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
                     <div className="p-2 bg-amber-50 rounded-lg text-amber-600 flex-shrink-0"><Clock size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.pendingJobs || 0}</div>
@@ -1068,7 +1069,7 @@ const TechnicianDashboard = () => {
                     </div>
 
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-[140px] flex-shrink-0">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
                     <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600 flex-shrink-0"><CheckCircle2 size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-xl font-bold text-gray-800">{stats.acceptedJobs || 0}</div>
@@ -1077,21 +1078,21 @@ const TechnicianDashboard = () => {
                 </div>
 
                 {/* [NEW] Account Info Cards */}
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-indigo-500 min-w-[140px] flex-shrink-0">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 border-l-4 border-l-indigo-500 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
                     <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600 flex-shrink-0"><Shield size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-sm font-bold text-gray-800 truncate">{user?.membership || 'Free'}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Membership</div>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-orange-500 min-w-[140px] flex-shrink-0">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 border-l-4 border-l-orange-500 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
                     <div className="p-2 bg-orange-50 rounded-lg text-orange-600 flex-shrink-0"><MapPin size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-sm font-bold text-gray-800 truncate" title={registeredAddress}>{registeredAddress}</div>
                         <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Registered Loc</div>
                     </div>
                 </div>
-                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-pink-500 min-w-[140px] flex-shrink-0">
+                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 border-l-4 border-l-pink-500 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
                     <div className="p-2 bg-pink-50 rounded-lg text-pink-600 flex-shrink-0"><Calendar size={20} /></div>
                     <div className="overflow-hidden">
                         <div className="text-sm font-bold text-gray-800 truncate">
@@ -1108,9 +1109,9 @@ const TechnicianDashboard = () => {
                 stats={stats}
             />
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-12">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 lg:gap-12 xl:gap-16">
                 {/* Main Job List & Offers */}
-                <div className="lg:col-span-2 space-y-16">
+                <div className="lg:col-span-2 space-y-12 sm:space-y-16">
                     {/* [NEW] Direct Analytics Curve on Dashboard */}
                     <Card title="Earnings Dynamics" headerColor="border-t-blue-600" noPadding>
                         <div className="p-6">
@@ -1540,8 +1541,9 @@ const TechnicianDashboard = () => {
                     </div>
                 </nav>
 
+
                 {/* Main Content Scrollable Area */}
-                <main className="flex-1 bg-gray-100 overflow-y-auto pb-20">
+                <main className="flex-1 bg-slate-50/50 overflow-y-auto pb-32">
                     <ContentHeader
                         title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                         breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
