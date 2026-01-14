@@ -394,7 +394,7 @@ const DashboardHome = ({ jobs = [] }) => {
 
             {/* Recent Activity (Moved to Top & Made Horizontal) */}
             <Grid item xs={12}>
-                <Card sx={{ borderRadius: '16px', boxShadow: theme.shadows[1], mb: 1, backgroundColor: 'transparent', backgroundImage: 'none', boxShadow: 'none' }}>
+                <Card sx={{ borderRadius: '16px', mb: 1, backgroundColor: 'transparent', backgroundImage: 'none', boxShadow: 'none' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, px: 1 }}>
                         <Schedule color="primary" sx={{ mr: 1, fontSize: 20 }} />
                         <Typography variant="h6" fontWeight="bold">Recent Activity</Typography>

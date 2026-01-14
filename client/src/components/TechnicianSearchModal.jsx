@@ -384,8 +384,9 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                         </div>
                     </motion.div>
                 </div>
-            </AnimatePresence>
-            , document.body);
+            </AnimatePresence>,
+            document.body
+        );
     };
 
     export default TechnicianSearchModal;
