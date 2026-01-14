@@ -73,7 +73,6 @@ class TechnicianManager {
                 registeredLongitude: regLng,
 
                 baseAddress: addr,
-                baseAddress: addr,
                 serviceRadius: rad,
 
                 // Stats
@@ -103,7 +102,6 @@ class TechnicianManager {
                 serviceType, addressDetails, reviewCount, membershipSince, joinedAt, updatedAt,
                 documents, baseAddress, serviceRadius, id,
                 latitude, longitude, registeredLatitude, registeredLongitude,
-                latitude, longitude, registeredLatitude, registeredLongitude,
                 location,
                 totalJobs, completedJobs, rejectedJobs, pendingJobs, // [NEW]
                 ...rest
@@ -124,7 +122,6 @@ class TechnicianManager {
             if (longitude !== undefined) mapped.longitude = longitude;
             if (registeredLatitude !== undefined) mapped.registered_latitude = registeredLatitude;
             if (registeredLongitude !== undefined) mapped.registered_longitude = registeredLongitude;
-            if (baseAddress !== undefined) mapped.base_address = baseAddress;
             if (baseAddress !== undefined) mapped.base_address = baseAddress;
             if (serviceRadius !== undefined) mapped.service_radius = serviceRadius;
 
