@@ -428,10 +428,9 @@ const TechnicianDashboard = () => {
         { title: "Complete 10 Jobs", description: "Get ₹500 bonus", badgeText: "Active" },
         { title: "Maintain 4.8 Rating", description: "Priority Allocation", badgeText: "Goal" }
     ]);
-    const [currentLocationName, setCurrentLocationName] = useState("Unknown Location");
-    const [currentTime, setCurrentTime] = useState(new Date());
     const [formattedTime, setFormattedTime] = useState("");
     const [unreadNotifications, setUnreadNotifications] = useState(0);
+    const [liveFeed, setLiveFeed] = useState([]);
 
     const chatEndRef = useRef(null);
 
@@ -556,6 +555,17 @@ const TechnicianDashboard = () => {
             }
         };
 
+        const handleNewNotification = (notif) => {
+            setUnreadNotifications(prev => prev + 1);
+            setLiveFeed(prev => [{
+                id: notif.id || Date.now(),
+                title: notif.title,
+                message: notif.message,
+                type: notif.type,
+                createdAt: notif.createdAt || new Date().toISOString()
+            }, ...prev].slice(0, 10)); // Keep last 10
+        };
+
         socket.on('technician_status_update', handleStatusUpdate);
         socket.on('job_updated', handleJobUpdate);
         socket.on('job_status_updated', handleJobUpdate);
@@ -563,6 +573,7 @@ const TechnicianDashboard = () => {
         socket.on('stats_updated', handleStatsUpdate);
         socket.on('wallet_updated', handleWalletUpdate);
         socket.on('payment_received', handleWalletUpdate);
+        socket.on('new_notification', handleNewNotification);
 
         return () => {
             socket.off('technician_status_update', handleStatusUpdate);
@@ -572,6 +583,7 @@ const TechnicianDashboard = () => {
             socket.off('stats_updated', handleStatsUpdate);
             socket.off('wallet_updated', handleWalletUpdate);
             socket.off('payment_received', handleWalletUpdate);
+            socket.off('new_notification', handleNewNotification);
         };
     }, [socket, user]);
 
@@ -620,7 +632,14 @@ const TechnicianDashboard = () => {
             try {
                 // Assuming an endpoint exists, or defaulting to 0 if not yet implemented
                 const res = await api.get(`/notifications/unread/${user.id}`);
-                if (res.data.success) setUnreadNotifications(res.data.count);
+                if (res.data.success) {
+                    setUnreadNotifications(res.data.count);
+                    // Also fetch some recent notifications for the feed
+                    const recentRes = await api.get(`/notifications/${user.id}`);
+                    if (recentRes.data.success) {
+                        setLiveFeed((recentRes.data.notifications || []).slice(0, 10));
+                    }
+                }
             } catch (e) {
                 // Silent fail or just set to 0
                 console.log("Notification fetch info:", e.message);
@@ -1210,7 +1229,7 @@ const TechnicianDashboard = () => {
                         <div className="text-sm font-bold text-gray-800 truncate">
                             {user?.membershipExpiry ? new Date(user.membershipExpiry).toLocaleDateString() : 'Lifetime'}
                         </div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Expires On</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Membership Expiry</div>
                     </div>
                 </div>
             </div>
@@ -1380,6 +1399,49 @@ const TechnicianDashboard = () => {
                                 ))}
                                 {feedbacks.length === 0 && <p className="text-xs text-center text-gray-400">No reviews to display.</p>}
                             </div>
+                        </div>
+                    </Card>
+
+                    {/* [NEW] Real-time Feed Card */}
+                    <Card title="Real-time Live Feed" headerColor="border-t-emerald-500" className="mt-8">
+                        <div className="space-y-4">
+                            {liveFeed.length === 0 ? (
+                                <div className="py-8 text-center text-gray-400">
+                                    <Bell size={32} className="mx-auto mb-2 opacity-20" />
+                                    <p className="text-xs">No live updates yet.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                    {liveFeed.map((item, idx) => (
+                                        <motion.div
+                                            key={item.id || idx}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            className="flex gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100/50 hover:bg-white transition-all group duration-300"
+                                        >
+                                            <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${item.type?.includes('job') ? 'bg-blue-500' :
+                                                    item.type?.includes('payment') ? 'bg-emerald-500' : 'bg-amber-500'
+                                                } group-hover:scale-125 transition-transform`} />
+                                            <div className="min-w-0">
+                                                <h5 className="text-[11px] font-bold text-slate-800">{item.title}</h5>
+                                                <p className="text-[10px] text-slate-500 leading-normal line-clamp-2 mt-0.5">{item.message}</p>
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <Clock size={8} className="text-slate-400" />
+                                                    <span className="text-[8px] font-medium text-slate-400">
+                                                        {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+                            <button
+                                onClick={() => setActiveTab('notifications')}
+                                className="w-full py-2 text-[10px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50/50 rounded-lg transition-colors mt-2"
+                            >
+                                View All Activity
+                            </button>
                         </div>
                     </Card>
                 </div>

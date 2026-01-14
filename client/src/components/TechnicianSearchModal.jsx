@@ -19,7 +19,18 @@ const mapOptions = {
 
 const getStatusConfig = (status) => {
     // Normalize status to lowercase for robust matching
-    const s = (status || '').toLowerCase().trim();
+    let s = (status || '').toString().trim().toLowerCase();
+
+    // [FIX] Safety check for JSON-encoded strings
+    if (s.startsWith('{')) {
+        try {
+            const parsed = JSON.parse(s);
+            s = (parsed.status || 'unknown').toLowerCase().trim();
+        } catch (e) {
+            console.error("Failed to parse corrupted status JSON:", s);
+        }
+    }
+
     switch (s) {
         case 'available': return { color: 'bg-emerald-500', text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200', label: 'Available' };
         case 'engaged':
@@ -30,7 +41,7 @@ const getStatusConfig = (status) => {
         case 'not_available':
         case 'offline':
         case 'not available': return { color: 'bg-slate-400', text: 'text-slate-600', bg: 'bg-slate-100', border: 'border-slate-200', label: 'Not Available' };
-        default: return { color: 'bg-slate-300', text: 'text-slate-500', bg: 'bg-slate-50', border: 'border-slate-200', label: status || 'Unknown' };
+        default: return { color: 'bg-slate-300', text: 'text-slate-500', bg: 'bg-slate-50', border: 'border-slate-200', label: s.toUpperCase() || 'Unknown' };
     }
 };
 

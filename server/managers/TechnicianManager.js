@@ -298,7 +298,9 @@ class TechnicianManager {
                 .map(t => this._mapFromDb(t))
                 .filter(t => {
                     const dbType = t.serviceType || t.service_type || '';
-                    return this._normalizeType(dbType) === type;
+                    const normalizedDbType = this._normalizeType(dbType);
+                    // [FIX] Flexible matching for "CCTV" vs "CCTV Technician"
+                    return normalizedDbType === type || normalizedDbType.includes(type) || type.includes(normalizedDbType);
                 });
 
             const nearbyTechs = techs.map(tech => {
@@ -410,7 +412,21 @@ class TechnicianManager {
 
     async updateStatus(id, status) {
         try {
-            const result = await this.db.update('id', id, { status });
+            // [FIX] Data Integrity: Prevent Objects/JSON from being saved as status
+            let cleanStatus = status;
+            if (typeof status === 'object' && status !== null) {
+                console.warn(`[TechnicianManager] status update for ${id} was an object! Attempting to extract status field.`);
+                cleanStatus = status.status || 'unknown';
+            }
+            // If it's a string but looks like JSON, it might have been double-encoded elsewhere
+            if (typeof cleanStatus === 'string' && cleanStatus.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(cleanStatus);
+                    cleanStatus = parsed.status || cleanStatus;
+                } catch (e) { }
+            }
+
+            const result = await this.db.update('id', id, { status: String(cleanStatus) });
             const tech = this._mapFromDb(result);
             if (this.io) {
                 this.io.emit('technician_status_update', { technicianId: id, status });
