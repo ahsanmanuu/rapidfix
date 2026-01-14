@@ -340,1013 +340,627 @@ const TechnicianDashboard = () => {
 
 
     // [NEW] Resolve Registered Address
+
     useEffect(() => {
         if (!user) return;
-        // 1. Resolve Current Location (from lat/lng) for Header
-        if (user.latitude && user.longitude) {
-            const lat = user.latitude;
-            const lng = user.longitude;
-            // Immediate fallback display
-            // setCurrentLocationName(`${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)}`);
 
-            try {
-                const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-                const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`);
-                const data = await res.json();
-                if (data.results?.[0]) {
-                    const locality = data.results[0].address_components.find(c => c.types.includes('locality') || c.types.includes('sublocality'))?.long_name;
-                    const city = data.results[0].address_components.find(c => c.types.includes('administrative_area_level_2'))?.long_name;
-                    const street = data.results[0].address_components.find(c => c.types.includes('route'))?.short_name;
+        const resolveAddress = async () => {
+            // 1. Resolve Current Location (from lat/lng) for Header
+            if (user.latitude && user.longitude) {
+                const lat = user.latitude;
+                const lng = user.longitude;
 
-                    // Construct a readable place name
-                    let placeName = [street, locality, city].filter(Boolean).join(', ');
-                    if (!placeName && data.results[0].formatted_address) {
-                        placeName = data.results[0].formatted_address.split(',')[0];
+                try {
+                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+                    const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`);
+                    const data = await res.json();
+                    if (data.results?.[0]) {
+                        const locality = data.results[0].address_components.find(c => c.types.includes('locality') || c.types.includes('sublocality'))?.long_name;
+                        const city = data.results[0].address_components.find(c => c.types.includes('administrative_area_level_2'))?.long_name;
+                        const street = data.results[0].address_components.find(c => c.types.includes('route'))?.short_name;
+
+                        // Construct a readable place name
+                        let placeName = [street, locality, city].filter(Boolean).join(', ');
+                        if (!placeName && data.results[0].formatted_address) {
+                            placeName = data.results[0].formatted_address.split(',')[0];
+                        }
+
+                        if (placeName) {
+                            setCurrentLocationName(placeName);
+                        } else {
+                            setCurrentLocationName("Unknown Place");
+                        }
                     }
+                } catch (e) {
+                    console.error("Current Loc Error:", e);
+                    setCurrentLocationName("Locating Error");
+                }
+            } else if (user.city) {
+                setCurrentLocationName(user.city);
+            }
 
-                    if (placeName) {
-                        setCurrentLocationName(placeName);
-                    } else {
-                        setCurrentLocationName("Unknown Place");
+            // 2. Resolve Registered Location (from registeredLatitude/Longitude) for Card
+            if (user.registeredLatitude && user.registeredLongitude) {
+                const rLat = user.registeredLatitude;
+                const rLng = user.registeredLongitude;
+                try {
+                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+                    const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${rLat},${rLng}&key=${apiKey}`);
+                    const data = await res.json();
+                    if (data.results?.[0]) {
+                        // Prefer full address for registration
+                        const formatted = data.results[0].formatted_address;
+                        setRegisteredAddress(formatted || "Location Found");
                     }
+                } catch (e) {
+                    console.error("Reg Loc Error:", e);
+                    setRegisteredAddress(user.address || "Address Error");
                 }
-            } catch (e) {
-                console.error("Current Loc Error:", e);
-                setCurrentLocationName("Locating Error");
+            } else {
+                setRegisteredAddress(user.address || "No Registered Address");
             }
-        } else if (user.city) {
-            setCurrentLocationName(user.city);
-        }
+        };
 
-        // 2. Resolve Registered Location (from registeredLatitude/Longitude) for Card
-        if (user.registeredLatitude && user.registeredLongitude) {
-            const rLat = user.registeredLatitude;
-            const rLng = user.registeredLongitude;
+        resolveAddress();
+    }, [user]);
+
+    // [FIX] Real-time Status & Data Sync
+    useEffect(() => {
+        if (!socket || !user) return;
+
+        const handleStatusUpdate = (data) => {
+            if (data.technicianId === user.id) {
+                updateUser({ ...user, status: data.status });
+            }
+        };
+
+        const handleJobUpdate = (data) => {
+            // Refresh data on any job change relevant to this tech
+            fetchAllData();
+        };
+
+        socket.on('technician_status_update', handleStatusUpdate);
+        socket.on('job_updated', handleJobUpdate);
+        socket.on('job_status_updated', handleJobUpdate);
+        socket.on('new_job_assigned', handleJobUpdate);
+
+        return () => {
+            socket.off('technician_status_update', handleStatusUpdate);
+            socket.off('job_updated', handleJobUpdate);
+            socket.off('job_status_updated', handleJobUpdate);
+            socket.off('new_job_assigned', handleJobUpdate);
+        };
+    }, [socket, user]);
+
+    // Live Data Fetching
+
+
+    // [NEW] Notification Real-time
+    useSupabaseRealtime('notifications', (payload) => {
+        if (payload.new && payload.new.receiverId === user.id && !payload.new.read) {
+            setUnreadNotifications(prev => prev + 1);
+        }
+    });
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            if (!user) return;
             try {
-                const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-                const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${rLat},${rLng}&key=${apiKey}`);
-                const data = await res.json();
-                if (data.results?.[0]) {
-                    // Prefer full address for registration
-                    const formatted = data.results[0].formatted_address;
-                    setRegisteredAddress(formatted || "Location Found");
-                }
+                // Assuming an endpoint exists, or defaulting to 0 if not yet implemented
+                const res = await api.get(`/notifications/unread/${user.id}`);
+                if (res.data.success) setUnreadNotifications(res.data.count);
             } catch (e) {
-                console.error("Reg Loc Error:", e);
-                setRegisteredAddress(user.address || "Address Error");
+                // Silent fail or just set to 0
+                console.log("Notification fetch info:", e.message);
             }
-        } else {
-            setRegisteredAddress(user.address || "No Registered Address");
-        }
-    };
-    resolveAddress();
-}, [user]);
+        };
+        fetchNotifications();
+    }, [user]);
 
-// [FIX] Real-time Status & Data Sync
-useEffect(() => {
-    if (!socket || !user) return;
-
-    const handleStatusUpdate = (data) => {
-        if (data.technicianId === user.id) {
-            updateUser({ ...user, status: data.status });
-        }
-    };
-
-    const handleJobUpdate = (data) => {
-        // Refresh data on any job change relevant to this tech
-        fetchAllData();
-    };
-
-    socket.on('technician_status_update', handleStatusUpdate);
-    socket.on('job_updated', handleJobUpdate);
-    socket.on('job_status_updated', handleJobUpdate);
-    socket.on('new_job_assigned', handleJobUpdate);
-
-    return () => {
-        socket.off('technician_status_update', handleStatusUpdate);
-        socket.off('job_updated', handleJobUpdate);
-        socket.off('job_status_updated', handleJobUpdate);
-        socket.off('new_job_assigned', handleJobUpdate);
-    };
-}, [socket, user]);
-
-// Live Data Fetching
-
-
-// [NEW] Notification Real-time
-useSupabaseRealtime('notifications', (payload) => {
-    if (payload.new && payload.new.receiverId === user.id && !payload.new.read) {
-        setUnreadNotifications(prev => prev + 1);
-    }
-});
-
-useEffect(() => {
-    const fetchNotifications = async () => {
+    // [RESTORED] Missing Data Fetching & Derived State
+    const fetchAllData = async () => {
         if (!user) return;
         try {
-            // Assuming an endpoint exists, or defaulting to 0 if not yet implemented
-            const res = await api.get(`/notifications/unread/${user.id}`);
-            if (res.data.success) setUnreadNotifications(res.data.count);
-        } catch (e) {
-            // Silent fail or just set to 0
-            console.log("Notification fetch info:", e.message);
+            // Fetch jobs
+            const jobsRes = await api.get(`/jobs/technician/${user.id}`);
+            if (jobsRes.data.success) setMyJobs(jobsRes.data.jobs);
+
+            // Fetch stats
+            const statsRes = await api.get(`/technicians/${user.id}/stats`);
+            // Handle potentially different response structures
+            if (statsRes.data.success) {
+                setStats(prev => ({ ...prev, ...statsRes.data.stats }));
+            }
+
+            // Fetch feedback
+            const feedbackRes = await api.get(`/technicians/${user.id}/feedbacks`);
+            if (feedbackRes.data.success) setFeedbacks(feedbackRes.data.feedbacks);
+
+        } catch (error) {
+            console.error("Failed to fetch dashboard data:", error);
         }
     };
-    fetchNotifications();
-}, [user]);
 
-// [RESTORED] Missing Data Fetching & Derived State
-const fetchAllData = async () => {
-    if (!user) return;
-    try {
-        // Fetch jobs
-        const jobsRes = await api.get(`/jobs/technician/${user.id}`);
-        if (jobsRes.data.success) setMyJobs(jobsRes.data.jobs);
-
-        // Fetch stats
-        const statsRes = await api.get(`/technicians/${user.id}/stats`);
-        // Handle potentially different response structures
-        if (statsRes.data.success) {
-            setStats(prev => ({ ...prev, ...statsRes.data.stats }));
+    // [NEW] Sync Stats with User Object (Real-time updates via user prop)
+    useEffect(() => {
+        if (user) {
+            setStats(prev => ({
+                ...prev,
+                // Stats Sync
+                completedJobs: user.completedJobs !== undefined ? user.completedJobs : prev.completedJobs,
+                rejectedJobs: user.rejectedJobs !== undefined ? user.rejectedJobs : prev.rejectedJobs,
+                acceptedJobs: user.acceptedJobs !== undefined ? user.acceptedJobs : prev.acceptedJobs, // [NEW]
+                pendingJobs: user.pendingJobs !== undefined ? user.pendingJobs : prev.pendingJobs,
+                rating: user.rating !== undefined ? user.rating : prev.rating
+            }));
         }
+    }, [user]);
 
-        // Fetch feedback
-        const feedbackRes = await api.get(`/technicians/${user.id}/feedbacks`);
-        if (feedbackRes.data.success) setFeedbacks(feedbackRes.data.feedbacks);
-
-    } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-    }
-};
-
-// [NEW] Sync Stats with User Object (Real-time updates via user prop)
-useEffect(() => {
-    if (user) {
-        setStats(prev => ({
-            ...prev,
-            // Stats Sync
-            completedJobs: user.completedJobs !== undefined ? user.completedJobs : prev.completedJobs,
-            rejectedJobs: user.rejectedJobs !== undefined ? user.rejectedJobs : prev.rejectedJobs,
-            acceptedJobs: user.acceptedJobs !== undefined ? user.acceptedJobs : prev.acceptedJobs, // [NEW]
-            pendingJobs: user.pendingJobs !== undefined ? user.pendingJobs : prev.pendingJobs,
-            rating: user.rating !== undefined ? user.rating : prev.rating
-        }));
-    }
-}, [user]);
-
-useEffect(() => {
-    fetchAllData();
-}, [user]);
-
-const filteredJobs = (myJobs || []).filter(job => {
-    if (jobFilter === 'all') return ['pending', 'accepted', 'in_progress'].includes(job.status);
-    return job.status === jobFilter;
-});
-
-// [RESTORED] Handlers
-const handleStatusUpdate = async (newStatus) => {
-    setStatusLoading(true);
-    try {
-        const res = await api.put(`/technicians/${user.id}/status`, { status: newStatus });
-        if (res.data.success) {
-            updateUser({ ...user, status: newStatus });
-        }
-    } catch (error) {
-        console.error("Status update error", error);
-    } finally {
-        setStatusLoading(false);
-    }
-};
-
-const handleStartRide = (job) => {
-    // Assuming state for active ride exists
-    // setActiveRideJob(job);
-    // setRideModalOpen(true);
-    // For now, simpler implementation if state is missing context
-    console.log("Starting ride for job", job.id);
-};
-
-const handleViewJobDetails = (jobId) => {
-    const job = myJobs.find(j => j.id === jobId);
-    if (job) setViewJob(job);
-};
-
-const handleSendMessage = () => {
-    if (!newMessage.trim() || !activeChatUser) return;
-    // socket code would go here
-    setChatMessages(prev => [...prev, { senderId: user.id, message: newMessage, createdAt: new Date() }]);
-    setNewMessage("");
-};
-
-const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    setProfileLoading(true);
-    try {
-        // Mock update
-        await new Promise(r => setTimeout(r, 1000));
-        alert("Profile updated successfully!");
-    } catch (err) {
-        console.error(err);
-    } finally {
-        setProfileLoading(false);
-    }
-};
-
-
-const handleJobAction = async (jobId, action, extraData = {}) => {
-    try {
-        let status = '';
-        let apiData = {};
-
-        switch (action) {
-            case 'accept': status = 'accepted'; break;
-            case 'reject': status = 'rejected'; break;
-            case 'start': status = 'in_progress'; break;
-            case 'complete': status = 'completed'; break;
-            case 'cancel': status = 'cancelled'; break;
-            default: return;
-        }
-
-        // Optimistic Update
-        setMyJobs(prev => prev.map(j => j.id === jobId ? { ...j, status } : j));
-
-        const res = await api.put(`/jobs/${jobId}/status`, { status, details: { ...extraData, ...apiData } });
-
-        if (res.data.success) {
-            // Confirm with server data
-            setMyJobs(prev => prev.map(j => j.id === jobId ? { ...j, ...res.data.job } : j));
-            fetchAllData(); // key for stats sync
-            setOpenMenuJobId(null);
-        }
-    } catch (error) {
-        console.error(`Failed to ${action} job:`, error);
-        // Revert on error (could implement more robust rollback)
+    useEffect(() => {
         fetchAllData();
-    }
-};
+    }, [user]);
 
-// ...
+    const filteredJobs = (myJobs || []).filter(job => {
+        if (jobFilter === 'all') return ['pending', 'accepted', 'in_progress'].includes(job.status);
+        return job.status === jobFilter;
+    });
 
-const renderJobItem = (job) => (
-    <div key={job.id} className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-gray-50 transition-colors gap-4">
-        <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl shrink-0">
-                {job.serviceType.charAt(0)}
-            </div>
-            <div>
-                <h4 className="font-bold text-gray-800 text-base">{job.serviceType} Request</h4>
-                <p className="text-sm text-gray-700 font-bold">{job.contactName || job.customer?.name || "Customer"}</p>
-                <p className="text-xs text-blue-600 font-medium">Mobile: {job.customerMobile || job.contactPhone || job.customer?.phone || "No Phone"}</p>
-                <p className="text-xs text-gray-500 line-clamp-1 mt-1">{job.description || "No description provided"}</p>
-                <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                    <Clock size={12} /> {new Date(job.scheduledDate).toLocaleDateString()}
-                    <MapPin size={12} className="ml-2" />
-                    {job.location && typeof job.location === 'object' ? (
-                        <span
-                            className="text-blue-500 cursor-pointer hover:underline font-medium"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(`https://www.google.com/maps?q=${job.location.latitude},${job.location.longitude}`, '_blank');
-                            }}
-                        >
-                            View Map
-                        </span>
-                    ) : "Remote / TBD"}
+    // [RESTORED] Handlers
+    const handleStatusUpdate = async (newStatus) => {
+        setStatusLoading(true);
+        try {
+            const res = await api.put(`/technicians/${user.id}/status`, { status: newStatus });
+            if (res.data.success) {
+                updateUser({ ...user, status: newStatus });
+            }
+        } catch (error) {
+            console.error("Status update error", error);
+        } finally {
+            setStatusLoading(false);
+        }
+    };
+
+    const handleStartRide = (job) => {
+        // Assuming state for active ride exists
+        // setActiveRideJob(job);
+        // setRideModalOpen(true);
+        // For now, simpler implementation if state is missing context
+        console.log("Starting ride for job", job.id);
+    };
+
+    const handleViewJobDetails = (jobId) => {
+        const job = myJobs.find(j => j.id === jobId);
+        if (job) setViewJob(job);
+    };
+
+    const handleSendMessage = () => {
+        if (!newMessage.trim() || !activeChatUser) return;
+        // socket code would go here
+        setChatMessages(prev => [...prev, { senderId: user.id, message: newMessage, createdAt: new Date() }]);
+        setNewMessage("");
+    };
+
+    const handleProfileUpdate = async (e) => {
+        e.preventDefault();
+        setProfileLoading(true);
+        try {
+            // Mock update
+            await new Promise(r => setTimeout(r, 1000));
+            alert("Profile updated successfully!");
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setProfileLoading(false);
+        }
+    };
+
+
+    const handleJobAction = async (jobId, action, extraData = {}) => {
+        try {
+            let status = '';
+            let apiData = {};
+
+            switch (action) {
+                case 'accept': status = 'accepted'; break;
+                case 'reject': status = 'rejected'; break;
+                case 'start': status = 'in_progress'; break;
+                case 'complete': status = 'completed'; break;
+                case 'cancel': status = 'cancelled'; break;
+                default: return;
+            }
+
+            // Optimistic Update
+            setMyJobs(prev => prev.map(j => j.id === jobId ? { ...j, status } : j));
+
+            const res = await api.put(`/jobs/${jobId}/status`, { status, details: { ...extraData, ...apiData } });
+
+            if (res.data.success) {
+                // Confirm with server data
+                setMyJobs(prev => prev.map(j => j.id === jobId ? { ...j, ...res.data.job } : j));
+                fetchAllData(); // key for stats sync
+                setOpenMenuJobId(null);
+            }
+        } catch (error) {
+            console.error(`Failed to ${action} job:`, error);
+            // Revert on error (could implement more robust rollback)
+            fetchAllData();
+        }
+    };
+
+    // ...
+
+    const renderJobItem = (job) => (
+        <div key={job.id} className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-gray-50 transition-colors gap-4">
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl shrink-0">
+                    {job.serviceType.charAt(0)}
+                </div>
+                <div>
+                    <h4 className="font-bold text-gray-800 text-base">{job.serviceType} Request</h4>
+                    <p className="text-sm text-gray-700 font-bold">{job.contactName || job.customer?.name || "Customer"}</p>
+                    <p className="text-xs text-blue-600 font-medium">Mobile: {job.customerMobile || job.contactPhone || job.customer?.phone || "No Phone"}</p>
+                    <p className="text-xs text-gray-500 line-clamp-1 mt-1">{job.description || "No description provided"}</p>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                        <Clock size={12} /> {new Date(job.scheduledDate).toLocaleDateString()}
+                        <MapPin size={12} className="ml-2" />
+                        {job.location && typeof job.location === 'object' ? (
+                            <span
+                                className="text-blue-500 cursor-pointer hover:underline font-medium"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(`https://www.google.com/maps?q=${job.location.latitude},${job.location.longitude}`, '_blank');
+                                }}
+                            >
+                                View Map
+                            </span>
+                        ) : "Remote / TBD"}
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide
+            <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide
                         ${job.status === 'in_progress' ? 'bg-amber-100 text-amber-600' :
-                    job.status === 'accepted' ? 'bg-blue-100 text-blue-600' :
-                        'bg-gray-100 text-gray-600'}`
-            }>
-                {job.status.replace('_', ' ')}
-            </span>
+                        job.status === 'accepted' ? 'bg-blue-100 text-blue-600' :
+                            'bg-gray-100 text-gray-600'}`
+                }>
+                    {job.status.replace('_', ' ')}
+                </span>
 
-            {/* Primary Action Button */}
-            {['accepted', 'pending'].includes(job.status) && (
-                <button
-                    onClick={() => handleStartRide(job)}
-                    className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded shadow-sm hover:bg-blue-700 flex items-center gap-1 animate-pulse"
-                >
-                    <MapPin size={12} /> Start Riding
-                </button>
-            )}
-
-            {/* Action Buttons via Popup Menu */}
-            <div className="relative">
-                <button
-                    onClick={() => setOpenMenuJobId(openMenuJobId === job.id ? null : job.id)}
-                    className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors border border-gray-200"
-                >
-                    <MoreVertical size={16} />
-                </button>
-
-                {openMenuJobId === job.id && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        {job.status === 'pending' && (
-                            <button
-                                onClick={() => { handleJobAction(job.id, 'accept'); setOpenMenuJobId(null); }}
-                                className="w-full text-left px-4 py-2.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 flex items-center gap-2 group"
-                            >
-                                <div className="p-1 rounded-full bg-emerald-100 group-hover:bg-emerald-200 transition-colors"><CheckCircle2 size={14} /></div>
-                                Accept Request
-                            </button>
-                        )}
-                        {job.status === 'in_progress' && (
-                            <button
-                                onClick={() => { handleJobAction(job.id, 'complete'); setOpenMenuJobId(null); }}
-                                className="w-full text-left px-4 py-2.5 text-xs font-semibold text-blue-600 hover:bg-blue-50 flex items-center gap-2 group"
-                            >
-                                <div className="p-1 rounded-full bg-blue-100 group-hover:bg-blue-200 transition-colors"><CheckCircle2 size={14} /></div>
-                                Mark Completed
-                            </button>
-                        )}
-                        {['accepted', 'pending'].includes(job.status) && (
-                            <button
-                                onClick={() => { setRejectModalOpen(true); setSelectedJobId(job.id); setOpenMenuJobId(null); }}
-                                className="w-full text-left px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 group"
-                            >
-                                <div className="p-1 rounded-full bg-rose-100 group-hover:bg-rose-200 transition-colors"><XCircle size={14} /></div>
-                                Reject Job
-                            </button>
-
-                        )
-                        }
-                        <button
-                            onClick={() => { handleViewJobDetails(job.id); setOpenMenuJobId(null); }}
-                            className="w-full text-left px-4 py-2 text-xs text-gray-500 hover:bg-gray-50 border-t border-gray-100 mt-1"
-                        >
-                            View Details
-                        </button>
-                    </div >
+                {/* Primary Action Button */}
+                {['accepted', 'pending'].includes(job.status) && (
+                    <button
+                        onClick={() => handleStartRide(job)}
+                        className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded shadow-sm hover:bg-blue-700 flex items-center gap-1 animate-pulse"
+                    >
+                        <MapPin size={12} /> Start Riding
+                    </button>
                 )}
+
+                {/* Action Buttons via Popup Menu */}
+                <div className="relative">
+                    <button
+                        onClick={() => setOpenMenuJobId(openMenuJobId === job.id ? null : job.id)}
+                        className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors border border-gray-200"
+                    >
+                        <MoreVertical size={16} />
+                    </button>
+
+                    {openMenuJobId === job.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-2 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                            {job.status === 'pending' && (
+                                <button
+                                    onClick={() => { handleJobAction(job.id, 'accept'); setOpenMenuJobId(null); }}
+                                    className="w-full text-left px-4 py-2.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 flex items-center gap-2 group"
+                                >
+                                    <div className="p-1 rounded-full bg-emerald-100 group-hover:bg-emerald-200 transition-colors"><CheckCircle2 size={14} /></div>
+                                    Accept Request
+                                </button>
+                            )}
+                            {job.status === 'in_progress' && (
+                                <button
+                                    onClick={() => { handleJobAction(job.id, 'complete'); setOpenMenuJobId(null); }}
+                                    className="w-full text-left px-4 py-2.5 text-xs font-semibold text-blue-600 hover:bg-blue-50 flex items-center gap-2 group"
+                                >
+                                    <div className="p-1 rounded-full bg-blue-100 group-hover:bg-blue-200 transition-colors"><CheckCircle2 size={14} /></div>
+                                    Mark Completed
+                                </button>
+                            )}
+                            {['accepted', 'pending'].includes(job.status) && (
+                                <button
+                                    onClick={() => { setRejectModalOpen(true); setSelectedJobId(job.id); setOpenMenuJobId(null); }}
+                                    className="w-full text-left px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 group"
+                                >
+                                    <div className="p-1 rounded-full bg-rose-100 group-hover:bg-rose-200 transition-colors"><XCircle size={14} /></div>
+                                    Reject Job
+                                </button>
+
+                            )
+                            }
+                            <button
+                                onClick={() => { handleViewJobDetails(job.id); setOpenMenuJobId(null); }}
+                                className="w-full text-left px-4 py-2 text-xs text-gray-500 hover:bg-gray-50 border-t border-gray-100 mt-1"
+                            >
+                                View Details
+                            </button>
+                        </div >
+                    )}
+                </div >
             </div >
         </div >
-    </div >
-);
+    );
 
-const renderDashboardContent = () => (
-    <div className="p-4 sm:p-6 lg:p-8">
-        {/* Rejection Modal */}
-        <AnimatePresence>
-            {rejectModalOpen && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.9, opacity: 0 }}
-                        className="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
-                    >
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">Reject Job Request</h3>
-                        <textarea
-                            className="w-full border border-gray-300 rounded p-3 text-sm focus:ring-2 focus:ring-red-500 outline-none mb-4"
-                            rows="4"
-                            placeholder="Please provide a reason for rejection..."
-                            value={rejectReason}
-                            onChange={(e) => setRejectReason(e.target.value)}
-                        />
-                        <div className="flex justify-end gap-3">
-                            <button onClick={() => setRejectModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-                            <button
-                                onClick={() => handleJobAction(selectedJobId, 'reject', { reason: rejectReason })}
-                                disabled={!rejectReason.trim()}
-                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
-                            >
-                                Confirm Rejection
-                            </button>
-                        </div>
-                    </motion.div>
-                </div>
-            )}
-        </AnimatePresence>
-
-        {/* View Details Modal */}
-        <AnimatePresence>
-            {viewJob && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.9, opacity: 0 }}
-                        className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto"
-                    >
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-800">Job #{viewJob.id} Details</h3>
-                                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
-                                        ${viewJob.status === 'in_progress' ? 'bg-amber-100 text-amber-600' :
-                                        viewJob.status === 'accepted' ? 'bg-blue-100 text-blue-600' :
-                                            viewJob.status === 'completed' ? 'bg-green-100 text-green-600' :
-                                                'bg-gray-100 text-gray-600'}`
-                                }>
-                                    {viewJob.status.replace('_', ' ')}
-                                </span>
-                            </div>
-                            <button onClick={() => setViewJob(null)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-4">
-                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                                        <User size={16} /> Customer Info
-                                    </h4>
-                                    <p className="text-sm text-gray-600"><span className="font-semibold">Name:</span> {viewJob.contactName || viewJob.customer?.name || "N/A"}</p>
-                                    <p className="text-sm text-gray-600"><span className="font-semibold">Phone/Mobile:</span> {viewJob.customerMobile || viewJob.contactPhone || viewJob.customer?.phone || "N/A"}</p>
-                                </div>
-                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                                        <Clock size={16} /> Schedule
-                                    </h4>
-                                    <p className="text-sm text-gray-600"><span className="font-semibold">Date:</span> {new Date(viewJob.scheduledDate).toLocaleDateString()}</p>
-                                    <p className="text-sm text-gray-600"><span className="font-semibold">Time:</span> {viewJob.scheduledTime || "Flexible"}</p>
-                                </div>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 h-full">
-                                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                                        <Briefcase size={16} /> Service Details
-                                    </h4>
-                                    <p className="text-sm text-gray-600 mb-2"><span className="font-semibold">Type:</span> {viewJob.serviceType}</p>
-                                    <p className="text-sm text-gray-600 mb-4"><span className="font-semibold">Description:</span> {viewJob.description}</p>
-                                    <div className="pt-3 border-t border-gray-200">
-                                        <p className="text-sm font-bold text-gray-800 flex justify-between">
-                                            <span>Offer Price:</span>
-                                            <span className="text-emerald-600">₹{viewJob.offerPrice || viewJob.visitingCharges || "TBD"}</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {viewJob.location && viewJob.location.latitude && (
-                            <div className="mt-6">
-                                <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                                    <MapPin size={16} /> Location
-                                </h4>
-                                <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden relative">
-                                    {/* Simple Static Map Image or Link */}
-                                    <img
-                                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${viewJob.location.latitude},${viewJob.location.longitude}&zoom=15&size=600x300&markers=color:red%7C${viewJob.location.latitude},${viewJob.location.longitude}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`}
-                                        alt="Map"
-                                        className="w-full h-full object-cover"
-                                    />
-                                    <a
-                                        href={`https://www.google.com/maps?q=${viewJob.location.latitude},${viewJob.location.longitude}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors group"
-                                    >
-                                        <span className="bg-white px-4 py-2 rounded-full text-sm font-bold shadow-md group-hover:scale-105 transition-transform">Open in Google Maps</span>
-                                    </a>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="mt-8 flex justify-end gap-3">
-                            {['accepted', 'pending'].includes(viewJob.status) && (
-                                <button
-                                    onClick={() => { handleStartRide(viewJob); setViewJob(null); }}
-                                    className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold flex items-center gap-2 shadow-lg animate-pulse"
-                                >
-                                    <MapPin size={18} /> Start Riding Now
-                                </button>
-                            )}
-                            <button
-                                onClick={() => setViewJob(null)}
-                                className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 font-medium"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </motion.div>
-                </div>
-            )}
-        </AnimatePresence>
-
-        {/* Live Ride Modal */}
-        {rideModalOpen && activeRideJob && (
-            <LiveRideModal
-                job={activeRideJob}
-                technicianId={user.id}
-                userId={activeRideJob.userId}
-                socket={socket}
-                onClose={() => setRideModalOpen(false)}
-            />
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {/* Premium Stats Grid */}
-            {/* Unified Grid for Top Row */}
-            <StatCard
-                title="Total Balance"
-                value={`₹${(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}`}
-                icon={Wallet}
-                color="bg-emerald-500"
-                trend={{ value: 12, positive: true }}
-                onClick={() => { setStatsModalOpen(true); setActiveTab('wallet'); }}
-                subtext="Available for withdrawal"
-            />
-            <StatCard
-                title="Month Earnings"
-                value={`₹${(typeof stats.monthlyEarnings === 'object' ? stats.monthlyEarnings.amount : stats.monthlyEarnings)?.toLocaleString() || 0}`}
-                icon={TrendingUp}
-                color="bg-blue-500"
-                trend={{ value: 5, positive: true }}
-                onClick={() => setStatsModalOpen(true)}
-                subtext="Since 1st of Month"
-            />
-            <StatCard
-                title="Completed Jobs"
-                value={stats.completedJobs}
-                icon={CheckCircle2}
-                color="bg-indigo-500"
-                onClick={() => setStatsModalOpen(true)}
-                subtext="Lifetime Total"
-            />
-            <StatCard
-                title="Rating"
-                value={stats.rating}
-                icon={Star}
-                color="bg-amber-500"
-                onClick={() => setActiveTab('feedback')}
-                subtext={`Based on ${stats.totalReviews} reviews`}
-            />
-        </div> {/* Close Unified Grid */}
-
-        {/* Additional Stats Row - Grid Expanded */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-6 mb-8 px-1">
-            {/* Existing Small Cards */}
-            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
-                <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Briefcase size={20} /></div>
-                <div className="overflow-hidden">
-                    <div className="text-xl font-bold text-gray-800">{stats.monthJobs || stats.monthlyJobs || 0}</div>
-                    <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Jobs This Month</div>
-                </div>
-            </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
-                <div className="p-2 bg-rose-50 rounded-lg text-rose-600"><XCircle size={20} /></div>
-                <div className="overflow-hidden">
-                    <div className="text-xl font-bold text-gray-800">{stats.rejectedJobs || 0}</div>
-                    <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Rejected</div>
-                </div>
-            </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
-                <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><CheckCircle2 size={20} /></div>
-                <div className="overflow-hidden">
-                    <div className="text-xl font-bold text-gray-800">{stats.completedJobs || 0}</div>
-                    <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Completed</div>
-                </div>
-            </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
-                <div className="p-2 bg-amber-50 rounded-lg text-amber-600"><Clock size={20} /></div>
-                <div className="overflow-hidden">
-                    <div className="text-xl font-bold text-gray-800">{stats.pendingJobs || 0}</div>
-                    <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Pending</div>
-                </div>
-
-            </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
-                <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600"><CheckCircle2 size={20} /></div>
-                <div className="overflow-hidden">
-                    <div className="text-xl font-bold text-gray-800">{stats.acceptedJobs || 0}</div>
-                    <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Accepted</div>
-                </div>
-            </div>
-
-            {/* [NEW] Account Info Cards */}
-            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-indigo-500">
-                <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Shield size={20} /></div>
-                <div className="overflow-hidden">
-                    <div className="text-sm font-bold text-gray-800 truncate">{user?.membership || 'Free'}</div>
-                    <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Membership</div>
-                </div>
-            </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-orange-500">
-                <div className="p-2 bg-orange-50 rounded-lg text-orange-600"><MapPin size={20} /></div>
-                <div className="overflow-hidden">
-                    <div className="text-sm font-bold text-gray-800 truncate" title={registeredAddress}>{registeredAddress}</div>
-                    <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Registered Loc</div>
-                </div>
-            </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-pink-500">
-                <div className="p-2 bg-pink-50 rounded-lg text-pink-600"><Calendar size={20} /></div>
-                <div className="overflow-hidden">
-                    <div className="text-sm font-bold text-gray-800 truncate">
-                        {user?.membershipExpiry ? new Date(user.membershipExpiry).toLocaleDateString() : 'Lifetime'}
-                    </div>
-                    <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Expires On</div>
-                </div>
-            </div>
-        </div>
-
-        <DashboardStatsModal
-            isOpen={statsModalOpen}
-            onClose={() => setStatsModalOpen(false)}
-            stats={stats}
-        />
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-12">
-            {/* Main Job List & Offers */}
-            <div className="lg:col-span-2 space-y-16">
-                <Card
-                    title="Active Jobs"
-                    headerColor="border-t-blue-500"
-                    tools={
-                        <div className="relative">
-                            <select
-                                value={jobFilter}
-                                onChange={(e) => setJobFilter(e.target.value)}
-                                className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none cursor-pointer"
-                            >
-                                <option value="all">Active (All)</option>
-                                <option value="pending">Pending</option>
-                                <option value="accepted">Accepted</option>
-                                <option value="in_progress">In Progress</option>
-                            </select>
-                        </div>
-                    }
-                    noPadding
-                >
-                    {filteredJobs.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">
-                            <Briefcase size={48} className="mx-auto text-gray-300 mb-2" />
-                            <p>No {jobFilter !== 'all' ? jobFilter.replace('_', ' ') : 'active'} jobs found.</p>
-                        </div>
-                    ) : (
-                        <div className="divide-y divide-gray-100">
-                            {Array.isArray(filteredJobs) && filteredJobs.map(job => renderJobItem(job))}
-                        </div>
-                    )}
-                    <div className="p-4 border-t border-gray-100 text-center">
-                        <button
-                            onClick={() => setActiveTab('history')}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-700"
+    const renderDashboardContent = () => (
+        <div className="p-4 sm:p-6 lg:p-8">
+            {/* Rejection Modal */}
+            <AnimatePresence>
+                {rejectModalOpen && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-lg shadow-xl w-full max-w-md p-6"
                         >
-                            View All Job History
-                        </button>
+                            <h3 className="text-lg font-bold text-gray-800 mb-4">Reject Job Request</h3>
+                            <textarea
+                                className="w-full border border-gray-300 rounded p-3 text-sm focus:ring-2 focus:ring-red-500 outline-none mb-4"
+                                rows="4"
+                                placeholder="Please provide a reason for rejection..."
+                                value={rejectReason}
+                                onChange={(e) => setRejectReason(e.target.value)}
+                            />
+                            <div className="flex justify-end gap-3">
+                                <button onClick={() => setRejectModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                                <button
+                                    onClick={() => handleJobAction(selectedJobId, 'reject', { reason: rejectReason })}
+                                    disabled={!rejectReason.trim()}
+                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                                >
+                                    Confirm Rejection
+                                </button>
+                            </div>
+                        </motion.div>
                     </div>
-                </Card>
-
-                {/* Offers Section */}
-                {offers.length > 0 && (
-                    <Card title="Special Offers For You" headerColor="border-t-yellow-500">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {(offers || []).map((offer, i) => (
-                                <div key={i} className="border border-yellow-100 bg-yellow-50 p-4 rounded-lg flex items-start gap-3">
-                                    <Zap className="text-yellow-600 mt-1" size={20} />
-                                    <div>
-                                        <h4 className="font-bold text-gray-800 text-sm">{offer.title}</h4>
-                                        <p className="text-xs text-gray-600 mt-1">{offer.description}</p>
-                                        {offer.badgeText && <span className="inline-block mt-2 px-2 py-0.5 bg-yellow-200 text-yellow-800 text-[10px] font-bold rounded">{offer.badgeText}</span>}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
                 )}
-            </div>
+            </AnimatePresence>
 
-            {/* Feedback Panel */}
-            <div className="lg:col-span-1">
-                <Card title="Feedback Breakdown" headerColor="border-t-purple-500">
-                    <div className="space-y-4">
-                        {(() => {
-                            // Dynamic Calculation
-                            const metrics = [
-                                { key: 'timeliness', label: 'Timeliness', color: 'bg-green-500' },
-                                { key: 'expertise', label: 'Expertise', color: 'bg-blue-500' },
-                                { key: 'professionalism', label: 'Professionalism', color: 'bg-purple-500' },
-                                { key: 'honesty', label: 'Honesty', color: 'bg-cyan-500' },
-                                { key: 'behavior', label: 'Behavior', color: 'bg-indigo-500' },
-                                { key: 'knowledge', label: 'Knowledge', color: 'bg-teal-500' },
-                                { key: 'respect', label: 'Respect', color: 'bg-pink-500' },
-                                { key: 'overall', label: 'Overall', color: 'bg-amber-500' },
-                                { key: 'recommendation', label: 'Recommendation', color: 'bg-rose-500', max: 10 }
-                            ];
-
-                            const data = metrics.map(m => {
-                                if (!Array.isArray(feedbacks) || feedbacks.length === 0) return { ...m, v: 0, raw: "0.0" };
-                                const sum = feedbacks.reduce((acc, f) => {
-                                    const val = f.ratings?.[m.key] || 0;
-                                    return acc + Number(val);
-                                }, 0);
-                                const avg = sum / feedbacks.length;
-                                const max = m.max || 5;
-                                const percent = Math.round((avg / max) * 100);
-                                return { ...m, v: percent, raw: avg.toFixed(1) };
-                            });
-
-                            return data.map((m, i) => (
-                                <div key={i}>
-                                    <div className="flex justify-between text-xs font-semibold text-gray-600 mb-1">
-                                        <span>{m.label}</span>
-                                        <span>{m.v}% <span className="text-gray-400 font-normal">({m.raw})</span></span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                        <div style={{ width: `${m.v}%` }} className={`h-full rounded-full ${m.color}`} />
-                                    </div>
-                                </div>
-                            ));
-                        })()}
-                        <h4 className="font-semibold text-gray-700 mt-6 mb-3 text-sm">Recent Reviews</h4>
-                        <div className="space-y-3">
-                            {(Array.isArray(feedbacks) ? feedbacks : []).slice(0, 3).map((f, i) => (
-                                <div key={i} className="bg-gray-50 p-3 rounded text-xs border border-gray-100">
-                                    <div className="flex text-amber-400 mb-1">
-                                        {[...Array(5)].map((_, i) => <Star key={i} size={8} fill="currentColor" />)}
-                                    </div>
-                                    <div className='flex justify-between items-center mb-1'>
-                                        <span className='font-bold text-[10px] text-gray-700'>{f.ratings?.overall || 5}/5</span>
-                                        <span className='text-[10px] text-gray-400'>{new Date(f.createdAt || Date.now()).toLocaleDateString()}</span>
-                                    </div>
-                                    <p className="text-gray-600 italic">"{f.comment || 'No comment'}"</p>
-                                </div>
-                            ))}
-                            {feedbacks.length === 0 && <p className="text-xs text-center text-gray-400">No reviews to display.</p>}
-                        </div>
-                    </div>
-                </Card>
-            </div>
-        </div>
-    </div >
-);
-
-const renderChat = () => (
-    <div className="px-6 h-[calc(100vh-140px)] flex flex-col">
-        <Card title="Live Chat Support" headerColor="border-t-blue-600" height="100%" noPadding>
-            <div className="flex h-full">
-                {/* Contacts List */}
-                <div className="w-64 border-r border-gray-100 bg-gray-50 flex flex-col">
-                    <div className="p-3 border-b border-gray-100 font-bold text-xs text-gray-500 uppercase">Recent Chats</div>
-                    <div className="flex-1 overflow-y-auto">
-                        {/* Mock Contacts for now until we have history API integrated fully */}
-                        <div onClick={() => setActiveChatUser({ id: 'admin', name: 'Admin Support' })} className={`p-4 hover:bg-white cursor-pointer transition-colors ${activeChatUser?.id === 'admin' ? 'bg-white border-l-4 border-blue-500' : ''}`}>
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">A</div>
+            {/* View Details Modal */}
+            <AnimatePresence>
+                {viewJob && (
+                    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto"
+                        >
+                            <div className="flex justify-between items-start mb-6">
                                 <div>
-                                    <div className="text-sm font-bold text-gray-700">Admin Support</div>
-                                    <div className="text-xs text-green-500">Online</div>
+                                    <h3 className="text-xl font-bold text-gray-800">Job #{viewJob.id} Details</h3>
+                                    <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
+                                        ${viewJob.status === 'in_progress' ? 'bg-amber-100 text-amber-600' :
+                                            viewJob.status === 'accepted' ? 'bg-blue-100 text-blue-600' :
+                                                viewJob.status === 'completed' ? 'bg-green-100 text-green-600' :
+                                                    'bg-gray-100 text-gray-600'}`
+                                    }>
+                                        {viewJob.status.replace('_', ' ')}
+                                    </span>
                                 </div>
+                                <button onClick={() => setViewJob(null)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
+                                    <X size={20} />
+                                </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                {/* Chat Area */}
-                <div className="flex-1 flex flex-col bg-white">
-                    {activeChatUser ? (
-                        <>
-                            <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                <h4 className="font-bold text-gray-700">{activeChatUser.name}</h4>
-                                <span className="w-2 h-2 bg-green-500 rounded-full" />
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                {(Array.isArray(chatMessages) ? chatMessages : []).map((msg, i) => (
-                                    <div key={i} className={`flex ${msg.senderId === user.id ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[70%] p-3 rounded-lg text-sm ${msg.senderId === user.id ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
-                                            {msg.message}
-                                            <div className={`text-[10px] mt-1 ${msg.senderId === user.id ? 'text-blue-200' : 'text-gray-400'}`}>
-                                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                        <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                                            <User size={16} /> Customer Info
+                                        </h4>
+                                        <p className="text-sm text-gray-600"><span className="font-semibold">Name:</span> {viewJob.contactName || viewJob.customer?.name || "N/A"}</p>
+                                        <p className="text-sm text-gray-600"><span className="font-semibold">Phone/Mobile:</span> {viewJob.customerMobile || viewJob.contactPhone || viewJob.customer?.phone || "N/A"}</p>
+                                    </div>
+                                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                        <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                                            <Clock size={16} /> Schedule
+                                        </h4>
+                                        <p className="text-sm text-gray-600"><span className="font-semibold">Date:</span> {new Date(viewJob.scheduledDate).toLocaleDateString()}</p>
+                                        <p className="text-sm text-gray-600"><span className="font-semibold">Time:</span> {viewJob.scheduledTime || "Flexible"}</p>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 h-full">
+                                        <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                                            <Briefcase size={16} /> Service Details
+                                        </h4>
+                                        <p className="text-sm text-gray-600 mb-2"><span className="font-semibold">Type:</span> {viewJob.serviceType}</p>
+                                        <p className="text-sm text-gray-600 mb-4"><span className="font-semibold">Description:</span> {viewJob.description}</p>
+                                        <div className="pt-3 border-t border-gray-200">
+                                            <p className="text-sm font-bold text-gray-800 flex justify-between">
+                                                <span>Offer Price:</span>
+                                                <span className="text-emerald-600">₹{viewJob.offerPrice || viewJob.visitingCharges || "TBD"}</span>
+                                            </p>
                                         </div>
                                     </div>
-                                ))}
-                                <div ref={chatEndRef} />
-                            </div>
-                            <div className="p-3 border-t border-gray-100 bg-white">
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                                        placeholder="Type a message..."
-                                        className="flex-1 bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-                                    />
-                                    <button onClick={handleSendMessage} className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                                        <Send size={18} />
-                                    </button>
                                 </div>
                             </div>
-                        </>
-                    ) : (
-                        <div className="flex-1 flex items-center justify-center text-gray-400 flex-col">
-                            <MessageSquare size={48} className="mb-2 opacity-50" />
-                            <p>Select a contact to start chatting</p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </Card>
-    </div>
-);
 
-const renderSettings = () => (
-    <div className="px-6 max-w-2xl">
-        <Card title="Profile Settings" headerColor="border-t-slate-600">
-            <form onSubmit={handleProfileUpdate} className="space-y-6">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
-                    <div className="flex items-center gap-4">
-                        <div className="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
-                            {user.documents?.photo ? (
-                                <img src={user.documents.photo} alt="Profile" className="w-full h-full object-cover" />
-                            ) : (
-                                <ImageIcon className="text-gray-400" />
+                            {viewJob.location && viewJob.location.latitude && (
+                                <div className="mt-6">
+                                    <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                                        <MapPin size={16} /> Location
+                                    </h4>
+                                    <div className="w-full h-48 bg-gray-200 rounded-lg overflow-hidden relative">
+                                        {/* Simple Static Map Image or Link */}
+                                        <img
+                                            src={`https://maps.googleapis.com/maps/api/staticmap?center=${viewJob.location.latitude},${viewJob.location.longitude}&zoom=15&size=600x300&markers=color:red%7C${viewJob.location.latitude},${viewJob.location.longitude}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`}
+                                            alt="Map"
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <a
+                                            href={`https://www.google.com/maps?q=${viewJob.location.latitude},${viewJob.location.longitude}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors group"
+                                        >
+                                            <span className="bg-white px-4 py-2 rounded-full text-sm font-bold shadow-md group-hover:scale-105 transition-transform">Open in Google Maps</span>
+                                        </a>
+                                    </div>
+                                </div>
                             )}
-                        </div>
-                        <button type="button" className="text-sm text-blue-600 font-medium hover:underline">Upload New Photo</button>
-                    </div>
-                </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Change Password</label>
-                    <div className="relative">
-                        <Lock className="absolute left-3 top-2.5 text-gray-400" size={16} />
-                        <input
-                            type="password"
-                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            placeholder="Enter new password"
-                            value={profileForm.password}
-                            onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })}
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Membership Status</label>
-                    <div className="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-100 rounded">
-                        <Shield className="text-indigo-600" size={20} />
-                        <div>
-                            <div className="font-bold text-indigo-900 text-sm">Free Membership</div>
-                            <div className="text-xs text-indigo-600">Upgrade to Premium for lower commissions and verified badge.</div>
-                        </div>
-                        <button type="button" className="ml-auto px-3 py-1 bg-indigo-600 text-white text-xs font-bold rounded hover:bg-indigo-700">Upgrade</button>
-                    </div>
-                </div>
-
-                <div className="pt-4 border-t border-gray-100">
-                    <button disabled={profileLoading} className="px-6 py-2 bg-slate-900 text-white font-bold rounded hover:bg-slate-800 transition-colors disabled:opacity-50 text-sm">
-                        {profileLoading ? 'Saving...' : 'Save Changes'}
-                    </button>
-                </div>
-            </form>
-        </Card>
-    </div>
-);
-
-return (
-    <div className="flex bg-gray-100 font-sans text-gray-800 h-screen overflow-hidden">
-        {/* --- SIDEBAR --- */}
-        {/* Mobile: Fixed & Translated. Desktop: Relative & Width-based toggle */}
-        <aside
-            className={`
-                    bg-slate-900 z-40 shadow-xl flex flex-col transition-all duration-300 ease-in-out
-                    fixed inset-y-0 left-0
-                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                    md:relative md:translate-x-0 
-                    ${sidebarOpen ? 'md:w-64' : 'md:w-0'} 
-                    w-64
-                `}
-        >
-            <div className="w-64 flex flex-col h-full border-r border-gray-800">
-                {/* Brand Logo */}
-                <div className="h-[57px] flex items-center px-4 border-b border-gray-700 bg-slate-900 shadow-sm shrink-0">
-                    <img src="/logo.png" alt="Fixofy" className="w-8 h-8 mr-3 object-contain" />
-                    <span className="text-lg font-light text-gray-200 tracking-wide">Fixofy</span>
-                </div>
-
-                {/* User Panel */}
-                <div className="p-4 border-b border-gray-800 flex items-center gap-3">
-                    <img src={user?.documents?.photo || `https://ui-avatars.com/api/?name=${user?.name}`} className="w-9 h-9 rounded-full border border-gray-600" alt="User" />
-                    <div className="overflow-hidden">
-                        <div className="text-gray-200 text-sm font-medium truncate w-32">{user?.name}</div>
-                        <div className="flex items-center gap-1 text-[10px] text-emerald-400 uppercase font-bold tracking-wider">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online
-                        </div>
-                    </div>
-                </div>
-
-                {/* Navigation */}
-                <nav className="flex-1 overflow-y-auto py-2 custom-scrollbar">
-                    <ul className="space-y-1 px-2">
-                        {[
-                            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                            { id: 'jobs', label: 'My Contracts', icon: Briefcase },
-                            { id: 'chat', label: 'Live Chat', icon: MessageSquare },
-                            { id: 'wallet', label: 'Finances', icon: Wallet },
-                            { id: 'history', label: 'History', icon: History },
-                            { id: 'feedback', label: 'Feedback', icon: Star },
-                        ].map(item => (
-                            <li key={item.id}>
+                            <div className="mt-8 flex justify-end gap-3">
+                                {['accepted', 'pending'].includes(viewJob.status) && (
+                                    <button
+                                        onClick={() => { handleStartRide(viewJob); setViewJob(null); }}
+                                        className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold flex items-center gap-2 shadow-lg animate-pulse"
+                                    >
+                                        <MapPin size={18} /> Start Riding Now
+                                    </button>
+                                )}
                                 <button
-                                    onClick={() => { setActiveTab(item.id); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                                    className={`w-full flex items-center px-3 py-2.5 rounded text-sm transition-colors ${activeTab === item.id ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                                    onClick={() => setViewJob(null)}
+                                    className="px-6 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 font-medium"
                                 >
-                                    <item.icon size={18} className="mr-3 opactiy-80" />
-                                    {item.label}
+                                    Close
                                 </button>
-                            </li>
-                        ))}
-
-                        <li className="mt-8 px-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Settings</li>
-                        <li>
-                            <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center px-3 py-2.5 rounded text-sm transition-colors ${activeTab === 'settings' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
-                                <User size={18} className="mr-3" /> Profile
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={handleLogout} className="w-full flex items-center px-3 py-2.5 rounded text-sm text-rose-400 hover:bg-rose-900/20 hover:text-rose-300 transition-colors mt-2">
-                                <LogOut size={18} className="mr-3" /> Sign Out
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        </aside>
-
-        {/* Mobile Backdrop */}
-        {sidebarOpen && (
-            <div
-                onClick={() => setSidebarOpen(false)}
-                className="fixed inset-0 bg-black/50 z-30 md:hidden"
-            />
-        )}
-
-        {/* --- CONTENT WRAPPER --- */}
-        {/* No manual margins! Flexbox handles it. */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-
-            {/* Navbar */}
-            <nav className="bg-white h-[57px] shadow-sm border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-30 shrink-0">
-                <div className="flex items-center">
-                    <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-gray-500 hover:text-gray-700">
-                        <Menu size={20} />
-                    </button>
-                    <div className="hidden sm:flex items-center text-sm text-gray-500 ml-4 gap-4">
-                        <span className="hover:text-blue-500 cursor-pointer text-gray-700 font-medium">Home</span>
-                        <span className="hover:text-blue-500 cursor-pointer">Contact</span>
+                            </div>
+                        </motion.div>
                     </div>
-                </div>
+                )}
+            </AnimatePresence>
 
-                <div className="flex items-center gap-2 sm:gap-6">
-                    {/* Realtime Status Toggle in Navbar */}
-                    <StatusToggle currentStatus={user?.status} onUpdate={handleStatusUpdate} loading={statusLoading} />
-
-                    <div className="flex items-center gap-2 sm:gap-4 text-gray-400">
-                        {/* Force Search/Bell to fit better on mobile */}
-                        <div className="flex gap-2">
-                            <Search size={18} className="hover:text-blue-500 cursor-pointer" />
-                            <div className="relative">
-                                <Bell size={18} className="hover:text-blue-500 cursor-pointer" />
-                                {unreadNotifications > 0 && <span className="absolute -top-1.5 -right-1 bg-amber-500 text-white text-[9px] font-bold px-1 rounded-sm shadow-sm">{unreadNotifications}</span>}
-                            </div>
-                        </div>
-
-                        <div className="h-6 w-px bg-gray-200 mx-1 sm:mx-2"></div>
-
-                        {/* Time & Location: Removed 'hidden sm:block' to show on mobile, adjusted layout */}
-                        <div className="text-right flex flex-col items-end">
-                            <div className="text-[10px] sm:text-xs font-bold text-gray-700 flex items-center justify-end gap-1">
-                                <Clock size={10} className="text-gray-400" />
-                                <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
-                            <div className="text-[9px] sm:text-[10px] text-gray-500 flex items-center justify-end gap-1 max-w-[150px] truncate">
-                                <MapPin size={10} /> {currentLocationName || "Locating..."}
-                            </div>
-                        </div>
-                        {/* Network Indicator in Navbar */}
-                        <div className="text-[9px] text-emerald-600 font-bold flex items-center justify-end gap-1">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Network
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            {/* Main Content Scrollable Area */}
-            <main className="flex-1 bg-gray-100 overflow-y-auto pb-20">
-                <ContentHeader
-                    title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                    breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+            {/* Live Ride Modal */}
+            {rideModalOpen && activeRideJob && (
+                <LiveRideModal
+                    job={activeRideJob}
+                    technicianId={user.id}
+                    userId={activeRideJob.userId}
+                    socket={socket}
+                    onClose={() => setRideModalOpen(false)}
                 />
+            )}
 
-                {/* Dynamic Content Switching */}
-                {activeTab === 'dashboard' && renderDashboardContent()}
-                {activeTab === 'chat' && renderChat()}
-                {activeTab === 'settings' && renderSettings()}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                {/* Premium Stats Grid */}
+                {/* Unified Grid for Top Row */}
+                <StatCard
+                    title="Total Balance"
+                    value={`₹${(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}`}
+                    icon={Wallet}
+                    color="bg-emerald-500"
+                    trend={{ value: 12, positive: true }}
+                    onClick={() => { setStatsModalOpen(true); setActiveTab('wallet'); }}
+                    subtext="Available for withdrawal"
+                />
+                <StatCard
+                    title="Month Earnings"
+                    value={`₹${(typeof stats.monthlyEarnings === 'object' ? stats.monthlyEarnings.amount : stats.monthlyEarnings)?.toLocaleString() || 0}`}
+                    icon={TrendingUp}
+                    color="bg-blue-500"
+                    trend={{ value: 5, positive: true }}
+                    onClick={() => setStatsModalOpen(true)}
+                    subtext="Since 1st of Month"
+                />
+                <StatCard
+                    title="Completed Jobs"
+                    value={stats.completedJobs}
+                    icon={CheckCircle2}
+                    color="bg-indigo-500"
+                    onClick={() => setStatsModalOpen(true)}
+                    subtext="Lifetime Total"
+                />
+                <StatCard
+                    title="Rating"
+                    value={stats.rating}
+                    icon={Star}
+                    color="bg-amber-500"
+                    onClick={() => setActiveTab('feedback')}
+                    subtext={`Based on ${stats.totalReviews} reviews`}
+                />
+            </div> {/* Close Unified Grid */}
 
-                {['jobs', 'wallet', 'history', 'feedback'].includes(activeTab) && (
-                    <div className="p-4 sm:p-6 lg:p-8">
-                        {/* Placeholder for tabs handled within dashboard summary initially, extending them here now */}
-                        <Card
-                            title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                            headerColor="border-t-gray-400"
-                            tools={activeTab === 'jobs' && (
+            {/* Additional Stats Row - Grid Expanded */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-x-4 gap-y-6 sm:gap-x-6 sm:gap-y-6 mb-8 px-1">
+                {/* Existing Small Cards */}
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
+                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Briefcase size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-xl font-bold text-gray-800">{stats.monthJobs || stats.monthlyJobs || 0}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Jobs This Month</div>
+                    </div>
+                </div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
+                    <div className="p-2 bg-rose-50 rounded-lg text-rose-600"><XCircle size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-xl font-bold text-gray-800">{stats.rejectedJobs || 0}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Rejected</div>
+                    </div>
+                </div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
+                    <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><CheckCircle2 size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-xl font-bold text-gray-800">{stats.completedJobs || 0}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Completed</div>
+                    </div>
+                </div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
+                    <div className="p-2 bg-amber-50 rounded-lg text-amber-600"><Clock size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-xl font-bold text-gray-800">{stats.pendingJobs || 0}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Pending</div>
+                    </div>
+
+                </div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 min-w-0">
+                    <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600"><CheckCircle2 size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-xl font-bold text-gray-800">{stats.acceptedJobs || 0}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Accepted</div>
+                    </div>
+                </div>
+
+                {/* [NEW] Account Info Cards */}
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-indigo-500">
+                    <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Shield size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-sm font-bold text-gray-800 truncate">{user?.membership || 'Free'}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Membership</div>
+                    </div>
+                </div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-orange-500">
+                    <div className="p-2 bg-orange-50 rounded-lg text-orange-600"><MapPin size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-sm font-bold text-gray-800 truncate" title={registeredAddress}>{registeredAddress}</div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Registered Loc</div>
+                    </div>
+                </div>
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1 border-l-4 border-l-pink-500">
+                    <div className="p-2 bg-pink-50 rounded-lg text-pink-600"><Calendar size={20} /></div>
+                    <div className="overflow-hidden">
+                        <div className="text-sm font-bold text-gray-800 truncate">
+                            {user?.membershipExpiry ? new Date(user.membershipExpiry).toLocaleDateString() : 'Lifetime'}
+                        </div>
+                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Expires On</div>
+                    </div>
+                </div>
+            </div>
+
+            <DashboardStatsModal
+                isOpen={statsModalOpen}
+                onClose={() => setStatsModalOpen(false)}
+                stats={stats}
+            />
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-12">
+                {/* Main Job List & Offers */}
+                <div className="lg:col-span-2 space-y-16">
+                    <Card
+                        title="Active Jobs"
+                        headerColor="border-t-blue-500"
+                        tools={
+                            <div className="relative">
                                 <select
                                     value={jobFilter}
                                     onChange={(e) => setJobFilter(e.target.value)}
@@ -1357,53 +971,441 @@ return (
                                     <option value="accepted">Accepted</option>
                                     <option value="in_progress">In Progress</option>
                                 </select>
-                            )}
-                        >
-                            {activeTab === 'wallet' && (
-                                <div className="text-center py-10">
-                                    <h3 className="text-2xl font-bold text-emerald-600 mb-2">₹{(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}</h3>
-                                    <p className="text-gray-500">Current Balance</p>
-                                    <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow">Withdraw Funds</button>
-                                </div>
-                            )}
-                            {activeTab === 'jobs' && (
-                                <div className="divide-y divide-gray-100">
-                                    {filteredJobs.length === 0 ? (
-                                        <div className="p-20 text-center text-gray-500">
-                                            <Briefcase size={64} className="mx-auto text-gray-200 mb-4" />
-                                            <h3 className="text-xl font-bold text-gray-400">No active contracts</h3>
-                                            <p className="text-gray-400 text-sm mt-1">You are not assigned to any jobs matching this filter.</p>
+                            </div>
+                        }
+                        noPadding
+                    >
+                        {filteredJobs.length === 0 ? (
+                            <div className="p-8 text-center text-gray-500">
+                                <Briefcase size={48} className="mx-auto text-gray-300 mb-2" />
+                                <p>No {jobFilter !== 'all' ? jobFilter.replace('_', ' ') : 'active'} jobs found.</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-gray-100">
+                                {Array.isArray(filteredJobs) && filteredJobs.map(job => renderJobItem(job))}
+                            </div>
+                        )}
+                        <div className="p-4 border-t border-gray-100 text-center">
+                            <button
+                                onClick={() => setActiveTab('history')}
+                                className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                            >
+                                View All Job History
+                            </button>
+                        </div>
+                    </Card>
+
+                    {/* Offers Section */}
+                    {offers.length > 0 && (
+                        <Card title="Special Offers For You" headerColor="border-t-yellow-500">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {(offers || []).map((offer, i) => (
+                                    <div key={i} className="border border-yellow-100 bg-yellow-50 p-4 rounded-lg flex items-start gap-3">
+                                        <Zap className="text-yellow-600 mt-1" size={20} />
+                                        <div>
+                                            <h4 className="font-bold text-gray-800 text-sm">{offer.title}</h4>
+                                            <p className="text-xs text-gray-600 mt-1">{offer.description}</p>
+                                            {offer.badgeText && <span className="inline-block mt-2 px-2 py-0.5 bg-yellow-200 text-yellow-800 text-[10px] font-bold rounded">{offer.badgeText}</span>}
                                         </div>
-                                    ) : (
-                                        filteredJobs.map(job => renderJobItem(job))
-                                    )}
-                                </div>
-                            )}
-                            {['history', 'feedback'].includes(activeTab) && (
-                                <div className="text-center py-20 bg-gray-50 rounded border border-dashed border-gray-200">
-                                    <Coffee size={48} className="mx-auto text-gray-300 mb-4" />
-                                    <h3 className="text-lg font-medium text-gray-600">Module Loaded</h3>
-                                    <p className="text-gray-400 text-sm">Detailed view for {activeTab} is ready for data population.</p>
-                                </div>
-                            )}
+                                    </div>
+                                ))}
+                            </div>
                         </Card>
-                    </div>
-                )}
-            </main>
-
-            {/* Footer */}
-            <footer className="bg-white border-t border-gray-200 p-4 text-xs text-gray-500 flex justify-between items-center shrink-0">
-                <div>
-                    <strong>Copyright &copy; 2024 <span className="text-blue-600">Fixofy.io</span>.</strong> All rights reserved. {/* v3.2.0-rc */}
+                    )}
                 </div>
-                <div className="hidden sm:block">
-                    <b>Version</b> 3.2.0-rc
-                </div>
-            </footer>
 
+                {/* Feedback Panel */}
+                <div className="lg:col-span-1">
+                    <Card title="Feedback Breakdown" headerColor="border-t-purple-500">
+                        <div className="space-y-4">
+                            {(() => {
+                                // Dynamic Calculation
+                                const metrics = [
+                                    { key: 'timeliness', label: 'Timeliness', color: 'bg-green-500' },
+                                    { key: 'expertise', label: 'Expertise', color: 'bg-blue-500' },
+                                    { key: 'professionalism', label: 'Professionalism', color: 'bg-purple-500' },
+                                    { key: 'honesty', label: 'Honesty', color: 'bg-cyan-500' },
+                                    { key: 'behavior', label: 'Behavior', color: 'bg-indigo-500' },
+                                    { key: 'knowledge', label: 'Knowledge', color: 'bg-teal-500' },
+                                    { key: 'respect', label: 'Respect', color: 'bg-pink-500' },
+                                    { key: 'overall', label: 'Overall', color: 'bg-amber-500' },
+                                    { key: 'recommendation', label: 'Recommendation', color: 'bg-rose-500', max: 10 }
+                                ];
+
+                                const data = metrics.map(m => {
+                                    if (!Array.isArray(feedbacks) || feedbacks.length === 0) return { ...m, v: 0, raw: "0.0" };
+                                    const sum = feedbacks.reduce((acc, f) => {
+                                        const val = f.ratings?.[m.key] || 0;
+                                        return acc + Number(val);
+                                    }, 0);
+                                    const avg = sum / feedbacks.length;
+                                    const max = m.max || 5;
+                                    const percent = Math.round((avg / max) * 100);
+                                    return { ...m, v: percent, raw: avg.toFixed(1) };
+                                });
+
+                                return data.map((m, i) => (
+                                    <div key={i}>
+                                        <div className="flex justify-between text-xs font-semibold text-gray-600 mb-1">
+                                            <span>{m.label}</span>
+                                            <span>{m.v}% <span className="text-gray-400 font-normal">({m.raw})</span></span>
+                                        </div>
+                                        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                            <div style={{ width: `${m.v}%` }} className={`h-full rounded-full ${m.color}`} />
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
+                            <h4 className="font-semibold text-gray-700 mt-6 mb-3 text-sm">Recent Reviews</h4>
+                            <div className="space-y-3">
+                                {(Array.isArray(feedbacks) ? feedbacks : []).slice(0, 3).map((f, i) => (
+                                    <div key={i} className="bg-gray-50 p-3 rounded text-xs border border-gray-100">
+                                        <div className="flex text-amber-400 mb-1">
+                                            {[...Array(5)].map((_, i) => <Star key={i} size={8} fill="currentColor" />)}
+                                        </div>
+                                        <div className='flex justify-between items-center mb-1'>
+                                            <span className='font-bold text-[10px] text-gray-700'>{f.ratings?.overall || 5}/5</span>
+                                            <span className='text-[10px] text-gray-400'>{new Date(f.createdAt || Date.now()).toLocaleDateString()}</span>
+                                        </div>
+                                        <p className="text-gray-600 italic">"{f.comment || 'No comment'}"</p>
+                                    </div>
+                                ))}
+                                {feedbacks.length === 0 && <p className="text-xs text-center text-gray-400">No reviews to display.</p>}
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            </div>
         </div >
-    </div >
-);
+    );
+
+    const renderChat = () => (
+        <div className="px-6 h-[calc(100vh-140px)] flex flex-col">
+            <Card title="Live Chat Support" headerColor="border-t-blue-600" height="100%" noPadding>
+                <div className="flex h-full">
+                    {/* Contacts List */}
+                    <div className="w-64 border-r border-gray-100 bg-gray-50 flex flex-col">
+                        <div className="p-3 border-b border-gray-100 font-bold text-xs text-gray-500 uppercase">Recent Chats</div>
+                        <div className="flex-1 overflow-y-auto">
+                            {/* Mock Contacts for now until we have history API integrated fully */}
+                            <div onClick={() => setActiveChatUser({ id: 'admin', name: 'Admin Support' })} className={`p-4 hover:bg-white cursor-pointer transition-colors ${activeChatUser?.id === 'admin' ? 'bg-white border-l-4 border-blue-500' : ''}`}>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">A</div>
+                                    <div>
+                                        <div className="text-sm font-bold text-gray-700">Admin Support</div>
+                                        <div className="text-xs text-green-500">Online</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {/* Chat Area */}
+                    <div className="flex-1 flex flex-col bg-white">
+                        {activeChatUser ? (
+                            <>
+                                <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                    <h4 className="font-bold text-gray-700">{activeChatUser.name}</h4>
+                                    <span className="w-2 h-2 bg-green-500 rounded-full" />
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                    {(Array.isArray(chatMessages) ? chatMessages : []).map((msg, i) => (
+                                        <div key={i} className={`flex ${msg.senderId === user.id ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`max-w-[70%] p-3 rounded-lg text-sm ${msg.senderId === user.id ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
+                                                {msg.message}
+                                                <div className={`text-[10px] mt-1 ${msg.senderId === user.id ? 'text-blue-200' : 'text-gray-400'}`}>
+                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <div ref={chatEndRef} />
+                                </div>
+                                <div className="p-3 border-t border-gray-100 bg-white">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newMessage}
+                                            onChange={(e) => setNewMessage(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                                            placeholder="Type a message..."
+                                            className="flex-1 bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                                        />
+                                        <button onClick={handleSendMessage} className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                            <Send size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center text-gray-400 flex-col">
+                                <MessageSquare size={48} className="mb-2 opacity-50" />
+                                <p>Select a contact to start chatting</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </Card>
+        </div>
+    );
+
+    const renderSettings = () => (
+        <div className="px-6 max-w-2xl">
+            <Card title="Profile Settings" headerColor="border-t-slate-600">
+                <form onSubmit={handleProfileUpdate} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
+                        <div className="flex items-center gap-4">
+                            <div className="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                                {user.documents?.photo ? (
+                                    <img src={user.documents.photo} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <ImageIcon className="text-gray-400" />
+                                )}
+                            </div>
+                            <button type="button" className="text-sm text-blue-600 font-medium hover:underline">Upload New Photo</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Change Password</label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                            <input
+                                type="password"
+                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                placeholder="Enter new password"
+                                value={profileForm.password}
+                                onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Membership Status</label>
+                        <div className="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-100 rounded">
+                            <Shield className="text-indigo-600" size={20} />
+                            <div>
+                                <div className="font-bold text-indigo-900 text-sm">Free Membership</div>
+                                <div className="text-xs text-indigo-600">Upgrade to Premium for lower commissions and verified badge.</div>
+                            </div>
+                            <button type="button" className="ml-auto px-3 py-1 bg-indigo-600 text-white text-xs font-bold rounded hover:bg-indigo-700">Upgrade</button>
+                        </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100">
+                        <button disabled={profileLoading} className="px-6 py-2 bg-slate-900 text-white font-bold rounded hover:bg-slate-800 transition-colors disabled:opacity-50 text-sm">
+                            {profileLoading ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    </div>
+                </form>
+            </Card>
+        </div>
+    );
+
+    return (
+        <div className="flex bg-gray-100 font-sans text-gray-800 h-screen overflow-hidden">
+            {/* --- SIDEBAR --- */}
+            {/* Mobile: Fixed & Translated. Desktop: Relative & Width-based toggle */}
+            <aside
+                className={`
+                    bg-slate-900 z-40 shadow-xl flex flex-col transition-all duration-300 ease-in-out
+                    fixed inset-y-0 left-0
+                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                    md:relative md:translate-x-0 
+                    ${sidebarOpen ? 'md:w-64' : 'md:w-0'} 
+                    w-64
+                `}
+            >
+                <div className="w-64 flex flex-col h-full border-r border-gray-800">
+                    {/* Brand Logo */}
+                    <div className="h-[57px] flex items-center px-4 border-b border-gray-700 bg-slate-900 shadow-sm shrink-0">
+                        <img src="/logo.png" alt="Fixofy" className="w-8 h-8 mr-3 object-contain" />
+                        <span className="text-lg font-light text-gray-200 tracking-wide">Fixofy</span>
+                    </div>
+
+                    {/* User Panel */}
+                    <div className="p-4 border-b border-gray-800 flex items-center gap-3">
+                        <img src={user?.documents?.photo || `https://ui-avatars.com/api/?name=${user?.name}`} className="w-9 h-9 rounded-full border border-gray-600" alt="User" />
+                        <div className="overflow-hidden">
+                            <div className="text-gray-200 text-sm font-medium truncate w-32">{user?.name}</div>
+                            <div className="flex items-center gap-1 text-[10px] text-emerald-400 uppercase font-bold tracking-wider">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Navigation */}
+                    <nav className="flex-1 overflow-y-auto py-2 custom-scrollbar">
+                        <ul className="space-y-1 px-2">
+                            {[
+                                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                                { id: 'jobs', label: 'My Contracts', icon: Briefcase },
+                                { id: 'chat', label: 'Live Chat', icon: MessageSquare },
+                                { id: 'wallet', label: 'Finances', icon: Wallet },
+                                { id: 'history', label: 'History', icon: History },
+                                { id: 'feedback', label: 'Feedback', icon: Star },
+                            ].map(item => (
+                                <li key={item.id}>
+                                    <button
+                                        onClick={() => { setActiveTab(item.id); if (window.innerWidth < 768) setSidebarOpen(false); }}
+                                        className={`w-full flex items-center px-3 py-2.5 rounded text-sm transition-colors ${activeTab === item.id ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                                    >
+                                        <item.icon size={18} className="mr-3 opactiy-80" />
+                                        {item.label}
+                                    </button>
+                                </li>
+                            ))}
+
+                            <li className="mt-8 px-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Settings</li>
+                            <li>
+                                <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center px-3 py-2.5 rounded text-sm transition-colors ${activeTab === 'settings' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+                                    <User size={18} className="mr-3" /> Profile
+                                </button>
+                            </li>
+                            <li>
+                                <button onClick={handleLogout} className="w-full flex items-center px-3 py-2.5 rounded text-sm text-rose-400 hover:bg-rose-900/20 hover:text-rose-300 transition-colors mt-2">
+                                    <LogOut size={18} className="mr-3" /> Sign Out
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </aside>
+
+            {/* Mobile Backdrop */}
+            {sidebarOpen && (
+                <div
+                    onClick={() => setSidebarOpen(false)}
+                    className="fixed inset-0 bg-black/50 z-30 md:hidden"
+                />
+            )}
+
+            {/* --- CONTENT WRAPPER --- */}
+            {/* No manual margins! Flexbox handles it. */}
+            <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+
+                {/* Navbar */}
+                <nav className="bg-white h-[57px] shadow-sm border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-30 shrink-0">
+                    <div className="flex items-center">
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-gray-500 hover:text-gray-700">
+                            <Menu size={20} />
+                        </button>
+                        <div className="hidden sm:flex items-center text-sm text-gray-500 ml-4 gap-4">
+                            <span className="hover:text-blue-500 cursor-pointer text-gray-700 font-medium">Home</span>
+                            <span className="hover:text-blue-500 cursor-pointer">Contact</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 sm:gap-6">
+                        {/* Realtime Status Toggle in Navbar */}
+                        <StatusToggle currentStatus={user?.status} onUpdate={handleStatusUpdate} loading={statusLoading} />
+
+                        <div className="flex items-center gap-2 sm:gap-4 text-gray-400">
+                            {/* Force Search/Bell to fit better on mobile */}
+                            <div className="flex gap-2">
+                                <Search size={18} className="hover:text-blue-500 cursor-pointer" />
+                                <div className="relative">
+                                    <Bell size={18} className="hover:text-blue-500 cursor-pointer" />
+                                    {unreadNotifications > 0 && <span className="absolute -top-1.5 -right-1 bg-amber-500 text-white text-[9px] font-bold px-1 rounded-sm shadow-sm">{unreadNotifications}</span>}
+                                </div>
+                            </div>
+
+                            <div className="h-6 w-px bg-gray-200 mx-1 sm:mx-2"></div>
+
+                            {/* Time & Location: Removed 'hidden sm:block' to show on mobile, adjusted layout */}
+                            <div className="text-right flex flex-col items-end">
+                                <div className="text-[10px] sm:text-xs font-bold text-gray-700 flex items-center justify-end gap-1">
+                                    <Clock size={10} className="text-gray-400" />
+                                    <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                <div className="text-[9px] sm:text-[10px] text-gray-500 flex items-center justify-end gap-1 max-w-[150px] truncate">
+                                    <MapPin size={10} /> {currentLocationName || "Locating..."}
+                                </div>
+                            </div>
+                            {/* Network Indicator in Navbar */}
+                            <div className="text-[9px] text-emerald-600 font-bold flex items-center justify-end gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Network
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                {/* Main Content Scrollable Area */}
+                <main className="flex-1 bg-gray-100 overflow-y-auto pb-20">
+                    <ContentHeader
+                        title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                        breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                    />
+
+                    {/* Dynamic Content Switching */}
+                    {activeTab === 'dashboard' && renderDashboardContent()}
+                    {activeTab === 'chat' && renderChat()}
+                    {activeTab === 'settings' && renderSettings()}
+
+                    {['jobs', 'wallet', 'history', 'feedback'].includes(activeTab) && (
+                        <div className="p-4 sm:p-6 lg:p-8">
+                            {/* Placeholder for tabs handled within dashboard summary initially, extending them here now */}
+                            <Card
+                                title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                                headerColor="border-t-gray-400"
+                                tools={activeTab === 'jobs' && (
+                                    <select
+                                        value={jobFilter}
+                                        onChange={(e) => setJobFilter(e.target.value)}
+                                        className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none cursor-pointer"
+                                    >
+                                        <option value="all">Active (All)</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="accepted">Accepted</option>
+                                        <option value="in_progress">In Progress</option>
+                                    </select>
+                                )}
+                            >
+                                {activeTab === 'wallet' && (
+                                    <div className="text-center py-10">
+                                        <h3 className="text-2xl font-bold text-emerald-600 mb-2">₹{(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}</h3>
+                                        <p className="text-gray-500">Current Balance</p>
+                                        <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow">Withdraw Funds</button>
+                                    </div>
+                                )}
+                                {activeTab === 'jobs' && (
+                                    <div className="divide-y divide-gray-100">
+                                        {filteredJobs.length === 0 ? (
+                                            <div className="p-20 text-center text-gray-500">
+                                                <Briefcase size={64} className="mx-auto text-gray-200 mb-4" />
+                                                <h3 className="text-xl font-bold text-gray-400">No active contracts</h3>
+                                                <p className="text-gray-400 text-sm mt-1">You are not assigned to any jobs matching this filter.</p>
+                                            </div>
+                                        ) : (
+                                            filteredJobs.map(job => renderJobItem(job))
+                                        )}
+                                    </div>
+                                )}
+                                {['history', 'feedback'].includes(activeTab) && (
+                                    <div className="text-center py-20 bg-gray-50 rounded border border-dashed border-gray-200">
+                                        <Coffee size={48} className="mx-auto text-gray-300 mb-4" />
+                                        <h3 className="text-lg font-medium text-gray-600">Module Loaded</h3>
+                                        <p className="text-gray-400 text-sm">Detailed view for {activeTab} is ready for data population.</p>
+                                    </div>
+                                )}
+                            </Card>
+                        </div>
+                    )}
+                </main>
+
+                {/* Footer */}
+                <footer className="bg-white border-t border-gray-200 p-4 text-xs text-gray-500 flex justify-between items-center shrink-0">
+                    <div>
+                        <strong>Copyright &copy; 2024 <span className="text-blue-600">Fixofy.io</span>.</strong> All rights reserved. {/* v3.2.0-rc */}
+                    </div>
+                    <div className="hidden sm:block">
+                        <b>Version</b> 3.2.0-rc
+                    </div>
+                </footer>
+
+            </div >
+        </div >
+    );
 };
 
 export default TechnicianDashboard;
