@@ -1361,6 +1361,13 @@ app.put('/api/rides/:id/complete', async (req, res) => {
   else res.status(404).json({ success: false, error: 'Ride not found' });
 });
 
+app.put('/api/rides/:id/location', async (req, res) => {
+  const { location } = req.body;
+  const success = await rideManager.updateRoute(req.params.id, location);
+  if (success) res.json({ success: true });
+  else res.status(404).json({ success: false, error: 'Ride not found' });
+});
+
 // --- Broadcast Routes ---
 
 app.post('/api/broadcasts', async (req, res) => {

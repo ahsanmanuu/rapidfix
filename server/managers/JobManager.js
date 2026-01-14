@@ -326,13 +326,16 @@ class JobManager {
                 if (enriched.technicianId) {
                     this.io.to(`tech_${enriched.technicianId}`).emit('job_status_updated', enriched);
 
-                    // [NEW] Update Stats
+                    // [NEW] Update Stats & Technician Status
                     if (status === 'completed') {
                         await this.techManager.updateStats(enriched.technicianId, { type: 'complete' });
+                        await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
                     } else if (status === 'rejected') {
                         await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
-                    } else if (status === 'accepted') { // [NEW]
+                        await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
+                    } else if (status === 'accepted') {
                         await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
+                        await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
                     }
                 }
                 this.io.emit('admin_job_update', enriched);
