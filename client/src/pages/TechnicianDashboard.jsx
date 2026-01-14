@@ -427,7 +427,6 @@ const TechnicianDashboard = () => {
 
         socket.on('technician_status_update', (data) => {
             if (data.technicianId === user?.id) {
-                console.log("[Socket] Status update received:", data.status);
                 if (updateProfile) {
                     updateProfile({ status: data.status });
                 }
