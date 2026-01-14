@@ -238,7 +238,6 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
 
                                 {/* Tech Markers using OverlayView for Custom UI */}
                                 {!searching && Array.isArray(technicians) && technicians
-                                    .filter(tech => tech.distance <= 2.0)
                                     .map((tech) => {
                                         let photoUrl = tech.documents?.photo
                                             ? (tech.documents.photo.startsWith('http') ? tech.documents.photo : `http://localhost:3000${tech.documents.photo}`)
@@ -259,7 +258,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                 getPixelPositionOffset={(width, height) => ({ x: -(width / 2), y: -(height / 2) })}
                                             >
                                                 <div
-                                                    className={`relative flex flex-col items-center group ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'} hover:z-[999] -translate-y-6 transition-all duration-300`}
+                                                    className={`relative flex flex-col items-center group ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'} hover:z-[999] -translate-y-6 transition-all duration-300 ${tech.distance > 2.0 ? 'opacity-60' : ''}`}
                                                     onClick={() => {
                                                         if (isAvailable) onBook(tech);
                                                         else alert(`This technician is currently ${statusConfig.label}`);
@@ -350,9 +349,8 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                         </div>
                                     </div>
                                 ))
-                            ) : (Array.isArray(technicians) ? technicians.filter(t => t.distance <= 2.0) : []).length > 0 ? (
+                            ) : (Array.isArray(technicians) ? technicians : []).length > 0 ? (
                                 (Array.isArray(technicians) ? technicians : [])
-                                    .filter(tech => tech.distance <= 2.0)
                                     .map((tech, idx) => {
                                         let photoUrl = tech.documents?.photo
                                             ? (tech.documents.photo.startsWith('http') ? tech.documents.photo : `http://localhost:3000${tech.documents.photo}`)
@@ -371,7 +369,8 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                 initial={{ opacity: 0, y: 15 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
-                                                className={`group relative bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 border border-red-500 shadow-sm transition-all duration-300 ${isAvailable ? 'hover:shadow-xl hover:shadow-blue-900/5 hover:border-blue-200 cursor-pointer hover:-translate-y-1' : 'cursor-not-allowed opacity-70 grayscale'}`}
+                                                className={`group relative bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 border border-red-500 shadow-sm transition-all duration-300 ${tech.distance > 2.0 ? 'opacity-50 border-gray-200' : ''
+                                                    } ${isAvailable ? 'hover:shadow-xl hover:shadow-blue-900/5 hover:border-blue-200 cursor-pointer hover:-translate-y-1' : 'cursor-not-allowed opacity-70 grayscale'}`}
                                             >
                                                 <div className="flex gap-4 md:gap-5 items-center">
                                                     {/* List Avatar */}
@@ -397,8 +396,10 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                             <h3 className="text-base md:text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors truncate">
                                                                 {tech.name}
                                                             </h3>
-                                                            <span className="text-[10px] md:text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md whitespace-nowrap">
-                                                                {tech.distance} km
+                                                            <span className="text-[10px] md:text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap ${
+                                                                tech.distance <= 2.0 ? 'text-blue-600 bg-blue-50' : 'text-amber-600 bg-amber-50'
+                                                            }">
+                                                                {tech.distance} km {tech.distance > 2.0 ? '(Far)' : ''}
                                                             </span>
                                                         </div>
 
