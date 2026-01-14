@@ -529,7 +529,7 @@ const TechnicianDashboard = () => {
     // ...
 
     const renderJobItem = (job) => (
-        <div key={job.id} className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-gray-50 transition-colors gap-4">
+        <div key={job.id} className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:bg-gray-50 transition-colors gap-4">
             <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl shrink-0">
                     {job.serviceType.charAt(0)}
@@ -663,7 +663,7 @@ const TechnicianDashboard = () => {
     );
 
     const renderDashboardContent = () => (
-        <div className="px-10 py-8">
+        <div className="p-4 sm:p-6 lg:p-8">
             {/* Rejection Modal */}
             <AnimatePresence>
                 {rejectModalOpen && (
@@ -814,9 +814,9 @@ const TechnicianDashboard = () => {
                 />
             )}
 
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 {/* Premium Stats Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                {/* Unified Grid for Top Row */}
                     <StatCard
                         title="Total Balance"
                         value={`₹${(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}`}
@@ -851,11 +851,10 @@ const TechnicianDashboard = () => {
                         onClick={() => setActiveTab('feedback')}
                         subtext={`Based on ${stats.totalReviews} reviews`}
                     />
-                </div>
+            </div> {/* Close Unified Grid */}
 
-                {/* Additional Stats Row */}
-                {/* Additional Stats Row - Grid Expanded */}
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-8">
+            {/* Additional Stats Row - Grid Expanded */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4 mb-8">
                     {/* Existing Small Cards */}
                     <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 xl:col-span-1">
                         <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Briefcase size={20} /></div>
@@ -920,7 +919,7 @@ const TechnicianDashboard = () => {
                 stats={stats}
             />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-12">
                 {/* Main Job List & Offers */}
                 <div className="lg:col-span-2 space-y-16">
                     <Card
@@ -1043,138 +1042,138 @@ const TechnicianDashboard = () => {
                     </Card>
                 </div>
             </div>
-        </div>
+        </div >
     );
 
-    const renderChat = () => (
-        <div className="px-6 h-[calc(100vh-140px)] flex flex-col">
-            <Card title="Live Chat Support" headerColor="border-t-blue-600" height="100%" noPadding>
-                <div className="flex h-full">
-                    {/* Contacts List */}
-                    <div className="w-64 border-r border-gray-100 bg-gray-50 flex flex-col">
-                        <div className="p-3 border-b border-gray-100 font-bold text-xs text-gray-500 uppercase">Recent Chats</div>
-                        <div className="flex-1 overflow-y-auto">
-                            {/* Mock Contacts for now until we have history API integrated fully */}
-                            <div onClick={() => setActiveChatUser({ id: 'admin', name: 'Admin Support' })} className={`p-4 hover:bg-white cursor-pointer transition-colors ${activeChatUser?.id === 'admin' ? 'bg-white border-l-4 border-blue-500' : ''}`}>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">A</div>
-                                    <div>
-                                        <div className="text-sm font-bold text-gray-700">Admin Support</div>
-                                        <div className="text-xs text-green-500">Online</div>
-                                    </div>
+const renderChat = () => (
+    <div className="px-6 h-[calc(100vh-140px)] flex flex-col">
+        <Card title="Live Chat Support" headerColor="border-t-blue-600" height="100%" noPadding>
+            <div className="flex h-full">
+                {/* Contacts List */}
+                <div className="w-64 border-r border-gray-100 bg-gray-50 flex flex-col">
+                    <div className="p-3 border-b border-gray-100 font-bold text-xs text-gray-500 uppercase">Recent Chats</div>
+                    <div className="flex-1 overflow-y-auto">
+                        {/* Mock Contacts for now until we have history API integrated fully */}
+                        <div onClick={() => setActiveChatUser({ id: 'admin', name: 'Admin Support' })} className={`p-4 hover:bg-white cursor-pointer transition-colors ${activeChatUser?.id === 'admin' ? 'bg-white border-l-4 border-blue-500' : ''}`}>
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">A</div>
+                                <div>
+                                    <div className="text-sm font-bold text-gray-700">Admin Support</div>
+                                    <div className="text-xs text-green-500">Online</div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    {/* Chat Area */}
-                    <div className="flex-1 flex flex-col bg-white">
-                        {activeChatUser ? (
-                            <>
-                                <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                                    <h4 className="font-bold text-gray-700">{activeChatUser.name}</h4>
-                                    <span className="w-2 h-2 bg-green-500 rounded-full" />
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                                    {(Array.isArray(chatMessages) ? chatMessages : []).map((msg, i) => (
-                                        <div key={i} className={`flex ${msg.senderId === user.id ? 'justify-end' : 'justify-start'}`}>
-                                            <div className={`max-w-[70%] p-3 rounded-lg text-sm ${msg.senderId === user.id ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
-                                                {msg.message}
-                                                <div className={`text-[10px] mt-1 ${msg.senderId === user.id ? 'text-blue-200' : 'text-gray-400'}`}>
-                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div ref={chatEndRef} />
-                                </div>
-                                <div className="p-3 border-t border-gray-100 bg-white">
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={newMessage}
-                                            onChange={(e) => setNewMessage(e.target.value)}
-                                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                                            placeholder="Type a message..."
-                                            className="flex-1 bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-                                        />
-                                        <button onClick={handleSendMessage} className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                                            <Send size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="flex-1 flex items-center justify-center text-gray-400 flex-col">
-                                <MessageSquare size={48} className="mb-2 opacity-50" />
-                                <p>Select a contact to start chatting</p>
-                            </div>
-                        )}
                     </div>
                 </div>
-            </Card>
-        </div>
-    );
-
-    const renderSettings = () => (
-        <div className="px-6 max-w-2xl">
-            <Card title="Profile Settings" headerColor="border-t-slate-600">
-                <form onSubmit={handleProfileUpdate} className="space-y-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
-                        <div className="flex items-center gap-4">
-                            <div className="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
-                                {user.documents?.photo ? (
-                                    <img src={user.documents.photo} alt="Profile" className="w-full h-full object-cover" />
-                                ) : (
-                                    <ImageIcon className="text-gray-400" />
-                                )}
+                {/* Chat Area */}
+                <div className="flex-1 flex flex-col bg-white">
+                    {activeChatUser ? (
+                        <>
+                            <div className="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <h4 className="font-bold text-gray-700">{activeChatUser.name}</h4>
+                                <span className="w-2 h-2 bg-green-500 rounded-full" />
                             </div>
-                            <button type="button" className="text-sm text-blue-600 font-medium hover:underline">Upload New Photo</button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Change Password</label>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-2.5 text-gray-400" size={16} />
-                            <input
-                                type="password"
-                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                placeholder="Enter new password"
-                                value={profileForm.password}
-                                onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })}
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Membership Status</label>
-                        <div className="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-100 rounded">
-                            <Shield className="text-indigo-600" size={20} />
-                            <div>
-                                <div className="font-bold text-indigo-900 text-sm">Free Membership</div>
-                                <div className="text-xs text-indigo-600">Upgrade to Premium for lower commissions and verified badge.</div>
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                                {(Array.isArray(chatMessages) ? chatMessages : []).map((msg, i) => (
+                                    <div key={i} className={`flex ${msg.senderId === user.id ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`max-w-[70%] p-3 rounded-lg text-sm ${msg.senderId === user.id ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
+                                            {msg.message}
+                                            <div className={`text-[10px] mt-1 ${msg.senderId === user.id ? 'text-blue-200' : 'text-gray-400'}`}>
+                                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                                <div ref={chatEndRef} />
                             </div>
-                            <button type="button" className="ml-auto px-3 py-1 bg-indigo-600 text-white text-xs font-bold rounded hover:bg-indigo-700">Upgrade</button>
+                            <div className="p-3 border-t border-gray-100 bg-white">
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                                        placeholder="Type a message..."
+                                        className="flex-1 bg-gray-50 border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                                    />
+                                    <button onClick={handleSendMessage} className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                        <Send size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center text-gray-400 flex-col">
+                            <MessageSquare size={48} className="mb-2 opacity-50" />
+                            <p>Select a contact to start chatting</p>
                         </div>
-                    </div>
+                    )}
+                </div>
+            </div>
+        </Card>
+    </div>
+);
 
-                    <div className="pt-4 border-t border-gray-100">
-                        <button disabled={profileLoading} className="px-6 py-2 bg-slate-900 text-white font-bold rounded hover:bg-slate-800 transition-colors disabled:opacity-50 text-sm">
-                            {profileLoading ? 'Saving...' : 'Save Changes'}
-                        </button>
+const renderSettings = () => (
+    <div className="px-6 max-w-2xl">
+        <Card title="Profile Settings" headerColor="border-t-slate-600">
+            <form onSubmit={handleProfileUpdate} className="space-y-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo</label>
+                    <div className="flex items-center gap-4">
+                        <div className="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                            {user.documents?.photo ? (
+                                <img src={user.documents.photo} alt="Profile" className="w-full h-full object-cover" />
+                            ) : (
+                                <ImageIcon className="text-gray-400" />
+                            )}
+                        </div>
+                        <button type="button" className="text-sm text-blue-600 font-medium hover:underline">Upload New Photo</button>
                     </div>
-                </form>
-            </Card>
-        </div>
-    );
+                </div>
 
-    return (
-        <div className="flex bg-gray-100 font-sans text-gray-800 h-screen overflow-hidden">
-            {/* --- SIDEBAR --- */}
-            {/* Mobile: Fixed & Translated. Desktop: Relative & Width-based toggle */}
-            <aside
-                className={`
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Change Password</label>
+                    <div className="relative">
+                        <Lock className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                        <input
+                            type="password"
+                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            placeholder="Enter new password"
+                            value={profileForm.password}
+                            onChange={(e) => setProfileForm({ ...profileForm, password: e.target.value })}
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Membership Status</label>
+                    <div className="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-100 rounded">
+                        <Shield className="text-indigo-600" size={20} />
+                        <div>
+                            <div className="font-bold text-indigo-900 text-sm">Free Membership</div>
+                            <div className="text-xs text-indigo-600">Upgrade to Premium for lower commissions and verified badge.</div>
+                        </div>
+                        <button type="button" className="ml-auto px-3 py-1 bg-indigo-600 text-white text-xs font-bold rounded hover:bg-indigo-700">Upgrade</button>
+                    </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-100">
+                    <button disabled={profileLoading} className="px-6 py-2 bg-slate-900 text-white font-bold rounded hover:bg-slate-800 transition-colors disabled:opacity-50 text-sm">
+                        {profileLoading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                </div>
+            </form>
+        </Card>
+    </div>
+);
+
+return (
+    <div className="flex bg-gray-100 font-sans text-gray-800 h-screen overflow-hidden">
+        {/* --- SIDEBAR --- */}
+        {/* Mobile: Fixed & Translated. Desktop: Relative & Width-based toggle */}
+        <aside
+            className={`
                     bg-slate-900 z-40 shadow-xl flex flex-col transition-all duration-300 ease-in-out
                     fixed inset-y-0 left-0
                     ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -1182,197 +1181,197 @@ const TechnicianDashboard = () => {
                     ${sidebarOpen ? 'md:w-64' : 'md:w-0'} 
                     w-64
                 `}
-            >
-                <div className="w-64 flex flex-col h-full border-r border-gray-800">
-                    {/* Brand Logo */}
-                    <div className="h-[57px] flex items-center px-4 border-b border-gray-700 bg-slate-900 shadow-sm shrink-0">
-                        <img src="/logo.png" alt="Fixofy" className="w-8 h-8 mr-3 object-contain" />
-                        <span className="text-lg font-light text-gray-200 tracking-wide">Fixofy</span>
-                    </div>
-
-                    {/* User Panel */}
-                    <div className="p-4 border-b border-gray-800 flex items-center gap-3">
-                        <img src={user?.documents?.photo || `https://ui-avatars.com/api/?name=${user?.name}`} className="w-9 h-9 rounded-full border border-gray-600" alt="User" />
-                        <div className="overflow-hidden">
-                            <div className="text-gray-200 text-sm font-medium truncate w-32">{user?.name}</div>
-                            <div className="flex items-center gap-1 text-[10px] text-emerald-400 uppercase font-bold tracking-wider">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Navigation */}
-                    <nav className="flex-1 overflow-y-auto py-2 custom-scrollbar">
-                        <ul className="space-y-1 px-2">
-                            {[
-                                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                                { id: 'jobs', label: 'My Contracts', icon: Briefcase },
-                                { id: 'chat', label: 'Live Chat', icon: MessageSquare },
-                                { id: 'wallet', label: 'Finances', icon: Wallet },
-                                { id: 'history', label: 'History', icon: History },
-                                { id: 'feedback', label: 'Feedback', icon: Star },
-                            ].map(item => (
-                                <li key={item.id}>
-                                    <button
-                                        onClick={() => { setActiveTab(item.id); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                                        className={`w-full flex items-center px-3 py-2.5 rounded text-sm transition-colors ${activeTab === item.id ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                                    >
-                                        <item.icon size={18} className="mr-3 opactiy-80" />
-                                        {item.label}
-                                    </button>
-                                </li>
-                            ))}
-
-                            <li className="mt-8 px-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Settings</li>
-                            <li>
-                                <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center px-3 py-2.5 rounded text-sm transition-colors ${activeTab === 'settings' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
-                                    <User size={18} className="mr-3" /> Profile
-                                </button>
-                            </li>
-                            <li>
-                                <button onClick={handleLogout} className="w-full flex items-center px-3 py-2.5 rounded text-sm text-rose-400 hover:bg-rose-900/20 hover:text-rose-300 transition-colors mt-2">
-                                    <LogOut size={18} className="mr-3" /> Sign Out
-                                </button>
-                            </li>
-                        </ul>
-                    </nav>
+        >
+            <div className="w-64 flex flex-col h-full border-r border-gray-800">
+                {/* Brand Logo */}
+                <div className="h-[57px] flex items-center px-4 border-b border-gray-700 bg-slate-900 shadow-sm shrink-0">
+                    <img src="/logo.png" alt="Fixofy" className="w-8 h-8 mr-3 object-contain" />
+                    <span className="text-lg font-light text-gray-200 tracking-wide">Fixofy</span>
                 </div>
-            </aside>
 
-            {/* Mobile Backdrop */}
-            {sidebarOpen && (
-                <div
-                    onClick={() => setSidebarOpen(false)}
-                    className="fixed inset-0 bg-black/50 z-30 md:hidden"
-                />
-            )}
-
-            {/* --- CONTENT WRAPPER --- */}
-            {/* No manual margins! Flexbox handles it. */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-
-                {/* Navbar */}
-                <nav className="bg-white h-[57px] shadow-sm border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-30 shrink-0">
-                    <div className="flex items-center">
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-gray-500 hover:text-gray-700">
-                            <Menu size={20} />
-                        </button>
-                        <div className="hidden sm:flex items-center text-sm text-gray-500 ml-4 gap-4">
-                            <span className="hover:text-blue-500 cursor-pointer text-gray-700 font-medium">Home</span>
-                            <span className="hover:text-blue-500 cursor-pointer">Contact</span>
+                {/* User Panel */}
+                <div className="p-4 border-b border-gray-800 flex items-center gap-3">
+                    <img src={user?.documents?.photo || `https://ui-avatars.com/api/?name=${user?.name}`} className="w-9 h-9 rounded-full border border-gray-600" alt="User" />
+                    <div className="overflow-hidden">
+                        <div className="text-gray-200 text-sm font-medium truncate w-32">{user?.name}</div>
+                        <div className="flex items-center gap-1 text-[10px] text-emerald-400 uppercase font-bold tracking-wider">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online
                         </div>
                     </div>
+                </div>
 
-                    <div className="flex items-center gap-2 sm:gap-6">
-                        {/* Realtime Status Toggle in Navbar */}
-                        <StatusToggle currentStatus={user?.status} onUpdate={handleStatusUpdate} loading={statusLoading} />
+                {/* Navigation */}
+                <nav className="flex-1 overflow-y-auto py-2 custom-scrollbar">
+                    <ul className="space-y-1 px-2">
+                        {[
+                            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                            { id: 'jobs', label: 'My Contracts', icon: Briefcase },
+                            { id: 'chat', label: 'Live Chat', icon: MessageSquare },
+                            { id: 'wallet', label: 'Finances', icon: Wallet },
+                            { id: 'history', label: 'History', icon: History },
+                            { id: 'feedback', label: 'Feedback', icon: Star },
+                        ].map(item => (
+                            <li key={item.id}>
+                                <button
+                                    onClick={() => { setActiveTab(item.id); if (window.innerWidth < 768) setSidebarOpen(false); }}
+                                    className={`w-full flex items-center px-3 py-2.5 rounded text-sm transition-colors ${activeTab === item.id ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                                >
+                                    <item.icon size={18} className="mr-3 opactiy-80" />
+                                    {item.label}
+                                </button>
+                            </li>
+                        ))}
 
-                        <div className="flex items-center gap-2 sm:gap-4 text-gray-400">
-                            {/* Force Search/Bell to fit better on mobile */}
-                            <div className="flex gap-2">
-                                <Search size={18} className="hover:text-blue-500 cursor-pointer" />
-                                <div className="relative">
-                                    <Bell size={18} className="hover:text-blue-500 cursor-pointer" />
-                                    {unreadNotifications > 0 && <span className="absolute -top-1.5 -right-1 bg-amber-500 text-white text-[9px] font-bold px-1 rounded-sm shadow-sm">{unreadNotifications}</span>}
-                                </div>
-                            </div>
-
-                            <div className="h-6 w-px bg-gray-200 mx-1 sm:mx-2"></div>
-
-                            {/* Time & Location: Removed 'hidden sm:block' to show on mobile, adjusted layout */}
-                            <div className="text-right flex flex-col items-end">
-                                <div className="text-[10px] sm:text-xs font-bold text-gray-700 flex items-center justify-end gap-1">
-                                    <Clock size={10} className="text-gray-400" />
-                                    <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                </div>
-                                <div className="text-[9px] sm:text-[10px] text-gray-500 flex items-center justify-end gap-1 max-w-[100px] truncate">
-                                    <MapPin size={10} /> {currentLocationName}
-                                </div>
-                                {/* Network Indicator in Navbar */}
-                                <div className="text-[9px] text-emerald-600 font-bold flex items-center justify-end gap-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Network
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        <li className="mt-8 px-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Settings</li>
+                        <li>
+                            <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center px-3 py-2.5 rounded text-sm transition-colors ${activeTab === 'settings' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+                                <User size={18} className="mr-3" /> Profile
+                            </button>
+                        </li>
+                        <li>
+                            <button onClick={handleLogout} className="w-full flex items-center px-3 py-2.5 rounded text-sm text-rose-400 hover:bg-rose-900/20 hover:text-rose-300 transition-colors mt-2">
+                                <LogOut size={18} className="mr-3" /> Sign Out
+                            </button>
+                        </li>
+                    </ul>
                 </nav>
-
-                {/* Main Content Scrollable Area */}
-                <main className="flex-1 bg-gray-100 overflow-y-auto pb-20">
-                    <ContentHeader
-                        title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                        breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                    />
-
-                    {/* Dynamic Content Switching */}
-                    {activeTab === 'dashboard' && renderDashboardContent()}
-                    {activeTab === 'chat' && renderChat()}
-                    {activeTab === 'settings' && renderSettings()}
-
-                    {['jobs', 'wallet', 'history', 'feedback'].includes(activeTab) && (
-                        <div className="px-10 py-8">
-                            {/* Placeholder for tabs handled within dashboard summary initially, extending them here now */}
-                            <Card
-                                title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                                headerColor="border-t-gray-400"
-                                tools={activeTab === 'jobs' && (
-                                    <select
-                                        value={jobFilter}
-                                        onChange={(e) => setJobFilter(e.target.value)}
-                                        className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none cursor-pointer"
-                                    >
-                                        <option value="all">Active (All)</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="accepted">Accepted</option>
-                                        <option value="in_progress">In Progress</option>
-                                    </select>
-                                )}
-                            >
-                                {activeTab === 'wallet' && (
-                                    <div className="text-center py-10">
-                                        <h3 className="text-2xl font-bold text-emerald-600 mb-2">₹{(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}</h3>
-                                        <p className="text-gray-500">Current Balance</p>
-                                        <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow">Withdraw Funds</button>
-                                    </div>
-                                )}
-                                {activeTab === 'jobs' && (
-                                    <div className="divide-y divide-gray-100">
-                                        {filteredJobs.length === 0 ? (
-                                            <div className="p-20 text-center text-gray-500">
-                                                <Briefcase size={64} className="mx-auto text-gray-200 mb-4" />
-                                                <h3 className="text-xl font-bold text-gray-400">No active contracts</h3>
-                                                <p className="text-gray-400 text-sm mt-1">You are not assigned to any jobs matching this filter.</p>
-                                            </div>
-                                        ) : (
-                                            filteredJobs.map(job => renderJobItem(job))
-                                        )}
-                                    </div>
-                                )}
-                                {['history', 'feedback'].includes(activeTab) && (
-                                    <div className="text-center py-20 bg-gray-50 rounded border border-dashed border-gray-200">
-                                        <Coffee size={48} className="mx-auto text-gray-300 mb-4" />
-                                        <h3 className="text-lg font-medium text-gray-600">Module Loaded</h3>
-                                        <p className="text-gray-400 text-sm">Detailed view for {activeTab} is ready for data population.</p>
-                                    </div>
-                                )}
-                            </Card>
-                        </div>
-                    )}
-                </main>
-
-                {/* Footer */}
-                <footer className="bg-white border-t border-gray-200 p-4 text-xs text-gray-500 flex justify-between items-center shrink-0">
-                    <div>
-                        <strong>Copyright &copy; 2024 <span className="text-blue-600">Fixofy.io</span>.</strong> All rights reserved.
-                    </div>
-                    <div className="hidden sm:block">
-                        <b>Version</b> 3.2.0-rc
-                    </div>
-                </footer>
-
             </div>
+        </aside>
+
+        {/* Mobile Backdrop */}
+        {sidebarOpen && (
+            <div
+                onClick={() => setSidebarOpen(false)}
+                className="fixed inset-0 bg-black/50 z-30 md:hidden"
+            />
+        )}
+
+        {/* --- CONTENT WRAPPER --- */}
+        {/* No manual margins! Flexbox handles it. */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+
+            {/* Navbar */}
+            <nav className="bg-white h-[57px] shadow-sm border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-30 shrink-0">
+                <div className="flex items-center">
+                    <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-gray-500 hover:text-gray-700">
+                        <Menu size={20} />
+                    </button>
+                    <div className="hidden sm:flex items-center text-sm text-gray-500 ml-4 gap-4">
+                        <span className="hover:text-blue-500 cursor-pointer text-gray-700 font-medium">Home</span>
+                        <span className="hover:text-blue-500 cursor-pointer">Contact</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 sm:gap-6">
+                    {/* Realtime Status Toggle in Navbar */}
+                    <StatusToggle currentStatus={user?.status} onUpdate={handleStatusUpdate} loading={statusLoading} />
+
+                    <div className="flex items-center gap-2 sm:gap-4 text-gray-400">
+                        {/* Force Search/Bell to fit better on mobile */}
+                        <div className="flex gap-2">
+                            <Search size={18} className="hover:text-blue-500 cursor-pointer" />
+                            <div className="relative">
+                                <Bell size={18} className="hover:text-blue-500 cursor-pointer" />
+                                {unreadNotifications > 0 && <span className="absolute -top-1.5 -right-1 bg-amber-500 text-white text-[9px] font-bold px-1 rounded-sm shadow-sm">{unreadNotifications}</span>}
+                            </div>
+                        </div>
+
+                        <div className="h-6 w-px bg-gray-200 mx-1 sm:mx-2"></div>
+
+                        {/* Time & Location: Removed 'hidden sm:block' to show on mobile, adjusted layout */}
+                        <div className="text-right flex flex-col items-end">
+                            <div className="text-[10px] sm:text-xs font-bold text-gray-700 flex items-center justify-end gap-1">
+                                <Clock size={10} className="text-gray-400" />
+                                <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <div className="text-[9px] sm:text-[10px] text-gray-500 flex items-center justify-end gap-1 max-w-[100px] truncate">
+                                <MapPin size={10} /> {currentLocationName}
+                            </div>
+                            {/* Network Indicator in Navbar */}
+                            <div className="text-[9px] text-emerald-600 font-bold flex items-center justify-end gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Network
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            {/* Main Content Scrollable Area */}
+            <main className="flex-1 bg-gray-100 overflow-y-auto pb-20">
+                <ContentHeader
+                    title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                    breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                />
+
+                {/* Dynamic Content Switching */}
+                {activeTab === 'dashboard' && renderDashboardContent()}
+                {activeTab === 'chat' && renderChat()}
+                {activeTab === 'settings' && renderSettings()}
+
+                {['jobs', 'wallet', 'history', 'feedback'].includes(activeTab) && (
+                    <div className="p-4 sm:p-6 lg:p-8">
+                        {/* Placeholder for tabs handled within dashboard summary initially, extending them here now */}
+                        <Card
+                            title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                            headerColor="border-t-gray-400"
+                            tools={activeTab === 'jobs' && (
+                                <select
+                                    value={jobFilter}
+                                    onChange={(e) => setJobFilter(e.target.value)}
+                                    className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none cursor-pointer"
+                                >
+                                    <option value="all">Active (All)</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="accepted">Accepted</option>
+                                    <option value="in_progress">In Progress</option>
+                                </select>
+                            )}
+                        >
+                            {activeTab === 'wallet' && (
+                                <div className="text-center py-10">
+                                    <h3 className="text-2xl font-bold text-emerald-600 mb-2">₹{(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}</h3>
+                                    <p className="text-gray-500">Current Balance</p>
+                                    <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow">Withdraw Funds</button>
+                                </div>
+                            )}
+                            {activeTab === 'jobs' && (
+                                <div className="divide-y divide-gray-100">
+                                    {filteredJobs.length === 0 ? (
+                                        <div className="p-20 text-center text-gray-500">
+                                            <Briefcase size={64} className="mx-auto text-gray-200 mb-4" />
+                                            <h3 className="text-xl font-bold text-gray-400">No active contracts</h3>
+                                            <p className="text-gray-400 text-sm mt-1">You are not assigned to any jobs matching this filter.</p>
+                                        </div>
+                                    ) : (
+                                        filteredJobs.map(job => renderJobItem(job))
+                                    )}
+                                </div>
+                            )}
+                            {['history', 'feedback'].includes(activeTab) && (
+                                <div className="text-center py-20 bg-gray-50 rounded border border-dashed border-gray-200">
+                                    <Coffee size={48} className="mx-auto text-gray-300 mb-4" />
+                                    <h3 className="text-lg font-medium text-gray-600">Module Loaded</h3>
+                                    <p className="text-gray-400 text-sm">Detailed view for {activeTab} is ready for data population.</p>
+                                </div>
+                            )}
+                        </Card>
+                    </div>
+                )}
+            </main>
+
+            {/* Footer */}
+            <footer className="bg-white border-t border-gray-200 p-4 text-xs text-gray-500 flex justify-between items-center shrink-0">
+                <div>
+                    <strong>Copyright &copy; 2024 <span className="text-blue-600">Fixofy.io</span>.</strong> All rights reserved.
+                </div>
+                <div className="hidden sm:block">
+                    <b>Version</b> 3.2.0-rc
+                </div>
+            </footer>
+
         </div>
-    );
+    </div>
+);
 };
 
 export default TechnicianDashboard;
