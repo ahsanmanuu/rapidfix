@@ -109,6 +109,9 @@ const AdminDashboard = () => {
     // Real-time Stats Hook (Replaces local useEffect)
     const { stats, loading, error, refetch } = useRealtimeStats();
 
+    // Fix: Initialize socket for local event listeners
+    const socket = useSocket();
+
     // Data for Tables (User & Job)
     const [users, setUsers] = useState([]);
     const [jobs, setJobs] = useState([]);
