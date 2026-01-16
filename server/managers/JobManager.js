@@ -460,6 +460,47 @@ class JobManager {
             return [];
         }
     }
+
+    // [NEW] Get jobs within specific radius
+    async getJobsByLocation(lat, lng, radiusKm = 30) {
+        try {
+            const allJobs = await this.getAllJobs();
+            if (!lat || !lng) return allJobs;
+
+            return allJobs.filter(j => {
+                let jLat = null;
+                let jLon = null;
+
+                // 1. Prioritize Job Location
+                if (j.location && (j.location.latitude || j.location.lat)) {
+                    jLat = j.location.latitude || j.location.lat;
+                    jLon = j.location.longitude || j.location.lng;
+                }
+                // 2. Fallback to Customer Location
+                else if (j.customer && j.customer.latitude) {
+                    jLat = j.customer.latitude;
+                    jLon = j.customer.longitude;
+                }
+
+                if (!jLat || !jLon) return false;
+
+                // Simple Distance Calc (Reuse generic if available, or duplicate simple one)
+                const R = 6371;
+                const dLat = (jLat - lat) * (Math.PI / 180);
+                const dLon = (jLon - lng) * (Math.PI / 180);
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(lat * (Math.PI / 180)) * Math.cos(jLat * (Math.PI / 180)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                const dist = R * c;
+
+                return dist <= radiusKm;
+            });
+        } catch (err) {
+            console.error("[JobManager] Error getting jobs by location:", err);
+            return [];
+        }
+    }
 }
 
 module.exports = JobManager;

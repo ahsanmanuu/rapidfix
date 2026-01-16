@@ -171,108 +171,136 @@ class UserManager {
         }
     }
 
-    async updateUser(id, data) {
+    // [NEW] Get users within specific radius
+    async getUsersByLocation(lat, lng, radiusKm = 30) {
         try {
-            // Handle Location Input in Update (copying logic from createUser)
-            if (data.location) {
-                if (typeof data.location === 'string') {
-                    // Geocode city/address
-                    const coords = await geocodeAddress(data.location);
-                    if (coords) {
-                        data.latitude = coords.lat;
-                        data.longitude = coords.lng;
-                        data.city = data.location;
-                        data.fixed_address = coords.displayName;
-                    }
-                } else if (typeof data.location === 'object') {
-                    data.latitude = data.location.latitude;
-                    data.longitude = data.location.longitude;
-                    data.city = data.location.city;
-                    data.fixed_address = data.location.fixedAddress || data.location.address;
-                }
-                // Cleanup custom field before mapping to DB
-                delete data.location;
-            }
+            const allUsers = await this.getAllUsers();
+            if (!lat || !lng) return allUsers;
 
-            const updates = {
-                ...this._mapToDb(data),
-                updated_at: new Date().toISOString()
-            };
-            // Prevent ID/Email tampering if not intended
-            delete updates.id;
-
-            const result = await this.db.update('id', id, updates);
-            const user = this._mapFromDb(result);
-
-            if (this.io) {
-                this.io.to(`user_${id}`).emit('profile_updated', user);
-                this.io.emit('admin_user_update', user);
-            }
-            return user;
+            return allUsers.filter(u => {
+                if (!u.latitude || !u.longitude) return false;
+                const dist = this._calculateDistance(lat, lng, u.latitude, u.longitude);
+                return dist <= radiusKm;
+            });
         } catch (err) {
-            console.error(`[UserManager] Error updating user ${id}:`, err);
-            return null;
+            console.error("[UserManager] Error getting users by location:", err);
+            return [];
         }
     }
+
+    _calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of the earth in km
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
+
+    async updateUser(id, data) {
+            try {
+                // Handle Location Input in Update (copying logic from createUser)
+                if (data.location) {
+                    if (typeof data.location === 'string') {
+                        // Geocode city/address
+                        const coords = await geocodeAddress(data.location);
+                        if (coords) {
+                            data.latitude = coords.lat;
+                            data.longitude = coords.lng;
+                            data.city = data.location;
+                            data.fixed_address = coords.displayName;
+                        }
+                    } else if (typeof data.location === 'object') {
+                        data.latitude = data.location.latitude;
+                        data.longitude = data.location.longitude;
+                        data.city = data.location.city;
+                        data.fixed_address = data.location.fixedAddress || data.location.address;
+                    }
+                    // Cleanup custom field before mapping to DB
+                    delete data.location;
+                }
+
+                const updates = {
+                    ...this._mapToDb(data),
+                    updated_at: new Date().toISOString()
+                };
+                // Prevent ID/Email tampering if not intended
+                delete updates.id;
+
+                const result = await this.db.update('id', id, updates);
+                const user = this._mapFromDb(result);
+
+                if (this.io) {
+                    this.io.to(`user_${id}`).emit('profile_updated', user);
+                    this.io.emit('admin_user_update', user);
+                }
+                return user;
+            } catch (err) {
+                console.error(`[UserManager] Error updating user ${id}:`, err);
+                return null;
+            }
+        }
 
     async setStatus(id, status) {
-        try {
-            const result = await this.db.update('id', id, {
-                status,
-                updated_at: new Date().toISOString()
-            });
-            const user = this._mapFromDb(result);
-            if (this.io) {
-                this.io.to(`user_${id}`).emit('profile_updated', user);
-                this.io.emit('admin_user_update', user);
+            try {
+                const result = await this.db.update('id', id, {
+                    status,
+                    updated_at: new Date().toISOString()
+                });
+                const user = this._mapFromDb(result);
+                if (this.io) {
+                    this.io.to(`user_${id}`).emit('profile_updated', user);
+                    this.io.emit('admin_user_update', user);
+                }
+                return user;
+            } catch (err) {
+                console.error(`[UserManager] Error setting status for user ${id}:`, err);
+                return null;
             }
-            return user;
-        } catch (err) {
-            console.error(`[UserManager] Error setting status for user ${id}:`, err);
-            return null;
         }
-    }
 
     async setMembership(id, tier, expiryDate = null) {
-        try {
-            const updates = {
-                membership: tier,
-                updated_at: new Date().toISOString()
-            };
-            if (expiryDate) updates.membership_expiry = expiryDate;
+            try {
+                const updates = {
+                    membership: tier,
+                    updated_at: new Date().toISOString()
+                };
+                if (expiryDate) updates.membership_expiry = expiryDate;
 
-            const result = await this.db.update('id', id, updates);
-            const user = this._mapFromDb(result);
-            if (this.io) {
-                this.io.to(`user_${id}`).emit('membership_updated', { membership: tier, expiry: expiryDate });
-                this.io.emit('admin_user_update', user);
+                const result = await this.db.update('id', id, updates);
+                const user = this._mapFromDb(result);
+                if (this.io) {
+                    this.io.to(`user_${id}`).emit('membership_updated', { membership: tier, expiry: expiryDate });
+                    this.io.emit('admin_user_update', user);
+                }
+                return user;
+            } catch (err) {
+                console.error(`[UserManager] Error setting membership for user ${id}:`, err);
+                return null;
             }
-            return user;
-        } catch (err) {
-            console.error(`[UserManager] Error setting membership for user ${id}:`, err);
-            return null;
         }
-    }
 
     async checkAndSyncMembership(userId) {
-        try {
-            const user = await this.getUser(userId);
-            if (!user) return null;
+            try {
+                const user = await this.getUser(userId);
+                if (!user) return null;
 
-            if (user.membership === 'Premium' && user.membershipExpiry) {
-                const expiry = new Date(user.membershipExpiry);
-                if (expiry < new Date()) {
-                    console.log(`[UserManager] Membership expired for ${userId}. Downgrading to Free.`);
-                    const updated = await this.setMembership(userId, 'Free', null);
-                    return { ...updated, statusChanged: true, newTier: 'Free' };
+                if (user.membership === 'Premium' && user.membershipExpiry) {
+                    const expiry = new Date(user.membershipExpiry);
+                    if (expiry < new Date()) {
+                        console.log(`[UserManager] Membership expired for ${userId}. Downgrading to Free.`);
+                        const updated = await this.setMembership(userId, 'Free', null);
+                        return { ...updated, statusChanged: true, newTier: 'Free' };
+                    }
                 }
+                return { ...user, statusChanged: false };
+            } catch (err) {
+                console.error(`[UserManager] Error syncing membership for ${userId}:`, err);
+                return null;
             }
-            return { ...user, statusChanged: false };
-        } catch (err) {
-            console.error(`[UserManager] Error syncing membership for ${userId}:`, err);
-            return null;
         }
     }
-}
 
 module.exports = UserManager;

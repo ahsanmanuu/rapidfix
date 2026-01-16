@@ -603,6 +603,27 @@ class TechnicianManager {
     }
 
     getOffers() { return []; }
+
+    // [NEW] Get technicians within specific radius
+    async getTechniciansByLocation(lat, lng, radiusKm = 30) {
+        try {
+            const allTechs = await this.getAllTechnicians();
+            if (!lat || !lng) return allTechs;
+
+            return allTechs.filter(t => {
+                // Use registered location (or dynamic if missing)
+                const tLat = t.registeredLatitude || t.latitude;
+                const tLon = t.registeredLongitude || t.longitude;
+
+                if (!tLat || !tLon) return false;
+                const dist = this.calculateDistance(lat, lng, tLat, tLon);
+                return dist <= radiusKm;
+            });
+        } catch (err) {
+            console.error("[TechnicianManager] Error getting techs by location:", err);
+            return [];
+        }
+    }
 }
 
 module.exports = TechnicianManager;
