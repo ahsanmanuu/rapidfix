@@ -189,6 +189,7 @@ class UserManager {
                 const dist = this._calculateDistance(searchLat, searchLng, uLat, uLon);
                 return dist <= radiusKm;
             });
+        } catch (err) {
             console.error("[UserManager] Error getting users by location:", err);
             return [];
         }
