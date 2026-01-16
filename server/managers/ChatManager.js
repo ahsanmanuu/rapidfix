@@ -10,6 +10,40 @@ class ChatManager {
         this.io = io;
     }
 
+    _mapFromDb(chat) {
+        if (!chat) return null;
+        try {
+            const { sender_id, receiver_id, sender_name, created_at, ...rest } = chat;
+            return {
+                ...rest,
+                senderId: sender_id,
+                receiverId: receiver_id,
+                senderName: sender_name,
+                createdAt: created_at || chat.createdAt
+            };
+        } catch (err) {
+            console.error("[ChatManager] Error mapping from DB:", err);
+            return chat;
+        }
+    }
+
+    _mapToDb(chat) {
+        if (!chat) return null;
+        try {
+            const { senderId, receiverId, senderName, createdAt, id, ...rest } = chat;
+            const mapped = { ...rest };
+            if (senderId !== undefined) mapped.sender_id = senderId;
+            if (receiverId !== undefined) mapped.receiver_id = receiverId;
+            if (senderName !== undefined) mapped.sender_name = senderName;
+            if (createdAt !== undefined) mapped.created_at = createdAt;
+            if (id !== undefined) mapped.id = id;
+            return mapped;
+        } catch (err) {
+            console.error("[ChatManager] Error mapping to DB:", err);
+            return chat;
+        }
+    }
+
     async sendMessage(senderId, receiverId, message, senderName) {
         try {
             const chat = {
@@ -20,7 +54,10 @@ class ChatManager {
                 read: false,
                 createdAt: new Date().toISOString()
             };
-            const result = await this.db.add(chat);
+            const dbChat = this._mapToDb(chat);
+            const saved = await this.db.add(dbChat);
+            const result = this._mapFromDb(saved);
+
             if (this.io) {
                 this.io.to(`user_${receiverId}`).emit('new_message', result);
                 this.io.to(`user_${senderId}`).emit('message_sent', result);
@@ -35,7 +72,7 @@ class ChatManager {
     async getHistory(userId1, userId2) {
         try {
             const allChats = await this.db.read();
-            return allChats.filter(c =>
+            return allChats.map(c => this._mapFromDb(c)).filter(c =>
                 (c.senderId === userId1 && c.receiverId === userId2) ||
                 (c.senderId === userId2 && c.receiverId === userId1)
             ).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -48,7 +85,7 @@ class ChatManager {
     async getConversations(userId) {
         try {
             const allChats = await this.db.read();
-            const relevantChats = allChats.filter(c => c.senderId === userId || c.receiverId === userId);
+            const relevantChats = allChats.map(c => this._mapFromDb(c)).filter(c => c.senderId === userId || c.receiverId === userId);
 
             const conversations = {};
             relevantChats.forEach(c => {
@@ -67,10 +104,12 @@ class ChatManager {
 
     async markAsRead(senderId, receiverId) {
         try {
-            const allChats = await this.db.read();
-            const targets = allChats.filter(c => c.senderId === senderId && c.receiverId === receiverId && !c.read);
+            // Note: Efficient update would be updateWhere but simple DB might not support it 
+            // Standard approach: Get all -> filter -> update loop
+            const history = await this.getHistory(senderId, receiverId);
+            const unread = history.filter(c => c.senderId === senderId && !c.read);
 
-            for (const msg of targets) {
+            for (const msg of unread) {
                 await this.db.update('id', msg.id, { read: true });
             }
             return true;

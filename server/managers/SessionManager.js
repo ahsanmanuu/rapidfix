@@ -56,30 +56,18 @@ class SessionManager {
                 expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
             };
 
-            // Workaround for Hybrid System:
-            // 1. If not using Supabase (Local JSON), always store role.
-            // 2. If using Supabase, 'sessions' table usually lacks 'role' column (causing error).
-            //    BUT, for Admin/Techs using LocalDB workaround, we WANT 'role'.
-
-            const useLocalDbForRole = process.env.USE_SUPABASE === 'true' && (role === 'admin' || role === 'technician');
-
-            if (process.env.USE_SUPABASE !== 'true' || useLocalDbForRole) {
-                session.role = role;
+            // [UPDATED] Use Main DB for all sessions (Schema update allows generic IDs)
+            if (role === 'admin' || role === 'technician') {
+                // Explicitly set role since it might not be auto-inferred by table column if strict (but we mapped it in _mapToDb)
+                // mapToDb doesn't have 'role' in the destructuring list in the original code, we should check that too.
+                // Actually _mapToDb lines 34-45 in SessionManager:
+                // "const { userId, deviceId, expiresAt, createdAt, id, ...rest } = sess;" -> rest contains role.
+                // "const mapped = { ...rest };" -> mapped contains role.
+                // So role IS passed to DB.
             }
 
             const dbSess = this._mapToDb(session);
-
-            let saved;
-            if (useLocalDbForRole) {
-                // Use local JSON Database for admin/tech sessions
-                console.log(`[SessionManager] Using LocalDB for ${role} session to bypass FK constraints`);
-                const LocalDatabase = require('./Database');
-                const localDb = new LocalDatabase('sessions');
-                saved = await localDb.add(dbSess);
-            } else {
-                // Using Main DB (Supabase for users) - dbSess will NOT have 'role' here due to logic above
-                saved = await this.db.add(dbSess);
-            }
+            const saved = await this.db.add(dbSess);
 
             const result = this._mapFromDb(saved);
 
@@ -100,15 +88,9 @@ class SessionManager {
 
     async validateSession(token) {
         try {
-            // 1. Try Main DB (Supabase/JSON)
-            let session = await this.db.find('token', token);
-
-            // 2. Fallback: If using Supabase, check Local JSON (for admins/techs)
-            if (!session && process.env.USE_SUPABASE === 'true') {
-                const LocalDatabase = require('./Database');
-                const localDb = new LocalDatabase('sessions');
-                session = await localDb.find('token', token);
-            }
+            // 1. Check Main DB
+            // (Schema fix: 'sessions' table now supports user_id as text, holding any UUID)
+            const session = await this.db.find('token', token);
 
             if (!session) return null;
             const mapped = this._mapFromDb(session);
@@ -127,17 +109,7 @@ class SessionManager {
 
     async deleteSession(token) {
         try {
-            // Try deleting from Main DB
             const mainResult = await this.db.delete('token', token);
-
-            // If using Supabase, also try deleting from Local JSON
-            if (process.env.USE_SUPABASE === 'true') {
-                const LocalDatabase = require('./Database');
-                const localDb = new LocalDatabase('sessions');
-                const localResult = await localDb.delete('token', token);
-                return mainResult || localResult;
-            }
-
             return mainResult;
         } catch (err) {
             console.error("[SessionManager] Error deleting session:", err);
