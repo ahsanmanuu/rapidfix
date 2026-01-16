@@ -207,7 +207,7 @@ class TechnicianManager extends BaseManager {
                 serviceType,
                 addressDetails: finalAddress,
                 experience, // Now calling code passes this
-                status: 'Available',
+                status: 'Available', // Explicitly set to Available so they show up in search immediately
                 rating: 0,
                 reviewCount: 0,
                 membership: 'Standard',
@@ -330,7 +330,7 @@ class TechnicianManager extends BaseManager {
         }
     }
 
-    async searchTechnicians(userLat, userLon, serviceType, radius = 2.0) {
+    async searchTechnicians(userLat, userLon, serviceType, radius = 50.0) {
         try {
             const lat = parseFloat(userLat);
             const lon = parseFloat(userLon);

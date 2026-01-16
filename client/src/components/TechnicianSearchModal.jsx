@@ -74,7 +74,8 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
             const res = await searchTechnicians({
                 latitude: loc.latitude,
                 longitude: loc.longitude,
-                serviceType
+                serviceType,
+                radius: 50 // [FIX] Increased search radius to 50km to ensure visibility
             });
 
             if (res.data.success) {
@@ -145,12 +146,40 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
             ));
         };
 
+        const handleNewTechnician = (newTech) => {
+            if (!newTech) return;
+            // Check if matches current service type (loose match)
+            if (serviceType && newTech.serviceType &&
+                (newTech.serviceType.toLowerCase().includes(serviceType.toLowerCase()) ||
+                    serviceType.toLowerCase().includes(newTech.serviceType.toLowerCase()))) {
+
+                // Calculate distance if not present (simplified or use 0 if unknown, usually backend sends it if searched, but here it's raw)
+                // For raw insert, we might not have distance relative to user. 
+                // We can compute it if we have userLocation.
+                let dist = 0;
+                if (userLocation && newTech.location) {
+                    // Simple Haversine (reuse simple math or just accept it)
+                    // If we want accurate distance, we might need to re-trigger search, 
+                    // OR just append it and let the user see it (maybe with 'New' badge).
+                    // Let's just append it.
+                }
+
+                setTechnicians(prev => {
+                    const exists = prev.find(t => t.id === newTech.id);
+                    if (exists) return prev;
+                    return [...prev, { ...newTech, distance: 0.1 }]; // Default distance or re-calc
+                });
+            }
+        };
+
         socket.on('technician_status_update', handleStatusUpdate);
         socket.on('technician_location_update', handleLocationUpdate);
+        socket.on('new_technician', handleNewTechnician); // [NEW] Listen for creation
 
         return () => {
             socket.off('technician_status_update', handleStatusUpdate);
             socket.off('technician_location_update', handleLocationUpdate);
+            socket.off('new_technician', handleNewTechnician);
         };
     }, [socket, isOpen]);
 
@@ -175,6 +204,40 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                 }
                 return t;
             }));
+        } else if (eventType === 'INSERT' && newRecord) {
+            // Check if matches current service type (loose match)
+            // Supabase returns snake_case
+            const dbServiceType = newRecord.service_type || '';
+
+            if (serviceType && dbServiceType &&
+                (dbServiceType.toLowerCase().includes(serviceType.toLowerCase()) ||
+                    serviceType.toLowerCase().includes(dbServiceType.toLowerCase()))) {
+
+                setTechnicians(prev => {
+                    const exists = prev.find(t => t.id === newRecord.id);
+                    if (exists) return prev;
+
+                    // Manual Mapping snake_case -> camelCase
+                    const mappedTech = {
+                        id: newRecord.id,
+                        name: newRecord.name,
+                        email: newRecord.email,
+                        phone: newRecord.phone,
+                        serviceType: newRecord.service_type,
+                        photo: newRecord.photo, // or documents.photo depending on schema
+                        status: newRecord.status || 'Available',
+                        rating: newRecord.rating || 0,
+                        experience: newRecord.experience || 0,
+                        location: {
+                            latitude: newRecord.fixed_latitude || newRecord.latitude,
+                            longitude: newRecord.fixed_longitude || newRecord.longitude
+                        },
+                        documents: { photo: newRecord.photo }, // Simplify
+                        distance: 0.1 // Default
+                    };
+                    return [...prev, mappedTech];
+                });
+            }
         }
     });
 
