@@ -19,6 +19,7 @@ import Footer from './components/Footer';
 import ThemeCustomization from './themes';
 import { SocketProvider } from './context/SocketContext';
 import { useAuth } from './context/AuthContext';
+import UnifiedDashboard from './components/UnifiedDashboard';
 
 function App() {
   const { user, setUser, logout } = useAuth();
@@ -48,10 +49,6 @@ function App() {
               <Route path="/admin/" element={<Navigate to="/admin/login" replace />} />
               <Route path="/admin/dashboard" element={<Navigate to="/admin-dashboard" replace />} />
 
-              import UnifiedDashboard from './components/UnifiedDashboard';
-
-              // ... other imports ...
-
               <Route
                 path="/dashboard"
                 element={user ? <UnifiedDashboard /> : <Navigate to="/login" />}
@@ -66,11 +63,7 @@ function App() {
               />
               <Route
                 path="/super-admin-dashboard"
-                element={user && user.role === 'superadmin' ? <SuperAdminDashboard /> : <Navigate to="/superadmin/login" />}
-              />
-              <Route
-                path="/admin-dashboard"
-                element={user && (user.role === 'admin' || user.role === 'superadmin') ? <AdminDashboard /> : <Navigate to="/admin/login" />}
+                element={user ? <UnifiedDashboard /> : <Navigate to="/superadmin/login" />}
               />
               <Route
                 path="/wallet"
