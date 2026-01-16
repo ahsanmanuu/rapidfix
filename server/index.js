@@ -1521,7 +1521,7 @@ app.post('/api/admin/login', async (req, res) => {
     }
   } catch (err) {
     console.error("[Server] Admin Login Error:", err);
-    res.status(500).json({ success: false, error: 'Internal server error during admin login' });
+    res.status(500).json({ success: false, error: `Internal server error: ${err.message}` });
   }
 });
 
