@@ -51,6 +51,7 @@ class SessionManager {
             const session = {
                 token,
                 userId,
+                role, // [FIX] Ensure role is included so it gets saved to DB
                 deviceId,
                 createdAt: new Date().toISOString(),
                 expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
