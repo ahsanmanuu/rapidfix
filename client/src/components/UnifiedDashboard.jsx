@@ -87,7 +87,7 @@ const UnifiedDashboard = () => {
                 return <DashboardFinance user={user} />;
             case 'technicians':
                 // Special admin route
-                return <NearbyMap />;
+                return <NearbyMap user={user} />;
             default:
                 return <DashboardHome user={user} />;
         }
