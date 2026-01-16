@@ -613,20 +613,25 @@ app.delete('/api/offers/:id', async (req, res) => {
 });
 
 // --- Finance Routes ---
-app.get('/api/admin/finance', async (req, res) => {
+// --- Finance Routes ---
+app.get('/api/admin/finance', verifyAdmin, async (req, res) => {
   try {
-    const transactions = await financeManager.getAllTransactions();
+    let transactions = [];
+    if (req.admin.role === 'admin' && req.admin.fixed_latitude && req.admin.fixed_longitude) {
+      transactions = await financeManager.getTransactionsByLocation(req.admin.fixed_latitude, req.admin.fixed_longitude, 30, userManager);
+    } else {
+      transactions = await financeManager.getAllTransactions();
+    }
+
     const balance = await financeManager.getSystemWalletBalance();
 
     // Calculate simple stats
     const revenue = transactions
-      .filter(t => t.type === 'debit') // Money IN to platform (from user view point, debit meant payment TO platform, typically) 
-      // WAIT: FinanceManager 'credit' usually means User GAINS money. 'debit' means User PAYS (e.g. membership).
-      // So Revenue = 'debit' transactions sum.
+      .filter(t => t.type === 'debit')
       .reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
 
     const payouts = transactions
-      .filter(t => t.type === 'credit' && t.description?.includes('Payout')) // Assuming Payouts are credits
+      .filter(t => t.type === 'credit' && t.description?.includes('Payout'))
       .reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
 
     res.json({
@@ -1677,37 +1682,84 @@ app.get('/api/admin/jobs', verifyAdmin, async (req, res) => {
 });
 
 app.get('/api/admin/feedbacks', verifyAdmin, async (req, res) => {
-  // Collect all feedbacks from all technicians
-  const allFeedback = await feedbackManager.getAllFeedback();
-
-  // Optional: Filter feedbacks by technicians who are within range?
-  // Current requirement doesn't explicitly state feedbacks must be filtered, but implied.
-  // For now, let's keep it global or apply filter if needed. 
-  // Given feedbacks are tied to jobs/techs, and we filter jobs/techs, we should probably filter these too.
-  // Implementation: Get visible Tech IDs, filter feedbacks by technicianId.
-  if (req.admin.role === 'admin' && req.admin.fixed_latitude) {
-    const visibleTechs = await technicianManager.getTechniciansByLocation(req.admin.fixed_latitude, req.admin.fixed_longitude, 30);
-    const visibleIds = new Set(visibleTechs.map(t => t.id));
-    const filtered = allFeedback.filter(f => visibleIds.has(f.technicianId));
-    return res.json({ success: true, feedbacks: filtered });
+  try {
+    let feedbacks = [];
+    if (req.admin.role === 'admin' && req.admin.fixed_latitude && req.admin.fixed_longitude) {
+      feedbacks = await feedbackManager.getFeedbacksByLocation(req.admin.fixed_latitude, req.admin.fixed_longitude, 30, technicianManager);
+    } else {
+      feedbacks = await feedbackManager.getAllFeedback();
+    }
+    res.json({ success: true, feedbacks });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
-
-  res.json({ success: true, feedbacks: allFeedback });
 });
 
 app.get('/api/admin/transactions', verifyAdmin, async (req, res) => {
-  const transactions = await financeManager.getAllTransactions();
-  // Filter Finance?
-  // Finance is usually global, but if each admin manages a zone, they might only see transactions for their zone's techs.
-  // Let's filter by visible technicians.
-  if (req.admin.role === 'admin' && req.admin.fixed_latitude) {
-    const visibleTechs = await technicianManager.getTechniciansByLocation(req.admin.fixed_latitude, req.admin.fixed_longitude, 30);
-    const visibleIds = new Set(visibleTechs.map(t => t.id));
-    const filtered = transactions.filter(t => visibleIds.has(t.userId) || visibleIds.has(t.technicianId)); // FinanceManager logs userId usually
-    return res.json({ success: true, transactions: filtered });
+  try {
+    let transactions = [];
+    if (req.admin.role === 'admin' && req.admin.fixed_latitude && req.admin.fixed_longitude) {
+      transactions = await financeManager.getTransactionsByLocation(req.admin.fixed_latitude, req.admin.fixed_longitude, 30, userManager);
+    } else {
+      transactions = await financeManager.getAllTransactions();
+    }
+    res.json({ success: true, transactions });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
+});
 
-  res.json({ success: true, transactions });
+// [NEW] Admin Specific Offers
+app.get('/api/admin/offers', verifyAdmin, async (req, res) => {
+  try {
+    let offers = [];
+    if (req.admin.role === 'admin' && req.admin.fixed_latitude && req.admin.fixed_longitude) {
+      offers = await offerManager.getOffersByLocation(req.admin.fixed_latitude, req.admin.fixed_longitude, 30, technicianManager);
+    } else {
+      offers = await offerManager.getAllOffers();
+    }
+    res.json({ success: true, offers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// [NEW] Admin Specific Testimonials (Global for now, but ready for filter)
+app.get('/api/admin/testimonials', verifyAdmin, async (req, res) => {
+  try {
+    // Testimonials currently don't link to UserID in schema easily, so keeping global or filtering if schema updated.
+    // Assuming global for now as per previous analysis, but creating endpoint for consistency.
+    const testimonials = await testimonialManager.getTestimonials();
+    res.json({ success: true, testimonials });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// [NEW] Admin Support/Complaints
+app.get('/api/admin/complaints', verifyAdmin, async (req, res) => {
+  try {
+    let complaints = [];
+    if (req.admin.role === 'admin' && req.admin.fixed_latitude && req.admin.fixed_longitude) {
+      complaints = await complaintManager.getComplaintsByLocation(req.admin.fixed_latitude, req.admin.fixed_longitude, 30, userManager);
+    } else {
+      complaints = await complaintManager.getAllComplaints();
+    }
+    res.json({ success: true, complaints });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+// Finance is usually global, but if each admin manages a zone, they might only see transactions for their zone's techs.
+// Let's filter by visible technicians.
+if (req.admin.role === 'admin' && req.admin.fixed_latitude) {
+  const visibleTechs = await technicianManager.getTechniciansByLocation(req.admin.fixed_latitude, req.admin.fixed_longitude, 30);
+  const visibleIds = new Set(visibleTechs.map(t => t.id));
+  const filtered = transactions.filter(t => visibleIds.has(t.userId) || visibleIds.has(t.technicianId)); // FinanceManager logs userId usually
+  return res.json({ success: true, transactions: filtered });
+}
+
+res.json({ success: true, transactions });
 });
 
 
