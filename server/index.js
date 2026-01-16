@@ -26,12 +26,15 @@ const NotificationManager = require('./managers/NotificationManager');
 const BroadcastManager = require('./managers/BroadcastManager');
 const TestimonialManager = require('./managers/TestimonialManager');
 const PerformerManager = require('./managers/PerformerManager');
+const InvoiceManager = require('./managers/InvoiceManager');
+const InvoiceSettingsManager = require('./managers/InvoiceSettingsManager');
+const Database = require('./managers/Database'); // Explicitly needed for settings
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '10mb' })); // Increased limit for logo uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, '../client/dist')));
 
@@ -52,7 +55,6 @@ const adminManager = new AdminManager();
 const feedbackManager = new FeedbackManager();
 const locationManager = new LocationManager();
 const complaintManager = new ComplaintManager();
-const jobManager = new JobManager();
 const financeManager = new FinanceManager();
 const rideManager = new RideManager();
 const sessionManager = new SessionManager();
@@ -65,13 +67,20 @@ const broadcastManager = new BroadcastManager();
 const testimonialManager = new TestimonialManager();
 const performerManager = new PerformerManager();
 
+// Invoice System
+const invoiceSettingsDb = new Database('invoice_settings.json');
+const invoiceSettingsManager = new InvoiceSettingsManager(invoiceSettingsDb);
+const invoiceManager = new InvoiceManager(invoiceSettingsManager, adminManager);
+
+const jobManager = new JobManager(); // Will link invoiceManager below
+
 // Link Managers to Socket.io for automatic broadcasts
 const allManagers = [
   userManager, technicianManager, adminManager, feedbackManager,
   locationManager, complaintManager, jobManager, financeManager,
   rideManager, sessionManager, superAdminManager, chatManager,
   offerManager, notificationManager, storageManager, broadcastManager,
-  testimonialManager, performerManager
+  testimonialManager, performerManager, invoiceManager, invoiceSettingsManager
 ];
 
 allManagers.forEach(m => {
@@ -86,8 +95,10 @@ allManagers.forEach(m => {
 feedbackManager.setTechnicianManager(technicianManager);
 
 // Connect JobManager to TechnicianManager and FinanceManager
+// Connect JobManager to TechnicianManager and FinanceManager
 jobManager.setTechnicianManager(technicianManager);
 jobManager.setFinanceManager(financeManager);
+jobManager.setInvoiceManager(invoiceManager);
 
 
 
@@ -1379,6 +1390,36 @@ app.post('/api/invoices/:jobId/share', async (req, res) => {
   } catch (err) {
     console.error("Invoice Share Error:", err);
     res.status(500).json({ success: false, error: 'Failed to share invoice' });
+  }
+});
+
+// --- Invoice Settings Routes [NEW] ---
+app.get('/api/invoice-settings', async (req, res) => {
+  const settings = await invoiceSettingsManager.getSettings();
+  res.json({ success: true, settings });
+});
+
+app.post('/api/invoice-settings', upload.single('logo'), async (req, res) => {
+  try {
+    const updates = req.body;
+
+    // Handle logo upload
+    if (req.file) {
+      // Logic to save file appropriately
+      // Ideally use storageManager, but for invoice basic implementation we can return a path
+      // For now, let's copy to server/logo.png or keep using storage manager url
+
+      // OPTION A: Use StorageManager (Best Practice for this codebase)
+      const customName = `invoice-logo-${Date.now()}${path.extname(req.file.originalname)}`;
+      const logoUrl = await storageManager.upload(req.file, 'misc', customName);
+      updates.logoUrl = logoUrl;
+    }
+
+    const settings = await invoiceSettingsManager.updateSettings(updates);
+    res.json({ success: true, settings });
+  } catch (err) {
+    console.error('Invoice Settings Update Error:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

@@ -9,7 +9,8 @@ const navItems = [
     { id: 'offers', icon: 'local_offer', label: 'Offers' },
     { id: 'testimonials', icon: 'reviews', label: 'Testimonials' },
     { id: 'feedback', icon: 'star', label: 'Feedback' },
-    { id: 'billing', icon: 'payments', label: 'Billing' },
+    { id: 'billing', icon: 'payments', label: 'Finance' },
+    { id: 'invoice_settings', icon: 'receipt_long', label: 'Invoice Config' },
     { id: 'support', icon: 'support_agent', label: 'Support' },
     { id: 'settings', icon: 'settings', label: 'Settings' }
 ];

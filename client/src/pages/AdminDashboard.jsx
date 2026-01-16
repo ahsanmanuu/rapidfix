@@ -33,6 +33,7 @@ import TestimonialManager from '../components/admin/testimonials/TestimonialMana
 import FinanceView from '../components/admin/finance/FinanceView';
 import SupportView from '../components/admin/support/SupportView';
 import FeedbackView from '../components/admin/feedback/FeedbackView';
+import InvoiceSettings from '../components/admin/finance/InvoiceSettings';
 
 // Mock Data & Constants
 const ACTIVITY_LOG = [
@@ -653,6 +654,14 @@ const AdminDashboard = () => {
                     ) : activeTab === 'feedback' ? (
                         <div className="h-full overflow-y-auto">
                             <FeedbackView />
+                        </div>
+                    ) : activeTab === 'feedback' ? (
+                        <div className="h-full overflow-y-auto">
+                            <FeedbackView />
+                        </div>
+                    ) : activeTab === 'invoice_settings' ? (
+                        <div className="h-full overflow-y-auto">
+                            <InvoiceSettings />
                         </div>
                     ) : (
                         <div className="h-full">

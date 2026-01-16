@@ -15,7 +15,8 @@ class JobManager {
         this.notificationManager = new NotificationManager();
         this.financeManager = new FinanceManager();
         this.complaintManager = new ComplaintManager();
-        this.invoiceManager = new InvoiceManager(); // [NEW]
+        this.complaintManager = new ComplaintManager();
+        this.invoiceManager = null; // Injected via setInvoiceManager
         this.io = null; // Will be set via server/index.js
     }
 
@@ -29,6 +30,11 @@ class JobManager {
 
     setFinanceManager(financeManager) {
         this.financeManager = financeManager;
+    }
+
+    setInvoiceManager(invoiceManager) {
+        this.invoiceManager = invoiceManager;
+        console.log('[JobManager] InvoiceManager injected successfully');
     }
 
     // Helper to map DB snake_case to App camelCase
@@ -354,13 +360,20 @@ class JobManager {
                         }
 
                         // [NEW] Generate and Send Invoice (Async)
-                        try {
-                            console.log(`[JobManager] Generating invoice for Job ${id}...`);
-                            const pdfBuffer = await this.invoiceManager.generateInvoice(enriched);
-                            await this.invoiceManager.sendInvoiceEmail(enriched, pdfBuffer);
-                            console.log(`[JobManager] Invoice generated and sent for Job ${id}`);
-                        } catch (invErr) {
-                            console.error(`[JobManager] Invoice generation failed for Job ${id}:`, invErr);
+                        if (this.invoiceManager) {
+                            // Don't await in critical path to keep response fast, but handle errors
+                            (async () => {
+                                try {
+                                    console.log(`[JobManager] Generating invoice for Job ${id}...`);
+                                    const pdfBuffer = await this.invoiceManager.generateInvoice(enriched);
+                                    const result = await this.invoiceManager.sendInvoiceEmail(enriched, pdfBuffer);
+                                    console.log(`[JobManager] Invoice processing for Job ${id}:`, result);
+                                } catch (invErr) {
+                                    console.error(`[JobManager] Invoice generation failed for Job ${id}:`, invErr);
+                                }
+                            })();
+                        } else {
+                            console.error('[JobManager] InvoiceManager not injected! Cannot send invoice.');
                         }
                     } else if (status === 'rejected') {
                         console.log(`[JobManager] Job ${id} rejected, updating tech ${enriched.technicianId} stats and setting status to available`);
@@ -397,6 +410,13 @@ class JobManager {
     }
 
     async updateJob(id, data) {
+        // [CRITICAL FIX] Delegate to updateStatus if status is changing.
+        // This ensures side effects (Invoice, Tech Status, Payment) trigger even if Admin updates job.
+        if (data.status) {
+            console.log(`[JobManager] updateJob detected status change to '${data.status}'. Delegating to updateStatus to ensure automation.`);
+            return this.updateStatus(id, data.status, data);
+        }
+
         try {
             const updates = {
                 ...this._mapToDb(data),
