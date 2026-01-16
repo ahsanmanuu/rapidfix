@@ -1406,6 +1406,33 @@ app.put('/api/technicians/:id/profile', async (req, res) => {
   }
 });
 
+// --- Finance/Billing Routes ---
+app.get('/api/finance/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    // Fetch completed jobs for the user to show as bills
+    const jobs = await jobManager.db.all(
+      `SELECT * FROM jobs WHERE customer_id = ? AND (status = 'completed' OR status = 'work_done') ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    const bills = jobs.map(job => ({
+      id: job.id,
+      createdAt: job.created_at,
+      completedAt: job.completed_at,
+      description: job.description || 'Service Charge',
+      serviceType: job.service_type,
+      amount: parseFloat(job.offer_price || job.visiting_charges || 0),
+      status: job.status
+    }));
+
+    res.json({ success: true, bills });
+  } catch (err) {
+    console.error("Fetch User Bills Error:", err);
+    res.status(500).json({ success: false, error: 'Failed to fetch billing history' });
+  }
+});
+
 // [NEW] Basic Stats Endpoint for Technician Dashboard
 app.get('/api/technicians/:id/stats', async (req, res) => {
   try {
