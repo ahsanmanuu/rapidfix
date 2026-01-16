@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, CreditCard, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import api from '../../../services/api';
+import { useSocket } from '../../../context/SocketContext';
 
 const FinanceView = () => {
     const [transactions, setTransactions] = useState([]);
@@ -23,9 +24,18 @@ const FinanceView = () => {
         }
     };
 
+    const socket = useSocket();
+
     useEffect(() => {
         fetchFinance();
-    }, []);
+
+        if (socket) {
+            socket.on('admin_finance_update', fetchFinance);
+            return () => {
+                socket.off('admin_finance_update', fetchFinance);
+            };
+        }
+    }, [socket]);
 
     return (
         <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8">
