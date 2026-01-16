@@ -59,6 +59,18 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'admins' AND column_name = 'latitude') THEN 
         ALTER TABLE public.admins ADD COLUMN latitude float; 
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'admins' AND column_name = 'name') THEN 
+        ALTER TABLE public.admins ADD COLUMN name text; 
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'admins' AND column_name = 'role') THEN 
+        ALTER TABLE public.admins ADD COLUMN role text default 'admin'; 
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'admins' AND column_name = 'office_address') THEN 
+        ALTER TABLE public.admins ADD COLUMN office_address text; 
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'admins' AND column_name = 'is_active') THEN 
+        ALTER TABLE public.admins ADD COLUMN is_active boolean default true; 
+    END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'admins' AND column_name = 'longitude') THEN 
         ALTER TABLE public.admins ADD COLUMN longitude float; 
     END IF;
