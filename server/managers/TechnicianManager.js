@@ -607,18 +607,26 @@ class TechnicianManager {
     // [NEW] Get technicians within specific radius
     async getTechniciansByLocation(lat, lng, radiusKm = 30) {
         try {
+            console.log(`[TechnicianManager] Filtering techs near ${lat}, ${lng} (Radius: ${radiusKm}km)`);
             const allTechs = await this.getAllTechnicians();
             if (!lat || !lng) return allTechs;
 
-            return allTechs.filter(t => {
+            const filtered = allTechs.filter(t => {
                 // Use registered location (or dynamic if missing)
-                const tLat = t.registeredLatitude || t.latitude;
-                const tLon = t.registeredLongitude || t.longitude;
+                const tLat = parseFloat(t.registeredLatitude || t.latitude);
+                const tLon = parseFloat(t.registeredLongitude || t.longitude);
+                const searchLat = parseFloat(lat);
+                const searchLng = parseFloat(lng);
 
-                if (!tLat || !tLon) return false;
-                const dist = this.calculateDistance(lat, lng, tLat, tLon);
+                if (isNaN(tLat) || isNaN(tLon)) return false;
+
+                const dist = this.calculateDistance(searchLat, searchLng, tLat, tLon);
+                // console.log(` - Tech ${t.name} (${t.id}): ${dist.toFixed(2)}km`);
                 return dist <= radiusKm;
             });
+
+            console.log(`[TechnicianManager] Found ${filtered.length} techs within range out of ${allTechs.length}`);
+            return filtered;
         } catch (err) {
             console.error("[TechnicianManager] Error getting techs by location:", err);
             return [];
