@@ -381,18 +381,28 @@ const AdminDashboard = () => {
     // Initial Data Fetch
     useEffect(() => {
         const fetchDashboardData = async () => {
+            // Fetch Users
             try {
-                const [usersRes, techsRes, jobsRes] = await Promise.all([
-                    api.get('/admin/users'),
-                    api.get('/admin/technicians'),
-                    api.get('/admin/jobs')
-                ]);
-                setUsers(usersRes.data.users || []);
-                setTechnicians(techsRes.data.technicians || []);
-                setJobs(jobsRes.data.jobs || []);
+                const res = await api.get('/admin/users');
+                setUsers(res.data.users || []);
             } catch (error) {
-                console.error("Dashboard data fetch error", error);
-                // [REMOVED] Mock data fallback. Show error state or empty.
+                console.error("Failed to fetch users", error);
+            }
+
+            // Fetch Technicians
+            try {
+                const res = await api.get('/admin/technicians');
+                setTechnicians(res.data.technicians || []);
+            } catch (error) {
+                console.error("Failed to fetch technicians", error);
+            }
+
+            // Fetch Jobs
+            try {
+                const res = await api.get('/admin/jobs');
+                setJobs(res.data.jobs || []);
+            } catch (error) {
+                console.error("Failed to fetch jobs", error);
             }
         };
         fetchDashboardData();
