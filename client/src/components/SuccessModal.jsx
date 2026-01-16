@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle } from 'lucide-react';
 
 const SuccessModal = ({ isOpen, onComplete }) => {
@@ -11,65 +12,56 @@ const SuccessModal = ({ isOpen, onComplete }) => {
         }
     }, [isOpen, onComplete]);
 
-    if (!isOpen) return null;
-
     return (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 10000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(255,255,255,0.9)',
-            backdropFilter: 'blur(10px)'
-        }}>
-            <div style={{
-                textAlign: 'center',
-                animation: 'scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-            }}>
-                <div style={{
-                    width: '100px',
-                    height: '100px',
-                    borderRadius: '50%',
-                    backgroundColor: '#4CAF50',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 20px',
-                    boxShadow: '0 10px 30px rgba(76, 175, 80, 0.4)'
-                }}>
-                    <CheckCircle size={50} color="#fff" strokeWidth={3} />
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md"
+                    />
+
+                    {/* Content */}
+                    <motion.div
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
+                        transition={{ type: "spring", damping: 15 }}
+                        className="relative z-10 text-center"
+                    >
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                            className="w-24 h-24 rounded-full bg-emerald-500 mx-auto flex items-center justify-center shadow-2xl shadow-emerald-500/40 mb-6"
+                        >
+                            <CheckCircle size={50} className="text-white" strokeWidth={3} />
+                        </motion.div>
+
+                        <motion.h2
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-3xl md:text-4xl font-black text-slate-800 dark:text-white mb-4 tracking-tight"
+                        >
+                            Welcome Aboard!
+                        </motion.h2>
+
+                        <motion.p
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className="text-lg text-slate-500 dark:text-slate-400 font-medium"
+                        >
+                            Registration Successful.<br />Redirecting to Dashboard...
+                        </motion.p>
+                    </motion.div>
                 </div>
-                <h2 style={{
-                    fontSize: '32px',
-                    fontWeight: '800',
-                    color: '#333',
-                    marginBottom: '10px',
-                    fontFamily: "'Montserrat', sans-serif"
-                }}>
-                    Welcome Aboard!
-                </h2>
-                <p style={{
-                    fontSize: '18px',
-                    color: '#666',
-                    fontFamily: "'Montserrat', sans-serif"
-                }}>
-                    Registration Successful. Redirecting to Dashboard...
-                </p>
-            </div>
-            <style>
-                {`
-                    @keyframes scaleUp {
-                        from { transform: scale(0.5); opacity: 0; }
-                        to { transform: scale(1); opacity: 1; }
-                    }
-                `}
-            </style>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };
 
