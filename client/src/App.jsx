@@ -61,6 +61,10 @@ function App() {
                 element={user && user.role === 'superadmin' ? <SuperAdminDashboard /> : <Navigate to="/superadmin/login" />}
               />
               <Route
+                path="/admin-dashboard"
+                element={user && (user.role === 'admin' || user.role === 'superadmin') ? <AdminDashboard /> : <Navigate to="/admin/login" />}
+              />
+              <Route
                 path="/wallet"
                 element={user ? <Wallet /> : <Navigate to="/login" />}
               />
