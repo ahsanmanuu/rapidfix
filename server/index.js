@@ -131,6 +131,15 @@ const verifyAdmin = async (req, res, next) => {
     }
 
     const session = await sessionManager.validateSession(token);
+
+    // Fallback: If session has no role (DB column missing), check AdminManager
+    if (session && !session.role) {
+      const admin = await adminManager.db.find('id', session.userId);
+      if (admin) {
+        session.role = admin.role || 'admin'; // Infer role
+      }
+    }
+
     if (!session || (session.role !== 'admin' && session.role !== 'superadmin')) {
       return res.status(403).json({ error: 'Unauthorized: Invalid admin session' });
     }
@@ -139,6 +148,7 @@ const verifyAdmin = async (req, res, next) => {
 
     // If Admin, load full details to get Location
     if (session.role === 'admin') {
+      // We might have already fetched it above, but fine to fetch again or optimize
       const adminDetails = await adminManager.db.find('id', session.userId);
       if (adminDetails) {
         req.admin = { ...req.admin, ...adminManager._mapFromDb(adminDetails) };

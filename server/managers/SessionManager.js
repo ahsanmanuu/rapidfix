@@ -68,7 +68,19 @@ class SessionManager {
             }
 
             const dbSess = this._mapToDb(session);
-            const saved = await this.db.add(dbSess);
+            let saved;
+            try {
+                saved = await this.db.add(dbSess);
+            } catch (dbErr) {
+                // Self-Healing: If 'role' column is missing, retry without it
+                if (dbErr.message && (dbErr.message.includes('role') || dbErr.message.includes('column'))) {
+                    console.warn("[SessionManager] 'role' column missing in DB. Retrying without role.");
+                    const { role, ...fallbackSess } = dbSess;
+                    saved = await this.db.add(fallbackSess);
+                } else {
+                    throw dbErr;
+                }
+            }
 
             const result = this._mapFromDb(saved);
 
