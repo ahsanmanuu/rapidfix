@@ -2,11 +2,25 @@ const Database = require('./DatabaseLoader');
 // Syntax fix verified
 
 const { geocodeAddress } = require('../utils/geocoder');
+const crypto = require('crypto');
 
 class TechnicianManager {
     constructor() {
         this.db = new Database('technicians');
         this.io = null;
+    }
+
+    // Helper: Convert any string to a deterministic UUID
+    _toUuid(input) {
+        if (!input) return null;
+        // If already a valid UUID, return it
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(input)) return input;
+
+        // Otherwise, hash it to create a UUID-like string
+        const hash = crypto.createHash('md5').update(String(input)).digest('hex');
+        // Format: 8-4-4-4-12
+        return `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(12, 16)}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
     }
 
     setSocketIO(io) {
