@@ -1647,6 +1647,37 @@ app.get('/api/admin/technicians', verifyAdmin, async (req, res) => {
   res.json({ success: true, technicians });
 });
 
+// [NEW] Create Technician (Admin Bound)
+app.post('/api/admin/technicians', verifyAdmin, async (req, res) => {
+  try {
+    const { name, email, phone, serviceType, location, password, experience, addressDetails } = req.body;
+
+    // Binding Context
+    const createdBy = req.admin.id; // UUID of Admin
+    const fixedLocation = (req.admin.fixed_latitude && req.admin.fixed_longitude)
+      ? { latitude: req.admin.fixed_latitude, longitude: req.admin.fixed_longitude }
+      : null;
+
+    const tech = await technicianManager.createTechnician(
+      name,
+      email,
+      phone,
+      serviceType,
+      location, // locationInput
+      password,
+      experience,
+      addressDetails,
+      createdBy,
+      fixedLocation
+    );
+
+    res.json({ success: true, technician: tech });
+  } catch (err) {
+    console.error("Create Technician Error:", err);
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/admin/technicians/:id/verify', verifyAdmin, async (req, res) => {
   const { status } = req.body; // 'approved', 'rejected', 'pending'
   const tech = await technicianManager.updateStatus(req.params.id, status);

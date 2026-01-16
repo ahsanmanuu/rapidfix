@@ -138,7 +138,7 @@ class TechnicianManager {
         }
     }
 
-    async createTechnician(name, email, phone, serviceType, locationInput, password, experience, addressDetails) {
+    async createTechnician(name, email, phone, serviceType, locationInput, password, experience, addressDetails, createdBy = null, fixedLocation = null) {
         try {
             if (!name || !email || !password) {
                 throw new Error("Missing required fields: name, email, or password");

@@ -25,7 +25,7 @@ const TechnicianCreationModal = ({ isOpen, onClose, onCreated }) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await api.post('/superadmin/create-technician', {
+            const res = await api.post('/admin/technicians', {
                 ...formData,
                 addressDetails: formData.location // Mapping for simplicity
             });
