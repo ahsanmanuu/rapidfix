@@ -183,496 +183,498 @@ class TechnicianManager {
                 }
             }
 
-            lat = fixedLocation.latitude;
-            lng = fixedLocation.longitude;
-            // Don't set baseAddress if it wasn't provided, or maybe set to "Admin Territory"
-        }
+            // Fallback to Fixed Location (Admin's Location) if provided and no specific location entered
+            if ((!lat || !lng) && fixedLocation) {
+                lat = fixedLocation.latitude;
+                lng = fixedLocation.longitude;
+                // Don't set baseAddress if it wasn't provided, or maybe set to "Admin Territory"
+            }
 
             const newTechnician = {
-            id: crypto.randomUUID(), // [FIX] Use authentic UUID instead of timestamp
-            name,
-            email,
-            phone,
-            password, // Stored as plain text per previous code pattern (should be hashed in production!)
-            experience,
-            rating: 0,
-            status: 'available',
-            service_type: serviceType,
-            address_details: addressDetails,
-            documents: {},
-            joined_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+                id: crypto.randomUUID(), // [FIX] Use authentic UUID instead of timestamp
+                name,
+                email,
+                phone,
+                password, // Stored as plain text per previous code pattern (should be hashed in production!)
+                experience,
+                rating: 0,
+                status: 'available',
+                service_type: serviceType,
+                address_details: addressDetails,
+                documents: {},
+                joined_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
 
-            // Set both Static and Dynamic to the same initial value
-            latitude: lat,
-            longitude: lng,
-            registeredLatitude: lat,
-            registeredLongitude: lng,
+                // Set both Static and Dynamic to the same initial value
+                latitude: lat,
+                longitude: lng,
+                registeredLatitude: lat,
+                registeredLongitude: lng,
 
-            baseAddress: baseAddress,
-            serviceRadius: 2,
+                baseAddress: baseAddress,
+                serviceRadius: 2,
 
-            // Binding
-            created_by: this._toUuid(createdBy) // Map to snake_case for DB, ensure valid UUID
-        };
+                // Binding
+                created_by: this._toUuid(createdBy) // Map to snake_case for DB, ensure valid UUID
+            };
 
-        const dbRecord = this._mapToDb(newTechnician);
+            const dbRecord = this._mapToDb(newTechnician);
 
-        let created;
-        try {
-            created = await this.db.add(dbRecord);
-        } catch (dbErr) {
-            // Self-Healing: If 'created_by' column is missing, retry without it
-            if (dbErr.message && (dbErr.message.includes('created_by') || dbErr.message.includes('column'))) {
-                console.warn("[TechnicianManager] 'created_by' column missing in DB. Retrying without it.");
-                const { created_by, ...fallbackRecord } = dbRecord;
-                created = await this.db.add(fallbackRecord);
-            } else {
-                throw dbErr;
+            let created;
+            try {
+                created = await this.db.add(dbRecord);
+            } catch (dbErr) {
+                // Self-Healing: If 'created_by' column is missing, retry without it
+                if (dbErr.message && (dbErr.message.includes('created_by') || dbErr.message.includes('column'))) {
+                    console.warn("[TechnicianManager] 'created_by' column missing in DB. Retrying without it.");
+                    const { created_by, ...fallbackRecord } = dbRecord;
+                    created = await this.db.add(fallbackRecord);
+                } else {
+                    throw dbErr;
+                }
             }
+
+            const tech = this._mapFromDb(created);
+
+            if (this.io) {
+                this.io.emit('new_technician_registered', tech);
+            }
+
+            return tech;
+        } catch (err) {
+            console.error("[TechnicianManager] Error creating technician:", err);
+            throw err;
         }
-
-        const tech = this._mapFromDb(created);
-
-        if (this.io) {
-            this.io.emit('new_technician_registered', tech);
-        }
-
-        return tech;
-    } catch(err) {
-        console.error("[TechnicianManager] Error creating technician:", err);
-        throw err;
     }
-}
 
     async updateTechnicianDocuments(id, docPaths) {
-    try {
-        const tech = await this.db.find('id', id);
-        if (!tech) return null;
+        try {
+            const tech = await this.db.find('id', id);
+            if (!tech) return null;
 
-        const currentDocs = tech.documents || {};
-        const newDocs = { ...currentDocs, ...docPaths };
+            const currentDocs = tech.documents || {};
+            const newDocs = { ...currentDocs, ...docPaths };
 
-        // Ensure we map to DB format (snake_case if needed)
-        const updates = { documents: newDocs };
-        const dbUpdates = this._mapToDb(updates);
+            // Ensure we map to DB format (snake_case if needed)
+            const updates = { documents: newDocs };
+            const dbUpdates = this._mapToDb(updates);
 
-        const result = await this.db.update('id', id, dbUpdates);
-        return this._mapFromDb(result);
-    } catch (err) {
-        console.error("[TechnicianManager] Error updating documents:", err);
-        return null;
+            const result = await this.db.update('id', id, dbUpdates);
+            return this._mapFromDb(result);
+        } catch (err) {
+            console.error("[TechnicianManager] Error updating documents:", err);
+            return null;
+        }
     }
-}
 
     async login(email, password, currentLat, currentLng) {
-    try {
-        if (!email || !password) return null;
-        const cleanEmail = email.trim().toLowerCase();
-        const tech = await this.db.find('email', cleanEmail);
+        try {
+            if (!email || !password) return null;
+            const cleanEmail = email.trim().toLowerCase();
+            const tech = await this.db.find('email', cleanEmail);
 
-        if (!tech) return null;
+            if (!tech) return null;
 
-        if (tech.password === password) {
-            // Prepare return object
-            let techObj = this._mapFromDb(tech);
+            if (tech.password === password) {
+                // Prepare return object
+                let techObj = this._mapFromDb(tech);
 
-            // Update Dynamic Location if provided
-            if (currentLat && currentLng) {
-                // Fire and forget update (awaiting it might slow down login slightly, but safer to await)
-                await this.updateLocation(tech.id, { latitude: currentLat, longitude: currentLng });
-                // Update the object in memory to return fresh state
-                techObj.latitude = currentLat;
-                techObj.longitude = currentLng;
+                // Update Dynamic Location if provided
+                if (currentLat && currentLng) {
+                    // Fire and forget update (awaiting it might slow down login slightly, but safer to await)
+                    await this.updateLocation(tech.id, { latitude: currentLat, longitude: currentLng });
+                    // Update the object in memory to return fresh state
+                    techObj.latitude = currentLat;
+                    techObj.longitude = currentLng;
+                }
+
+                const { password, ...techWithoutPass } = techObj;
+                return techWithoutPass;
             }
-
-            const { password, ...techWithoutPass } = techObj;
-            return techWithoutPass;
+            return null;
+        } catch (err) {
+            console.error("[TechnicianManager] Login error:", err);
+            return null;
         }
-        return null;
-    } catch (err) {
-        console.error("[TechnicianManager] Login error:", err);
-        return null;
     }
-}
 
     async getTechnician(id) {
-    try {
-        const tech = await this.db.find('id', id);
-        if (tech) {
-            const { password, ...techWithoutPass } = this._mapFromDb(tech);
-            return techWithoutPass;
+        try {
+            const tech = await this.db.find('id', id);
+            if (tech) {
+                const { password, ...techWithoutPass } = this._mapFromDb(tech);
+                return techWithoutPass;
+            }
+            return null;
+        } catch (err) {
+            console.error(`[TechnicianManager] Error getting tech ${id}:`, err);
+            return null;
         }
-        return null;
-    } catch (err) {
-        console.error(`[TechnicianManager] Error getting tech ${id}:`, err);
-        return null;
     }
-}
 
     async getAllTechnicians() {
-    try {
-        const techs = await this.db.read();
-        return techs.map(t => {
-            const { password, ...rest } = this._mapFromDb(t);
-            return rest;
-        });
-    } catch (err) {
-        console.error("[TechnicianManager] Error getting all techs:", err);
-        return [];
+        try {
+            const techs = await this.db.read();
+            return techs.map(t => {
+                const { password, ...rest } = this._mapFromDb(t);
+                return rest;
+            });
+        } catch (err) {
+            console.error("[TechnicianManager] Error getting all techs:", err);
+            return [];
+        }
     }
-}
 
     async searchTechnicians(userLat, userLon, serviceType, radius = 2.0) {
-    try {
-        const lat = parseFloat(userLat);
-        const lon = parseFloat(userLon);
-        const type = this._normalizeType(serviceType);
+        try {
+            const lat = parseFloat(userLat);
+            const lon = parseFloat(userLon);
+            const type = this._normalizeType(serviceType);
 
-        const allTechs = await this.db.read();
-        const techs = allTechs
-            .map(t => this._mapFromDb(t))
-            .filter(t => {
-                const dbType = t.serviceType || t.service_type || '';
-                const normalizedDbType = this._normalizeType(dbType);
-                // [FIX] Flexible matching for "CCTV" vs "CCTV Technician"
-                return normalizedDbType === type || normalizedDbType.includes(type) || type.includes(normalizedDbType);
-            });
+            const allTechs = await this.db.read();
+            const techs = allTechs
+                .map(t => this._mapFromDb(t))
+                .filter(t => {
+                    const dbType = t.serviceType || t.service_type || '';
+                    const normalizedDbType = this._normalizeType(dbType);
+                    // [FIX] Flexible matching for "CCTV" vs "CCTV Technician"
+                    return normalizedDbType === type || normalizedDbType.includes(type) || type.includes(normalizedDbType);
+                });
 
-        const nearbyTechs = techs.map(tech => {
-            // PRIORITIZE FIXED/REGISTERED LOCATION
-            let tLat = tech.registeredLatitude;
-            let tLon = tech.registeredLongitude;
+            const nearbyTechs = techs.map(tech => {
+                // PRIORITIZE FIXED/REGISTERED LOCATION
+                let tLat = tech.registeredLatitude;
+                let tLon = tech.registeredLongitude;
 
-            // Fallback to Dynamic if Fixed is missing (Legacy support)
-            if (tLat === undefined || tLon === undefined || tLat === null || tLon === null) {
-                tLat = tech.latitude;
-                tLon = tech.longitude;
-            }
+                // Fallback to Dynamic if Fixed is missing (Legacy support)
+                if (tLat === undefined || tLon === undefined || tLat === null || tLon === null) {
+                    tLat = tech.latitude;
+                    tLon = tech.longitude;
+                }
 
-            // Checking valid numbers
-            if (tLat === undefined || tLon === undefined || isNaN(tLat) || isNaN(tLon)) return null;
+                // Checking valid numbers
+                if (tLat === undefined || tLon === undefined || isNaN(tLat) || isNaN(tLon)) return null;
 
-            const dist = this.calculateDistance(lat, lon, tLat, tLon);
-            const { password, ...rest } = tech;
+                const dist = this.calculateDistance(lat, lon, tLat, tLon);
+                const { password, ...rest } = tech;
 
-            return {
-                ...rest,
-                location: { latitude: tLat, longitude: tLon, address: tech.baseAddress || '' },
-                distance: parseFloat(dist.toFixed(1))
-            };
-        }).filter(item => item !== null && item.distance <= radius);
+                return {
+                    ...rest,
+                    location: { latitude: tLat, longitude: tLon, address: tech.baseAddress || '' },
+                    distance: parseFloat(dist.toFixed(1))
+                };
+            }).filter(item => item !== null && item.distance <= radius);
 
-        const enrichedTechs = await this._enrichWithRatings(nearbyTechs);
-        return enrichedTechs.sort((a, b) => a.distance - b.distance);
-    } catch (err) {
-        console.error("[TechnicianManager] Error searching technicians:", err);
-        return [];
+            const enrichedTechs = await this._enrichWithRatings(nearbyTechs);
+            return enrichedTechs.sort((a, b) => a.distance - b.distance);
+        } catch (err) {
+            console.error("[TechnicianManager] Error searching technicians:", err);
+            return [];
+        }
     }
-}
 
     async _enrichWithRatings(techs) {
-    try {
-        const FeedbackManager = require('./FeedbackManager');
-        const feedbackManager = new FeedbackManager();
+        try {
+            const FeedbackManager = require('./FeedbackManager');
+            const feedbackManager = new FeedbackManager();
 
-        const enriched = [];
-        for (const tech of techs) {
-            const feedbacks = await feedbackManager.getFeedbackForTechnician(tech.id);
-            let averageRating = 0;
+            const enriched = [];
+            for (const tech of techs) {
+                const feedbacks = await feedbackManager.getFeedbackForTechnician(tech.id);
+                let averageRating = 0;
 
-            if (feedbacks && feedbacks.length > 0) {
-                const total = feedbacks.reduce((sum, f) => {
-                    const ratings = f.ratings || {};
-                    const vals = Object.values(ratings);
-                    const feedbackAvg = vals.length ? vals.reduce((a, b) => a + Number(b), 0) / vals.length : 0;
-                    return sum + feedbackAvg;
-                }, 0);
-                averageRating = parseFloat((total / feedbacks.length).toFixed(1));
+                if (feedbacks && feedbacks.length > 0) {
+                    const total = feedbacks.reduce((sum, f) => {
+                        const ratings = f.ratings || {};
+                        const vals = Object.values(ratings);
+                        const feedbackAvg = vals.length ? vals.reduce((a, b) => a + Number(b), 0) / vals.length : 0;
+                        return sum + feedbackAvg;
+                    }, 0);
+                    averageRating = parseFloat((total / feedbacks.length).toFixed(1));
+                }
+
+                enriched.push({
+                    ...tech,
+                    rating: averageRating,
+                    reviewCount: feedbacks ? feedbacks.length : 0
+                });
             }
-
-            enriched.push({
-                ...tech,
-                rating: averageRating,
-                reviewCount: feedbacks ? feedbacks.length : 0
-            });
+            return enriched;
+        } catch (err) {
+            console.error("[TechnicianManager] Enrich Ratings Error:", err);
+            return techs;
         }
-        return enriched;
-    } catch (err) {
-        console.error("[TechnicianManager] Enrich Ratings Error:", err);
-        return techs;
     }
-}
 
-calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-}
+    calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
 
     async updateLocation(id, location) {
-    try {
-        // Support both objects {latitude, longitude} and raw args if needed, but here assuming object
-        let updates = {};
+        try {
+            // Support both objects {latitude, longitude} and raw args if needed, but here assuming object
+            let updates = {};
 
-        if (location.latitude !== undefined) updates.latitude = location.latitude;
-        if (location.longitude !== undefined) updates.longitude = location.longitude;
+            if (location.latitude !== undefined) updates.latitude = location.latitude;
+            if (location.longitude !== undefined) updates.longitude = location.longitude;
 
-        // If it's the "registered" location update requested specifically (rarely used directly)
-        if (location.registeredLatitude !== undefined) updates.registered_latitude = location.registeredLatitude;
-        if (location.registeredLongitude !== undefined) updates.registered_longitude = location.registeredLongitude;
+            // If it's the "registered" location update requested specifically (rarely used directly)
+            if (location.registeredLatitude !== undefined) updates.registered_latitude = location.registeredLatitude;
+            if (location.registeredLongitude !== undefined) updates.registered_longitude = location.registeredLongitude;
 
-        const result = await this.db.update('id', id, updates);
+            const result = await this.db.update('id', id, updates);
 
-        if (this.io) {
-            // Emit event for real-time tracking (Maps)
-            this.io.emit('technician_location_update', {
-                technicianId: id,
-                location: {
-                    latitude: location.latitude,
-                    longitude: location.longitude
-                }
-            });
+            if (this.io) {
+                // Emit event for real-time tracking (Maps)
+                this.io.emit('technician_location_update', {
+                    technicianId: id,
+                    location: {
+                        latitude: location.latitude,
+                        longitude: location.longitude
+                    }
+                });
+            }
+            return result;
+        } catch (err) {
+            console.error(`[TechnicianManager] Error updating location for tech ${id}:`, err);
+            return null;
         }
-        return result;
-    } catch (err) {
-        console.error(`[TechnicianManager] Error updating location for tech ${id}:`, err);
-        return null;
     }
-}
 
     async updateStatus(id, status) {
-    try {
-        console.log(`[TechnicianManager] Updating status for Tech ${id}: ${status}`);
-        // [FIX] Data Integrity: Prevent Objects/JSON from being saved as status
-        let cleanStatus = status;
-        if (typeof status === 'object' && status !== null) {
-            console.warn(`[TechnicianManager] status update for ${id} was an object! Attempting to extract status field.`);
-            cleanStatus = status.status || 'unknown';
-        }
-        // If it's a string but looks like JSON, it might have been double-encoded elsewhere
-        if (typeof cleanStatus === 'string' && cleanStatus.startsWith('{')) {
-            try {
-                const parsed = JSON.parse(cleanStatus);
-                cleanStatus = parsed.status || cleanStatus;
-            } catch (e) { }
-        }
+        try {
+            console.log(`[TechnicianManager] Updating status for Tech ${id}: ${status}`);
+            // [FIX] Data Integrity: Prevent Objects/JSON from being saved as status
+            let cleanStatus = status;
+            if (typeof status === 'object' && status !== null) {
+                console.warn(`[TechnicianManager] status update for ${id} was an object! Attempting to extract status field.`);
+                cleanStatus = status.status || 'unknown';
+            }
+            // If it's a string but looks like JSON, it might have been double-encoded elsewhere
+            if (typeof cleanStatus === 'string' && cleanStatus.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(cleanStatus);
+                    cleanStatus = parsed.status || cleanStatus;
+                } catch (e) { }
+            }
 
-        console.log(`[TechnicianManager] Calling DB update with status: ${cleanStatus}`);
-        const result = await this.db.update('id', id, { status: String(cleanStatus) });
+            console.log(`[TechnicianManager] Calling DB update with status: ${cleanStatus}`);
+            const result = await this.db.update('id', id, { status: String(cleanStatus) });
 
-        if (!result) {
-            console.error(`[TechnicianManager] DB update returned null for Tech ${id}`);
+            if (!result) {
+                console.error(`[TechnicianManager] DB update returned null for Tech ${id}`);
+                return null;
+            }
+
+            console.log(`[TechnicianManager] DB update successful for Tech ${id}, new status: ${result.status}`);
+            const tech = this._mapFromDb(result);
+
+            if (this.io) {
+                console.log(`[TechnicianManager] Emitting socket events for Tech ${id} status update`);
+                this.io.emit('technician_status_update', { technicianId: id, status: cleanStatus });
+                this.io.to(`tech_${id}`).emit('profile_updated', tech);
+            }
+            return tech;
+        } catch (err) {
+            console.error(`[TechnicianManager] Error updating status for tech ${id}:`, err);
             return null;
         }
-
-        console.log(`[TechnicianManager] DB update successful for Tech ${id}, new status: ${result.status}`);
-        const tech = this._mapFromDb(result);
-
-        if (this.io) {
-            console.log(`[TechnicianManager] Emitting socket events for Tech ${id} status update`);
-            this.io.emit('technician_status_update', { technicianId: id, status: cleanStatus });
-            this.io.to(`tech_${id}`).emit('profile_updated', tech);
-        }
-        return tech;
-    } catch (err) {
-        console.error(`[TechnicianManager] Error updating status for tech ${id}:`, err);
-        return null;
     }
-}
 
     async updateRating(id, rating) {
-    try {
-        console.log(`[TechnicianManager] Updating rating for Tech ${id}: ${rating}`);
-        const result = await this.db.update('id', id, { rating: Number(rating) });
+        try {
+            console.log(`[TechnicianManager] Updating rating for Tech ${id}: ${rating}`);
+            const result = await this.db.update('id', id, { rating: Number(rating) });
 
-        if (!result) {
-            console.error(`[TechnicianManager] DB update returned null for Tech ${id}`);
+            if (!result) {
+                console.error(`[TechnicianManager] DB update returned null for Tech ${id}`);
+                return null;
+            }
+
+            console.log(`[TechnicianManager] Rating update successful for Tech ${id}, new rating: ${result.rating}`);
+            const tech = this._mapFromDb(result);
+
+            if (this.io) {
+                this.io.emit('technician_rating_updated', { technicianId: id, rating });
+                this.io.to(`tech_${id}`).emit('profile_updated', tech);
+            }
+            return tech;
+        } catch (err) {
+            console.error(`[TechnicianManager] Error updating rating for tech ${id}:`, err);
             return null;
         }
-
-        console.log(`[TechnicianManager] Rating update successful for Tech ${id}, new rating: ${result.rating}`);
-        const tech = this._mapFromDb(result);
-
-        if (this.io) {
-            this.io.emit('technician_rating_updated', { technicianId: id, rating });
-            this.io.to(`tech_${id}`).emit('profile_updated', tech);
-        }
-        return tech;
-    } catch (err) {
-        console.error(`[TechnicianManager] Error updating rating for tech ${id}:`, err);
-        return null;
     }
-}
 
     async updateProfile(id, updates) {
-    try {
-        const techRaw = await this.db.find('id', id);
-        if (!techRaw) return null;
+        try {
+            const techRaw = await this.db.find('id', id);
+            if (!techRaw) return null;
 
-        // Handle Location Input - For Profile Updates, this usually implies Changing Home Base (Registered)
-        // But if we want it to be current... typically "Profile" address is "Registered" address.
-        // Let's assume Profile Address = Registered Location.
+            // Handle Location Input - For Profile Updates, this usually implies Changing Home Base (Registered)
+            // But if we want it to be current... typically "Profile" address is "Registered" address.
+            // Let's assume Profile Address = Registered Location.
 
-        if (updates.location) {
-            if (typeof updates.location === 'string') {
-                updates.baseAddress = updates.location;
-                const coords = await geocodeAddress(updates.location);
-                if (coords) {
-                    updates.registeredLatitude = coords.lat;
-                    updates.registeredLongitude = coords.lng;
-                    // Also update current if they are moving base? Maybe not always.
-                    // Let's safe-bet: changing profile address updates registered location.
+            if (updates.location) {
+                if (typeof updates.location === 'string') {
+                    updates.baseAddress = updates.location;
+                    const coords = await geocodeAddress(updates.location);
+                    if (coords) {
+                        updates.registeredLatitude = coords.lat;
+                        updates.registeredLongitude = coords.lng;
+                        // Also update current if they are moving base? Maybe not always.
+                        // Let's safe-bet: changing profile address updates registered location.
+                    }
+                } else if (typeof updates.location === 'object') {
+                    // Direct override
+                    if (updates.location.latitude) updates.registeredLatitude = updates.location.latitude;
+                    if (updates.location.longitude) updates.registeredLongitude = updates.location.longitude;
+
+                    if (!updates.baseAddress && (updates.location.address || updates.location.baseAddress)) {
+                        updates.baseAddress = updates.location.address || updates.location.baseAddress;
+                    }
                 }
-            } else if (typeof updates.location === 'object') {
-                // Direct override
-                if (updates.location.latitude) updates.registeredLatitude = updates.location.latitude;
-                if (updates.location.longitude) updates.registeredLongitude = updates.location.longitude;
-
-                if (!updates.baseAddress && (updates.location.address || updates.location.baseAddress)) {
-                    updates.baseAddress = updates.location.address || updates.location.baseAddress;
-                }
+                delete updates.location; // handled
             }
-            delete updates.location; // handled
-        }
 
-        const dbUpdates = this._mapToDb(updates);
-        const currentDocs = techRaw.documents || {};
-        if (updates.documents) {
-            dbUpdates.documents = { ...currentDocs, ...updates.documents };
-        }
+            const dbUpdates = this._mapToDb(updates);
+            const currentDocs = techRaw.documents || {};
+            if (updates.documents) {
+                dbUpdates.documents = { ...currentDocs, ...updates.documents };
+            }
 
-        const result = await this.db.update('id', id, dbUpdates);
-        const tech = this._mapFromDb(result);
+            const result = await this.db.update('id', id, dbUpdates);
+            const tech = this._mapFromDb(result);
 
-        if (this.io) {
-            this.io.to(`tech_${id}`).emit('profile_updated', tech);
-            this.io.emit('admin_tech_update', tech);
+            if (this.io) {
+                this.io.to(`tech_${id}`).emit('profile_updated', tech);
+                this.io.emit('admin_tech_update', tech);
+            }
+            return tech;
+        } catch (err) {
+            console.error(`[TechnicianManager] Error updating profile for tech ${id}:`, err);
+            return null;
         }
-        return tech;
-    } catch (err) {
-        console.error(`[TechnicianManager] Error updating profile for tech ${id}:`, err);
-        return null;
     }
-}
 
     async updateMembership(id, type) {
-    try {
-        const result = await this.db.update('id', id, {
-            membership: type,
-            membership_since: new Date().toISOString()
-        });
-        const tech = this._mapFromDb(result);
-        if (this.io) {
-            this.io.to(`tech_${id}`).emit('membership_updated', { membership: type });
+        try {
+            const result = await this.db.update('id', id, {
+                membership: type,
+                membership_since: new Date().toISOString()
+            });
+            const tech = this._mapFromDb(result);
+            if (this.io) {
+                this.io.to(`tech_${id}`).emit('membership_updated', { membership: type });
+            }
+            return tech;
+        } catch (err) {
+            console.error(`[TechnicianManager] Error updating membership for tech ${id}:`, err);
+            return null;
         }
-        return tech;
-    } catch (err) {
-        console.error(`[TechnicianManager] Error updating membership for tech ${id}:`, err);
-        return null;
     }
-}
 
     async updateStats(id, { type }) {
-    try {
-        const tech = await this.db.find('id', id);
-        if (!tech) return null;
+        try {
+            const tech = await this.db.find('id', id);
+            if (!tech) return null;
 
-        let total = tech.total_jobs || 0;
-        let completed = tech.completed_jobs || 0;
-        let rejected = tech.rejected_jobs || 0;
-        let pending = tech.pending_jobs || 0;
-        let accepted = tech.accepted_jobs || 0; // [NEW]
+            let total = tech.total_jobs || 0;
+            let completed = tech.completed_jobs || 0;
+            let rejected = tech.rejected_jobs || 0;
+            let pending = tech.pending_jobs || 0;
+            let accepted = tech.accepted_jobs || 0; // [NEW]
 
-        if (type === 'assign') {
-            total += 1;
-            pending += 1;
-        } else if (type === 'accept') {
-            accepted += 1;
-            if (pending > 0) pending -= 1;
-        } else if (type === 'complete') {
-            completed += 1;
-            // 'accepted' job becomes 'completed'. 'accepted' count remains as historical record of acceptance? 
-            // Usually dashboard stats are 'current state'. 
-            // Let's assume 'Accepted' means 'Currently Active'.
-            if (accepted > 0) accepted -= 1;
-        } else if (type === 'reject') {
-            rejected += 1;
-            if (pending > 0) pending -= 1;
+            if (type === 'assign') {
+                total += 1;
+                pending += 1;
+            } else if (type === 'accept') {
+                accepted += 1;
+                if (pending > 0) pending -= 1;
+            } else if (type === 'complete') {
+                completed += 1;
+                // 'accepted' job becomes 'completed'. 'accepted' count remains as historical record of acceptance? 
+                // Usually dashboard stats are 'current state'. 
+                // Let's assume 'Accepted' means 'Currently Active'.
+                if (accepted > 0) accepted -= 1;
+            } else if (type === 'reject') {
+                rejected += 1;
+                if (pending > 0) pending -= 1;
+            }
+
+            const updates = {
+                total_jobs: total,
+                completed_jobs: completed,
+                rejected_jobs: rejected,
+                pending_jobs: pending,
+                accepted_jobs: accepted
+            };
+
+            const result = await this.db.update('id', id, updates);
+            const updatedTech = this._mapFromDb(result);
+
+            if (this.io) {
+                this.io.to(`tech_${id}`).emit('stats_updated', updatedTech);
+                this.io.emit('admin_tech_update', updatedTech); // [NEW] Notify Admin
+            }
+            return updatedTech;
+        } catch (err) {
+            console.error(`[TechnicianManager] Error updating stats for tech ${id}:`, err);
+            return null;
         }
-
-        const updates = {
-            total_jobs: total,
-            completed_jobs: completed,
-            rejected_jobs: rejected,
-            pending_jobs: pending,
-            accepted_jobs: accepted
-        };
-
-        const result = await this.db.update('id', id, updates);
-        const updatedTech = this._mapFromDb(result);
-
-        if (this.io) {
-            this.io.to(`tech_${id}`).emit('stats_updated', updatedTech);
-            this.io.emit('admin_tech_update', updatedTech); // [NEW] Notify Admin
-        }
-        return updatedTech;
-    } catch (err) {
-        console.error(`[TechnicianManager] Error updating stats for tech ${id}:`, err);
-        return null;
     }
-}
 
     async getAllTechnicians() {
-    try {
-        const allTechs = await this.db.read();
-        return allTechs.map(t => this._mapFromDb(t));
-    } catch (err) {
-        console.error('[TechnicianManager] Error getting all technicians:', err);
-        return [];
+        try {
+            const allTechs = await this.db.read();
+            return allTechs.map(t => this._mapFromDb(t));
+        } catch (err) {
+            console.error('[TechnicianManager] Error getting all technicians:', err);
+            return [];
+        }
     }
-}
 
-getOffers() { return []; }
+    getOffers() { return []; }
 
     // [NEW] Get technicians within specific radius
     async getTechniciansByLocation(lat, lng, radiusKm = 30) {
-    try {
-        console.log(`[TechnicianManager] Filtering techs near ${lat}, ${lng} (Radius: ${radiusKm}km)`);
-        const allTechs = await this.getAllTechnicians();
-        if (!lat || !lng) return allTechs;
+        try {
+            console.log(`[TechnicianManager] Filtering techs near ${lat}, ${lng} (Radius: ${radiusKm}km)`);
+            const allTechs = await this.getAllTechnicians();
+            if (!lat || !lng) return allTechs;
 
-        const filtered = allTechs.filter(t => {
-            // Use registered location (or dynamic if missing)
-            const tLat = parseFloat(t.registeredLatitude || t.latitude);
-            const tLon = parseFloat(t.registeredLongitude || t.longitude);
-            const searchLat = parseFloat(lat);
-            const searchLng = parseFloat(lng);
+            const filtered = allTechs.filter(t => {
+                // Use registered location (or dynamic if missing)
+                const tLat = parseFloat(t.registeredLatitude || t.latitude);
+                const tLon = parseFloat(t.registeredLongitude || t.longitude);
+                const searchLat = parseFloat(lat);
+                const searchLng = parseFloat(lng);
 
-            if (isNaN(tLat) || isNaN(tLon)) return false;
+                if (isNaN(tLat) || isNaN(tLon)) return false;
 
-            const dist = this.calculateDistance(searchLat, searchLng, tLat, tLon);
-            // console.log(` - Tech ${t.name} (${t.id}): ${dist.toFixed(2)}km`);
-            return dist <= radiusKm;
-        });
+                const dist = this.calculateDistance(searchLat, searchLng, tLat, tLon);
+                // console.log(` - Tech ${t.name} (${t.id}): ${dist.toFixed(2)}km`);
+                return dist <= radiusKm;
+            });
 
-        console.log(`[TechnicianManager] Found ${filtered.length} techs within range out of ${allTechs.length}`);
-        return filtered;
-    } catch (err) {
-        console.error("[TechnicianManager] Error getting techs by location:", err);
-        return [];
+            console.log(`[TechnicianManager] Found ${filtered.length} techs within range out of ${allTechs.length}`);
+            return filtered;
+        } catch (err) {
+            console.error("[TechnicianManager] Error getting techs by location:", err);
+            return [];
+        }
     }
-}
 
     async getTechnicianIdsByLocation(lat, lng, radiusKm = 30) {
-    const techs = await this.getTechniciansByLocation(lat, lng, radiusKm);
-    return techs.map(t => t.id);
-}
+        const techs = await this.getTechniciansByLocation(lat, lng, radiusKm);
+        return techs.map(t => t.id);
+    }
 }
 
 module.exports = TechnicianManager;
