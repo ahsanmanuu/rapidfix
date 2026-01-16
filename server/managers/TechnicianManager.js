@@ -632,6 +632,11 @@ class TechnicianManager {
             return [];
         }
     }
+
+    async getTechnicianIdsByLocation(lat, lng, radiusKm = 30) {
+        const techs = await this.getTechniciansByLocation(lat, lng, radiusKm);
+        return techs.map(t => t.id);
+    }
 }
 
 module.exports = TechnicianManager;
