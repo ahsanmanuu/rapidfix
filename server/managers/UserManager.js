@@ -1,15 +1,9 @@
-const Database = require('./DatabaseLoader');
-
+const BaseManager = require('./BaseManager');
 const { geocodeAddress } = require('../utils/geocoder');
 
-class UserManager {
+class UserManager extends BaseManager {
     constructor() {
-        this.db = new Database('users');
-        this.io = null;
-    }
-
-    setSocketIO(io) {
-        this.io = io;
+        super('users'); // BaseManager sets up this.db with 'users' table
     }
 
     // Helper to map DB snake_case to App camelCase
@@ -48,107 +42,103 @@ class UserManager {
         }
     }
 
-    async createUser(name, email, phone, password, locationInput, photoUrl = null) {
+    async createUser(name, email, phone, locationInput, password) {
         try {
-            const existing = await this.db.find('email', email);
+            const existing = await this.findOne('email', email);
             if (existing) {
-                throw new Error('User already exists');
+                throw new Error('User already exists with this email');
             }
 
             let lat = null;
             let lng = null;
-            let city = null;
             let fixedAddress = null;
 
-            // Handle Location Input (String or Object)
             if (locationInput) {
                 if (typeof locationInput === 'string') {
-                    // It's a city/address string
-                    city = locationInput;
+                    fixedAddress = locationInput;
                     const coords = await geocodeAddress(locationInput);
                     if (coords) {
                         lat = coords.lat;
                         lng = coords.lng;
-                        fixedAddress = coords.displayName;
                     }
                 } else if (typeof locationInput === 'object') {
-                    // It's { latitude, longitude, address }
                     lat = locationInput.latitude;
                     lng = locationInput.longitude;
                     fixedAddress = locationInput.address;
-                    // Try to infer city if not provided? For now keep simple
                 }
             }
 
             const newUser = {
+                id: Date.now().toString(), // Or crypto.randomUUID() if migrating
                 name,
                 email,
                 phone,
                 password,
                 role: 'user',
-                photo: photoUrl,
                 status: 'Active',
                 membership: 'Free',
-                created_at: new Date().toISOString(),
-                // Location Fields
+                walletBalance: 0.00,
                 latitude: lat,
                 longitude: lng,
-                city: city,
-                fixed_address: fixedAddress
+                fixedAddress: fixedAddress
             };
 
-            const created = await this.db.add(newUser);
-            const user = this._mapFromDb(created);
+            // Use BaseManager's automated create
+            return await this.create(newUser);
 
-            if (this.io) {
-                this.io.emit('new_user_registered', user);
-            }
-
-            return user;
         } catch (err) {
             console.error("[UserManager] Error creating user:", err);
             throw err;
         }
     }
 
+    // Overriding update to add specific user logic if needed, or just use generic
+    // But we need to maintain specific method signature if called elsewhere
     async updateUser(id, updates) {
-        try {
-            const dbUpdates = this._mapToDb(updates);
-            dbUpdates.updated_at = new Date().toISOString();
-
-            const result = await this.db.update('id', id, dbUpdates);
-            const user = this._mapFromDb(result);
-
-            if (this.io) {
-                this.io.to(`user_${id}`).emit('profile_updated', user);
-                this.io.emit('admin_user_update', user);
+        // Handle Location Input in Update (copying logic from createUser)
+        if (updates.location) {
+            if (typeof updates.location === 'string') {
+                // Geocode city/address
+                const coords = await geocodeAddress(updates.location);
+                if (coords) {
+                    updates.latitude = coords.lat;
+                    updates.longitude = coords.lng;
+                    updates.city = updates.location;
+                    updates.fixedAddress = coords.displayName;
+                }
+            } else if (typeof updates.location === 'object') {
+                updates.latitude = updates.location.latitude;
+                updates.longitude = updates.location.longitude;
+                updates.city = updates.location.city;
+                updates.fixedAddress = updates.location.fixedAddress || updates.location.address;
             }
-            return user;
-        } catch (err) {
-            console.error(`[UserManager] Error updating user ${id}:`, err);
-            throw err;
+            // Cleanup custom field before mapping to DB
+            delete updates.location;
         }
+
+        // BaseManager handles timestamps and mapping automatically
+        return await this.update(id, updates);
     }
 
     async login(email, password) {
         try {
-            const user = await this.db.find('email', email);
+            const user = await this.findOne('email', email);
             if (user && user.password === password) {
-                const { password, ...userWithoutPass } = this._mapFromDb(user);
+                const { password, ...userWithoutPass } = user;
                 return userWithoutPass;
             }
             return null;
         } catch (err) {
-            console.error("[UserManager] Login error:", err);
+            console.error("[UserManager] Error during login:", err);
             return null;
         }
     }
 
     async getUser(id) {
         try {
-            const user = await this.db.find('id', id);
+            const user = await this.findOne(id); // Use BaseManager's findOne by ID
             if (user) {
-                const { password, ...userWithoutPass } = this._mapFromDb(user);
+                const { password, ...userWithoutPass } = user;
                 return userWithoutPass;
             }
             return null;

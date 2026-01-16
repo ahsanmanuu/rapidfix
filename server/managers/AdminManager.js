@@ -1,10 +1,10 @@
-const Database = require('./DatabaseLoader');
+const BaseManager = require('./BaseManager');
 
-class AdminManager {
+class AdminManager extends BaseManager {
     constructor() {
-        this.db = new Database('admins');
+        super('admins'); // BaseManager sets up this.db with 'admins'
         this.io = null;
-        this.geocoder = require('../utils/geocoder'); // Lazy load or require at top if preferred, but doing here for safety
+        this.geocoder = require('../utils/geocoder');
         this.ensureDefaultAdmin();
     }
 
@@ -44,23 +44,21 @@ class AdminManager {
 
     async ensureDefaultAdmin() {
         try {
+            // Use findOne from BaseManager
             const defaultEmail = 'admin@fixofy.com';
-            const existing = await this.db.find('email', defaultEmail);
+            const existing = await this.findOne('email', defaultEmail);
 
             if (!existing) {
                 console.log(`[AdminManager] No default admin found. Creating ${defaultEmail}...`);
-                await this.createAdmin('admin', defaultEmail, 'admin123', 'Super Admin');
+                await this.createAdmin('Admin', defaultEmail, 'admin123', 'Super Admin');
             } else {
                 console.log(`[AdminManager] Default admin ${defaultEmail} found.`);
                 // SELF-HEALING: Ensure the password is 'admin123' to prevent lockout
                 if (String(existing.password).trim() !== 'admin123') {
                     console.log(`[AdminManager] Password mismatch for default admin. Resetting to 'admin123'...`);
-                    if (this.db.update) {
-                        await this.db.update('email', defaultEmail, { password: 'admin123' });
-                        console.log(`[AdminManager] Password reset successful.`);
-                    } else {
-                        console.warn(`[AdminManager] CANNOT RESET PASSWORD: database.update() method missing.`);
-                    }
+                    // Use BaseManager update
+                    await this.update(existing.id, { password: 'admin123' });
+                    console.log(`[AdminManager] Password reset successful.`);
                 }
             }
         } catch (err) {
@@ -71,14 +69,16 @@ class AdminManager {
     async createAdmin(name, email, password, role = 'Admin', listLocation = null, createdBy = null) {
         try {
             const cleanEmail = String(email).trim().toLowerCase();
-            const existing = await this.db.find('email', cleanEmail);
+            const existing = await this.findOne('email', cleanEmail);
             if (existing) throw new Error('Admin already exists');
 
             const newAdmin = {
+                id: require('crypto').randomUUID(), // Ensure UUID
                 name,
                 email: cleanEmail,
                 password,
                 role,
+                created_at: new Date().toISOString(), // DB field name directly for now, or rely on mapping
                 createdAt: new Date().toISOString(),
                 createdBy // [NEW] Link to Super Admin ID
             };
@@ -88,7 +88,7 @@ class AdminManager {
                 if (listLocation.latitude && listLocation.longitude) {
                     newAdmin.latitude = listLocation.latitude;
                     newAdmin.longitude = listLocation.longitude;
-                    newAdmin.fixed_latitude = listLocation.latitude; // Cannot be changed by Admin, only SuperAdmin
+                    newAdmin.fixed_latitude = listLocation.latitude;
                     newAdmin.fixed_longitude = listLocation.longitude;
                 }
                 if (listLocation.address) {
@@ -96,15 +96,15 @@ class AdminManager {
                 }
             }
 
-            const dbAdmin = this._mapToDb(newAdmin);
-            const saved = await this.db.add(dbAdmin);
-            const result = this._mapFromDb(saved);
+            // Use BaseManager's create
+            const result = await this.create(newAdmin);
             if (this.io) {
                 this.io.emit('new_admin_created', { name, email: cleanEmail, role });
             }
             return result;
+
         } catch (err) {
-            console.error("[AdminManager] Error creating admin:", err);
+            console.error("[AdminManager] Create Admin Error:", err);
             throw err;
         }
     }

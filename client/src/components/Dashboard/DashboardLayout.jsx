@@ -24,7 +24,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({
 }));
 
 
-const DashboardLayout = ({ user, activeTab, setActiveTab, onLogout, children }) => {
+const DashboardLayout = ({ user, activeTab, setActiveTab, onLogout, children, roleConfig }) => {
     const theme = useTheme();
     const matchDownMd = useMediaQuery(theme.breakpoints.down('md'));
     // Default to CLOSED initially to prevent mobile flash
@@ -76,6 +76,7 @@ const DashboardLayout = ({ user, activeTab, setActiveTab, onLogout, children }) 
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 user={user}
+                roleConfig={roleConfig}
             />
 
             {/* Main Content */}

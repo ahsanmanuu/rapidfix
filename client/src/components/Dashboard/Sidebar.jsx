@@ -22,19 +22,15 @@ import {
 
 const drawerWidth = 260;
 
-const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, user }) => {
+const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, user, roleConfig }) => {
     const theme = useTheme();
     const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
 
     const container = window !== undefined ? () => window().document.body : undefined;
 
-    const navItems = [
-        { id: 'home', label: 'Dashboard', icon: <HomeIcon /> },
-        { id: 'jobs', label: 'Request Services', icon: <WorkIcon /> },
-        { id: 'history', label: 'Job History', icon: <HistoryIcon /> },
-        { id: 'profile', label: 'Profile', icon: <PersonIcon /> },
-        { id: 'chat', label: 'Messages', icon: <ChatIcon /> },
-        { id: 'finance', label: 'Billing', icon: <WalletIcon /> }
+    // Use routes from config, fall back to default if missing (safety check)
+    const navItems = roleConfig?.routes || [
+        { id: 'home', label: 'Dashboard', icon: <HomeIcon /> }
     ];
 
     const drawer = (
@@ -75,48 +71,56 @@ const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, us
                 <Typography variant="caption" sx={{ pl: 2, mb: 2, display: 'block', fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>
                     MENU
                 </Typography>
-                {navItems.map((item) => (
-                    <ListItemButton
-                        key={item.id}
-                        selected={activeTab === item.id}
-                        onClick={() => {
-                            setActiveTab(item.id);
-                            if (!matchUpMd) handleDrawerToggle();
-                        }}
-                        sx={{
-                            mb: 1,
-                            borderRadius: '12px',
-                            minHeight: 48,
-                            transition: 'all 0.2s',
-                            '&.Mui-selected': {
-                                bgcolor: 'primary.main',
-                                color: '#fff',
-                                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)', // Glow effect
+                {navItems.map((item) => {
+                    const IconComponent = item.icon; // Expecting React Component or Element
+                    // Handle both Lucide (Component) and MUI (Element) icons
+                    const iconElement = typeof IconComponent === 'function' || typeof IconComponent === 'object'
+                        ? (React.isValidElement(IconComponent) ? IconComponent : <IconComponent size={22} />)
+                        : <HomeIcon />; // Fallback
+
+                    return (
+                        <ListItemButton
+                            key={item.id}
+                            selected={activeTab === item.id}
+                            onClick={() => {
+                                setActiveTab(item.id);
+                                if (!matchUpMd) handleDrawerToggle();
+                            }}
+                            sx={{
+                                mb: 1,
+                                borderRadius: '12px',
+                                minHeight: 48,
+                                transition: 'all 0.2s',
+                                '&.Mui-selected': {
+                                    bgcolor: 'primary.main',
+                                    color: '#fff',
+                                    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)', // Glow effect
+                                    '&:hover': {
+                                        bgcolor: 'primary.dark',
+                                    },
+                                    '& .MuiListItemIcon-root': {
+                                        color: '#fff',
+                                    },
+                                },
                                 '&:hover': {
-                                    bgcolor: 'primary.dark',
+                                    bgcolor: 'rgba(255,255,255,0.05)',
+                                    transform: 'translateX(4px)'
                                 },
                                 '& .MuiListItemIcon-root': {
-                                    color: '#fff',
+                                    color: activeTab === item.id ? '#fff' : 'rgba(255,255,255,0.5)',
+                                    minWidth: 40
                                 },
-                            },
-                            '&:hover': {
-                                bgcolor: 'rgba(255,255,255,0.05)',
-                                transform: 'translateX(4px)'
-                            },
-                            '& .MuiListItemIcon-root': {
-                                color: activeTab === item.id ? '#fff' : 'rgba(255,255,255,0.5)',
-                                minWidth: 40
-                            },
-                            '& .MuiTypography-root': {
-                                fontWeight: activeTab === item.id ? 600 : 500,
-                                color: activeTab === item.id ? '#fff' : 'rgba(255,255,255,0.7)'
-                            }
-                        }}
-                    >
-                        <ListItemIcon>{item.icon}</ListItemIcon>
-                        <ListItemText primary={item.label} />
-                    </ListItemButton>
-                ))}
+                                '& .MuiTypography-root': {
+                                    fontWeight: activeTab === item.id ? 600 : 500,
+                                    color: activeTab === item.id ? '#fff' : 'rgba(255,255,255,0.7)'
+                                }
+                            }}
+                        >
+                            <ListItemIcon>{iconElement}</ListItemIcon>
+                            <ListItemText primary={item.label} />
+                        </ListItemButton>
+                    );
+                })}
             </List>
 
             {/* User Profile Footer */}

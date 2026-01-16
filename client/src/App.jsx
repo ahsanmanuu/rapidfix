@@ -48,13 +48,21 @@ function App() {
               <Route path="/admin/" element={<Navigate to="/admin/login" replace />} />
               <Route path="/admin/dashboard" element={<Navigate to="/admin-dashboard" replace />} />
 
+              import UnifiedDashboard from './components/UnifiedDashboard';
+
+              // ... other imports ...
+
               <Route
                 path="/dashboard"
-                element={user ? <Dashboard /> : <Navigate to="/login" />}
+                element={user ? <UnifiedDashboard /> : <Navigate to="/login" />}
               />
               <Route
                 path="/technician-dashboard"
-                element={user ? <TechnicianDashboard /> : <Navigate to="/login" />}
+                element={user ? <UnifiedDashboard /> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/admin-dashboard"
+                element={user ? <UnifiedDashboard /> : <Navigate to="/admin/login" />}
               />
               <Route
                 path="/super-admin-dashboard"

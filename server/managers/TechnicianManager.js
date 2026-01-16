@@ -1,12 +1,10 @@
-const Database = require('./DatabaseLoader');
-// Syntax fix verified
-
+const BaseManager = require('./BaseManager');
 const { geocodeAddress } = require('../utils/geocoder');
 const crypto = require('crypto');
 
-class TechnicianManager {
+class TechnicianManager extends BaseManager {
     constructor() {
-        this.db = new Database('technicians');
+        super('technicians'); // BaseManager sets up this.db with 'technicians'
         this.io = null;
     }
 
@@ -39,6 +37,7 @@ class TechnicianManager {
             const membershipExpiry = tech.membership_expiry || tech.membershipExpiry;
             const joinedAt = tech.joined_at || tech.joinedAt || tech.createdAt;
             const updatedAt = tech.updated_at || tech.updatedAt;
+            const createdBy = tech.created_by || tech.createdBy; // [FIX] ID-1532 Mapping
 
             const totalJobs = tech.total_jobs || tech.totalJobs || 0;
             const completedJobs = tech.completed_jobs || tech.completedJobs || 0;
@@ -54,6 +53,10 @@ class TechnicianManager {
             // Coordinates
             let lat = tech.latitude;
             let lng = tech.longitude;
+            // Fixed lat/lng
+            let fixedLat = tech.fixed_latitude || tech.fixedLatitude;
+            let fixedLng = tech.fixed_longitude || tech.fixedLongitude;
+
             let regLat = tech.registered_latitude || tech.registeredLatitude;
             let regLng = tech.registered_longitude || tech.registeredLongitude;
 
@@ -78,12 +81,15 @@ class TechnicianManager {
                 membershipExpiry,
                 joinedAt,
                 updatedAt,
+                createdBy,
                 documents,
                 location,
                 baseAddress,
                 serviceRadius,
                 latitude: lat,
                 longitude: lng,
+                fixedLatitude: fixedLat,
+                fixedLongitude: fixedLng,
                 registeredLatitude: regLat,
                 registeredLongitude: regLng,
                 totalJobs,
@@ -110,40 +116,40 @@ class TechnicianManager {
         try {
             // Destructure known app properties
             const {
-                serviceType, addressDetails, reviewCount, membershipSince, joinedAt, updatedAt,
-                documents, baseAddress, serviceRadius, id,
-                latitude, longitude, registeredLatitude, registeredLongitude,
-                location,
-                totalJobs, completedJobs, rejectedJobs, pendingJobs, acceptedJobs, // [NEW] Stats
-                membershipExpiry, // [NEW] Membership
+                serviceType, addressDetails, reviewCount, membershipSince, membershipExpiry,
+                joinedAt, updatedAt, totalJobs, completedJobs, rejectedJobs, pendingJobs, acceptedJobs,
+                baseAddress, serviceRadius, registeredLatitude, registeredLongitude,
+                fixedLatitude, fixedLongitude,
+                createdAt, createdBy, id,
                 ...rest
             } = tech;
 
             const mapped = { ...rest };
-            if (serviceType !== undefined) mapped.service_type = serviceType;
-            if (addressDetails !== undefined) mapped.address_details = addressDetails;
+            if (serviceType) mapped.service_type = serviceType;
+            if (addressDetails) mapped.address_details = addressDetails;
             if (reviewCount !== undefined) mapped.review_count = reviewCount;
-            if (membershipSince !== undefined) mapped.membership_since = membershipSince;
-            if (membershipExpiry !== undefined) mapped.membership_expiry = membershipExpiry; // [NEW]
-            if (joinedAt !== undefined) mapped.joined_at = joinedAt;
-            if (updatedAt !== undefined) mapped.updated_at = updatedAt;
-            if (documents !== undefined) mapped.documents = documents;
-            if (id !== undefined) mapped.id = id;
+            if (membershipSince) mapped.membership_since = membershipSince;
+            if (membershipExpiry) mapped.membership_expiry = membershipExpiry;
+            if (joinedAt) mapped.joined_at = joinedAt;
+            if (updatedAt) mapped.updated_at = updatedAt;
+            if (createdAt) mapped.created_at = createdAt; // IMPORTANT
+            if (createdBy) mapped.created_by = createdBy; // IMPORTANT
+            if (typeof totalJobs === 'number') mapped.total_jobs = totalJobs;
+            if (typeof completedJobs === 'number') mapped.completed_jobs = completedJobs;
+            if (typeof rejectedJobs === 'number') mapped.rejected_jobs = rejectedJobs;
+            if (typeof pendingJobs === 'number') mapped.pending_jobs = pendingJobs;
+            if (typeof acceptedJobs === 'number') mapped.accepted_jobs = acceptedJobs;
 
             // Direct Columns
-            if (latitude !== undefined) mapped.latitude = latitude;
-            if (longitude !== undefined) mapped.longitude = longitude;
-            if (registeredLatitude !== undefined) mapped.registered_latitude = registeredLatitude;
-            if (registeredLongitude !== undefined) mapped.registered_longitude = registeredLongitude;
-            if (baseAddress !== undefined) mapped.base_address = baseAddress;
-            if (serviceRadius !== undefined) mapped.service_radius = serviceRadius;
+            if (baseAddress) mapped.base_address = baseAddress;
+            if (serviceRadius) mapped.service_radius = serviceRadius;
 
-            // Stats
-            if (totalJobs !== undefined) mapped.total_jobs = totalJobs;
-            if (completedJobs !== undefined) mapped.completed_jobs = completedJobs;
-            if (rejectedJobs !== undefined) mapped.rejected_jobs = rejectedJobs;
-            if (pendingJobs !== undefined) mapped.pending_jobs = pendingJobs;
-            if (acceptedJobs !== undefined) mapped.accepted_jobs = acceptedJobs; // [NEW]
+            if (registeredLatitude) mapped.registered_latitude = registeredLatitude;
+            if (registeredLongitude) mapped.registered_longitude = registeredLongitude;
+            if (fixedLatitude) mapped.fixed_latitude = fixedLatitude; // New
+            if (fixedLongitude) mapped.fixed_longitude = fixedLongitude; // New
+
+            if (id) mapped.id = id;
 
             return mapped;
         } catch (err) {
@@ -152,97 +158,96 @@ class TechnicianManager {
         }
     }
 
-    async createTechnician(name, email, phone, serviceType, locationInput, password, experience, addressDetails, createdBy = null, fixedLocation = null) {
+    async createTechnician(technicianData, createdBy = null, fixedLocation = null) {
         try {
-            if (!name || !email || !password) {
-                throw new Error("Missing required fields: name, email, or password");
+            const { name, email, phone, serviceType, addressDetails, experience } = technicianData;
+
+            // Validate mandatory fields
+            if (!name || !email || !serviceType) {
+                throw new Error("Missing required fields: name, email, or serviceType");
             }
 
-            const existing = await this.db.find('email', email);
+            // Check if email already exists
+            const existing = await this.findOne('email', email);
             if (existing) {
-                throw new Error('Technician already exists with this email');
+                throw new Error("Technician with this email already exists");
             }
 
+            // Geocoding Logic
             let lat = null;
             let lng = null;
-            let baseAddress = null;
+            let finalAddress = addressDetails;
 
-            // Handle Location Input
-            if (locationInput) {
-                if (typeof locationInput === 'string') {
-                    baseAddress = locationInput;
-                    const coords = await geocodeAddress(locationInput);
-                    if (coords) {
-                        lat = coords.lat;
-                        lng = coords.lng;
-                    }
-                } else if (typeof locationInput === 'object') {
-                    lat = locationInput.latitude;
-                    lng = locationInput.longitude;
-                    baseAddress = locationInput.address || addressDetails;
+            // [FIX] Priority: Fixed Location (from Admin) > Address Geocoding
+            if (fixedLocation && fixedLocation.latitude && fixedLocation.longitude) {
+                lat = fixedLocation.latitude;
+                lng = fixedLocation.longitude;
+                // If address is also passed in fixedLocation, use it
+                if (fixedLocation.address) finalAddress = fixedLocation.address;
+            }
+            else if (addressDetails) {
+                const coords = await geocodeAddress(addressDetails);
+                if (coords) {
+                    lat = coords.lat;
+                    lng = coords.lng;
                 }
             }
 
-            // Fallback to Fixed Location (Admin's Location) if provided and no specific location entered
+            // Explicitly verify coordinates
             if ((!lat || !lng) && fixedLocation) {
                 lat = fixedLocation.latitude;
                 lng = fixedLocation.longitude;
-                // Don't set baseAddress if it wasn't provided, or maybe set to "Admin Territory"
             }
 
             const newTechnician = {
-                id: crypto.randomUUID(), // [FIX] Use authentic UUID instead of timestamp
+                id: crypto.randomUUID(), // Standard UUID
                 name,
                 email,
                 phone,
-                password, // Stored as plain text per previous code pattern (should be hashed in production!)
-                experience,
+                serviceType,
+                addressDetails: finalAddress,
+                experience, // Now calling code passes this
+                status: 'Available',
                 rating: 0,
-                status: 'available',
-                service_type: serviceType,
-                address_details: addressDetails,
-                documents: {},
-                joined_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-
-                // Set both Static and Dynamic to the same initial value
+                reviewCount: 0,
+                membership: 'Standard',
+                membershipSince: new Date().toISOString(),
+                joinedAt: new Date().toISOString(),
+                location: { latitude: lat, longitude: lng },
                 latitude: lat,
                 longitude: lng,
-                registeredLatitude: lat,
-                registeredLongitude: lng,
 
-                baseAddress: baseAddress,
-                serviceRadius: 2,
+                // Add Fixed Location
+                fixedLatitude: lat,
+                fixedLongitude: lng,
 
-                // Binding
-                created_by: this._toUuid(createdBy) // Map to snake_case for DB, ensure valid UUID
+                documents: {
+                    verificationStatus: 'Pending',
+                    photo: null
+                },
+
+                // Add Creator ID using deterministic UUID helper if needed
+                createdBy: this._toUuid(createdBy)
             };
 
-            const dbRecord = this._mapToDb(newTechnician);
+            // Use BaseManager's automated create
+            const created = await this.create(newTechnician);
 
-            let created;
-            try {
-                created = await this.db.add(dbRecord);
-            } catch (dbErr) {
-                // Self-Healing: If 'created_by' column is missing, retry without it
-                if (dbErr.message && (dbErr.message.includes('created_by') || dbErr.message.includes('column'))) {
-                    console.warn("[TechnicianManager] 'created_by' column missing in DB. Retrying without it.");
-                    const { created_by, ...fallbackRecord } = dbRecord;
-                    created = await this.db.add(fallbackRecord);
-                } else {
-                    throw dbErr;
-                }
-            }
-
-            const tech = this._mapFromDb(created);
-
+            // Special Event: Notify Admins explicitly (BaseManager already emits 'technician_created')
             if (this.io) {
-                this.io.emit('new_technician_registered', tech);
+                // Keep this for any legacy listeners expecting 'new_technician'
+                this.io.emit('new_technician', created);
             }
 
-            return tech;
+            return created;
         } catch (err) {
-            console.error("[TechnicianManager] Error creating technician:", err);
+            console.error("[TechnicianManager] Create Error:", err);
+
+            // [Self-Healing] If created_by error, retry without it
+            if (err.message && err.message.includes("created_by") && technicianData.createdBy) {
+                console.log("[TechnicianManager] Retrying creation without 'createdBy'...");
+                return this.createTechnician({ ...technicianData, createdBy: null }, null, fixedLocation);
+            }
             throw err;
         }
     }
