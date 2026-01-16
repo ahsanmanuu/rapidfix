@@ -5,6 +5,8 @@ const NotificationManager = require('./NotificationManager');
 const FinanceManager = require('./FinanceManager');
 const ComplaintManager = require('./ComplaintManager');
 
+const InvoiceManager = require('./InvoiceManager');
+
 class JobManager {
     constructor() {
         this.db = new Database('jobs');
@@ -13,6 +15,7 @@ class JobManager {
         this.notificationManager = new NotificationManager();
         this.financeManager = new FinanceManager();
         this.complaintManager = new ComplaintManager();
+        this.invoiceManager = new InvoiceManager(); // [NEW]
         this.io = null; // Will be set via server/index.js
     }
 
@@ -347,6 +350,17 @@ class JobManager {
                         if (amount > 0) {
                             await this.financeManager.processPayment(enriched.technicianId, amount * 0.9, 'credit', `Job Compensation #${enriched.id}`);
                             this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
+                            this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
+                        }
+
+                        // [NEW] Generate and Send Invoice (Async)
+                        try {
+                            console.log(`[JobManager] Generating invoice for Job ${id}...`);
+                            const pdfBuffer = await this.invoiceManager.generateInvoice(enriched);
+                            await this.invoiceManager.sendInvoiceEmail(enriched, pdfBuffer);
+                            console.log(`[JobManager] Invoice generated and sent for Job ${id}`);
+                        } catch (invErr) {
+                            console.error(`[JobManager] Invoice generation failed for Job ${id}:`, invErr);
                         }
                     } else if (status === 'rejected') {
                         console.log(`[JobManager] Job ${id} rejected, updating tech ${enriched.technicianId} stats and setting status to available`);

@@ -1,7 +1,31 @@
-import React from 'react';
+// Imports at top (implied context)
+import { useToast } from '../../ToastSystem';
+import api from '../../../services/api';
 
 const JobDrawer = ({ job, onClose, onEdit }) => {
+    const { success, error } = useToast();
+
     if (!job) return null;
+
+    const handleDownloadInvoice = async () => {
+        try {
+            // Direct open in new tab for download
+            window.open(`${api.defaults.baseURL}/invoices/${job.id}/download`, '_blank');
+        } catch (err) {
+            error('Failed to download invoice');
+        }
+    };
+
+    const handleShareInvoice = async () => {
+        try {
+            const res = await api.post(`/invoices/${job.id}/share`);
+            if (res.data.success) {
+                success('Invoice shared successfully with customer!');
+            }
+        } catch (err) {
+            error('Failed to share invoice');
+        }
+    };
 
     const getStatusStyles = (status) => {
         const s = status?.toLowerCase();
@@ -37,8 +61,9 @@ const JobDrawer = ({ job, onClose, onEdit }) => {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+                    {/* ... Existing Content ... */}
+                    {/* Keeping existing content structure, just injecting logic above */}
                     <div className="flex flex-col gap-8">
-                        {/* Summary Card */}
                         {/* Summary Card */}
                         <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-10 -mt-10 blur-xl"></div>
@@ -65,7 +90,6 @@ const JobDrawer = ({ job, onClose, onEdit }) => {
                             </div>
                         </div>
 
-                        {/* Customer Info */}
                         {/* Customer Info */}
                         <div className="flex flex-col gap-3">
                             <h4 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Customer Insight</h4>
@@ -102,7 +126,7 @@ const JobDrawer = ({ job, onClose, onEdit }) => {
                             </p>
                         </div>
 
-                        {/* Technician Info (if assigned) */}
+                        {/* Technician Info */}
                         {job.technicianId && (
                             <div className="flex flex-col gap-4">
                                 <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Assigned Technician</h4>
@@ -122,15 +146,35 @@ const JobDrawer = ({ job, onClose, onEdit }) => {
 
                 {/* Footer Actions */}
                 <div className="p-6 border-t border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/[0.02]">
-                    <div className="grid grid-cols-2 gap-3">
-                        <button className="flex items-center justify-center gap-2 bg-white dark:bg-white/5 text-slate-900 dark:text-white border border-gray-200 dark:border-white/10 px-4 py-3 rounded-xl text-sm font-black hover:bg-gray-100 dark:hover:bg-white/10 transition-all">
-                            <span className="material-symbols-outlined text-sm">edit</span>
-                            Edit Job
-                        </button>
-                        <button className="flex items-center justify-center gap-2 bg-primary text-white px-4 py-3 rounded-xl text-sm font-black hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
-                            <span className="material-symbols-outlined text-sm">download</span>
-                            Invoice
-                        </button>
+                    <div className="flex flex-col gap-3">
+                        {(job.status === 'completed' || job.status === 'work_done') && (
+                            <div className="grid grid-cols-2 gap-3 mb-2">
+                                <button
+                                    onClick={handleDownloadInvoice}
+                                    className="flex items-center justify-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-3 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all border border-indigo-100"
+                                >
+                                    <span className="material-symbols-outlined text-sm">download</span>
+                                    Download PDF
+                                </button>
+                                <button
+                                    onClick={handleShareInvoice}
+                                    className="flex items-center justify-center gap-2 bg-purple-50 text-purple-600 px-4 py-3 rounded-xl text-sm font-bold hover:bg-purple-100 transition-all border border-purple-100"
+                                >
+                                    <span className="material-symbols-outlined text-sm">send</span>
+                                    Email Invoice
+                                </button>
+                            </div>
+                        )}
+                        <div className="grid grid-cols-2 gap-3">
+                            <button className="flex items-center justify-center gap-2 bg-white dark:bg-white/5 text-slate-900 dark:text-white border border-gray-200 dark:border-white/10 px-4 py-3 rounded-xl text-sm font-black hover:bg-gray-100 dark:hover:bg-white/10 transition-all">
+                                <span className="material-symbols-outlined text-sm">edit</span>
+                                Edit Job
+                            </button>
+                            <button className="flex items-center justify-center gap-2 bg-slate-200 text-slate-400 px-4 py-3 rounded-xl text-sm font-black cursor-not-allowed">
+                                <span className="material-symbols-outlined text-sm">delete</span>
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

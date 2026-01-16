@@ -1346,6 +1346,42 @@ app.put('/api/jobs/:id/status', async (req, res) => {
   else res.status(500).json({ success: false, error: 'Failed to update job' });
 });
 
+// --- Invoice Routes [NEW] ---
+app.get('/api/invoices/:jobId/download', async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const job = await jobManager.getJob(jobId);
+    if (!job) return res.status(404).json({ success: false, error: 'Job not found' });
+
+    const pdfBuffer = await jobManager.invoiceManager.generateInvoice(job);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Invoice-${jobId}.pdf`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error("Invoice Download Error:", err);
+    res.status(500).json({ success: false, error: 'Failed to generate invoice' });
+  }
+});
+
+app.post('/api/invoices/:jobId/share', async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const { email } = req.body; // Optional manual recipient
+    const job = await jobManager.getJob(jobId);
+    if (!job) return res.status(404).json({ success: false, error: 'Job not found' });
+
+    const pdfBuffer = await jobManager.invoiceManager.generateInvoice(job);
+    const recipients = email ? [email] : [];
+    const result = await jobManager.invoiceManager.sendInvoiceEmail(job, pdfBuffer, recipients);
+
+    res.json(result);
+  } catch (err) {
+    console.error("Invoice Share Error:", err);
+    res.status(500).json({ success: false, error: 'Failed to share invoice' });
+  }
+});
+
 // --- Technician Status & Profile Routes ---
 app.put('/api/technicians/:id/status', async (req, res) => {
   const { status, location } = req.body;
