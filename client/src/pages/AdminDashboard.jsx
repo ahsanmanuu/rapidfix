@@ -632,214 +632,214 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
                         </div>
+
+                    ) : activeTab === 'nearby' ? (
+                        <div className="h-[calc(100vh-100px)] -m-4 md:-m-8 p-4 md:p-8">
+                            <NearbyMap user={user} />
                         </div>
-            ) : activeTab === 'nearby' ? (
-            <div className="h-[calc(100vh-100px)] -m-4 md:-m-8 p-4 md:p-8">
-                <NearbyMap user={user} />
-            </div>
-            ) : activeTab === 'offers' ? (
-            <div className="h-full overflow-y-auto">
-                <OfferManager />
-            </div>
-            ) : activeTab === 'testimonials' ? (
-            <div className="h-full overflow-y-auto">
-                <TestimonialManager />
-            </div>
-            ) : activeTab === 'billing' ? (
-            <div className="h-full overflow-y-auto">
-                <FinanceView />
-            </div>
-            ) : (
-            <div className="h-full">
-                {/* TECHNICIANS TAB */}
-                {activeTab === 'technicians' && (
-                    <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
-                        <TechnicianHeader onAddTechnician={() => alert("Add Technician feature coming soon")} />
+                    ) : activeTab === 'offers' ? (
+                        <div className="h-full overflow-y-auto">
+                            <OfferManager />
+                        </div>
+                    ) : activeTab === 'testimonials' ? (
+                        <div className="h-full overflow-y-auto">
+                            <TestimonialManager />
+                        </div>
+                    ) : activeTab === 'billing' ? (
+                        <div className="h-full overflow-y-auto">
+                            <FinanceView />
+                        </div>
+                    ) : (
+                        <div className="h-full">
+                            {/* TECHNICIANS TAB */}
+                            {activeTab === 'technicians' && (
+                                <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
+                                    <TechnicianHeader onAddTechnician={() => alert("Add Technician feature coming soon")} />
 
-                        <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
-                            <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
-                                <TechnicianStats technicians={technicians} />
+                                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
+                                        <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
+                                            <TechnicianStats technicians={technicians} />
 
-                                <TechnicianFilters
-                                    searchQuery={searchQuery}
-                                    setSearchQuery={setSearchQuery}
-                                    activeStatus={activeTechStatus}
-                                    setActiveStatus={setActiveTechStatus}
-                                    activeService={activeTechService}
-                                    setActiveService={setActiveTechService}
-                                />
+                                            <TechnicianFilters
+                                                searchQuery={searchQuery}
+                                                setSearchQuery={setSearchQuery}
+                                                activeStatus={activeTechStatus}
+                                                setActiveStatus={setActiveTechStatus}
+                                                activeService={activeTechService}
+                                                setActiveService={setActiveTechService}
+                                            />
 
-                                <TechnicianTable
-                                    technicians={paginatedTechnicians}
-                                    selectedTechId={selectedTechnician?.id}
-                                    onSelectTech={handleSelectTechnician}
-                                    onBanTech={handleBanTechnician}
-                                    onDeleteTech={(tech) => alert(`Delete ${tech.name}`)}
-                                />
+                                            <TechnicianTable
+                                                technicians={paginatedTechnicians}
+                                                selectedTechId={selectedTechnician?.id}
+                                                onSelectTech={handleSelectTechnician}
+                                                onBanTech={handleBanTechnician}
+                                                onDeleteTech={(tech) => alert(`Delete ${tech.name}`)}
+                                            />
 
-                                {/* Pagination (Simple Implementation) */}
-                                {filteredTechnicians.length > LIMIT_PER_PAGE && (
-                                    <div className="flex justify-center mt-4 gap-2">
-                                        <button
-                                            disabled={technicianPage === 1}
-                                            onClick={() => setTechnicianPage(p => p - 1)}
-                                            className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg disabled:opacity-50"
-                                        >
-                                            Previous
-                                        </button>
-                                        <span className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg">
-                                            Page {technicianPage} of {Math.ceil(filteredTechnicians.length / LIMIT_PER_PAGE)}
-                                        </span>
-                                        <button
-                                            disabled={technicianPage === Math.ceil(filteredTechnicians.length / LIMIT_PER_PAGE)}
-                                            onClick={() => setTechnicianPage(p => p + 1)}
-                                            className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg disabled:opacity-50"
-                                        >
-                                            Next
-                                        </button>
+                                            {/* Pagination (Simple Implementation) */}
+                                            {filteredTechnicians.length > LIMIT_PER_PAGE && (
+                                                <div className="flex justify-center mt-4 gap-2">
+                                                    <button
+                                                        disabled={technicianPage === 1}
+                                                        onClick={() => setTechnicianPage(p => p - 1)}
+                                                        className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg disabled:opacity-50"
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    <span className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg">
+                                                        Page {technicianPage} of {Math.ceil(filteredTechnicians.length / LIMIT_PER_PAGE)}
+                                                    </span>
+                                                    <button
+                                                        disabled={technicianPage === Math.ceil(filteredTechnicians.length / LIMIT_PER_PAGE)}
+                                                        onClick={() => setTechnicianPage(p => p + 1)}
+                                                        className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg disabled:opacity-50"
+                                                    >
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
+
+                                    {/* Drawer Backdrop */}
+                                    {isTechDrawerOpen && (
+                                        <div
+                                            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
+                                            onClick={handleCloseTechDrawer}
+                                        />
+                                    )}
+
+                                    <TechnicianDrawer
+                                        technician={selectedTechnician}
+                                        onClose={handleCloseTechDrawer}
+                                        onBanTech={handleBanTechnician}
+                                        onVerifyTech={handleVerifyTechnician}
+                                    />
+                                </div>
+                            )}
+
+                            {/* USERS TAB (New Implementation) */}
+                            {activeTab === 'users' && (
+                                <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
+                                    <UserHeader onAddUser={() => setIsCreateUserOpen(true)} />
+                                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
+                                        <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
+                                            <Filters
+                                                searchQuery={searchQuery}
+                                                setSearchQuery={setSearchQuery}
+                                                activeTier={activeTier}
+                                                setActiveTier={setActiveTier}
+                                                activeStatus={activeStatus}
+                                                setActiveStatus={setActiveStatus}
+                                            />
+                                            <UserTable
+                                                users={paginatedUsers}
+                                                selectedUserId={selectedUser?.id || null}
+                                                onSelectUser={handleSelectUser}
+                                                onBanUser={handleBanUser}
+                                                onChangeMembership={handleChangeMembership}
+                                                currentPage={userPage}
+                                                onPageChange={setUserPage}
+                                                totalPages={Math.ceil(filteredUsers.length / LIMIT_PER_PAGE)}
+                                                totalItems={filteredUsers.length}
+                                                startIndex={(userPage - 1) * LIMIT_PER_PAGE + 1}
+                                                endIndex={Math.min(userPage * LIMIT_PER_PAGE, filteredUsers.length)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Detail Overlay */}
+                                    {isDrawerOpen && (
+                                        <div
+                                            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 sm:hidden"
+                                            onClick={handleCloseDrawer}
+                                        />
+                                    )}
+
+                                    <UserDrawer
+                                        user={selectedUser}
+                                        onClose={handleCloseDrawer}
+                                        onBanUser={handleBanUser}
+                                        onChangeMembership={handleChangeMembership}
+                                        onEdit={handleEditUser}
+                                    />
+
+                                    <UserCreateModal
+                                        isOpen={isCreateUserOpen || isEditUserOpen}
+                                        onClose={() => { setIsCreateUserOpen(false); setIsEditUserOpen(false); }}
+                                        onCreateUser={handleCreateUser}
+                                        onUpdateUser={handleUpdateUser}
+                                        initialData={isEditUserOpen ? selectedUser : null}
+                                    />
+                                </div>
+                            )}
+
+                            {/* JOBS TAB (New Professional Implementation) */}
+                            {activeTab === 'jobs' && (
+                                <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
+                                    <JobHeader
+                                        activeFilter={activeJobFilter}
+                                        setActiveFilter={setActiveJobFilter}
+                                        onAddJob={() => alert('Add Job Feature Coming Soon')}
+                                    />
+                                    <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
+                                        <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
+                                            <JobStats jobs={filteredJobs} />
+                                            <JobTable
+                                                jobs={paginatedJobs}
+                                                activeFilter={activeJobFilter}
+                                                setActiveFilter={setActiveJobFilter}
+                                                selectedJobId={selectedJob?.id || null}
+                                                onSelectJob={handleSelectJob}
+                                                onEditJob={handleEditJob}
+                                                currentPage={jobPage}
+                                                onPageChange={setJobPage}
+                                                totalPages={Math.ceil(filteredJobs.length / LIMIT_PER_PAGE)}
+                                                totalItems={filteredJobs.length}
+                                                startIndex={(jobPage - 1) * LIMIT_PER_PAGE + 1}
+                                                endIndex={Math.min(jobPage * LIMIT_PER_PAGE, filteredJobs.length)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Drawer Backdrop */}
+                                    {isJobDrawerOpen && (
+                                        <div
+                                            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
+                                            onClick={handleCloseJobDrawer}
+                                        />
+                                    )}
+
+                                    <JobDrawer
+                                        job={selectedJob}
+                                        onClose={handleCloseJobDrawer}
+                                        onEdit={handleEditJob}
+                                    />
+
+                                    <JobFormModal
+                                        isOpen={isEditJobOpen}
+                                        onClose={() => setIsEditJobOpen(false)}
+                                        onUpdateJob={handleUpdateJob}
+                                        initialData={selectedJob}
+                                    />
+                                </div>
+                            )}
+
+                            {/* OTHER TABS (Placeholder to ensure switching works) */}
+                            {activeTab !== 'dashboard' && activeTab !== 'users' && activeTab !== 'jobs' && activeTab !== 'technicians' && (
+                                <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 shadow-sm">
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 italic">
+                                        {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Module Loaded
+                                    </h3>
+                                    <p className="text-gray-500 dark:text-text-secondary">
+                                        Data for {activeTab} is ready.
+                                    </p>
+                                </div>
+                            )}
                         </div>
-
-                        {/* Drawer Backdrop */}
-                        {isTechDrawerOpen && (
-                            <div
-                                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
-                                onClick={handleCloseTechDrawer}
-                            />
-                        )}
-
-                        <TechnicianDrawer
-                            technician={selectedTechnician}
-                            onClose={handleCloseTechDrawer}
-                            onBanTech={handleBanTechnician}
-                            onVerifyTech={handleVerifyTechnician}
-                        />
-                    </div>
-                )}
-
-                {/* USERS TAB (New Implementation) */}
-                {activeTab === 'users' && (
-                    <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
-                        <UserHeader onAddUser={() => setIsCreateUserOpen(true)} />
-                        <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
-                            <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
-                                <Filters
-                                    searchQuery={searchQuery}
-                                    setSearchQuery={setSearchQuery}
-                                    activeTier={activeTier}
-                                    setActiveTier={setActiveTier}
-                                    activeStatus={activeStatus}
-                                    setActiveStatus={setActiveStatus}
-                                />
-                                <UserTable
-                                    users={paginatedUsers}
-                                    selectedUserId={selectedUser?.id || null}
-                                    onSelectUser={handleSelectUser}
-                                    onBanUser={handleBanUser}
-                                    onChangeMembership={handleChangeMembership}
-                                    currentPage={userPage}
-                                    onPageChange={setUserPage}
-                                    totalPages={Math.ceil(filteredUsers.length / LIMIT_PER_PAGE)}
-                                    totalItems={filteredUsers.length}
-                                    startIndex={(userPage - 1) * LIMIT_PER_PAGE + 1}
-                                    endIndex={Math.min(userPage * LIMIT_PER_PAGE, filteredUsers.length)}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Detail Overlay */}
-                        {isDrawerOpen && (
-                            <div
-                                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 sm:hidden"
-                                onClick={handleCloseDrawer}
-                            />
-                        )}
-
-                        <UserDrawer
-                            user={selectedUser}
-                            onClose={handleCloseDrawer}
-                            onBanUser={handleBanUser}
-                            onChangeMembership={handleChangeMembership}
-                            onEdit={handleEditUser}
-                        />
-
-                        <UserCreateModal
-                            isOpen={isCreateUserOpen || isEditUserOpen}
-                            onClose={() => { setIsCreateUserOpen(false); setIsEditUserOpen(false); }}
-                            onCreateUser={handleCreateUser}
-                            onUpdateUser={handleUpdateUser}
-                            initialData={isEditUserOpen ? selectedUser : null}
-                        />
-                    </div>
-                )}
-
-                {/* JOBS TAB (New Professional Implementation) */}
-                {activeTab === 'jobs' && (
-                    <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
-                        <JobHeader
-                            activeFilter={activeJobFilter}
-                            setActiveFilter={setActiveJobFilter}
-                            onAddJob={() => alert('Add Job Feature Coming Soon')}
-                        />
-                        <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
-                            <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
-                                <JobStats jobs={filteredJobs} />
-                                <JobTable
-                                    jobs={paginatedJobs}
-                                    activeFilter={activeJobFilter}
-                                    setActiveFilter={setActiveJobFilter}
-                                    selectedJobId={selectedJob?.id || null}
-                                    onSelectJob={handleSelectJob}
-                                    onEditJob={handleEditJob}
-                                    currentPage={jobPage}
-                                    onPageChange={setJobPage}
-                                    totalPages={Math.ceil(filteredJobs.length / LIMIT_PER_PAGE)}
-                                    totalItems={filteredJobs.length}
-                                    startIndex={(jobPage - 1) * LIMIT_PER_PAGE + 1}
-                                    endIndex={Math.min(jobPage * LIMIT_PER_PAGE, filteredJobs.length)}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Drawer Backdrop */}
-                        {isJobDrawerOpen && (
-                            <div
-                                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-opacity"
-                                onClick={handleCloseJobDrawer}
-                            />
-                        )}
-
-                        <JobDrawer
-                            job={selectedJob}
-                            onClose={handleCloseJobDrawer}
-                            onEdit={handleEditJob}
-                        />
-
-                        <JobFormModal
-                            isOpen={isEditJobOpen}
-                            onClose={() => setIsEditJobOpen(false)}
-                            onUpdateJob={handleUpdateJob}
-                            initialData={selectedJob}
-                        />
-                    </div>
-                )}
-
-                {/* OTHER TABS (Placeholder to ensure switching works) */}
-                {activeTab !== 'dashboard' && activeTab !== 'users' && activeTab !== 'jobs' && activeTab !== 'technicians' && (
-                    <div className="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-white/5 p-6 shadow-sm">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 italic">
-                            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Module Loaded
-                        </h3>
-                        <p className="text-gray-500 dark:text-text-secondary">
-                            Data for {activeTab} is ready.
-                        </p>
-                    </div>
-                )}
-            </div>
                     )}
-        </main>
+                </main>
             </div >
         </div >
     );
