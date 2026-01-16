@@ -145,7 +145,7 @@ const NearbyMap = ({ user }) => {
                             <div className="relative group cursor-pointer transform hover:scale-110 transition-transform">
                                 <div className={`w-8 h-8 rounded-full border-2 border-white shadow-md overflow-hidden ${t.status === 'Available' ? 'ring-2 ring-emerald-500' : 'ring-2 ring-slate-400'}`}>
                                     <img
-                                        src={t.avatar || `https://ui-avatars.com/api/?name=${t.name}`}
+                                        src={t.photo || t.avatar || t.documents?.photo || t.documents?.profile_photo || `https://ui-avatars.com/api/?name=${t.name}`}
                                         className="w-full h-full object-cover"
                                         onError={e => e.target.src = `https://ui-avatars.com/api/?name=${t.name}`}
                                     />
