@@ -219,7 +219,21 @@ class TechnicianManager {
             };
 
             const dbRecord = this._mapToDb(newTechnician);
-            const created = await this.db.add(dbRecord);
+
+            let created;
+            try {
+                created = await this.db.add(dbRecord);
+            } catch (dbErr) {
+                // Self-Healing: If 'created_by' column is missing, retry without it
+                if (dbErr.message && (dbErr.message.includes('created_by') || dbErr.message.includes('column'))) {
+                    console.warn("[TechnicianManager] 'created_by' column missing in DB. Retrying without it.");
+                    const { created_by, ...fallbackRecord } = dbRecord;
+                    created = await this.db.add(fallbackRecord);
+                } else {
+                    throw dbErr;
+                }
+            }
+
             const tech = this._mapFromDb(created);
 
             if (this.io) {
