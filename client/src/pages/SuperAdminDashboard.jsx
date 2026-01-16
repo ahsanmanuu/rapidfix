@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Plus, Users, Map, Settings, LogOut, LayoutDashboard } from 'lucide-react';
+import { Shield, Plus, Users, Map, Settings, LogOut, LayoutDashboard, Wrench, User } from 'lucide-react';
 import AdminCreationModal from '../components/admin-creation/AdminCreationModal';
+import UserCreationModal from '../components/admin-creation/UserCreationModal';
+import TechnicianCreationModal from '../components/admin-creation/TechnicianCreationModal';
 import { Header } from '../components/admin/Header'; // Reusing Header
 import { Sidebar } from '../components/admin/Sidebar'; // Reusing Sidebar if possible, or Custom
 import { StatsCard } from '../components/admin/StatsCard'; // Reusing
@@ -12,7 +14,9 @@ import api from '../services/api';
 const SuperAdminDashboard = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isCreateAdminModalOpen, setIsCreateAdminModalOpen] = useState(false);
+    const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+    const [isCreateTechModalOpen, setIsCreateTechModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
 
     const handleLogout = () => {
@@ -22,7 +26,14 @@ const SuperAdminDashboard = () => {
 
     const handleAdminCreated = (newAdmin) => {
         alert(`Admin ${newAdmin.name} created successfully!`);
-        // Refresh logic here if needed
+    };
+
+    const handleUserCreated = (newUser) => {
+        alert(`User ${newUser.name} created successfully!`);
+    };
+
+    const handleTechCreated = (newTech) => {
+        alert(`Technician ${newTech.name} created successfully!`);
     };
 
     return (
@@ -52,18 +63,34 @@ const SuperAdminDashboard = () => {
             {/* Main Content */}
             <main className="flex-1 overflow-auto bg-slate-900 p-8">
                 {/* Header Section */}
-                <header className="flex justify-between items-center mb-10">
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                     <div>
                         <h1 className="text-3xl font-bold">Control Center</h1>
                         <p className="text-slate-400 mt-1">Welcome back, Commander {user?.name}</p>
                     </div>
-                    <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-red-900/40 transition-all hover:scale-105"
-                    >
-                        <Plus size={20} />
-                        Create New Admin
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setIsCreateUserModalOpen(true)}
+                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-3 rounded-xl font-bold transition-all hover:scale-105"
+                        >
+                            <User size={18} />
+                            <span className="hidden md:inline">User</span>
+                        </button>
+                        <button
+                            onClick={() => setIsCreateTechModalOpen(true)}
+                            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-3 rounded-xl font-bold transition-all hover:scale-105"
+                        >
+                            <Wrench size={18} />
+                            <span className="hidden md:inline">Tech</span>
+                        </button>
+                        <button
+                            onClick={() => setIsCreateAdminModalOpen(true)}
+                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-red-900/40 transition-all hover:scale-105"
+                        >
+                            <Plus size={20} />
+                            Create Admin
+                        </button>
+                    </div>
                 </header>
 
                 {/* Content Area */}
@@ -96,10 +123,21 @@ const SuperAdminDashboard = () => {
                 </div>
             </main>
 
+            {/* MODALS */}
             <AdminCreationModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
+                isOpen={isCreateAdminModalOpen}
+                onClose={() => setIsCreateAdminModalOpen(false)}
                 onCreated={handleAdminCreated}
+            />
+            <UserCreationModal
+                isOpen={isCreateUserModalOpen}
+                onClose={() => setIsCreateUserModalOpen(false)}
+                onCreated={handleUserCreated}
+            />
+            <TechnicianCreationModal
+                isOpen={isCreateTechModalOpen}
+                onClose={() => setIsCreateTechModalOpen(false)}
+                onCreated={handleTechCreated}
             />
         </div>
     );

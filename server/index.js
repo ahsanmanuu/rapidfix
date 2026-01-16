@@ -561,6 +561,27 @@ app.post('/api/superadmin/create-admin', async (req, res) => {
   }
 });
 
+app.post('/api/superadmin/create-user', async (req, res) => {
+  try {
+    const { name, email, phone, password, location } = req.body;
+    // Super Admin action bypasses generic registration limitations if any
+    const user = await userManager.createUser(name, email, phone, password, location);
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/superadmin/create-technician', async (req, res) => {
+  try {
+    const { name, email, phone, serviceType, location, password, experience, addressDetails } = req.body;
+    const tech = await technicianManager.createTechnician(name, email, phone, serviceType, location, password, experience, addressDetails);
+    res.json({ success: true, technician: tech });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // --- Testimonial Routes ---
 app.get('/api/testimonials', async (req, res) => {
   const list = await testimonialManager.getTestimonials();
