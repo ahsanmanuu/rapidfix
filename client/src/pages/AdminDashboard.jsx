@@ -124,6 +124,16 @@ const AdminDashboard = () => {
     const [isJobDrawerOpen, setIsJobDrawerOpen] = useState(false);
     const [isEditJobOpen, setIsEditJobOpen] = useState(false);
 
+    // Data State (Technicians) - Moved to top level
+    const [technicians, setTechnicians] = useState([]);
+
+    // Technician Panel State
+    const [technicianPage, setTechnicianPage] = useState(1);
+    const [activeTechStatus, setActiveTechStatus] = useState('All');
+    const [activeTechService, setActiveTechService] = useState('All');
+    const [selectedTechnician, setSelectedTechnician] = useState(null);
+    const [isTechDrawerOpen, setIsTechDrawerOpen] = useState(false);
+
     const fetchUsers = async () => {
         try {
             const response = await api.get('/admin/users'); // [FIXED] Correct Endpoint
@@ -281,16 +291,7 @@ const AdminDashboard = () => {
             alert("Failed to update job");
         }
     };
-
-    // Data State
-    const [technicians, setTechnicians] = useState([]);
-
-    // Technician Panel State
-    const [technicianPage, setTechnicianPage] = useState(1);
-    const [activeTechStatus, setActiveTechStatus] = useState('All');
-    const [activeTechService, setActiveTechService] = useState('All');
-    const [selectedTechnician, setSelectedTechnician] = useState(null);
-    const [isTechDrawerOpen, setIsTechDrawerOpen] = useState(false);
+    /* [MOVED TO TOP] Data State and Technician Panel State were here */
 
     // Derived State - Filtered Technicians
     const filteredTechnicians = technicians.filter(tech => {
