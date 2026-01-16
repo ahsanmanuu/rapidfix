@@ -155,31 +155,32 @@ const TechnicianCreationModal = ({ isOpen, onClose, onCreated }) => {
                             Leave blank to auto-detect from Address or use your Admin Location. Explicit coordinates take priority.
                         </p>
                     </div>
+                </div>
 
-                    <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-400 uppercase">Base Location (City/Address)</label>
-                        <div className="relative">
-                            <MapPin className="absolute left-3 top-3 text-slate-500" size={16} />
-                            <input
-                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-10 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition"
-                                placeholder="Downtown, City Center"
-                                value={formData.location}
-                                onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <p className="text-[10px] text-slate-500 mt-1">We'll register this as their home base for geospatial searches.</p>
+                <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-400 uppercase">Base Location (City/Address)</label>
+                    <div className="relative">
+                        <MapPin className="absolute left-3 top-3 text-slate-500" size={16} />
+                        <input
+                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-10 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition"
+                            placeholder="Downtown, City Center"
+                            value={formData.location}
+                            onChange={e => setFormData({ ...formData, location: e.target.value })}
+                            required
+                        />
                     </div>
+                    <p className="text-[10px] text-slate-500 mt-1">We'll register this as their home base for geospatial searches.</p>
+                </div>
 
-                    <div className="pt-4">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-900/40 transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2"
-                        >
-                            {loading ? <Loader2 className="animate-spin" /> : 'Create Technician'}
-                        </button>
-                    </div>
+                <div className="pt-4">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-900/40 transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2"
+                    >
+                        {loading ? <Loader2 className="animate-spin" /> : 'Create Technician'}
+                    </button>
+                </div>
             </form>
         </AnimatedModalWrapper>
     );
