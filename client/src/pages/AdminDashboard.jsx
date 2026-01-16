@@ -178,7 +178,202 @@ const AdminDashboard = () => {
         } catch (e) { console.error(e); }
     }
 
-    // ... (Handlers)
+    const handleSelectUser = (user) => {
+        setSelectedUser(user);
+        setIsDrawerOpen(true);
+    };
+
+    const handleCloseDrawer = () => {
+        setIsDrawerOpen(false);
+        setTimeout(() => setSelectedUser(null), 300); // Wait for transition
+    };
+
+    const handleBanUser = async (userId, currentStatus) => {
+        try {
+            if (currentStatus === 'Banned') {
+                await unbanUser(userId);
+            } else {
+                await banUser(userId);
+            }
+            refreshUsers();
+            if (selectedUser && selectedUser.id === userId) {
+                setSelectedUser(prev => ({ ...prev, status: currentStatus === 'Banned' ? 'Active' : 'Banned' }));
+            }
+        } catch (error) {
+            console.error('Failed to toggle ban status:', error);
+            alert('Failed to update user status');
+        }
+    };
+
+    const handleChangeMembership = async (userId, newTier) => {
+        try {
+            await updateUserMembership(userId, newTier);
+            refreshUsers();
+            if (selectedUser && selectedUser.id === userId) {
+                setSelectedUser(prev => ({ ...prev, membership: newTier }));
+            }
+        } catch (error) {
+            console.error('Failed to update membership:', error);
+            alert('Failed to update membership');
+        }
+    };
+
+    const handleCreateUser = async (userData) => {
+        try {
+            console.log("Creating user:", userData);
+            await createUser(userData);
+            alert("User created successfully!");
+            refreshUsers();
+        } catch (error) {
+            console.error("Create user failed:", error);
+            throw error;
+        }
+    };
+
+    const handleEditUser = (user) => {
+        setSelectedUser(user);
+        setIsEditUserOpen(true);
+    };
+
+    const handleUpdateUser = async (userData) => {
+        try {
+            console.log("Updating user:", userData);
+            await updateUser(userData.id, userData);
+
+            // Optimistic update
+            setUsers(users.map(u => u.id === userData.id ? { ...u, ...userData } : u));
+            setSelectedUser(prev => prev && prev.id === userData.id ? { ...prev, ...userData } : prev);
+            setIsEditUserOpen(false);
+            alert("User updated successfully!");
+        } catch (error) {
+            console.error("Update user failed:", error);
+            alert("Failed to update user");
+        }
+    };
+
+    const handleSelectJob = (job) => {
+        setSelectedJob(job);
+        setIsJobDrawerOpen(true);
+    };
+
+    const handleCloseJobDrawer = () => {
+        setIsJobDrawerOpen(false);
+        setTimeout(() => setSelectedJob(null), 300);
+    };
+
+    const handleEditJob = (job) => {
+        setSelectedJob(job);
+        setIsEditJobOpen(true);
+    };
+
+    const handleUpdateJob = async (jobData) => {
+        try {
+            console.log("Updating job:", jobData);
+            await updateJob(jobData.id, jobData);
+
+            // Optimistic update
+            setJobs(jobs.map(j => j.id === jobData.id ? { ...j, ...jobData } : j));
+            setSelectedJob(prev => prev && prev.id === jobData.id ? { ...prev, ...jobData } : prev);
+            setIsEditJobOpen(false);
+            alert("Job updated successfully!");
+        } catch (error) {
+            console.error("Update job failed:", error);
+            alert("Failed to update job");
+        }
+    };
+
+    // Data State
+    const [technicians, setTechnicians] = useState([]);
+
+    // Technician Panel State
+    const [technicianPage, setTechnicianPage] = useState(1);
+    const [activeTechStatus, setActiveTechStatus] = useState('All');
+    const [activeTechService, setActiveTechService] = useState('All');
+    const [selectedTechnician, setSelectedTechnician] = useState(null);
+    const [isTechDrawerOpen, setIsTechDrawerOpen] = useState(false);
+
+    // Derived State - Filtered Technicians
+    const filteredTechnicians = technicians.filter(tech => {
+        const matchesSearch = searchQuery === '' ||
+            tech.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            tech.email?.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesStatus = activeTechStatus === 'All' || tech.status === activeTechStatus;
+        const matchesService = activeTechService === 'All' || tech.serviceType === activeTechService;
+
+        return matchesSearch && matchesStatus && matchesService;
+    });
+
+    const paginatedTechnicians = filteredTechnicians.slice((technicianPage - 1) * LIMIT_PER_PAGE, technicianPage * LIMIT_PER_PAGE);
+
+    const handleSelectTechnician = (tech) => {
+        setSelectedTechnician(tech);
+        setIsTechDrawerOpen(true);
+    };
+
+    const handleCloseTechDrawer = () => {
+        setIsTechDrawerOpen(false);
+        setTimeout(() => setSelectedTechnician(null), 300);
+    };
+
+    const handleBanTechnician = async (tech) => {
+        try {
+            if (tech.status === 'Banned') {
+                await unbanUser(tech.id);
+            } else {
+                await banUser(tech.id);
+            }
+            // Refresh technicians
+            const res = await api.get('/admin/technicians');
+            setTechnicians(res.data.technicians || []);
+
+            // Update selected technician if open
+            if (selectedTechnician && selectedTechnician.id === tech.id) {
+                setSelectedTechnician(prev => ({
+                    ...prev,
+                    status: tech.status === 'Banned' ? 'Active' : 'Banned'
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to toggle ban status:', error);
+            alert('Failed to update technician status');
+        }
+    };
+
+    const handleVerifyTechnician = async (tech) => {
+        // Placeholder for verification logic - potentially updateUserStatus or similar
+        alert(`Verifying ${tech.name}... (Feature pending backend support)`);
+    };
+
+    // Derived State - Filtered Users
+    const filteredUsers = users.filter(user => {
+        const matchesSearch = searchQuery === '' ||
+            user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.id?.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesTier = activeTier === 'All' || user.membership === activeTier;
+        const matchesStatus = activeStatus === 'All' || user.status === activeStatus;
+
+        return matchesSearch && matchesTier && matchesStatus;
+    });
+
+    // Derived State - Filtered Jobs
+    const filteredJobs = jobs.filter(job => {
+        const matchesSearch = searchQuery === '' ||
+            job.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.contactName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.serviceType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.status?.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesStatus = activeJobFilter === 'all' || job.status.toLowerCase() === activeJobFilter.toLowerCase();
+
+        return matchesSearch && matchesStatus;
+    });
+
+    // Pagination Logic
+    const paginatedUsers = filteredUsers.slice((userPage - 1) * LIMIT_PER_PAGE, userPage * LIMIT_PER_PAGE);
+    const paginatedJobs = filteredJobs.slice((jobPage - 1) * LIMIT_PER_PAGE, jobPage * LIMIT_PER_PAGE);
 
     // Initial Data Fetch
     useEffect(() => {
