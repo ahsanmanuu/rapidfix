@@ -136,10 +136,20 @@ class SuperAdminManager {
     }
 
     // [NEW] Create Sub-Admin (Delegates to AdminManager logic effectively or direct DB write)
+    // [NEW] Create Sub-Admin (Delegates to AdminManager logic effectively or direct DB write)
     async createSubAdmin(name, email, password, location) {
         try {
             const existing = await this.db.find('email', email);
             if (existing) throw new Error('Admin already exists');
+
+            // Find Super Admin ID to link as creator
+            let superAdminId = null;
+            // Optimistic approach: Get the first Super Admin. If multiple, just pick one.
+            const allAdmins = await this.db.read();
+            const superAdmin = allAdmins.find(a => a.role === 'superadmin');
+            if (superAdmin) {
+                superAdminId = superAdmin.id;
+            }
 
             const newAdmin = {
                 name,
@@ -153,7 +163,7 @@ class SuperAdminManager {
                 latitude: location?.latitude,
                 longitude: location?.longitude,
                 office_address: location?.address,
-                created_by: 'SUPER_ADMIN_ACTION'
+                created_by: superAdminId // Now passing a valid UUID (or null if not found, which is allowed as nullable FK)
             };
 
             // Using db.add from SuperAdminManager (which points to 'admins' table)
