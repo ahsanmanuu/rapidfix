@@ -50,10 +50,22 @@ class InvoiceManager {
     }
 
     _generateHeader(doc) {
-        const logoPath = path.join(__dirname, '../logo.png'); // Ensure a logo.png exists in server root
-        if (fs.existsSync(logoPath)) {
-            doc.image(logoPath, 50, 45, { width: 50 });
-        } else {
+        const logoPath = path.join(__dirname, '../logo.png');
+        let logoLoaded = false;
+
+        try {
+            if (fs.existsSync(logoPath)) {
+                const stats = fs.statSync(logoPath);
+                if (stats.size > 0) {
+                    doc.image(logoPath, 50, 45, { width: 50 });
+                    logoLoaded = true;
+                }
+            }
+        } catch (err) {
+            console.warn('[InvoiceManager] Failed to load logo:', err.message);
+        }
+
+        if (!logoLoaded) {
             // Fallback if no logo
             doc.fillColor('#10b981') // Emerald-500
                 .fontSize(20)
