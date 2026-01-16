@@ -26,6 +26,7 @@ import TechnicianHeader from '../components/admin/technicians/TechnicianHeader';
 import TechnicianFilters from '../components/admin/technicians/TechnicianFilters';
 import TechnicianTable from '../components/admin/technicians/TechnicianTable';
 import TechnicianDrawer from '../components/admin/technicians/TechnicianDrawer';
+import TechnicianCreationModal from '../components/admin-creation/TechnicianCreationModal';
 import NearbyMap from '../components/admin/NearbyMap';
 import OfferManager from '../components/admin/offers/OfferManager';
 import TestimonialManager from '../components/admin/testimonials/TestimonialManager';
@@ -135,6 +136,7 @@ const AdminDashboard = () => {
     const [activeTechService, setActiveTechService] = useState('All');
     const [selectedTechnician, setSelectedTechnician] = useState(null);
     const [isTechDrawerOpen, setIsTechDrawerOpen] = useState(false);
+    const [isCreateTechOpen, setIsCreateTechOpen] = useState(false);
 
     const fetchUsers = async () => {
         try {
@@ -657,7 +659,7 @@ const AdminDashboard = () => {
                             {/* TECHNICIANS TAB */}
                             {activeTab === 'technicians' && (
                                 <div className="flex flex-col h-[calc(100vh-100px)] relative -m-4 md:-m-8">
-                                    <TechnicianHeader onAddTechnician={() => alert("Add Technician feature coming soon")} />
+                                    <TechnicianHeader onAddTechnician={() => setIsCreateTechOpen(true)} />
 
                                     <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
                                         <div className="p-6 max-w-[1400px] mx-auto flex flex-col gap-6">
@@ -718,6 +720,15 @@ const AdminDashboard = () => {
                                         onClose={handleCloseTechDrawer}
                                         onBanTech={handleBanTechnician}
                                         onVerifyTech={handleVerifyTechnician}
+                                    />
+
+                                    <TechnicianCreationModal
+                                        isOpen={isCreateTechOpen}
+                                        onClose={() => setIsCreateTechOpen(false)}
+                                        onCreated={(newTech) => {
+                                            setTechnicians(prev => [newTech, ...prev]);
+                                            alert(`Technician ${newTech.name} created successfully!`);
+                                        }}
                                     />
                                 </div>
                             )}
