@@ -85,6 +85,19 @@ class ComplaintManager {
         }
     }
 
+    async getComplaintsByLocation(lat, lng, radiusKm = 30, userManager) {
+        try {
+            const all = await this.getAllComplaints();
+            if (!lat || !lng || !userManager) return all;
+
+            const visibleUserIds = new Set(await userManager.getUserIdsByLocation(lat, lng, radiusKm));
+            return all.filter(c => visibleUserIds.has(c.userId));
+        } catch (err) {
+            console.error("[ComplaintManager] Error getting complaints by location:", err);
+            return [];
+        }
+    }
+
     async updateStatus(id, status) {
         try {
             const result = await this.db.update('id', id, { status });

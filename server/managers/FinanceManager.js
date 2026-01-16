@@ -98,6 +98,20 @@ class FinanceManager {
         }
     }
 
+    async getTransactionsByLocation(lat, lng, radiusKm = 30, userManager) {
+        try {
+            const allTxns = await this.getAllTransactions();
+            if (!lat || !lng || !userManager) return allTxns;
+
+            const visibleUserIds = new Set(await userManager.getUserIdsByLocation(lat, lng, radiusKm));
+
+            return allTxns.filter(t => visibleUserIds.has(t.userId));
+        } catch (err) {
+            console.error("[FinanceManager] Error getting transactions by location:", err);
+            return [];
+        }
+    }
+
     async getTransactionsByUser(userId) {
         try {
             const txns = await this.db.findAll('user_id', userId);
