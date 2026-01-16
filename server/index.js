@@ -1750,17 +1750,7 @@ app.get('/api/admin/complaints', verifyAdmin, async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-// Finance is usually global, but if each admin manages a zone, they might only see transactions for their zone's techs.
-// Let's filter by visible technicians.
-if (req.admin.role === 'admin' && req.admin.fixed_latitude) {
-  const visibleTechs = await technicianManager.getTechniciansByLocation(req.admin.fixed_latitude, req.admin.fixed_longitude, 30);
-  const visibleIds = new Set(visibleTechs.map(t => t.id));
-  const filtered = transactions.filter(t => visibleIds.has(t.userId) || visibleIds.has(t.technicianId)); // FinanceManager logs userId usually
-  return res.json({ success: true, transactions: filtered });
-}
 
-res.json({ success: true, transactions });
-});
 
 
 // Store system settings (mock persistence)
