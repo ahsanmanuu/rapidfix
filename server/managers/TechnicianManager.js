@@ -183,6 +183,13 @@ class TechnicianManager {
                 }
             }
 
+            // Fallback to Fixed Location (Admin's Location) if provided and no specific location entered
+            if ((!lat || !lng) && fixedLocation) {
+                lat = fixedLocation.latitude;
+                lng = fixedLocation.longitude;
+                // Don't set baseAddress if it wasn't provided, or maybe set to "Admin Territory"
+            }
+
             const newTechnician = {
                 id: Date.now().toString(),
                 name,
@@ -205,7 +212,10 @@ class TechnicianManager {
                 registeredLongitude: lng,
 
                 baseAddress: baseAddress,
-                serviceRadius: 2
+                serviceRadius: 2,
+
+                // Binding
+                created_by: this._toUuid(createdBy) // Map to snake_case for DB, ensure valid UUID
             };
 
             const dbRecord = this._mapToDb(newTechnician);
