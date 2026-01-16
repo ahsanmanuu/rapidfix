@@ -30,6 +30,8 @@ import NearbyMap from '../components/admin/NearbyMap';
 import OfferManager from '../components/admin/offers/OfferManager';
 import TestimonialManager from '../components/admin/testimonials/TestimonialManager';
 import FinanceView from '../components/admin/finance/FinanceView';
+import SupportView from '../components/admin/support/SupportView';
+import FeedbackView from '../components/admin/feedback/FeedbackView';
 
 // Mock Data & Constants
 const ACTIVITY_LOG = [
@@ -631,6 +633,14 @@ const AdminDashboard = () => {
                     ) : activeTab === 'billing' ? (
                         <div className="h-full overflow-y-auto">
                             <FinanceView />
+                        </div>
+                    ) : activeTab === 'support' ? (
+                        <div className="h-full overflow-y-auto">
+                            <SupportView />
+                        </div>
+                    ) : activeTab === 'feedback' ? (
+                        <div className="h-full overflow-y-auto">
+                            <FeedbackView />
                         </div>
                     ) : (
                         <div className="h-full">
