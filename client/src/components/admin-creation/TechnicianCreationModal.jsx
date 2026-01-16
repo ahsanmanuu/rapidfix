@@ -125,30 +125,61 @@ const TechnicianCreationModal = ({ isOpen, onClose, onCreated }) => {
                     </div>
                 </div>
 
-                <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-400 uppercase">Base Location (City/Address)</label>
-                    <div className="relative">
-                        <MapPin className="absolute left-3 top-3 text-slate-500" size={16} />
+                {/* Precision Location Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-2 mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-400 uppercase">Latitude (Precision)</label>
                         <input
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-10 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition"
-                            placeholder="Downtown, City Center"
-                            value={formData.location}
-                            onChange={e => setFormData({ ...formData, location: e.target.value })}
-                            required
+                            type="number"
+                            step="any"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+                            placeholder="e.g. 19.0760"
+                            value={formData.latitude || ''}
+                            onChange={e => setFormData({ ...formData, latitude: e.target.value })}
                         />
                     </div>
-                    <p className="text-[10px] text-slate-500 mt-1">We'll register this as their home base for geospatial searches.</p>
-                </div>
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-400 uppercase">Longitude (Precision)</label>
+                        <input
+                            type="number"
+                            step="any"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition"
+                            placeholder="e.g. 72.8777"
+                            value={formData.longitude || ''}
+                            onChange={e => setFormData({ ...formData, longitude: e.target.value })}
+                        />
+                    </div>
+                    <div className="col-span-full">
+                        <p className="text-[10px] text-blue-500 font-medium flex items-center gap-1">
+                            <MapPin size={10} />
+                            Leave blank to auto-detect from Address or use your Admin Location. Explicit coordinates take priority.
+                        </p>
+                    </div>
 
-                <div className="pt-4">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-900/40 transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2"
-                    >
-                        {loading ? <Loader2 className="animate-spin" /> : 'Create Technician'}
-                    </button>
-                </div>
+                    <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-400 uppercase">Base Location (City/Address)</label>
+                        <div className="relative">
+                            <MapPin className="absolute left-3 top-3 text-slate-500" size={16} />
+                            <input
+                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-10 px-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none transition"
+                                placeholder="Downtown, City Center"
+                                value={formData.location}
+                                onChange={e => setFormData({ ...formData, location: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-1">We'll register this as their home base for geospatial searches.</p>
+                    </div>
+
+                    <div className="pt-4">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-900/40 transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2"
+                        >
+                            {loading ? <Loader2 className="animate-spin" /> : 'Create Technician'}
+                        </button>
+                    </div>
             </form>
         </AnimatedModalWrapper>
     );

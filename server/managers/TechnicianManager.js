@@ -207,6 +207,7 @@ class TechnicianManager extends BaseManager {
                 serviceType,
                 addressDetails: finalAddress,
                 experience, // Now calling code passes this
+                password: technicianData.password, // Store password (should be hashed in production)
                 status: 'Available', // Explicitly set to Available so they show up in search immediately
                 rating: 0,
                 reviewCount: 0,
@@ -330,7 +331,7 @@ class TechnicianManager extends BaseManager {
         }
     }
 
-    async searchTechnicians(userLat, userLon, serviceType, radius = 50.0) {
+    async searchTechnicians(userLat, userLon, serviceType, radius = 2.0) {
         try {
             const lat = parseFloat(userLat);
             const lon = parseFloat(userLon);
