@@ -120,6 +120,38 @@ const authenticateSession = async (req, res, next) => {
 };
 // End Authentication Middleware
 
+// Middleware to verify Admin Session and Attach Context
+const verifyAdmin = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized: No token provided' });
+    }
+
+    const session = await sessionManager.validateSession(token);
+    if (!session || (session.role !== 'admin' && session.role !== 'superadmin')) {
+      return res.status(403).json({ error: 'Unauthorized: Invalid admin session' });
+    }
+
+    req.admin = { role: session.role, id: session.userId };
+
+    // If Admin, load full details to get Location
+    if (session.role === 'admin') {
+      const adminDetails = await adminManager.db.find('id', session.userId);
+      if (adminDetails) {
+        req.admin = { ...req.admin, ...adminManager._mapFromDb(adminDetails) };
+      }
+    }
+
+    next();
+  } catch (err) {
+    console.error("[Middleware] Verify Admin Error:", err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 // VERSION CHECK - Verify Render has latest code
 app.get('/api/version', (req, res) => {
   res.json({
@@ -1533,36 +1565,7 @@ app.post('/api/admin/login', async (req, res) => {
 // Middleware to verify Admin Session (basic check for now)
 // In production, use a proper middleware checking headers authorization
 // Middleware to verify Admin Session and Attach Context
-const verifyAdmin = async (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
 
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized: No token provided' });
-    }
-
-    const session = await sessionManager.validateSession(token);
-    if (!session || (session.role !== 'admin' && session.role !== 'superadmin')) {
-      return res.status(403).json({ error: 'Unauthorized: Invalid admin session' });
-    }
-
-    req.admin = { role: session.role, id: session.userId };
-
-    // If Admin, load full details to get Location
-    if (session.role === 'admin') {
-      const adminDetails = await adminManager.db.find('id', session.userId);
-      if (adminDetails) {
-        req.admin = { ...req.admin, ...adminManager._mapFromDb(adminDetails) };
-      }
-    }
-
-    next();
-  } catch (err) {
-    console.error("[Middleware] Verify Admin Error:", err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-};
 
 // [RESTORED] Admin Stats Endpoint with Context Awareness
 app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
