@@ -32,7 +32,7 @@ const InvoiceSettings = () => {
     const fetchSettings = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/invoice-settings');
+            const res = await api.get('/admin/invoice-settings');
             if (res.data.success) {
                 setSettings(res.data.settings);
                 if (res.data.settings.logoUrl) {
@@ -74,7 +74,7 @@ const InvoiceSettings = () => {
                 formData.append('logo', logoFile);
             }
 
-            const res = await api.post('/invoice-settings', formData, {
+            const res = await api.post('/admin/invoice-settings', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 

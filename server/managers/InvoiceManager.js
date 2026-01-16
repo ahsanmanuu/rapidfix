@@ -6,17 +6,20 @@ const nodemailer = require('nodemailer');
 class InvoiceManager {
     constructor() {
         this.transporter = null;
+        this.settingsManager = null; // Injected
         this.initTransporter();
     }
 
+    setSettingsManager(settingsManager) {
+        this.settingsManager = settingsManager;
+    }
+
     initTransporter() {
-        // Configure using environment variables
-        // If not set, it will log a warning but not crash
         if (process.env.SMTP_HOST && process.env.SMTP_USER) {
             this.transporter = nodemailer.createTransport({
                 host: process.env.SMTP_HOST,
                 port: process.env.SMTP_PORT || 587,
-                secure: false, // true for 465, false for other ports
+                secure: false,
                 auth: {
                     user: process.env.SMTP_USER,
                     pass: process.env.SMTP_PASS
@@ -29,6 +32,9 @@ class InvoiceManager {
     }
 
     async generateInvoice(job) {
+        // Fetch Dynamic Settings
+        const settings = this.settingsManager ? await this.settingsManager.getSettings() : {};
+
         return new Promise((resolve, reject) => {
             try {
                 const doc = new PDFDocument({ margin: 50 });
@@ -37,10 +43,10 @@ class InvoiceManager {
                 doc.on('data', buffers.push.bind(buffers));
                 doc.on('end', () => resolve(Buffer.concat(buffers)));
 
-                this._generateHeader(doc);
+                this._generateHeader(doc, settings);
                 this._generateCustomerInformation(doc, job);
-                this._generateInvoiceTable(doc, job);
-                this._generateFooter(doc);
+                this._generateInvoiceTable(doc, job, settings);
+                this._generateFooter(doc, settings);
 
                 doc.end();
             } catch (err) {
@@ -49,41 +55,71 @@ class InvoiceManager {
         });
     }
 
-    _generateHeader(doc) {
-        const logoPath = path.join(__dirname, '../logo.png');
+    _generateHeader(doc, settings) {
+        // Priority: 1. Base64/Path from Settings 2. Default File 3. Text Fallback
         let logoLoaded = false;
 
-        try {
-            if (fs.existsSync(logoPath)) {
-                const stats = fs.statSync(logoPath);
-                if (stats.size > 0) {
-                    doc.image(logoPath, 50, 45, { width: 50 });
+        // Try Settings Logo (Handle Base64 or Path)
+        if (settings.logoUrl) {
+            try {
+                // If base64
+                if (settings.logoUrl.startsWith('data:image')) {
+                    doc.image(settings.logoUrl, 50, 45, { width: 50 });
                     logoLoaded = true;
                 }
+                // If local path (ensure it's safe/absolute if needed, or assume relative to root)
+                else if (fs.existsSync(settings.logoUrl)) {
+                    doc.image(settings.logoUrl, 50, 45, { width: 50 });
+                    logoLoaded = true;
+                }
+            } catch (e) {
+                console.warn('[InvoiceManager] Failed to load custom logo:', e.message);
             }
-        } catch (err) {
-            console.warn('[InvoiceManager] Failed to load logo:', err.message);
         }
 
         if (!logoLoaded) {
-            // Fallback if no logo
-            doc.fillColor('#10b981') // Emerald-500
-                .fontSize(20)
-                .font('Helvetica-Bold')
-                .text('Fixofy', 50, 50);
+            const logoPath = path.join(__dirname, '../logo.png');
+            try {
+                if (fs.existsSync(logoPath)) {
+                    doc.image(logoPath, 50, 45, { width: 50 });
+                    logoLoaded = true;
+                }
+            } catch (err) { }
         }
 
-        doc
-            .fillColor('#333333')
+        if (!logoLoaded) {
+            doc.fillColor('#10b981')
+                .fontSize(20)
+                .font('Helvetica-Bold')
+                .text(settings.companyName || 'Fixofy', 50, 50);
+        }
+
+        // Company Details from Settings
+        const companyName = settings.companyName || 'Fixofy Inc.';
+        const companyAddress = settings.companyAddress || 'Tech Hub, Silicon Valley\nMumbai, India 400001';
+        // Split address lines
+        const addressLines = companyAddress.split('\n');
+
+        doc.fillColor('#333333')
             .fontSize(20)
             .font('Helvetica-Bold')
-            .text('Fixofy Inc.', 200, 50, { align: 'right' })
+            .text(companyName, 200, 50, { align: 'right' })
             .fontSize(10)
-            .font('Helvetica')
-            .text('Tech Hub, Silicon Valley', 200, 65, { align: 'right' })
-            .text('Mumbai, India 400001', 200, 80, { align: 'right' })
-            .text('support@fixofy.com', 200, 95, { align: 'right' })
-            .moveDown();
+            .font('Helvetica');
+
+        let y = 65;
+        addressLines.forEach(line => {
+            doc.text(line, 200, y, { align: 'right' });
+            y += 15;
+        });
+
+        doc.text(settings.companyEmail || 'support@fixofy.com', 200, y, { align: 'right' })
+
+        if (settings.companyPhone) {
+            doc.text(settings.companyPhone, 200, y + 15, { align: 'right' });
+        }
+
+        doc.moveDown();
     }
 
     _generateCustomerInformation(doc, job) {
@@ -111,46 +147,59 @@ class InvoiceManager {
         this._generateHr(doc, 270);
     }
 
-    _generateInvoiceTable(doc, job) {
+    _generateInvoiceTable(doc, job, settings) {
         let i = 290;
         const currency = "Rs. ";
 
-        // Table Header
         doc.font('Helvetica-Bold');
         this._generateTableRow(doc, i, 'Service Description', 'Rate', 'Qty', 'Amount');
         this._generateHr(doc, i + 20);
 
-        // Table Rows
         doc.font('Helvetica');
         i += 30;
 
         const serviceName = job.serviceType || 'General Service';
         const description = job.description || 'Service Charges';
-        const price = parseFloat(job.offerPrice || job.visitingCharges || 0);
+        const basePrice = parseFloat(job.offerPrice || job.visitingCharges || 0);
 
-        // Item 1: Service Type
-        this._generateTableRow(doc, i, serviceName, price.toFixed(2), '1', price.toFixed(2));
+        this._generateTableRow(doc, i, serviceName, basePrice.toFixed(2), '1', basePrice.toFixed(2));
         i += 20;
 
-        // Item 2: Description (small)
         doc.fontSize(8).fillColor('#777777')
             .text(description.substring(0, 80) + (description.length > 80 ? '...' : ''), 50, i);
 
         doc.fillColor('#444444').fontSize(10);
 
-        // Totals Section
-        const subtotalPos = i + 50;
-        this._generateHr(doc, subtotalPos - 10);
+        // Subtotal
+        let yPos = i + 40;
+        this._generateHr(doc, yPos - 10);
+
+        // Calculate Tax if enabled
+        let total = basePrice;
+        let taxAmount = 0;
+
+        if (settings.taxRate && settings.taxRate > 0) {
+            taxAmount = basePrice * (settings.taxRate / 100);
+            total += taxAmount;
+
+            this._generateTableRow(doc, yPos, '', '', 'Subtotal:', currency + basePrice.toFixed(2));
+            yPos += 20;
+            this._generateTableRow(doc, yPos, '', '', `${settings.taxName || 'Tax'} (${settings.taxRate}%):`, currency + taxAmount.toFixed(2));
+            yPos += 20;
+        }
 
         doc.font('Helvetica-Bold');
-        this._generateTableRow(doc, subtotalPos, '', '', 'Total:', currency + price.toFixed(2));
+        this._generateTableRow(doc, yPos, '', '', 'Total:', currency + total.toFixed(2));
         doc.font('Helvetica');
     }
 
-    _generateFooter(doc) {
-        doc.fontSize(10).text('Thank you for choosing Fixofy.', 50, 700, { align: 'center', width: 500 });
+    _generateFooter(doc, settings) {
+        const footerText = settings.footerNote || 'Thank you for choosing Fixofy.';
+        doc.fontSize(10).text(footerText, 50, 700, { align: 'center', width: 500 });
+
+        const terms = settings.terms || 'Payment is due upon receipt. This is a computer-generated invoice.';
         doc.fontSize(8).fillColor('#777777')
-            .text('Payment is due upon receipt. This is a computer-generated invoice.', 50, 715, { align: 'center', width: 500 });
+            .text(terms, 50, 715, { align: 'center', width: 500 });
     }
 
     _generateTableRow(doc, y, c1, c2, c3, c4) {
@@ -158,7 +207,7 @@ class InvoiceManager {
             .text(c1, 50, y, { width: 230 })
             .text(c2, 280, y, { width: 90, align: 'right' })
             .text(c3, 370, y, { width: 90, align: 'right' })
-            .text(c4, 0, y, { align: 'right' }); // Right aligned to margin
+            .text(c4, 0, y, { align: 'right' });
     }
 
     _generateHr(doc, y) {
@@ -172,22 +221,41 @@ class InvoiceManager {
         }
 
         try {
-            // [FIX] Auto-Add Recipients: Customer, Tech, Admin, SuperAdmin
-            const recipients = new Set(manualRecipients);
+            // [FIX] Distribution Logic:
+            // 1. Primary Recipient: Customer (To)
+            // 2. Copies: Technician, Admin (BCC) -> Prevents Reply-All storms and Dashboard leaks if threaded
 
-            if (job.customer?.email) recipients.add(job.customer.email);
-            if (job.technician?.email) recipients.add(job.technician.email); // Need to ensure email is in enriched tech data
+            const toList = [];
+            const bccList = new Set();
 
-            // Add Admins (Hardcoded for now as per plan, or fetch from env/db)
-            if (process.env.ADMIN_EMAIL) recipients.add(process.env.ADMIN_EMAIL);
-            // Default fallback admin email if none
-            recipients.add('admin@fixofy.com');
+            // 1. Customer
+            if (job.customer?.email) {
+                toList.push(job.customer.email);
+            } else if (job.contactEmail) { // Fallback if contactEmail exists on job
+                toList.push(job.contactEmail);
+            }
 
-            const toList = [...recipients].filter(e => e); // Clean valid emails
+            // 2. Technician (BCC)
+            if (job.technician?.email) bccList.add(job.technician.email);
+
+            // 3. Admin (BCC)
+            if (process.env.ADMIN_EMAIL) bccList.add(process.env.ADMIN_EMAIL);
+            bccList.add('admin@fixofy.com'); // Global fallback
+
+            // 4. Manual Recipients (e.g. from Admin trigger) treated as 'To' or 'BCC'? 
+            // If manual, usually we want them to see it.
+            manualRecipients.forEach(e => toList.push(e));
+
+            // Validate
+            if (toList.length === 0 && bccList.size === 0) {
+                console.warn('[InvoiceManager] No valid recipients for invoice.');
+                return { success: false, error: 'No recipients' };
+            }
 
             const mailOptions = {
                 from: '"Fixofy Accounts" <' + (process.env.SMTP_USER || 'no-reply@fixofy.com') + '>',
-                to: toList.join(', '), // Send to all
+                to: toList.join(', '),
+                bcc: [...bccList].join(', '), // BCC is critical for privacy
                 subject: `Invoice for Job #${job.id} - Fixofy`,
                 html: `
                     <div style="font-family: Arial, sans-serif; color: #333;">
@@ -210,7 +278,7 @@ class InvoiceManager {
             };
 
             const info = await this.transporter.sendMail(mailOptions);
-            console.log('[InvoiceManager] Invoice sent to:', toList.join(', '));
+            console.log('[InvoiceManager] Invoice sent. To:', toList.join(', '), 'BCC:', [...bccList].join(', '));
             return { success: true, messageId: info.messageId };
         } catch (err) {
             console.error('[InvoiceManager] Email Error:', err);

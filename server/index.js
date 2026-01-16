@@ -1453,7 +1453,7 @@ app.get('/api/finance/user/:userId', async (req, res) => {
     const { userId } = req.params;
     // Fetch completed jobs for the user to show as bills
     const jobs = await jobManager.db.all(
-      `SELECT * FROM jobs WHERE customer_id = ? AND (status = 'completed' OR status = 'work_done') ORDER BY created_at DESC`,
+      `SELECT * FROM jobs WHERE user_id = ? AND (status = 'completed' OR status = 'work_done') ORDER BY created_at DESC`,
       [userId]
     );
 
@@ -1949,6 +1949,40 @@ app.post('/api/admin/users/:id/membership', verifyAdmin, async (req, res) => {
     res.status(404).json({ success: false, error: 'User not found' });
   }
 });
+
+// --- Invoice Settings Routes [NEW] ---
+app.get('/api/admin/invoice-settings', verifyAdmin, async (req, res) => {
+  try {
+    const settings = await invoiceSettingsManager.getSettings();
+    res.json({ success: true, settings });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/admin/invoice-settings', verifyAdmin, upload.single('logo'), async (req, res) => {
+  try {
+    const updates = req.body;
+
+    // Handle logo upload
+    if (req.file) {
+      const customName = `invoice-logo-${Date.now()}${path.extname(req.file.originalname)}`;
+      const logoUrl = await storageManager.upload(req.file, 'misc', customName);
+      updates.logoUrl = logoUrl;
+    }
+
+    const settings = await invoiceSettingsManager.updateSettings(updates);
+    res.json({ success: true, settings });
+  } catch (err) {
+    console.error('Invoice Settings Update Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Explicitly link settings manager since constructor injection was refactored
+if (invoiceManager && invoiceSettingsManager) {
+  invoiceManager.setSettingsManager(invoiceSettingsManager);
+}
 
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
