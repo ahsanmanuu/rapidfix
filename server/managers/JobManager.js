@@ -467,29 +467,32 @@ class JobManager {
             const allJobs = await this.getAllJobs();
             if (!lat || !lng) return allJobs;
 
+            const searchLat = parseFloat(lat);
+            const searchLng = parseFloat(lng);
+
             return allJobs.filter(j => {
                 let jLat = null;
                 let jLon = null;
 
                 // 1. Prioritize Job Location
                 if (j.location && (j.location.latitude || j.location.lat)) {
-                    jLat = j.location.latitude || j.location.lat;
-                    jLon = j.location.longitude || j.location.lng;
+                    jLat = parseFloat(j.location.latitude || j.location.lat);
+                    jLon = parseFloat(j.location.longitude || j.location.lng);
                 }
                 // 2. Fallback to Customer Location
                 else if (j.customer && j.customer.latitude) {
-                    jLat = j.customer.latitude;
-                    jLon = j.customer.longitude;
+                    jLat = parseFloat(j.customer.latitude);
+                    jLon = parseFloat(j.customer.longitude);
                 }
 
-                if (!jLat || !jLon) return false;
+                if (jLat === null || jLon === null || isNaN(jLat) || isNaN(jLon)) return false;
 
-                // Simple Distance Calc (Reuse generic if available, or duplicate simple one)
+                // Simple Distance Calc
                 const R = 6371;
-                const dLat = (jLat - lat) * (Math.PI / 180);
-                const dLon = (jLon - lng) * (Math.PI / 180);
+                const dLat = (jLat - searchLat) * (Math.PI / 180);
+                const dLon = (jLon - searchLng) * (Math.PI / 180);
                 const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                    Math.cos(lat * (Math.PI / 180)) * Math.cos(jLat * (Math.PI / 180)) *
+                    Math.cos(searchLat * (Math.PI / 180)) * Math.cos(jLat * (Math.PI / 180)) *
                     Math.sin(dLon / 2) * Math.sin(dLon / 2);
                 const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
                 const dist = R * c;

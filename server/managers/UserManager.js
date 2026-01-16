@@ -177,9 +177,16 @@ class UserManager {
             const allUsers = await this.getAllUsers();
             if (!lat || !lng) return allUsers;
 
+            const searchLat = parseFloat(lat);
+            const searchLng = parseFloat(lng);
+
             return allUsers.filter(u => {
-                if (!u.latitude || !u.longitude) return false;
-                const dist = this._calculateDistance(lat, lng, u.latitude, u.longitude);
+                const uLat = parseFloat(u.latitude);
+                const uLon = parseFloat(u.longitude);
+
+                if (isNaN(uLat) || isNaN(uLon)) return false;
+
+                const dist = this._calculateDistance(searchLat, searchLng, uLat, uLon);
                 return dist <= radiusKm;
             });
         } catch (err) {
