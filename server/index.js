@@ -174,13 +174,25 @@ const verifyAdmin = async (req, res, next) => {
 };
 
 // VERSION CHECK - Verify Render has latest code
-app.get('/api/version', (req, res) => {
+app.get('/api/version', async (req, res) => {
+  let dbStatus = 'Unknown';
+  if (process.env.USE_SUPABASE === 'true') {
+    try {
+      // Quick health check for Supabase
+      const { count, error } = await sessionManager.db.client.from('sessions').select('*', { count: 'exact', head: true });
+      dbStatus = error ? `Error: ${error.message}` : `Connected (Sessions: ${count})`;
+    } catch (e) { dbStatus = `Exception: ${e.message}`; }
+  } else {
+    dbStatus = 'Local JSON (Ephemeral)';
+  }
+
   res.json({
-    version: '2.1-SUPABASE-STORAGE',
+    version: '2.2-LOGIN-DEBUG',
     deployed: new Date().toISOString(),
     config: {
       USE_SUPABASE: process.env.USE_SUPABASE || 'NOT_SET',
-      database_type: process.env.USE_SUPABASE === 'true' ? 'Supabase' : 'JSON'
+      database_type: process.env.USE_SUPABASE === 'true' ? 'Supabase' : 'JSON',
+      db_status: dbStatus
     }
   });
 });
