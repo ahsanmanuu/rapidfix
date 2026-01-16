@@ -68,4 +68,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'admins' AND column_name = 'fixed_longitude') THEN 
         ALTER TABLE public.admins ADD COLUMN fixed_longitude float; 
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'admins' AND column_name = 'created_by') THEN 
+        ALTER TABLE public.admins ADD COLUMN created_by uuid references public.admins(id); 
+    END IF;
 END $$;

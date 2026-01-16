@@ -15,10 +15,11 @@ class AdminManager {
     _mapFromDb(admin) {
         if (!admin) return null;
         try {
-            const { created_at, ...rest } = admin;
+            const { created_at, created_by, ...rest } = admin;
             return {
                 ...rest,
-                createdAt: created_at
+                createdAt: created_at,
+                createdBy: created_by || admin.createdBy
             };
         } catch (err) {
             console.error("[AdminManager] Error mapping from DB:", err);
@@ -29,9 +30,10 @@ class AdminManager {
     _mapToDb(admin) {
         if (!admin) return null;
         try {
-            const { createdAt, id, ...rest } = admin;
+            const { createdAt, createdBy, id, ...rest } = admin;
             const mapped = { ...rest };
             if (createdAt !== undefined) mapped.created_at = createdAt;
+            if (createdBy !== undefined) mapped.created_by = createdBy;
             if (id !== undefined) mapped.id = id;
             return mapped;
         } catch (err) {
@@ -53,18 +55,7 @@ class AdminManager {
                 // SELF-HEALING: Ensure the password is 'admin123' to prevent lockout
                 if (String(existing.password).trim() !== 'admin123') {
                     console.log(`[AdminManager] Password mismatch for default admin. Resetting to 'admin123'...`);
-                    const updated = { ...existing, password: 'admin123' };
-                    const dbItem = this._mapToDb(updated);
-                    // Use update method if available, or just re-add (if overwrite supported) - DB implementation specific
-                    // Since specific DB update might be tricky without ID, let's try finding by ID or overwriting
-                    // SupabaseDatabase doesn't support overwrite well, but let's assume standard DB flow.
-                    // Actually, let's just use the DB 'update' if it exists or 'write' if reckless.
-                    // Safer: Do nothing but LOG CRITICAL WARNING if we can't easily update.
-                    // But WAIT, if Supabase, we can use client directly? No, keep abstraction.
-                    // Adding a specific 'updatePassword' method would be best, but 'db.update' usually matches by ID.
-
                     if (this.db.update) {
-                        // Correct signature: update(field, value, data)
                         await this.db.update('email', defaultEmail, { password: 'admin123' });
                         console.log(`[AdminManager] Password reset successful.`);
                     } else {
@@ -77,7 +68,7 @@ class AdminManager {
         }
     }
 
-    async createAdmin(name, email, password, role = 'Admin', listLocation = null) {
+    async createAdmin(name, email, password, role = 'Admin', listLocation = null, createdBy = null) {
         try {
             const cleanEmail = String(email).trim().toLowerCase();
             const existing = await this.db.find('email', cleanEmail);
@@ -88,7 +79,8 @@ class AdminManager {
                 email: cleanEmail,
                 password,
                 role,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                createdBy // [NEW] Link to Super Admin ID
             };
 
             // [NEW] Handle fixed location assignment
