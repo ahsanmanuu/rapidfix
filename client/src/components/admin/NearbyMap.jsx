@@ -115,19 +115,25 @@ const NearbyMap = ({ user }) => {
                     const lng = parseFloat(u.location?.longitude || u.longitude);
                     if (!lat || !lng) return null;
                     return (
-                        <Marker
+                        <OverlayView
                             key={`user-${u.id}`}
                             position={{ lat, lng }}
-                            icon={{
-                                path: window.google.maps.SymbolPath.CIRCLE,
-                                scale: 6,
-                                fillColor: "#A855F7", // Purple
-                                fillOpacity: 0.9,
-                                strokeColor: "#FFFFFF",
-                                strokeWeight: 1,
-                            }}
-                            title={`User: ${u.name}`}
-                        />
+                            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                        >
+                            <div className="relative group cursor-pointer transform hover:scale-110 transition-transform">
+                                <div className="w-8 h-8 rounded-full border-2 border-white shadow-md overflow-hidden ring-2 ring-purple-500">
+                                    <img
+                                        src={u.photo || u.avatar || `https://ui-avatars.com/api/?name=${u.name}`}
+                                        className="w-full h-full object-cover"
+                                        onError={e => e.target.src = `https://ui-avatars.com/api/?name=${u.name}`}
+                                    />
+                                </div>
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
+                                    User: {u.name}
+                                </div>
+                            </div>
+                        </OverlayView>
                     );
                 })}
 
