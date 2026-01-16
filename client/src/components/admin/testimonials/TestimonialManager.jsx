@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { MessageSquareQuote, Trash2, CheckCircle, XCircle } from 'lucide-react';
-import api from '../../services/api';
+import api from '../../../services/api';
 
 const TestimonialManager = () => {
     const [testimonials, setTestimonials] = useState([]);

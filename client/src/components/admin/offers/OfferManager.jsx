@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Tag, Loader2 } from 'lucide-react';
-import api from '../../services/api';
+import api from '../../../services/api';
 
 const OfferManager = () => {
     const [offers, setOffers] = useState([]);
