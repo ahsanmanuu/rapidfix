@@ -1,4 +1,4 @@
-// Imports at top (implied context)
+import React from 'react';
 import { useToast } from '../../ToastSystem';
 import api from '../../../services/api';
 
@@ -9,7 +9,6 @@ const JobDrawer = ({ job, onClose, onEdit }) => {
 
     const handleDownloadInvoice = async () => {
         try {
-            // Direct open in new tab for download
             window.open(`${api.defaults.baseURL}/invoices/${job.id}/download`, '_blank');
         } catch (err) {
             error('Failed to download invoice');
@@ -24,6 +23,27 @@ const JobDrawer = ({ job, onClose, onEdit }) => {
             }
         } catch (err) {
             error('Failed to share invoice');
+        }
+    };
+
+    const handleWhatsAppShare = () => {
+        const text = `Hello ${job.contactName || 'Customer'},\n\nYour invoice for Job #${job.id} is ready. Total: Rs. ${job.offerPrice || job.visitingCharges}.\n\nPlease check your email or download here: ${api.defaults.baseURL}/invoices/${job.id}/download\n\nThanks,\nFixofy Team`;
+        const url = `https://wa.me/${job.contactPhone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    };
+
+    const handleDeleteJob = async () => {
+        if (!window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) return;
+
+        try {
+            await api.delete(`/jobs/${job.id}`);
+            success('Job deleted successfully');
+            onClose();
+            // Trigger a refresh event if possible, or reload. 
+            // Ideally parent updates, but for now this ensures data consistency.
+            setTimeout(() => window.location.reload(), 1000);
+        } catch (err) {
+            error('Failed to delete job');
         }
     };
 
@@ -61,8 +81,6 @@ const JobDrawer = ({ job, onClose, onEdit }) => {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
-                    {/* ... Existing Content ... */}
-                    {/* Keeping existing content structure, just injecting logic above */}
                     <div className="flex flex-col gap-8">
                         {/* Summary Card */}
                         <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
@@ -163,14 +181,27 @@ const JobDrawer = ({ job, onClose, onEdit }) => {
                                     <span className="material-symbols-outlined text-sm">send</span>
                                     Email Invoice
                                 </button>
+                                <button
+                                    onClick={handleWhatsAppShare}
+                                    className="col-span-2 flex items-center justify-center gap-2 bg-green-50 text-green-600 px-4 py-3 rounded-xl text-sm font-bold hover:bg-green-100 transition-all border border-green-100"
+                                >
+                                    <span className="material-symbols-outlined text-sm">chat</span>
+                                    Share on WhatsApp
+                                </button>
                             </div>
                         )}
                         <div className="grid grid-cols-2 gap-3">
-                            <button className="flex items-center justify-center gap-2 bg-white dark:bg-white/5 text-slate-900 dark:text-white border border-gray-200 dark:border-white/10 px-4 py-3 rounded-xl text-sm font-black hover:bg-gray-100 dark:hover:bg-white/10 transition-all">
+                            <button
+                                onClick={() => onEdit && onEdit(job)}
+                                className="flex items-center justify-center gap-2 bg-white dark:bg-white/5 text-slate-900 dark:text-white border border-gray-200 dark:border-white/10 px-4 py-3 rounded-xl text-sm font-black hover:bg-gray-100 dark:hover:bg-white/10 transition-all"
+                            >
                                 <span className="material-symbols-outlined text-sm">edit</span>
                                 Edit Job
                             </button>
-                            <button className="flex items-center justify-center gap-2 bg-slate-200 text-slate-400 px-4 py-3 rounded-xl text-sm font-black cursor-not-allowed">
+                            <button
+                                onClick={handleDeleteJob}
+                                className="flex items-center justify-center gap-2 bg-rose-50 text-rose-600 border border-rose-100 px-4 py-3 rounded-xl text-sm font-black hover:bg-rose-100 transition-all"
+                            >
                                 <span className="material-symbols-outlined text-sm">delete</span>
                                 Delete
                             </button>
