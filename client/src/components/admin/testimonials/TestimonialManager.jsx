@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquareQuote, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import api from '../../../services/api';
 
+import { useSocket } from '../../../context/SocketContext';
+
 const TestimonialManager = () => {
     const [testimonials, setTestimonials] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -19,9 +21,20 @@ const TestimonialManager = () => {
         }
     };
 
+    const socket = useSocket();
+
     useEffect(() => {
         fetchTestimonials();
-    }, []);
+
+        if (socket) {
+            socket.on('new_testimonial', fetchTestimonials);
+            socket.on('testimonial_deleted', fetchTestimonials);
+            return () => {
+                socket.off('new_testimonial', fetchTestimonials);
+                socket.off('testimonial_deleted', fetchTestimonials);
+            };
+        }
+    }, [socket]);
 
     const handleDelete = async (id) => {
         if (!confirm('Delete this testimonial?')) return;

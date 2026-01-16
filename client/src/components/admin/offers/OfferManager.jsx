@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Tag, Loader2 } from 'lucide-react';
 import api from '../../../services/api';
 
+import { useSocket } from '../../../context/SocketContext';
+
 const OfferManager = () => {
     const [offers, setOffers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -26,9 +28,20 @@ const OfferManager = () => {
         }
     };
 
+    const socket = useSocket();
+
     useEffect(() => {
         fetchOffers();
-    }, []);
+
+        if (socket) {
+            socket.on('new_offer_created', fetchOffers);
+            socket.on('offer_deleted', fetchOffers);
+            return () => {
+                socket.off('new_offer_created', fetchOffers);
+                socket.off('offer_deleted', fetchOffers);
+            };
+        }
+    }, [socket]);
 
     const handleDelete = async (id) => {
         if (!confirm('Are you sure?')) return;
