@@ -82,6 +82,22 @@ class OfferManager {
         }
     }
 
+    async getOffersByLocation(lat, lng, radiusKm = 30, technicianManager) {
+        try {
+            const allOffers = await this.getAllOffers();
+            if (!lat || !lng || !technicianManager) return allOffers;
+
+            const visibleTechIds = new Set(await technicianManager.getTechnicianIdsByLocation(lat, lng, radiusKm));
+
+            // Filter offers created by visible technicians
+            // Assumption: 'createdBy' in offers refers to Technician ID
+            return allOffers.filter(o => visibleTechIds.has(o.createdBy));
+        } catch (err) {
+            console.error("[OfferManager] Error getting offers by location:", err);
+            return [];
+        }
+    }
+
     async deleteOffer(id) {
         try {
             const result = await this.db.delete('id', id);

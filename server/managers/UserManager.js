@@ -189,10 +189,14 @@ class UserManager {
                 const dist = this._calculateDistance(searchLat, searchLng, uLat, uLon);
                 return dist <= radiusKm;
             });
-        } catch (err) {
             console.error("[UserManager] Error getting users by location:", err);
             return [];
         }
+    }
+
+    async getUserIdsByLocation(lat, lng, radiusKm = 30) {
+        const users = await this.getUsersByLocation(lat, lng, radiusKm);
+        return users.map(u => u.id);
     }
 
     _calculateDistance(lat1, lon1, lat2, lon2) {

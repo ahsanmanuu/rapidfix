@@ -135,6 +135,19 @@ class FeedbackManager {
             return [];
         }
     }
+    async getFeedbacksByLocation(lat, lng, radiusKm = 30, technicianManager) {
+        try {
+            const allFeedbacks = await this.getAllFeedback();
+            if (!lat || !lng || !technicianManager) return allFeedbacks;
+
+            const visibleTechIds = new Set(await technicianManager.getTechnicianIdsByLocation(lat, lng, radiusKm));
+
+            return allFeedbacks.filter(f => visibleTechIds.has(f.technicianId));
+        } catch (err) {
+            console.error("[FeedbackManager] Error getting feedbacks by location:", err);
+            return [];
+        }
+    }
 }
 
 module.exports = FeedbackManager;
