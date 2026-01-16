@@ -35,7 +35,13 @@ class SuperAdminManager {
                 email,
                 password,
                 role: 'superadmin',
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                // Default Location: Darbhanga, Bihar
+                latitude: 26.1542,
+                longitude: 85.8918,
+                fixed_latitude: 26.1542, // Super Admin also has fixed location if needed
+                fixed_longitude: 85.8918,
+                office_address: 'Darbhanga, Bihar, India'
             };
 
             const result = await this.db.add(newAdmin);
@@ -126,6 +132,37 @@ class SuperAdminManager {
         } catch (err) {
             console.error(`[SuperAdminManager] Error getting superadmin ${id}:`, err);
             return null;
+        }
+    }
+
+    // [NEW] Create Sub-Admin (Delegates to AdminManager logic effectively or direct DB write)
+    async createSubAdmin(name, email, password, location) {
+        try {
+            const existing = await this.db.find('email', email);
+            if (existing) throw new Error('Admin already exists');
+
+            const newAdmin = {
+                name,
+                email,
+                password,
+                role: 'admin',
+                created_at: new Date().toISOString(),
+                // Fixed location logic
+                fixed_latitude: location?.latitude,
+                fixed_longitude: location?.longitude,
+                latitude: location?.latitude,
+                longitude: location?.longitude,
+                office_address: location?.address,
+                created_by: 'SUPER_ADMIN_ACTION'
+            };
+
+            // Using db.add from SuperAdminManager (which points to 'admins' table)
+            const result = await this.db.add(newAdmin);
+            if (this.io) this.io.emit('new_admin_created', { email, name });
+            return result;
+        } catch (err) {
+            console.error("[SuperAdminManager] Error creating sub-admin:", err);
+            throw err;
         }
     }
 }

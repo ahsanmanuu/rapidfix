@@ -10,6 +10,7 @@ import SuperAdminLogin from './pages/SuperAdminLogin';
 import Dashboard from './pages/Dashboard';
 import TechnicianDashboard from './pages/TechnicianDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import Wallet from './pages/Wallet';
 import TechnicianAuth from './pages/TechnicianAuth';
 import NotFound from './pages/NotFound';
@@ -40,7 +41,7 @@ function App() {
 
               {/* STRICT SEPARATION of Logins */}
               <Route path="/admin/login" element={!user || (user.role !== 'admin' && user.role !== 'superadmin') ? <AdminLogin /> : <Navigate to="/admin-dashboard" />} />
-              <Route path="/superadmin/login" element={!user || user.role !== 'superadmin' ? <SuperAdminLogin /> : <Navigate to="/admin-dashboard" />} />
+              <Route path="/superadmin/login" element={!user || user.role !== 'superadmin' ? <SuperAdminLogin /> : <Navigate to="/super-admin-dashboard" />} />
 
               {/* Redirects for convenience */}
               <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
@@ -56,8 +57,8 @@ function App() {
                 element={user ? <TechnicianDashboard /> : <Navigate to="/login" />}
               />
               <Route
-                path="/admin-dashboard"
-                element={user && (user.role === 'admin' || user.role === 'superadmin') ? <AdminDashboard /> : <Navigate to="/admin/login" />}
+                path="/super-admin-dashboard"
+                element={user && user.role === 'superadmin' ? <SuperAdminDashboard /> : <Navigate to="/superadmin/login" />}
               />
               <Route
                 path="/wallet"

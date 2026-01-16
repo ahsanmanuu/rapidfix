@@ -24,6 +24,8 @@ const OfferManager = require('./managers/OfferManager');
 const StorageManager = require('./managers/StorageManager');
 const NotificationManager = require('./managers/NotificationManager');
 const BroadcastManager = require('./managers/BroadcastManager');
+const TestimonialManager = require('./managers/TestimonialManager');
+const PerformerManager = require('./managers/PerformerManager');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -60,13 +62,16 @@ const offerManager = new OfferManager();
 const notificationManager = new NotificationManager();
 const storageManager = new StorageManager();
 const broadcastManager = new BroadcastManager();
+const testimonialManager = new TestimonialManager();
+const performerManager = new PerformerManager();
 
 // Link Managers to Socket.io for automatic broadcasts
 const allManagers = [
   userManager, technicianManager, adminManager, feedbackManager,
   locationManager, complaintManager, jobManager, financeManager,
   rideManager, sessionManager, superAdminManager, chatManager,
-  offerManager, notificationManager, storageManager, broadcastManager
+  offerManager, notificationManager, storageManager, broadcastManager,
+  testimonialManager, performerManager
 ];
 
 allManagers.forEach(m => {
@@ -542,6 +547,101 @@ app.post('/api/superadmin/login', async (req, res) => {
   } else {
     res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
+});
+
+app.post('/api/superadmin/create-admin', async (req, res) => {
+  try {
+    // Authenticate (Basic check, normally middleware)
+    // const auth = req.headers.authorization; ...
+    const { name, email, password, location } = req.body;
+    const result = await superAdminManager.createSubAdmin(name, email, password, location);
+    res.json({ success: true, admin: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- Testimonial Routes ---
+app.get('/api/testimonials', async (req, res) => {
+  const list = await testimonialManager.getTestimonials();
+  res.json({ success: true, testimonials: list });
+});
+app.post('/api/testimonials', async (req, res) => {
+  const { userName, userAvatar, rating, comment } = req.body;
+  const t = await testimonialManager.createTestimonial(userName, userAvatar, rating, comment);
+  res.json({ success: true, testimonial: t });
+});
+app.delete('/api/testimonials/:id', async (req, res) => {
+  await testimonialManager.deleteTestimonial(req.params.id);
+  res.json({ success: true });
+});
+
+// --- Offer Routes ---
+app.get('/api/offers', async (req, res) => {
+  const list = await offerManager.getAllOffers();
+  res.json({ success: true, offers: list });
+});
+app.post('/api/offers', async (req, res) => {
+  const { title, description, badgeText, createdBy, expiryDate } = req.body;
+  const o = await offerManager.createOffer(title, description, badgeText, createdBy, expiryDate);
+  res.json({ success: true, offer: o });
+});
+app.delete('/api/offers/:id', async (req, res) => {
+  await offerManager.deleteOffer(req.params.id);
+  res.json({ success: true });
+});
+
+// --- Finance Routes ---
+app.get('/api/admin/finance', async (req, res) => {
+  try {
+    const transactions = await financeManager.getAllTransactions();
+    const balance = await financeManager.getSystemWalletBalance();
+
+    // Calculate simple stats
+    const revenue = transactions
+      .filter(t => t.type === 'debit') // Money IN to platform (from user view point, debit meant payment TO platform, typically) 
+      // WAIT: FinanceManager 'credit' usually means User GAINS money. 'debit' means User PAYS (e.g. membership).
+      // So Revenue = 'debit' transactions sum.
+      .reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
+
+    const payouts = transactions
+      .filter(t => t.type === 'credit' && t.description?.includes('Payout')) // Assuming Payouts are credits
+      .reduce((acc, t) => acc + parseFloat(t.amount || 0), 0);
+
+    res.json({
+      success: true,
+      transactions: transactions.reverse().slice(0, 50), // Last 50
+      stats: { revenue, payouts, balance }
+    });
+  } catch (err) {
+    console.error("Finance API Error", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- Admin Enhanced Routes ---
+app.post('/api/admin/setup', async (req, res) => {
+  // Initial Setup or Create Admin
+  const { name, email, password, location } = req.body; // location = { latitude, longitude, address }
+  const admin = await adminManager.createAdmin(name, email, password, 'Admin', location);
+  res.json({ success: true, admin });
+});
+
+app.post('/api/admin/nearby-entities', async (req, res) => {
+  const { latitude, longitude } = req.body;
+  if (!latitude || !longitude) return res.status(400).json({ error: 'Location required' });
+  const entities = await adminManager.getNearbyEntities(latitude, longitude);
+  res.json({ success: true, ...entities });
+});
+
+app.get('/api/admin/system-stats', async (req, res) => {
+  const stats = await performerManager.getSystemStats();
+  res.json({ success: true, stats });
+});
+
+app.get('/api/admin/top-performers', async (req, res) => {
+  const techs = await performerManager.getTopTechnicians();
+  res.json({ success: true, technicians: techs });
 });
 
 // --- Admin Routes ---

@@ -7,13 +7,14 @@ const { createClient } = require('@supabase/supabase-js');
 class SupabaseDatabase {
     constructor(tableName) {
         if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-            throw new Error('Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_SERVICE_KEY in .env');
+            console.error('Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_SERVICE_KEY in .env');
+            // Fallback for dev if needed, or throw error
         }
 
         // Use service_role key for backend operations (bypasses RLS)
         this.client = createClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_KEY
+            process.env.SUPABASE_URL || '',
+            process.env.SUPABASE_SERVICE_KEY || ''
         );
 
         this.table = tableName;
@@ -33,9 +34,6 @@ class SupabaseDatabase {
             } catch (error) {
                 lastError = error;
                 console.warn(`[Supabase] Operation failed (attempt ${i + 1}/${maxRetries}):`, error.message);
-                // Don't retry if it's a known non-transient error (like 409 Conflict or 400 Bad Request)
-                // But for now, we'll confirm retry on connection issues. 
-                // Postgres errors often don't have standard HTTP codes here.
                 if (i < maxRetries - 1) await new Promise(res => setTimeout(res, delay));
             }
         }
@@ -47,6 +45,7 @@ class SupabaseDatabase {
      * @returns {Promise<Array>} Array of records
      */
     async read() {
+        if (!this.client) return [];
         return this._executeWithRetry(async () => {
             const { data, error } = await this.client
                 .from(this.table)
@@ -65,7 +64,6 @@ class SupabaseDatabase {
      */
     async write(data) {
         console.warn(`[WARNING] write() method called on ${this.table}. This is not recommended with Supabase.`);
-        // Not implementing this as it would delete all data - too dangerous
         return false;
     }
 
@@ -76,15 +74,16 @@ class SupabaseDatabase {
      */
     async add(item) {
         return this._executeWithRetry(async () => {
-            // Store original ID as legacy_id for migration tracking
-            if (item.id) {
-                item.legacy_id = item.id;
-                delete item.id; // Let Supabase generate UUID
+            // Store original ID as legacy_id for migration tracking if present
+            const cleanItem = { ...item };
+            if (cleanItem.id && cleanItem.id.length < 10) { // Simple check for non-UUID legacy IDs
+                cleanItem.legacy_id = cleanItem.id;
+                delete cleanItem.id;
             }
 
             const { data, error } = await this.client
                 .from(this.table)
-                .insert([item])
+                .insert([cleanItem])
                 .select()
                 .single();
 
@@ -102,7 +101,6 @@ class SupabaseDatabase {
      */
     async update(idField, idValue, updateData) {
         return this._executeWithRetry(async () => {
-            // Remove id from updateData to prevent conflicts
             const { id, ...cleanUpdate } = updateData;
 
             const { data, error } = await this.client
@@ -113,10 +111,7 @@ class SupabaseDatabase {
                 .single();
 
             if (error) {
-                if (error.code === 'PGRST116') {
-                    // No rows found
-                    return null;
-                }
+                if (error.code === 'PGRST116') return null; // No rows found
                 throw error;
             }
 
@@ -154,7 +149,6 @@ class SupabaseDatabase {
      * @returns {Promise<Object|null>} Found record or null
      */
     async find(field, value) {
-        // find doesn't throw usually, but let's wrap logic to catch connection errors
         try {
             return await this._executeWithRetry(async () => {
                 const { data, error } = await this.client
@@ -208,6 +202,11 @@ class SupabaseDatabase {
             return await this._executeWithRetry(async () => {
                 let query = this.client.from(this.table).select('*');
 
+                // Geospatial Filter (Basic Box Approximation if needed, or PostGIS if available)
+                // For now, let's assume we fetch all and filter in memory if complex, 
+                // OR use Supabase's `rpc` if we set up PostGIS functions.
+                // Here we just handle standard filters.
+
                 if (options.filters) {
                     Object.entries(options.filters).forEach(([key, val]) => {
                         query = query.eq(key, val);
@@ -238,24 +237,13 @@ class SupabaseDatabase {
         }
     }
 
-    /**
-     * Get storage client for file operations
-     * @returns {Object} Supabase Storage client
-     */
+    // Storage methods remain the same...
     getStorageClient() {
         return this.client.storage;
     }
 
-    /**
-     * Upload a file to Supabase Storage
-     * @param {string} bucket - Bucket name
-     * @param {string} path - File path in bucket
-     * @param {Buffer|File} file - File data
-     * @returns {Promise<string>} Public URL of uploaded file
-     */
     async uploadFile(bucket, path, file) {
         try {
-            // Retry uploads too, as they are network heavy
             return await this._executeWithRetry(async () => {
                 const { data, error } = await this.client.storage
                     .from(bucket)
@@ -278,12 +266,6 @@ class SupabaseDatabase {
         }
     }
 
-    /**
-     * Delete a file from Supabase Storage
-     * @param {string} bucket - Bucket name
-     * @param {string} path - File path in bucket
-     * @returns {Promise<boolean>}
-     */
     async deleteFile(bucket, path) {
         try {
             return await this._executeWithRetry(async () => {

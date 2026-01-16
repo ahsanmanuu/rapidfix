@@ -77,7 +77,7 @@ class AdminManager {
         }
     }
 
-    async createAdmin(name, email, password, role = 'Admin') {
+    async createAdmin(name, email, password, role = 'Admin', listLocation = null) {
         try {
             const cleanEmail = String(email).trim().toLowerCase();
             const existing = await this.db.find('email', cleanEmail);
@@ -90,6 +90,20 @@ class AdminManager {
                 role,
                 createdAt: new Date().toISOString()
             };
+
+            // [NEW] Handle fixed location assignment
+            if (listLocation) {
+                if (listLocation.latitude && listLocation.longitude) {
+                    newAdmin.latitude = listLocation.latitude;
+                    newAdmin.longitude = listLocation.longitude;
+                    newAdmin.fixed_latitude = listLocation.latitude; // Cannot be changed by Admin, only SuperAdmin
+                    newAdmin.fixed_longitude = listLocation.longitude;
+                }
+                if (listLocation.address) {
+                    newAdmin.office_address = listLocation.address;
+                }
+            }
+
             const dbAdmin = this._mapToDb(newAdmin);
             const saved = await this.db.add(dbAdmin);
             const result = this._mapFromDb(saved);
@@ -197,6 +211,47 @@ class AdminManager {
         }
     }
 
+    // [NEW] Get nearby users and technicians within 30km fixed radius
+    async getNearbyEntities(adminLat, adminLng) {
+        try {
+            const radiusKm = 30; // Fixed 30 KM radius as per requirements
+
+            // We need access to users and technicians. 
+            // Ideally should inject UserManager and TechnicianManager, but for now we'll lazily load or use DB directly.
+            // Using DB directly to avoid circular dependency hell if Managers require each other.
+
+            // DatabaseLoader will return SupabaseDatabase or JSON Database
+            const UserDB = new (require('./DatabaseLoader'))('users');
+            const TechDB = new (require('./DatabaseLoader'))('technicians');
+
+            const users = await UserDB.read();
+            const technicians = await TechDB.read();
+
+            const nearbyUsers = users.filter(u => {
+                if (!u.latitude || !u.longitude) return false;
+                const dist = this._calculateDistance(adminLat, adminLng, u.latitude, u.longitude);
+                return dist <= radiusKm;
+            });
+
+            const nearbyTechs = technicians.filter(t => {
+                if (!t.latitude || !t.longitude) return false;
+                const dist = this._calculateDistance(adminLat, adminLng, t.latitude, t.longitude);
+                return dist <= radiusKm;
+            });
+
+            return {
+                users: nearbyUsers,
+                technicians: nearbyTechs,
+                center: { lat: adminLat, lng: adminLng, radius: radiusKm }
+            };
+
+        } catch (err) {
+            console.error("[AdminManager] Error getting nearby entities:", err);
+            return { users: [], technicians: [], error: err.message };
+        }
+    }
+
+    // [MODIFIED] Search Admins with default 50km or custom radius
     async searchAdmins(lat, lng, radiusKm = 50) {
         try {
             const all = await this.db.read();

@@ -2,9 +2,12 @@ import React from 'react';
 
 const navItems = [
     { id: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
+    { id: 'nearby', icon: 'map', label: 'Nearby Map' },
     { id: 'technicians', icon: 'engineering', label: 'Technicians' },
     { id: 'users', icon: 'group', label: 'Users' },
     { id: 'jobs', icon: 'work', label: 'Jobs' },
+    { id: 'offers', icon: 'local_offer', label: 'Offers' },
+    { id: 'testimonials', icon: 'reviews', label: 'Testimonials' },
     { id: 'feedback', icon: 'star', label: 'Feedback' },
     { id: 'billing', icon: 'payments', label: 'Billing' },
     { id: 'support', icon: 'support_agent', label: 'Support' },
