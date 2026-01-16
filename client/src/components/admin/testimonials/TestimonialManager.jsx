@@ -10,7 +10,7 @@ const TestimonialManager = () => {
     const fetchTestimonials = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/testimonials');
+            const res = await api.get('/admin/testimonials');
             setTestimonials(res.data.testimonials || []);
         } catch (err) {
             console.error(err);

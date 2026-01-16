@@ -17,7 +17,7 @@ const OfferManager = () => {
     const fetchOffers = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/offers');
+            const res = await api.get('/admin/offers');
             setOffers(res.data.offers || []);
         } catch (err) {
             console.error(err);
