@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Grid, Typography, Card, CardContent, Box, Chip, Avatar, List, ListItem, ListItemAvatar, ListItemText, Divider, ListItemButton, ListItemIcon, Button, Modal, IconButton } from '@mui/material';
+import { Grid, Typography, Card, CardContent, Box, Chip, Avatar, List, ListItem, ListItemAvatar, ListItemText, Divider, ListItemButton, ListItemIcon, Button, Modal, IconButton, Backdrop, CircularProgress } from '@mui/material';
 import { AccessTime, LocationOn, Assessment, Schedule, Chat, AccountBalanceWallet, Work as WorkIcon, FlashOn, InvertColors as PlumbingIcon, FormatPaint, AcUnit, Videocam, Print, BatteryChargingFull, Fingerprint } from '@mui/icons-material';
 import MakeOfferModal from './MakeOfferModal';
 import DashboardOffers from './DashboardOffers';
@@ -25,6 +25,7 @@ const DashboardHome = ({ jobs = [] }) => {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [bookingParams, setBookingParams] = useState(null);
     const [selectedTechnician, setSelectedTechnician] = useState(null);
+    const [isLocating, setIsLocating] = useState(false); // [NEW] Loading state for GPS
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -141,6 +142,7 @@ const DashboardHome = ({ jobs = [] }) => {
     // --- Booking Logic ---
     const handleBookNow = (serviceType) => {
         const launchMap = (loc) => {
+            setIsLocating(false); // Stop loading
             setBookingParams({
                 serviceType,
                 location: loc,
@@ -170,12 +172,13 @@ const DashboardHome = ({ jobs = [] }) => {
             return;
         }
 
-        // Priority 3: Final GPS Attempt (if all else fails and sync didn't run)
+        // Priority 3: Final GPS Attempt (Slow path)
         if (!navigator.geolocation) {
             alert('Geolocation is not supported');
             return;
         }
 
+        setIsLocating(true); // Start loading
         navigator.geolocation.getCurrentPosition((position) => {
             const loc = {
                 latitude: position.coords.latitude,
@@ -184,8 +187,10 @@ const DashboardHome = ({ jobs = [] }) => {
             };
             launchMap(loc);
         }, (err) => {
-            alert("Please enable location to find technicians");
-        });
+            setIsLocating(false);
+            console.warn("GPS access denied during booking", err);
+            alert("Please enable location to find technicians nearby.");
+        }, { timeout: 10000, enableHighAccuracy: true });
     };
 
     const handleTechnicianSelect = (tech) => {
@@ -259,6 +264,16 @@ const DashboardHome = ({ jobs = [] }) => {
 
     return (
         <Grid container spacing={3}>
+            <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 9999 }}
+                open={isLocating}
+            >
+                <Box sx={{ textAlign: 'center' }}>
+                    <CircularProgress color="inherit" size={60} thickness={4} />
+                    <Typography variant="h6" sx={{ mt: 2, fontWeight: 'bold' }}>Detecting Precise Location...</Typography>
+                </Box>
+            </Backdrop>
+
             {/* ... Welcome & Existing Stats ... */}
             <Grid item xs={12}>
                 <Box sx={{ mb: 2 }}>
@@ -309,31 +324,49 @@ const DashboardHome = ({ jobs = [] }) => {
                                     borderRadius: '16px',
                                     textAlign: 'center',
                                     cursor: 'pointer',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                    transition: 'all 0.2s ease-in-out',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                                     border: '1px solid transparent',
+                                    position: 'relative',
+                                    overflow: 'hidden',
                                     '&:hover': {
-                                        transform: 'translateY(-5px)',
-                                        boxShadow: '0 12px 24px -4px rgba(0,0,0,0.1)',
-                                        borderColor: theme.palette.primary.main
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: '0 12px 24px -4px rgba(0,0,0,0.12)',
+                                        borderColor: service.color, // Color border on hover
+                                        backgroundColor: service.bg // Light tint background on hover
+                                    },
+                                    '&:active': {
+                                        transform: 'scale(0.98)',
+                                        backgroundColor: service.bg
                                     }
                                 }}>
-                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                {/* Hover Gradient Overlay */}
+                                <Box sx={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    background: `linear-gradient(135deg, ${service.color}10, transparent)`,
+                                    opacity: 0,
+                                    transition: 'opacity 0.3s',
+                                    '.MuiCard-root:hover &': { opacity: 1 }
+                                }} />
+
+                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, position: 'relative', zIndex: 1 }}>
                                     <Avatar sx={{
                                         bgcolor: service.bg,
                                         color: service.color,
-                                        width: 48,
-                                        height: 48,
+                                        width: 56,
+                                        height: 56,
                                         margin: '0 auto 12px',
-                                        transition: 'transform 0.3s',
+                                        transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                        boxShadow: `0 4px 12px ${service.color}30`, // Colored shadow matching icon
                                         '.MuiCard-root:hover &': {
-                                            transform: 'scale(1.1) rotate(5deg)'
+                                            transform: 'scale(1.1) rotate(6deg)',
+                                            boxShadow: `0 8px 20px ${service.color}50`
                                         }
                                     }}>
-                                        {/* Scale down icon inside */}
                                         {React.cloneElement(service.icon, { fontSize: "medium" })}
                                     </Avatar>
-                                    <Typography variant="body2" fontWeight="700" display="block" sx={{ fontSize: '0.85rem', color: theme.palette.text.primary }}>{service.title}</Typography>
+                                    <Typography variant="body2" fontWeight="700" display="block" sx={{ fontSize: '0.9rem', color: theme.palette.text.primary, letterSpacing: '0.02em' }}>{service.title}</Typography>
                                 </CardContent>
                             </Card>
                         </Grid>
