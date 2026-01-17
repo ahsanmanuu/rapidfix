@@ -91,7 +91,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
         }
     }, [userLocation, serviceType]);
 
-    const handlePrecisionRefresh = () => {
+    const handlePrecisionRefresh = useCallback(() => {
         if (!navigator.geolocation) return;
         setIsRefreshing(true);
         navigator.geolocation.getCurrentPosition(
@@ -112,17 +112,22 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
             (err) => {
                 console.error("Precision GPS failed", err);
                 setIsRefreshing(false);
-                alert("Could not get precise GPS lock. Using last known location.");
+                // alert("Could not get precise GPS lock. Using last known location."); // [OPTIONAL] Suppress alert for background run?
+                // For now, keeping alert as it might be useful, or checking if triggered automatically.
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
-    };
+    }, [map, performSearch]);
 
     useEffect(() => {
         if (isOpen) {
+            // 1. Initial Search (Fast, using passed prop)
             performSearch();
+
+            // 2. Background Precision Lock (Auto-Run)
+            handlePrecisionRefresh();
         }
-    }, [isOpen, performSearch]);
+    }, [isOpen, performSearch, handlePrecisionRefresh]);
 
     // Real-time Updates (Status & Location)
     // Helper: Calculate Distance (Haversine)
@@ -564,9 +569,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                     <p className="text-xs md:text-sm mt-1 max-w-[280px] leading-relaxed text-slate-400">
                                         We couldn't locate any available {serviceType}s within 30km radius.
                                     </p>
-                                    <button onClick={onClose} className="mt-6 md:mt-8 px-5 py-2.5 md:px-6 md:py-3 bg-blue-50 text-blue-600 font-bold rounded-xl text-xs md:text-sm hover:bg-blue-100 transition-colors">
-                                        Expand Search Radius
-                                    </button>
+                                    {/* Expand logic removed as per request */}
                                 </div>
                             )}
                         </div>
