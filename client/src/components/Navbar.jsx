@@ -72,28 +72,43 @@ const Navbar = () => {
                                     </button>
                                 </div>
                             ) : (
-                                <div className={`flex items-center p-1 rounded-full border transition-all duration-300 ${scrolled
-                                    ? 'bg-slate-50 border-slate-200 shadow-sm'
-                                    : 'bg-white/10 border-white/20 backdrop-blur-md'
-                                    }`}>
+                                <div className="flex items-center gap-4">
+                                    {/* Technician/Partner Link */}
                                     <Link
-                                        to="/login"
-                                        className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${scrolled
-                                            ? 'text-slate-600 hover:bg-slate-200/50'
-                                            : 'text-white hover:bg-white/10'
+                                        to="/join-partner"
+                                        className={`hidden xl:flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm border transition-all duration-300 ${scrolled
+                                            ? 'border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900 hover:bg-slate-50'
+                                            : 'border-white/30 text-white hover:border-white/60 hover:bg-white/10'
                                             }`}
                                     >
-                                        Log In
+                                        <Briefcase size={16} />
+                                        <span>Join as Partner</span>
                                     </Link>
-                                    <Link
-                                        to="/register"
-                                        className={`px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all duration-300 transform hover:-translate-y-0.5 ${scrolled
-                                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/25'
-                                            : 'bg-white text-blue-600 hover:bg-blue-50 shadow-black/20'
-                                            }`}
-                                    >
-                                        Register
-                                    </Link>
+
+                                    {/* User Auth Pill */}
+                                    <div className={`flex items-center p-1 rounded-full border transition-all duration-300 ${scrolled
+                                        ? 'bg-slate-50 border-slate-200 shadow-sm'
+                                        : 'bg-white/10 border-white/20 backdrop-blur-md'
+                                        }`}>
+                                        <Link
+                                            to="/login"
+                                            className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${scrolled
+                                                ? 'text-slate-600 hover:bg-slate-200/50'
+                                                : 'text-white hover:bg-white/10'
+                                                }`}
+                                        >
+                                            Log In
+                                        </Link>
+                                        <Link
+                                            to="/register"
+                                            className={`px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all duration-300 transform hover:-translate-y-0.5 ${scrolled
+                                                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/25'
+                                                : 'bg-white text-blue-600 hover:bg-blue-50 shadow-black/20'
+                                                }`}
+                                        >
+                                            Register
+                                        </Link>
+                                    </div>
                                 </div>
                             )}
                         </div>
