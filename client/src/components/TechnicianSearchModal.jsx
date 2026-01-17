@@ -375,10 +375,14 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                 getPixelPositionOffset={(width, height) => ({ x: -(width / 2), y: -(height / 2) })}
                                             >
                                                 <div
-                                                    className={`relative flex flex-col items-center group ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'} hover:z-[999] -translate-y-6 transition-all duration-300 ${tech.distance > 20.0 ? 'opacity-60' : ''}`}
+                                                    className={`relative flex flex-col items-center group ${['available', 'pending', 'engaged', 'finishing_work', 'finishing work'].includes((rawStatus || '').toLowerCase().trim()) ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'} hover:z-[999] -translate-y-6 transition-all duration-300 ${tech.distance > 20.0 ? 'opacity-60' : ''}`}
                                                     onClick={() => {
-                                                        if (isAvailable) onBook(tech);
-                                                        else alert(`This technician is currently ${statusConfig.label}`);
+                                                        const s = (rawStatus || '').toLowerCase().trim();
+                                                        if (['available', 'pending', 'engaged', 'finishing_work', 'finishing work'].includes(s)) {
+                                                            onBook(tech);
+                                                        } else {
+                                                            alert(`This technician is currently ${statusConfig.label}`);
+                                                        }
                                                     }}
                                                 >
                                                     {/* Status Flag Badge */}
@@ -482,18 +486,21 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                             <motion.div
                                                 key={tech.id}
                                                 onClick={() => {
-                                                    if (isAvailable) onBook(tech);
+                                                    const s = (rawStatus || '').toLowerCase().trim();
+                                                    if (['available', 'pending', 'engaged', 'finishing_work', 'finishing work'].includes(s)) {
+                                                        onBook(tech);
+                                                    }
                                                 }}
                                                 initial={{ opacity: 0, y: 15 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
                                                 className={`group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 border shadow-sm hover:shadow-lg transition-all duration-300 ${tech.distance > 20.0 ? 'opacity-60 border-slate-200' : 'border-slate-200 hover:border-blue-300'
-                                                    } ${isAvailable ? 'hover:shadow-blue-500/10 cursor-pointer hover:-translate-y-1' : 'cursor-not-allowed opacity-60 border-slate-100'}`}
+                                                    } ${['available', 'pending', 'engaged', 'finishing_work', 'finishing work'].includes((rawStatus || '').toLowerCase().trim()) ? 'hover:shadow-blue-500/10 cursor-pointer hover:-translate-y-1' : 'cursor-not-allowed opacity-60 border-slate-100'}`}
                                             >
                                                 <div className="flex gap-4 md:gap-5 items-center">
                                                     {/* List Avatar */}
                                                     <div className="relative flex-shrink-0">
-                                                        <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden shadow-md border-2 border-white ${isAvailable ? 'ring-2 ring-blue-500/20' : 'ring-2 ring-slate-200'}`}>
+                                                        <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden shadow-md border-2 border-white ${['available', 'pending', 'engaged', 'finishing_work', 'finishing work'].includes((rawStatus || '').toLowerCase().trim()) ? 'ring-2 ring-blue-500/20' : 'ring-2 ring-slate-200'}`}>
                                                             <img
                                                                 src={photoUrl}
                                                                 alt={tech.name}
