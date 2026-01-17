@@ -95,8 +95,9 @@ const TechnicianSidebar = ({
                 {/* Header / Logo */}
                 <div className="h-20 flex items-center px-6 border-b border-slate-800 bg-slate-950/50 shrink-0 relative">
                     <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-900/50">
-                            <span className="font-bold text-xl">F</span>
+                        {/* [FIX] Use logo.png instead of gradient box */}
+                        <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                            <img src="/logo.png" alt="Fixofy" className="w-full h-full object-contain" />
                         </div>
                         <motion.div
                             animate={{ opacity: isOpen ? 1 : 0, width: isOpen ? 'auto' : 0 }}
@@ -167,7 +168,7 @@ const TechnicianSidebar = ({
                 </div>
 
                 {/* Footer / Logout */}
-                <div className="p-4 border-t border-slate-800 shrink-0">
+                <div className="p-4 border-t border-slate-800 shrink-0 relative">
                     <button
                         onClick={onLogout}
                         className={`
@@ -183,12 +184,13 @@ const TechnicianSidebar = ({
                         </span>
                     </button>
 
-                    {/* Toggle Button for Desktop */}
+                    {/* Toggle Button for Desktop - [FIX] Position adjusted to be inside or overlay correctly */}
                     <button
                         onClick={toggleSidebar}
-                        className="hidden md:flex absolute -right-3 top-24 bg-blue-600 text-white w-6 h-6 rounded-full items-center justify-center shadow-lg hover:bg-blue-500 transition-colors z-50"
+                        className="hidden md:flex absolute -right-3 top-[-16px] bg-blue-600 text-white w-7 h-7 rounded-full items-center justify-center shadow-lg hover:bg-blue-500 transition-colors z-50 ring-4 ring-slate-50"
+                        style={{ right: '-14px', top: '10px' }} // Inline override for precision
                     >
-                        <ChevronLeft size={14} className={`transition-transform duration-300 ${!isOpen ? 'rotate-180' : ''}`} />
+                        <ChevronLeft size={16} className={`transition-transform duration-300 ${!isOpen ? 'rotate-180' : ''}`} />
                     </button>
                 </div>
             </motion.aside>

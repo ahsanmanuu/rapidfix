@@ -1261,9 +1261,10 @@ const TechnicianDashboard = () => {
                 stats={stats}
             />
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 lg:gap-12 xl:gap-16">
+            {/* [FIX] Increased Gap to prevent overlap */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 lg:gap-10 xl:gap-12 pb-12">
                 {/* Main Job List & Offers */}
-                <div className="lg:col-span-2 space-y-12 sm:space-y-16">
+                <div className="lg:col-span-2 space-y-10 sm:space-y-12">
                     {/* [NEW] Direct Analytics Curve on Dashboard */}
                     <Card title="Earnings Dynamics" headerColor="border-t-blue-600" noPadding>
                         <div className="p-6">
@@ -1615,7 +1616,7 @@ const TechnicianDashboard = () => {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => setSidebarOpen(!sidebarOpen)}
-                            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 focus:outline-none transition-colors md:hidden"
+                            className="p-2 rounded-lg hover:bg-slate-100 text-slate-600 focus:outline-none transition-colors md:hidden"
                         >
                             <Menu size={24} />
                         </button>
@@ -1626,6 +1627,17 @@ const TechnicianDashboard = () => {
                                         activeTab === 'jobs' ? 'My Contracts' :
                                             activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                             </h2>
+                            {/* [FIX] Restored Time & Location Display */}
+                            <div className="flex items-center gap-3 text-xs font-medium text-slate-500 mt-0.5">
+                                <div className="flex items-center gap-1">
+                                    <MapPin size={12} className="text-rose-500" />
+                                    <span>{currentLocationName || 'Locating...'}</span>
+                                </div>
+                                <div className="hidden sm:flex items-center gap-1 pl-3 border-l border-slate-200">
+                                    <Clock size={12} className="text-blue-500" />
+                                    <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
