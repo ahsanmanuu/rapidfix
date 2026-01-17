@@ -1640,7 +1640,6 @@ const TechnicianDashboard = () => {
                                 {/* [NEW] Network Status Icons */}
                                 <div className="flex items-center gap-2 pl-3 border-l border-slate-200 text-slate-400">
                                     <Wifi size={12} className="text-emerald-500" />
-                                    <Signal size={12} className="text-emerald-500" />
                                 </div>
                             </div>
                         </div>

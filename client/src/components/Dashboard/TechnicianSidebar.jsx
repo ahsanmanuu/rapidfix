@@ -167,7 +167,23 @@ const TechnicianSidebar = ({
                     })}
                 </div>
 
-                {/* Toggle Button moved to outside */}
+                {/* Footer / Logout */}
+                <div className="p-4 border-t border-slate-800 shrink-0 relative">
+                    <button
+                        onClick={onLogout}
+                        className={`
+                            w-full flex items-center gap-3 px-3 py-3 rounded-xl 
+                            text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 
+                            transition-all duration-300 group
+                        `}
+                        title="Logout"
+                    >
+                        <LogOut size={22} className="shrink-0 transition-transform group-hover:-translate-x-1" />
+                        <span className={`whitespace-nowrap font-medium transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
+                            Log Out
+                        </span>
+                    </button>
+                </div>
             </motion.aside>
 
             {/* Desktop Toggle Button - Floating Outside */}
