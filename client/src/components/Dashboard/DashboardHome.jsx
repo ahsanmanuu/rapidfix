@@ -25,7 +25,6 @@ const DashboardHome = ({ jobs = [] }) => {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [bookingParams, setBookingParams] = useState(null);
     const [selectedTechnician, setSelectedTechnician] = useState(null);
-    const [isLocating, setIsLocating] = useState(false); // [NEW] Loading state for GPS
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -172,25 +171,15 @@ const DashboardHome = ({ jobs = [] }) => {
             return;
         }
 
-        // Priority 3: Final GPS Attempt (Slow path)
+        // Priority 3: Final GPS Attempt (Delegate to Modal)
+        // If no location found, we open the modal anyway and let it fetch precise location via 'Auto Precision Lock'
         if (!navigator.geolocation) {
-            alert('Geolocation is not supported');
+            alert('Geolocation is not supported'); // Keep this check simple
             return;
         }
 
-        setIsLocating(true); // Start loading
-        navigator.geolocation.getCurrentPosition((position) => {
-            const loc = {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                address: locationName.area + ", " + locationName.city
-            };
-            launchMap(loc);
-        }, (err) => {
-            setIsLocating(false);
-            console.warn("GPS access denied during booking", err);
-            alert("Please enable location to find technicians nearby.");
-        }, { timeout: 10000, enableHighAccuracy: true });
+        // Launch immediately with null location - Modal will auto-fetch
+        launchMap(null);
     };
 
     const handleTechnicianSelect = (tech) => {
@@ -264,16 +253,6 @@ const DashboardHome = ({ jobs = [] }) => {
 
     return (
         <Grid container spacing={3}>
-            <Backdrop
-                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 9999 }}
-                open={isLocating}
-            >
-                <Box sx={{ textAlign: 'center' }}>
-                    <CircularProgress color="inherit" size={60} thickness={4} />
-                    <Typography variant="h6" sx={{ mt: 2, fontWeight: 'bold' }}>Detecting Precise Location...</Typography>
-                </Box>
-            </Backdrop>
-
             {/* ... Welcome & Existing Stats ... */}
             <Grid item xs={12}>
                 <Box sx={{ mb: 2 }}>
