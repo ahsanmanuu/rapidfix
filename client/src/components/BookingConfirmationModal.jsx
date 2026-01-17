@@ -110,6 +110,20 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                         </button>
 
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10">
+                            {['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase()) && (
+                                <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+                                    <div className="p-2 bg-amber-100 text-amber-600 rounded-lg shrink-0">
+                                        <Clock size={20} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-amber-800 text-sm">Technician is Finishing Work</h4>
+                                        <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                                            This technician is currently engaged. You can place a <strong>Queue Booking</strong>. They will call you directly to confirm their arrival time.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             <h3 className="text-xl md:text-2xl font-black text-slate-800 mb-6 md:mb-8 border-l-4 border-blue-500 pl-4 mt-2 md:mt-0">Booking Summary</h3>
 
                             <div className="space-y-4 md:space-y-6">
@@ -189,12 +203,12 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                                     }
                                     onConfirm({ ...jobDetails, visitingCharges, agreementAccepted: true, technicianId: technician?.id || null });
                                 }}
-                                className={`w-full py-3 md:py-4 rounded-xl text-white font-bold shadow-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${agreement ? 'bg-slate-900 shadow-slate-900/20' : 'bg-slate-300 shadow-none cursor-not-allowed'}`}
+                                className={`w-full py-3 md:py-4 rounded-xl text-white font-bold shadow-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${agreement ? (['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase()) ? 'bg-amber-600 shadow-amber-600/20' : 'bg-slate-900 shadow-slate-900/20') : 'bg-slate-300 shadow-none cursor-not-allowed'}`}
                             >
-                                {agreement && <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                                {agreement && <div className={`absolute inset-0 bg-gradient-to-r ${['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase()) ? 'from-amber-500 to-orange-600' : 'from-blue-600 to-indigo-600'} opacity-0 group-hover:opacity-100 transition-opacity`} />}
                                 <div className="relative z-10 flex items-center gap-2">
-                                    <ShieldCheck size={18} className="md:w-5 md:h-5" />
-                                    <span className="text-sm md:text-lg tracking-wide">{agreement ? 'Confirm & Book Now' : 'Accept Terms to Continue'}</span>
+                                    {['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase()) ? <Clock size={18} className="md:w-5 md:h-5" /> : <ShieldCheck size={18} className="md:w-5 md:h-5" />}
+                                    <span className="text-sm md:text-lg tracking-wide">{agreement ? (['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase()) ? 'Queue & Wait for Call' : 'Confirm & Book Now') : 'Accept Terms to Continue'}</span>
                                 </div>
                             </motion.button>
                         </div>

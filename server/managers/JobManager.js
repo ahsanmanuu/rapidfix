@@ -78,6 +78,10 @@ class JobManager {
             if (job.reason !== undefined) mapped.reason = job.reason;
             if (job.otp !== undefined) mapped.otp = job.otp;
 
+            if (job.offerPrice !== undefined) mapped.offer_price = job.offerPrice;
+            if (job.visitingCharges !== undefined) mapped.visiting_charges = job.visitingCharges;
+            if (job.agreementAccepted !== undefined) mapped.agreement_accepted = job.agreementAccepted ? 1 : 0;
+
             if (job.location) {
                 mapped.location = job.location;
                 if (job.location.address) mapped.address = job.location.address;
@@ -96,7 +100,7 @@ class JobManager {
         }
     }
 
-    async createJob(userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone) {
+    async createJob(userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted) {
         try {
             const user = await this.userManager.getUser(userId);
             const newJob = {
@@ -109,6 +113,10 @@ class JobManager {
                 scheduledTime,
                 contactName: contactName || (user ? user.name : "Customer"),
                 contactPhone: contactPhone || (user ? user.phone : ""),
+                offerPrice,
+                technicianId,
+                visitingCharges,
+                agreementAccepted,
                 status: 'pending',
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
@@ -155,17 +163,17 @@ class JobManager {
                 const lat = location.latitude || location.lat;
                 const lon = location.longitude || location.lng;
 
-                // Step A: Search Nearby (Radius 2km)
-                const radius = 2.0;
+                // Step A: Search Nearby (Radius 30km [FIXED])
+                const radius = 30.0;
                 let candidates = await this.techManager.searchTechnicians(lat, lon, serviceType, radius);
 
                 // Filter only available technicians
+                // Note: We only auto-assign to 'available' techs. 
+                // Busy techs can only be booked via Direct Booking (Queue).
                 candidates = candidates.filter(t => t.status === 'available');
 
                 console.log(`[AutoAssign] Found ${candidates.length} candidates within ${radius}km for ${serviceType}`);
 
-                // Pre-Fetch Global Stats for Market Share Calculation
-                const platformEarnings = await this.financeManager.getPlatformMonthlyEarnings();
                 const allJobsThisMonth = await this._getMonthlyJobCountGlobal();
 
                 const qualifiedTechs = [];
@@ -180,28 +188,28 @@ class JobManager {
                         continue;
                     }
 
-                    // 2. Check Job Rejection Rate (< 20% in CURRENT MONTH)
+                    // 2. Check Job Rejection Rate (<= 20% in CURRENT MONTH) [FIXED: <=]
                     const jobStats = await this.getJobStats(tech.id, true); // true = current month only
                     // jobStats.ratio is rejection ratio (0.0 to 1.0)
-                    // We allow if total jobs is low (< 3) so we don't block new techs on 1 rejection immediately
-                    if (jobStats.total >= 3 && jobStats.ratio >= 0.20) {
-                        // console.debug(`[AutoAssign] Skipping ${tech.name}: High Monthly Rejection Rate (${(jobStats.ratio * 100).toFixed(1)}%)`);
+                    if (jobStats.total >= 3 && jobStats.ratio > 0.20) {
+                        // console.debug(`[AutoAssign] Skipping ${tech.name}: High Monthly Rejection Rate (${(jobStats.ratio * 100).toFixed(1)}% > 20%)`);
                         continue;
                     }
 
                     // 3. Market Share / Workload Caps
-                    // Condition: Free < 20%, Premium < 80% (Using Job Volume)
+                    // Condition: Free < 20%, Premium <= 100% (No Cap) [FIXED]
                     const isPremium = tech.membership === 'Premium' || tech.subscription === 'premium';
-                    const volumeCap = isPremium ? 0.80 : 0.20;
+                    const volumeCap = isPremium ? 1.00 : 0.20;
 
                     const techMonthlyJobs = await this._getMonthlyJobCount(tech.id);
                     // Avoid division by zero
                     const volumeShare = allJobsThisMonth > 0 ? (techMonthlyJobs / allJobsThisMonth) : 0;
 
-                    // Only apply cap if there is significant volume (e.g., > 10 jobs in system)
+                    // Only apply cap if there is somewhat significant volume (e.g., > 10 jobs in system)
+                    // Strict adherence: If Free and share >= 20%, SKIP.
                     if (allJobsThisMonth > 10 && volumeShare >= volumeCap) {
                         // console.debug(`[AutoAssign] Skipping ${tech.name}: Over volume cap (${(volumeShare * 100).toFixed(1)}% / ${(volumeCap * 100).toFixed(1)}%)`);
-                        continue;
+                        if (!isPremium) continue; // Only skip if NOT premium (since premium is 100%)
                     }
 
                     qualifiedTechs.push(tech);
@@ -211,7 +219,7 @@ class JobManager {
                 if (qualifiedTechs.length > 0) {
                     // Sort Priority:
                     // 1. Rating (Desc)
-                    // 2. Premium Status (Privilege) - Optional but good for business
+                    // 2. Premium Status (Privilege)
                     // 3. Distance (Asc)
                     qualifiedTechs.sort((a, b) => {
                         const scoreA = (a.rating || 0) + (a.membership === 'Premium' ? 1 : 0);
@@ -238,38 +246,53 @@ class JobManager {
         }
     }
 
-    // New Helpers for Algo
-    async _getMonthlyJobCount(technicianId) {
-        try {
-            const now = new Date();
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-            const jobs = await this.db.findAll('technician_id', technicianId);
-            return jobs.filter(j => j.created_at >= startOfMonth).length;
-        } catch (e) { return 0; }
-    }
-    async _getMonthlyJobCountGlobal() {
-        try {
-            const now = new Date();
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-            const jobs = await this.db.read();
-            return jobs.filter(j => j.created_at >= startOfMonth).length;
-        } catch (e) { return 1; }
-    }
+    // Renaming original autoAssignJob to _autoAssignJobInternal or just keeping it 
+    // Wait, I should just modify assignment logic.
+    // The previous tool didn't show autoAssignJob fully. I'll rely on assignTechnician.
+
+    // Re-implementing autoAssignJob to be safe, or just relying on assignTechnician update.
+    // I will Only update assignTechnician and createJob in this chunk.
+    // WAIT, I need to keep autoAssignJob available.
+    // I will just paste createJob and assignTechnician.
+
+    // ...
 
     async assignTechnician(jobId, technicianId) {
         try {
             console.log(`[JobManager] Assigning Technician ${technicianId} to Job ${jobId}`);
-            const updatedJob = await this.updateStatus(jobId, 'accepted', { technicianId });
-            await this.techManager.updateStatus(technicianId, 'engaged');
+
+            // Check Tech Status First
+            const tech = await this.techManager.getTechnician(technicianId);
+            const techStatus = (tech?.status || 'available').toLowerCase();
+            const isBusy = ['engaged', 'finishing_work', 'finishing work'].includes(techStatus);
+
+            let newJobStatus = 'accepted';
+
+            if (isBusy) {
+                console.log(`[JobManager] Tech ${technicianId} is ${techStatus}. Creating Queue/Waiting Confirmation Booking.`);
+                newJobStatus = 'waiting_confirmation';
+                // Do NOT update tech status to 'engaged' (already is)
+            } else {
+                newJobStatus = 'accepted';
+                await this.techManager.updateStatus(technicianId, 'engaged');
+            }
+
+            const updatedJob = await this.updateStatus(jobId, newJobStatus, { technicianId });
 
             if (this.io) {
-                this.io.emit('technician_status_update', { technicianId, status: 'engaged' });
+                if (!isBusy) this.io.emit('technician_status_update', { technicianId, status: 'engaged' });
+
                 this.io.to(`tech_${technicianId}`).emit('new_job_assigned', updatedJob);
                 this.io.to(`user_${updatedJob.userId}`).emit('job_status_updated', updatedJob);
                 this.io.emit('admin_job_update', updatedJob);
             }
 
-            await this.notificationManager.createNotification(technicianId, 'technician', 'New Job Assigned', `Job #${jobId} has been assigned to you.`, 'job_assigned', jobId);
+            const notifTitle = isBusy ? 'New Queue Request' : 'New Job Assigned';
+            const notifBody = isBusy
+                ? `Job #${jobId} added to your queue. Please CALL customer to confirm time when free.`
+                : `Job #${jobId} has been assigned to you.`;
+
+            await this.notificationManager.createNotification(technicianId, 'technician', notifTitle, notifBody, 'job_assigned', jobId);
 
             // [NEW] Update Stats
             await this.techManager.updateStats(technicianId, { type: 'assign' });
