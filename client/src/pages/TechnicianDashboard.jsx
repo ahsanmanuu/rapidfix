@@ -1661,7 +1661,7 @@ const TechnicianDashboard = () => {
                             <div className="text-right hidden lg:block">
                                 <div className="text-sm font-bold text-slate-800">{user?.name}</div>
                                 <div className="text-[10px] text-slate-500 font-semibold bg-slate-100 px-1.5 py-0.5 rounded inline-block mt-0.5">
-                                    {user?.role === 'technician' ? 'Senior Technician' : 'Technician'}
+                                    {user?.serviceType || 'Technician'}
                                 </div>
                             </div>
                             <img
