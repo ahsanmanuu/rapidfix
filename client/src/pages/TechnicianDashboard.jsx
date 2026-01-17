@@ -43,10 +43,10 @@ const StatCard = ({ title, value, icon: Icon, color, trend, onClick, subtext, gr
         <div className={`absolute -left-10 -bottom-10 w-32 h-32 rounded-full opacity-20 blur-2xl ${gradient ? 'bg-black' : color.replace('bg-', 'bg-')}`} />
 
         <div className="relative z-10 flex justify-between items-start">
-            <div>
-                <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${gradient ? 'text-white/80' : 'text-slate-400'}`}>{title}</p>
-                <h3 className={`text-2xl font-black tracking-tight mb-1 ${gradient ? 'text-white' : 'text-slate-800'}`}>{value}</h3>
-                {subtext && <p className={`text-[10px] font-semibold ${gradient ? 'text-white/60' : 'text-slate-400'}`}>{subtext}</p>}
+            <div className="overflow-hidden">
+                <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 truncate ${gradient ? 'text-white/80' : 'text-slate-400'}`}>{title}</p>
+                <h3 className={`text-lg font-black tracking-tight mb-1 truncate ${gradient ? 'text-white' : 'text-slate-800'}`}>{value}</h3>
+                {subtext && <p className={`text-[9px] font-semibold truncate ${gradient ? 'text-white/60' : 'text-slate-400'}`}>{subtext}</p>}
             </div>
             <div className={`
                 p-4 rounded-2xl backdrop-blur-md shadow-sm
@@ -1261,10 +1261,10 @@ const TechnicianDashboard = () => {
                 stats={stats}
             />
 
-            {/* [FIX] Increased Gap (Aggressive) to prevent overlap */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-12 lg:gap-16 xl:gap-20 pb-20">
+            {/* [FIX] HUGE Gap (Aggressive) to prevent overlap */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-16 lg:gap-24 xl:gap-32 pb-32">
                 {/* Main Job List & Offers */}
-                <div className="lg:col-span-2 space-y-12 sm:space-y-16">
+                <div className="lg:col-span-2 space-y-16 sm:space-y-24">
                     {/* [NEW] Direct Analytics Curve on Dashboard */}
                     <Card title="Earnings Dynamics" headerColor="border-t-blue-600" noPadding>
                         <div className="p-6">
