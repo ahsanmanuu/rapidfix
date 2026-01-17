@@ -21,41 +21,50 @@ import useSupabaseRealtime from '../hooks/useSupabaseRealtime';
 
 import GoogleMapReact from 'google-map-react';
 import LiveRideModal from '../components/Dashboard/LiveRideModal';
+import TechnicianSidebar from '../components/Dashboard/TechnicianSidebar';
 
 // --- AdminLTE Style Components ---
 
 // --- Modern Stat Card Component ---
-const StatCard = ({ title, value, icon: Icon, color, trend, onClick, subtext }) => (
+// --- Modern Stat Card Component (Premium Glass + Gradients) ---
+const StatCard = ({ title, value, icon: Icon, color, trend, onClick, subtext, gradient }) => (
     <motion.div
-        whileHover={{ y: -8, shadow: "0 25px 50px -12px rgb(0 0 0 / 0.25)" }}
+        whileHover={{ y: -8, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className={`relative overflow-hidden rounded-2xl bg-white shadow-xl border border-gray-200/60 p-8 cursor-pointer group hover:shadow-2xl transition-all duration-500`}
+        className={`
+            relative overflow-hidden rounded-3xl p-8 cursor-pointer group transition-all duration-500
+            ${gradient ? gradient : 'bg-white'}
+            ${gradient ? 'text-white border-0 shadow-2xl' : 'bg-white border border-slate-100 shadow-xl'}
+        `}
     >
-        <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-10 ${color} group-hover:scale-150 transition-transform duration-500`} />
+        {/* Background Decorative Elements */}
+        <div className={`absolute -right-10 -top-10 w-40 h-40 rounded-full opacity-20 blur-3xl ${gradient ? 'bg-white' : color.replace('bg-', 'bg-')}`} />
+        <div className={`absolute -left-10 -bottom-10 w-32 h-32 rounded-full opacity-20 blur-2xl ${gradient ? 'bg-black' : color.replace('bg-', 'bg-')}`} />
 
         <div className="relative z-10 flex justify-between items-start">
             <div>
-                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">{title}</p>
-                <h3 className="text-3xl font-bold text-gray-800 tracking-tight">{value}</h3>
-                {subtext && <p className="text-xs text-gray-400 mt-1 font-medium">{subtext}</p>}
+                <p className={`text-sm font-bold uppercase tracking-wider mb-2 ${gradient ? 'text-white/80' : 'text-slate-400'}`}>{title}</p>
+                <h3 className={`text-4xl font-black tracking-tight mb-2 ${gradient ? 'text-white' : 'text-slate-800'}`}>{value}</h3>
+                {subtext && <p className={`text-xs font-semibold ${gradient ? 'text-white/60' : 'text-slate-400'}`}>{subtext}</p>}
             </div>
-            <div className={`p-3 rounded-xl ${color.replace('bg-', 'bg-opacity-20 ')} ${color.replace('bg-', 'text-')} bg-opacity-10`}>
-                <Icon size={24} className={color.replace('bg-', 'text-')} />
+            <div className={`
+                p-4 rounded-2xl backdrop-blur-md shadow-sm
+                ${gradient ? 'bg-white/20 text-white' : `${color.replace('bg-', 'bg-').replace('500', '50')} ${color.replace('bg-', 'text-')}`}
+            `}>
+                <Icon size={28} />
             </div>
         </div>
 
         {trend && (
-            <div className="mt-4 flex items-center text-xs font-bold">
-                <span className={`${trend.positive ? 'text-emerald-500' : 'text-rose-500'} flex items-center gap-1`}>
-                    {trend.positive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+            <div className={`mt-6 flex items-center text-sm font-bold ${gradient ? 'text-white/90' : ''}`}>
+                <span className={`flex items-center gap-1 ${!gradient ? (trend.positive ? 'text-emerald-500' : 'text-rose-500') : ''}`}>
+                    {trend.positive ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
                     {trend.value}%
                 </span>
-                <span className="text-gray-400 ml-2">vs last month</span>
+                <span className={`ml-2 ${gradient ? 'text-white/60' : 'text-slate-400'}`}>vs last month</span>
             </div>
         )}
-
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gray-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
     </motion.div>
 );
 
@@ -297,19 +306,30 @@ const SuccessAnimationModal = ({ isOpen, onClose, title = "Success!", message = 
     );
 };
 
-const Card = ({ title, tools, children, noPadding = false, headerColor = "border-t-blue-500", height = "auto" }) => (
-    <div className={`bg-white rounded-2xl shadow-lg border border-gray-100 border-t-4 ${headerColor} mb-8 flex flex-col overflow-hidden transition-shadow hover:shadow-xl`} style={{ minHeight: height }}>
-        <div className="px-8 py-5 border-b border-gray-50 flex justify-between items-center bg-white/50 backdrop-blur-sm">
-            <h3 className="text-lg font-bold text-gray-800 tracking-tight">{title}</h3>
-            <div className="flex items-center gap-3 text-gray-400">
-                {tools}
+const Card = ({ title, tools, children, noPadding = false, headerColor = "border-t-blue-500", height = "auto" }) => {
+    // Extract color for accent
+    const accentColor = headerColor.includes('border-t-')
+        ? headerColor.replace('border-t-', 'bg-')
+        : headerColor.includes('bg-') ? headerColor
+            : 'bg-blue-500';
+
+    return (
+        <div className={`bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 mb-8 flex flex-col overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]`} style={{ minHeight: height }}>
+            <div className="px-8 py-6 border-b border-slate-100/50 flex justify-between items-center bg-white/40">
+                <div className="flex items-center gap-3">
+                    <div className={`h-6 w-1.5 rounded-full ${accentColor} shadow-sm`}></div>
+                    <h3 className="text-lg font-bold text-slate-800 tracking-tight">{title}</h3>
+                </div>
+                <div className="flex items-center gap-3 text-slate-400">
+                    {tools}
+                </div>
+            </div>
+            <div className={`flex-1 ${noPadding ? 'p-0' : 'p-8 sm:p-10'}`}>
+                {children}
             </div>
         </div>
-        <div className={`flex-1 ${noPadding ? 'p-0' : 'p-8 sm:p-10'}`}>
-            {children}
-        </div>
-    </div>
-);
+    );
+};
 
 const StatusToggle = ({ currentStatus, onUpdate, loading }) => {
     const statuses = [
@@ -1131,109 +1151,108 @@ const TechnicianDashboard = () => {
 
 
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-12">
-                {/* Premium Stats Grid */}
-                {/* Unified Grid for Top Row */}
+
+            {/* --- TOP ROW: PREMIUM STAT CARDS --- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <StatCard
-                    title="Total Balance"
+                    title="Total Earnings"
                     value={`₹${(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}`}
                     icon={Wallet}
-                    color="bg-emerald-500"
+                    gradient="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500"
                     trend={stats.earnings?.balance > 0 ? { value: 12, positive: true } : null}
                     onClick={() => setStatsModalOpen(true)}
                     subtext="Available for withdrawal"
                 />
                 <StatCard
-                    title="Month Earnings"
+                    title="Monthly Revenue"
                     value={`₹${(typeof stats.monthlyEarnings === 'object' ? stats.monthlyEarnings.amount : stats.monthlyEarnings)?.toLocaleString() || 0}`}
                     icon={TrendingUp}
-                    color="bg-blue-500"
+                    gradient="bg-gradient-to-br from-emerald-400 to-cyan-500"
                     trend={stats.monthlyEarnings > 0 ? { value: 5, positive: true } : null}
                     onClick={() => setStatsModalOpen(true)}
-                    subtext="Since 1st of Month"
+                    subtext="Current Month"
                 />
                 <StatCard
-                    title="Completed Jobs"
+                    title="Jobs Completed"
                     value={stats.completedJobs}
                     icon={CheckCircle2}
-                    color="bg-indigo-500"
+                    gradient="bg-gradient-to-br from-blue-500 to-blue-700"
                     onClick={() => setStatsModalOpen(true)}
                     subtext="Lifetime Total"
                 />
                 <StatCard
-                    title="Rating"
+                    title="Customer Rating"
                     value={stats.rating}
                     icon={Star}
-                    color="bg-amber-500"
+                    gradient="bg-gradient-to-br from-amber-400 to-orange-500"
                     onClick={() => setActiveTab('feedback')}
                     subtext={`Based on ${stats.totalReviews} reviews`}
                 />
-            </div> {/* Close Unified Grid */}
+            </div>
 
             {/* Additional Stats Row - Grid Expanded */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-6 sm:gap-8 mb-12 px-1">
-                {/* Existing Small Cards */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
-                    <div className="p-2 bg-blue-50 rounded-lg text-blue-600 flex-shrink-0"><Briefcase size={20} /></div>
-                    <div className="overflow-hidden">
-                        <div className="text-xl font-bold text-gray-800">{stats.monthJobs || stats.monthlyJobs || 0}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Jobs This Month</div>
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
-                    <div className="p-2 bg-rose-50 rounded-lg text-rose-600 flex-shrink-0"><XCircle size={20} /></div>
-                    <div className="overflow-hidden">
-                        <div className="text-xl font-bold text-gray-800">{stats.rejectedJobs || 0}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Rejected</div>
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
-                    <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600 flex-shrink-0"><CheckCircle2 size={20} /></div>
-                    <div className="overflow-hidden">
-                        <div className="text-xl font-bold text-gray-800">{stats.completedJobs || 0}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Completed</div>
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
-                    <div className="p-2 bg-amber-50 rounded-lg text-amber-600 flex-shrink-0"><Clock size={20} /></div>
-                    <div className="overflow-hidden">
-                        <div className="text-xl font-bold text-gray-800">{stats.pendingJobs || 0}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Pending</div>
-                    </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-6 sm:gap-6 mb-12 px-1">
+                <StatCard
+                    title="Jobs This Month"
+                    value={stats.monthJobs || stats.monthlyJobs || 0}
+                    icon={Briefcase}
+                    color="bg-blue-500"
+                    onClick={() => setJobFilter('all')}
+                />
+                <StatCard
+                    title="Rejected"
+                    value={stats.rejectedJobs || 0}
+                    icon={XCircle}
+                    color="bg-rose-500"
+                    onClick={() => setJobFilter('rejected')}
+                />
+                <StatCard
+                    title="Completed"
+                    value={stats.completedJobs || 0}
+                    icon={CheckCircle2}
+                    color="bg-emerald-500"
+                    onClick={() => setJobFilter('completed')}
+                />
+                <StatCard
+                    title="Pending"
+                    value={stats.pendingJobs || 0}
+                    icon={Clock}
+                    color="bg-amber-500"
+                    onClick={() => setJobFilter('pending')}
+                />
+                <StatCard
+                    title="Accepted"
+                    value={stats.acceptedJobs || 0}
+                    icon={CheckCircle2}
+                    color="bg-cyan-500"
+                    onClick={() => setJobFilter('accepted')}
+                />
 
-                </div>
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
-                    <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600 flex-shrink-0"><CheckCircle2 size={20} /></div>
-                    <div className="overflow-hidden">
-                        <div className="text-xl font-bold text-gray-800">{stats.acceptedJobs || 0}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Accepted</div>
-                    </div>
-                </div>
-
-                {/* [NEW] Account Info Cards */}
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 border-l-4 border-l-indigo-500 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
-                    <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600 flex-shrink-0"><Shield size={20} /></div>
-                    <div className="overflow-hidden">
-                        <div className="text-sm font-bold text-gray-800 truncate">{user?.membership || 'Free'}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Membership</div>
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 border-l-4 border-l-orange-500 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
-                    <div className="p-2 bg-orange-50 rounded-lg text-orange-600 flex-shrink-0"><MapPin size={20} /></div>
-                    <div className="overflow-hidden">
-                        <div className="text-sm font-bold text-gray-800 truncate" title={registeredAddress}>{registeredAddress}</div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Registered Loc</div>
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-md flex items-center gap-4 xl:col-span-1 border-l-4 border-l-pink-500 min-w-[160px] flex-shrink-0 transition-transform hover:scale-105">
-                    <div className="p-2 bg-pink-50 rounded-lg text-pink-600 flex-shrink-0"><Calendar size={20} /></div>
-                    <div className="overflow-hidden">
-                        <div className="text-sm font-bold text-gray-800 truncate">
-                            {user?.membershipExpiry ? new Date(user.membershipExpiry).toLocaleDateString() : 'Lifetime'}
-                        </div>
-                        <div className="text-[10px] text-gray-500 font-bold uppercase truncate">Membership Expiry</div>
-                    </div>
-                </div>
+                {/* [NEW] Account Info Cards converted to StatCards */}
+                <StatCard
+                    title="Membership"
+                    value={user?.membership || 'Free'}
+                    icon={Shield}
+                    color="bg-indigo-500"
+                    onClick={() => setActiveTab('settings')}
+                    subtext="Current Plan"
+                />
+                <StatCard
+                    title="Location"
+                    value={user?.city || 'Unknown'}
+                    icon={MapPin}
+                    color="bg-orange-500"
+                    onClick={() => setActiveTab('profile')}
+                    subtext={registeredAddress ? registeredAddress.split(',')[0] : 'View Map'}
+                />
+                <StatCard
+                    title="Expiry"
+                    value={user?.membershipExpiry ? new Date(user.membershipExpiry).toLocaleDateString() : 'Lifetime'}
+                    icon={Calendar}
+                    color="bg-pink-500"
+                    onClick={() => setActiveTab('settings')}
+                    subtext="Plan Valid Until"
+                />
             </div>
 
             <DashboardStatsModal
@@ -1575,156 +1594,70 @@ const TechnicianDashboard = () => {
     );
 
     return (
-        <div className="flex bg-gray-100 font-sans text-gray-800 h-screen overflow-hidden">
+        <div className="flex font-sans text-gray-800 h-screen overflow-hidden bg-slate-50">
             {/* --- SIDEBAR --- */}
-            {/* Mobile: Fixed & Translated. Desktop: Relative & Width-based toggle */}
-            <aside
-                className={`
-                    bg-slate-900 z-40 shadow-xl flex flex-col transition-all duration-300 ease-in-out
-                    fixed inset-y-0 left-0
-                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-                    md:relative md:translate-x-0 
-                    ${sidebarOpen ? 'md:w-64' : 'md:w-0'} 
-                    w-64
-                `}
-            >
-                <div className="w-64 flex flex-col h-full border-r border-gray-800">
-                    {/* Brand Logo */}
-                    <div className="h-[57px] flex items-center px-4 border-b border-gray-700 bg-slate-900 shadow-sm shrink-0">
-                        <img src="/logo.png" alt="Fixofy" className="w-8 h-8 mr-3 object-contain" />
-                        <span className="text-lg font-light text-gray-200 tracking-wide">Fixofy</span>
-                    </div>
+            <TechnicianSidebar
+                isOpen={sidebarOpen}
+                toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                user={user}
+                onLogout={handleLogout}
+            />
 
-                    {/* User Panel */}
-                    <div className="p-4 border-b border-gray-800 flex items-center gap-3">
-                        <img src={user?.documents?.photo || `https://ui-avatars.com/api/?name=${user?.name}`} className="w-9 h-9 rounded-full border border-gray-600" alt="User" />
-                        <div className="overflow-hidden">
-                            <div className="text-gray-200 text-sm font-medium truncate w-32">{user?.name}</div>
-                            <div className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">{user?.serviceType || 'Professional'}</div>
-                            <div className="flex items-center gap-1 text-[10px] text-emerald-400 uppercase font-bold tracking-wider">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Online
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Navigation */}
-                    <nav className="flex-1 overflow-y-auto py-2 custom-scrollbar">
-                        <ul className="space-y-1 px-2">
-                            {[
-                                { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                                { id: 'jobs', label: 'My Contracts', icon: Briefcase },
-                                { id: 'chat', label: 'Live Chat', icon: MessageSquare },
-                                { id: 'wallet', label: 'Finances', icon: Wallet },
-                                { id: 'history', label: 'History', icon: History },
-                                { id: 'feedback', label: 'Feedback', icon: Star },
-                            ].map(item => (
-                                <li key={item.id}>
-                                    <button
-                                        onClick={() => { setActiveTab(item.id); if (window.innerWidth < 768) setSidebarOpen(false); }}
-                                        className={`w-full flex items-center px-3 py-2.5 rounded text-sm transition-colors ${activeTab === item.id ? 'bg-blue-600 text-white shadow-md shadow-blue-900/50' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                                    >
-                                        <item.icon size={18} className="mr-3 opactiy-80" />
-                                        {item.label}
-                                    </button>
-                                </li>
-                            ))}
-
-                            <li className="mt-8 px-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Settings</li>
-                            <li>
-                                <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center px-3 py-2.5 rounded text-sm transition-colors ${activeTab === 'settings' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
-                                    <User size={18} className="mr-3" /> Profile
-                                </button>
-                            </li>
-                            <li>
-                                <button onClick={handleLogout} className="w-full flex items-center px-3 py-2.5 rounded text-sm text-rose-400 hover:bg-rose-900/20 hover:text-rose-300 transition-colors mt-2">
-                                    <LogOut size={18} className="mr-3" /> Sign Out
-                                </button>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-            </aside>
-
-            {/* Mobile Backdrop */}
-            {sidebarOpen && (
-                <div
-                    onClick={() => setSidebarOpen(false)}
-                    className="fixed inset-0 bg-black/50 z-30 md:hidden"
-                />
-            )}
-
-            {/* --- CONTENT WRAPPER --- */}
-            {/* No manual margins! Flexbox handles it. */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-
-                {/* Navbar */}
-                <nav className="bg-white h-[57px] shadow-sm border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-30 shrink-0">
-                    <div className="flex items-center">
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-gray-500 hover:text-gray-700">
-                            <Menu size={20} />
+            {/* --- MAIN CONTENT WRAPPER --- */}
+            <main className={`
+                flex-1 flex flex-col h-full overflow-hidden relative transition-all duration-300
+                ${sidebarOpen ? 'md:ml-0' : 'md:ml-0'} 
+            `}>
+                {/* Header (Responsive) */}
+                <header className="bg-white/80 backdrop-blur-md sticky top-0 z-30 border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm shrink-0">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setSidebarOpen(!sidebarOpen)}
+                            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 focus:outline-none transition-colors md:hidden"
+                        >
+                            <Menu size={24} />
                         </button>
-                        <div className="hidden sm:flex items-center text-sm text-gray-500 ml-4 gap-4">
-                            <span className="hover:text-blue-500 cursor-pointer text-gray-700 font-medium">Home</span>
-                            <span className="hover:text-blue-500 cursor-pointer">Contact</span>
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-800 leading-tight">
+                                {activeTab === 'dashboard' ? 'Overview' :
+                                    activeTab === 'chat' ? 'Messages' :
+                                        activeTab === 'jobs' ? 'My Contracts' :
+                                            activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                            </h2>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:gap-6">
-                        {/* Realtime Status Toggle in Navbar */}
-                        <StatusToggle currentStatus={user?.status} onUpdate={handleStatusUpdate} loading={statusLoading} />
+                    <div className="flex items-center gap-3 sm:gap-6">
+                        <StatusToggle currentStatus={user?.status || 'available'} onUpdate={handleStatusUpdate} loading={statusLoading} />
 
-                        <div className="flex items-center gap-2 sm:gap-4 text-gray-400">
-                            {/* Force Search/Bell to fit better on mobile */}
-                            <div className="flex gap-2">
-                                <Search size={18} className="hover:text-blue-500 cursor-pointer" />
-                                <div className="relative">
-                                    <Bell size={18} className="hover:text-blue-500 cursor-pointer" />
-                                    {unreadNotifications > 0 && <span className="absolute -top-1.5 -right-1 bg-amber-500 text-white text-[9px] font-bold px-1 rounded-sm shadow-sm">{unreadNotifications}</span>}
-                                </div>
-                            </div>
-
-                            <div className="h-6 w-px bg-gray-200 mx-1 sm:mx-2"></div>
-
-                            {/* Time & Location: Enhanced alignment and formatting */}
-                            <div className="flex items-center gap-3 sm:gap-4">
-                                <div className="flex flex-col items-end leading-tight">
-                                    <div className="flex items-center gap-1.5 text-red-600 font-bold tracking-tight">
-                                        <Clock size={12} className="text-red-500" />
-                                        <span className="text-[11px] sm:text-xs">
-                                            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-1 text-red-400 mt-0.5">
-                                        <MapPin size={10} className="shrink-0" />
-                                        <span className="text-[9px] sm:text-[10px] max-w-[100px] sm:max-w-[150px] truncate font-medium">
-                                            {currentLocationName || "Locating..."}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Network Indicator: Modern Signal Symbol */}
-                                <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 rounded-lg border border-emerald-100/50 group">
-                                    <div className="relative">
-                                        <Signal size={14} className="text-emerald-600" />
-                                        <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse border border-white"></span>
-                                    </div>
-                                    <span className="text-[9px] sm:text-[10px] text-emerald-700 font-bold uppercase tracking-wider hidden xs:block">
-                                        Live
-                                    </span>
-                                </div>
+                        <div className="relative cursor-pointer" onClick={() => setActiveTab('notifications')}>
+                            <div className="p-2 rounded-full hover:bg-slate-100 transition-colors relative">
+                                <Bell size={20} className="text-slate-600" />
+                                {unreadNotifications > 0 && (
+                                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white" />
+                                )}
                             </div>
                         </div>
+
+                        <div className="hidden sm:flex items-center gap-3 pl-6 border-l border-gray-200">
+                            <div className="text-right hidden lg:block">
+                                <div className="text-sm font-bold text-slate-800">{user?.name}</div>
+                                <div className="text-xs text-slate-500">{user?.role === 'technician' ? 'Technician' : 'User'}</div>
+                            </div>
+                            <img
+                                src={user?.documents?.photo || user?.photo || "https://ui-avatars.com/api/?name=User"}
+                                alt="Profile"
+                                className="w-10 h-10 rounded-full border-2 border-slate-200 object-cover shadow-sm cursor-pointer"
+                                onClick={() => setActiveTab('profile')}
+                            />
+                        </div>
                     </div>
-                </nav>
+                </header>
 
-
-                {/* Main Content Scrollable Area */}
-                <main className="flex-1 bg-slate-50/50 overflow-y-auto pb-32">
-                    <ContentHeader
-                        title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                        breadcrumb={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                    />
-
+                {/* Scrollable Content Area */}
+                <div className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 scroll-smooth">
                     <SuccessAnimationModal
                         isOpen={successModal.isOpen}
                         onClose={() => setSuccessModal({ ...successModal, isOpen: false })}
@@ -1734,32 +1667,47 @@ const TechnicianDashboard = () => {
 
                     {activeTab === 'dashboard' && renderDashboardContent()}
                     {activeTab === 'chat' && renderChat()}
-                    {activeTab === 'settings' && renderSettings()}
+                    {activeTab === 'profile' && renderSettings()}
 
-                    {['jobs', 'wallet', 'history', 'feedback'].includes(activeTab) && (
-                        <div className="p-4 sm:p-6 lg:p-8">
-                            {/* Placeholder for tabs handled within dashboard summary initially, extending them here now */}
+                    {/* Other Tabs Fallback */}
+                    {['jobs', 'wallet', 'history', 'feedback', 'notifications'].includes(activeTab) && (
+                        <div className="p-6 sm:p-10 max-w-[1920px] mx-auto min-h-[calc(100vh-100px)]">
                             <Card
-                                title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                                headerColor="border-t-gray-400"
+                                title={activeTab === 'jobs' ? 'My Contracts' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                                headerColor="border-t-indigo-500"
                                 tools={activeTab === 'jobs' && (
                                     <select
                                         value={jobFilter}
                                         onChange={(e) => setJobFilter(e.target.value)}
-                                        className="text-xs border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none cursor-pointer"
+                                        className="text-xs border border-gray-300 rounded px-3 py-1.5 bg-white focus:outline-none cursor-pointer shadow-sm"
                                     >
-                                        <option value="all">Active (All)</option>
+                                        <option value="all">All Jobs</option>
                                         <option value="pending">Pending</option>
                                         <option value="accepted">Accepted</option>
                                         <option value="in_progress">In Progress</option>
                                     </select>
                                 )}
                             >
+                                {activeTab === 'history' && (
+                                    <div className="text-center py-20">
+                                        <History size={48} className="mx-auto text-slate-300 mb-4" />
+                                        <h3 className="text-lg font-medium text-slate-600">Job History</h3>
+                                        <p className="text-slate-400 text-sm">View all your past completed jobs here.</p>
+                                    </div>
+                                )}
+                                {activeTab === 'notifications' && (
+                                    <div className="text-center py-20">
+                                        <Bell size={48} className="mx-auto text-slate-300 mb-4" />
+                                        <h3 className="text-lg font-medium text-slate-600">Notifications</h3>
+                                        <p className="text-slate-400 text-sm">Stay updated with latest alerts.</p>
+                                    </div>
+                                )}
                                 {activeTab === 'wallet' && (
                                     <div className="text-center py-10">
-                                        <h3 className="text-2xl font-bold text-emerald-600 mb-2">₹{(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}</h3>
-                                        <p className="text-gray-500">Current Balance</p>
-                                        <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow">Withdraw Funds</button>
+                                        <div className="inline-block p-4 rounded-full bg-emerald-50 mb-4"><Wallet size={32} className="text-emerald-500" /></div>
+                                        <h3 className="text-3xl font-bold text-slate-800 mb-1">₹{(typeof stats.earnings === 'object' ? stats.earnings.balance : stats.earnings)?.toLocaleString() || 0}</h3>
+                                        <p className="text-slate-500 font-medium">Available Balance</p>
+                                        <button className="mt-6 px-6 py-2 bg-slate-900 text-white rounded-lg shadow-lg hover:bg-slate-800 transition-all font-medium">Withdraw Funds</button>
                                     </div>
                                 )}
                                 {activeTab === 'jobs' && (
@@ -1775,30 +1723,27 @@ const TechnicianDashboard = () => {
                                         )}
                                     </div>
                                 )}
-                                {['history', 'feedback'].includes(activeTab) && (
-                                    <div className="text-center py-20 bg-gray-50 rounded border border-dashed border-gray-200">
-                                        <Coffee size={48} className="mx-auto text-gray-300 mb-4" />
-                                        <h3 className="text-lg font-medium text-gray-600">Module Loaded</h3>
-                                        <p className="text-gray-400 text-sm">Detailed view for {activeTab} is ready for data population.</p>
+                                {activeTab === 'feedback' && (
+                                    <div className="text-center py-20">
+                                        <Star size={48} className="mx-auto text-amber-300 mb-4" />
+                                        <h3 className="text-lg font-medium text-slate-600">Customer Reviews</h3>
+                                        <p className="text-slate-400 text-sm">See what customers are saying about your service.</p>
                                     </div>
                                 )}
                             </Card>
                         </div>
                     )}
-                </main>
+                </div>
 
                 {/* Footer */}
-                <footer className="bg-white border-t border-gray-200 p-4 text-xs text-gray-500 flex justify-between items-center shrink-0">
+                <footer className="bg-white/80 backdrop-blur-sm border-t border-gray-200 p-4 text-xs text-gray-500 flex justify-between items-center shrink-0">
                     <div>
-                        <strong>Copyright &copy; 2024 <span className="text-blue-600">Fixofy.io</span>.</strong> All rights reserved. {/* v3.2.0-rc */}
-                    </div>
-                    <div className="hidden sm:block">
-                        <b>Version</b> 3.2.0-rc
+                        <strong>Copyright &copy; {new Date().getFullYear()} <span className="text-blue-600">Fixofy</span>.</strong> All rights reserved.
                     </div>
                 </footer>
 
-            </div >
-        </div >
+            </main>
+        </div>
     );
 };
 
