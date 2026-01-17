@@ -331,7 +331,7 @@ class TechnicianManager extends BaseManager {
         }
     }
 
-    async searchTechnicians(userLat, userLon, serviceType, radius = 2.0) {
+    async searchTechnicians(userLat, userLon, serviceType, radius = 30.0) {
         try {
             const lat = parseFloat(userLat);
             const lon = parseFloat(userLon);
@@ -348,14 +348,14 @@ class TechnicianManager extends BaseManager {
                 });
 
             const nearbyTechs = techs.map(tech => {
-                // PRIORITIZE FIXED/REGISTERED LOCATION
-                let tLat = tech.registeredLatitude;
-                let tLon = tech.registeredLongitude;
+                // [UPDATED] PRIORITIZE DYNAMIC LOCATION (Real-time) over Registered
+                let tLat = tech.latitude;
+                let tLon = tech.longitude;
 
-                // Fallback to Dynamic if Fixed is missing (Legacy support)
+                // Fallback to Registered/Fixed if Dynamic is missing
                 if (tLat === undefined || tLon === undefined || tLat === null || tLon === null) {
-                    tLat = tech.latitude;
-                    tLon = tech.longitude;
+                    tLat = tech.registeredLatitude || tech.fixedLatitude;
+                    tLon = tech.registeredLongitude || tech.fixedLongitude;
                 }
 
                 // Checking valid numbers
@@ -656,9 +656,9 @@ class TechnicianManager extends BaseManager {
             if (!lat || !lng) return allTechs;
 
             const filtered = allTechs.filter(t => {
-                // Use registered location (or dynamic if missing)
-                const tLat = parseFloat(t.registeredLatitude || t.latitude);
-                const tLon = parseFloat(t.registeredLongitude || t.longitude);
+                // [UPDATED] Use dynamic location primarily
+                const tLat = parseFloat(t.latitude || t.registeredLatitude);
+                const tLon = parseFloat(t.longitude || t.registeredLongitude);
                 const searchLat = parseFloat(lat);
                 const searchLng = parseFloat(lng);
 

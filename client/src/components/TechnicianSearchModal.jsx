@@ -75,7 +75,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                 latitude: loc.latitude,
                 longitude: loc.longitude,
                 serviceType,
-                radius: 2 // [FIX] Reverted to strict 2km as per user request
+                radius: 30 // [FIX] Extended to 30km as per user request
             });
 
             if (res.data.success) {
@@ -125,6 +125,20 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
     }, [isOpen, performSearch]);
 
     // Real-time Updates (Status & Location)
+    // Helper: Calculate Distance (Haversine)
+    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+        if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
+        const R = 6371; // Radius of the earth in km
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c; // Distance in km
+    };
+
     // Real-time Updates (Status & Location)
     useEffect(() => {
         if (!socket || !isOpen) return;
@@ -136,77 +150,89 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
         };
 
         const handleLocationUpdate = ({ technicianId, location }) => {
-            setTechnicians(prev => prev.map(t =>
-                t.id === technicianId ? {
-                    ...t,
-                    location: { ...t.location, ...location },
-                    latitude: location.latitude,
-                    longitude: location.longitude
-                } : t
-            ));
+            setTechnicians(prev => prev.map(t => {
+                if (t.id === technicianId) {
+                    const newDist = userLocation ? calculateDistance(
+                        userLocation.latitude, userLocation.longitude,
+                        location.latitude, location.longitude
+                    ) : t.distance;
+
+                    return {
+                        ...t,
+                        location: { ...t.location, ...location },
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                        distance: newDist
+                    };
+                }
+                return t;
+            }));
         };
 
         const handleNewTechnician = (newTech) => {
             if (!newTech) return;
-            // Check if matches current service type (loose match)
             if (serviceType && newTech.serviceType &&
                 (newTech.serviceType.toLowerCase().includes(serviceType.toLowerCase()) ||
                     serviceType.toLowerCase().includes(newTech.serviceType.toLowerCase()))) {
 
-                // Calculate distance if not present (simplified or use 0 if unknown, usually backend sends it if searched, but here it's raw)
-                // For raw insert, we might not have distance relative to user. 
-                // We can compute it if we have userLocation.
-                let dist = 0;
-                if (userLocation && newTech.location) {
-                    // Simple Haversine (reuse simple math or just accept it)
-                    // If we want accurate distance, we might need to re-trigger search, 
-                    // OR just append it and let the user see it (maybe with 'New' badge).
-                    // Let's just append it.
+                let dist = 999;
+                if (userLocation && (newTech.latitude || newTech.location?.latitude)) {
+                    const tLat = newTech.latitude || newTech.location?.latitude;
+                    const tLon = newTech.longitude || newTech.location?.longitude;
+                    dist = calculateDistance(userLocation.latitude, userLocation.longitude, tLat, tLon);
                 }
 
                 setTechnicians(prev => {
                     const exists = prev.find(t => t.id === newTech.id);
                     if (exists) return prev;
-                    return [...prev, { ...newTech, distance: 0.1 }]; // Default distance or re-calc
+                    return [...prev, { ...newTech, distance: dist }];
                 });
             }
         };
 
         socket.on('technician_status_update', handleStatusUpdate);
         socket.on('technician_location_update', handleLocationUpdate);
-        socket.on('new_technician', handleNewTechnician); // [NEW] Listen for creation
+        socket.on('new_technician', handleNewTechnician);
 
         return () => {
             socket.off('technician_status_update', handleStatusUpdate);
             socket.off('technician_location_update', handleLocationUpdate);
             socket.off('new_technician', handleNewTechnician);
         };
-    }, [socket, isOpen]);
+    }, [socket, isOpen, userLocation, serviceType]);
 
     // Supabase Realtime Subscription for technician updates
     useSupabaseRealtime('technicians', (payload) => {
         const { eventType, new: newRecord } = payload;
-        console.log('[TechnicianSearchModal] Supabase update:', newRecord?.id, newRecord?.status);
+        // console.log('[TechnicianSearchModal] Supabase update:', newRecord?.id, newRecord?.status);
 
         if (eventType === 'UPDATE' && newRecord) {
-            // Update technician in list
             setTechnicians(prev => prev.map(t => {
                 if (t.id === newRecord.id) {
+                    const tLat = newRecord.latitude || newRecord.current_latitude || t.latitude;
+                    const tLon = newRecord.longitude || newRecord.current_longitude || t.longitude;
+
+                    const newDist = userLocation ? calculateDistance(
+                        userLocation.latitude, userLocation.longitude,
+                        tLat, tLon
+                    ) : t.distance;
+
                     return {
                         ...t,
                         status: newRecord.status,
                         location: {
-                            latitude: newRecord.current_latitude,
-                            longitude: newRecord.current_longitude
+                            latitude: tLat,
+                            longitude: tLon
                         },
-                        rating: newRecord.rating || t.rating
+                        latitude: tLat,
+                        longitude: tLon,
+                        rating: newRecord.rating || t.rating,
+                        distance: newDist
                     };
                 }
                 return t;
             }));
         } else if (eventType === 'INSERT' && newRecord) {
-            // Check if matches current service type (loose match)
-            // Supabase returns snake_case
             const dbServiceType = newRecord.service_type || '';
 
             if (serviceType && dbServiceType &&
@@ -217,23 +243,25 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                     const exists = prev.find(t => t.id === newRecord.id);
                     if (exists) return prev;
 
-                    // Manual Mapping snake_case -> camelCase
+                    const tLat = newRecord.fixed_latitude || newRecord.latitude;
+                    const tLon = newRecord.fixed_longitude || newRecord.longitude;
+                    const dist = userLocation ? calculateDistance(userLocation.latitude, userLocation.longitude, tLat, tLon) : 999;
+
                     const mappedTech = {
                         id: newRecord.id,
                         name: newRecord.name,
                         email: newRecord.email,
                         phone: newRecord.phone,
                         serviceType: newRecord.service_type,
-                        photo: newRecord.photo, // or documents.photo depending on schema
+                        photo: newRecord.photo,
                         status: newRecord.status || 'Available',
                         rating: newRecord.rating || 0,
                         experience: newRecord.experience || 0,
-                        location: {
-                            latitude: newRecord.fixed_latitude || newRecord.latitude,
-                            longitude: newRecord.fixed_longitude || newRecord.longitude
-                        },
-                        documents: { photo: newRecord.photo }, // Simplify
-                        distance: 0.1 // Default
+                        location: { latitude: tLat, longitude: tLon },
+                        latitude: tLat,
+                        longitude: tLon,
+                        documents: { photo: newRecord.photo },
+                        distance: dist
                     };
                     return [...prev, mappedTech];
                 });
@@ -325,7 +353,8 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/10 rounded-full animate-ping pointer-events-none" />
 
                                 {/* Tech Markers using OverlayView for Custom UI */}
-                                {!searching && Array.isArray(technicians) && technicians
+                                {!searching && Array.isArray(technicians) && [...technicians]
+                                    .sort((a, b) => (a.distance || 0) - (b.distance || 0))
                                     .map((tech) => {
                                         let photoUrl = tech.documents?.photo
                                             ? (tech.documents.photo.startsWith('http') ? tech.documents.photo : `http://localhost:3000${tech.documents.photo}`)
@@ -346,7 +375,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                 getPixelPositionOffset={(width, height) => ({ x: -(width / 2), y: -(height / 2) })}
                                             >
                                                 <div
-                                                    className={`relative flex flex-col items-center group ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'} hover:z-[999] -translate-y-6 transition-all duration-300 ${tech.distance > 2.0 ? 'opacity-60' : ''}`}
+                                                    className={`relative flex flex-col items-center group ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'} hover:z-[999] -translate-y-6 transition-all duration-300 ${tech.distance > 20.0 ? 'opacity-60' : ''}`}
                                                     onClick={() => {
                                                         if (isAvailable) onBook(tech);
                                                         else alert(`This technician is currently ${statusConfig.label}`);
@@ -437,8 +466,9 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                         </div>
                                     </div>
                                 ))
-                            ) : (Array.isArray(technicians) ? technicians : []).length > 0 ? (
-                                (Array.isArray(technicians) ? technicians : [])
+                            ) : (Array.isArray(technicians) ? [...technicians] : []).sort((a, b) => (a.distance || 0) - (b.distance || 0)).length > 0 ? (
+                                (Array.isArray(technicians) ? [...technicians] : [])
+                                    .sort((a, b) => (a.distance || 0) - (b.distance || 0))
                                     .map((tech, idx) => {
                                         let photoUrl = tech.documents?.photo
                                             ? (tech.documents.photo.startsWith('http') ? tech.documents.photo : `http://localhost:3000${tech.documents.photo}`)
@@ -457,7 +487,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                 initial={{ opacity: 0, y: 15 }}
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
-                                                className={`group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 border shadow-sm hover:shadow-lg transition-all duration-300 ${tech.distance > 2.0 ? 'opacity-60 border-slate-200' : 'border-slate-200 hover:border-blue-300'
+                                                className={`group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 border shadow-sm hover:shadow-lg transition-all duration-300 ${tech.distance > 20.0 ? 'opacity-60 border-slate-200' : 'border-slate-200 hover:border-blue-300'
                                                     } ${isAvailable ? 'hover:shadow-blue-500/10 cursor-pointer hover:-translate-y-1' : 'cursor-not-allowed opacity-60 border-slate-100'}`}
                                             >
                                                 <div className="flex gap-4 md:gap-5 items-center">
@@ -484,10 +514,9 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                                             <h3 className="text-base md:text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors line-clamp-1 flex-1">
                                                                 {tech.name}
                                                             </h3>
-                                                            <span className="text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-lg whitespace-nowrap flex-shrink-0 ${
-                                                                tech.distance <= 2.0 ? 'text-blue-600 bg-blue-50 ring-1 ring-blue-100' : 'text-amber-600 bg-amber-50 ring-1 ring-amber-100'
-                                                            }">
-                                                                {tech.distance.toFixed(1)} km {tech.distance > 2.0 ? '• Far' : ''}
+                                                            <span className={`text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-lg whitespace-nowrap flex-shrink-0 ${tech.distance <= 20.0 ? 'text-blue-600 bg-blue-50 ring-1 ring-blue-100' : 'text-amber-600 bg-amber-50 ring-1 ring-amber-100'
+                                                                }`}>
+                                                                {tech.distance.toFixed(1)} km {tech.distance > 20.0 ? '• Far' : ''}
                                                             </span>
                                                         </div>
 
@@ -526,7 +555,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                     </div>
                                     <h4 className="text-lg md:text-xl font-bold text-slate-800 mb-2">No Professionals Found</h4>
                                     <p className="text-xs md:text-sm mt-1 max-w-[280px] leading-relaxed text-slate-400">
-                                        We couldn't locate any available {serviceType}s within 2km radius.
+                                        We couldn't locate any available {serviceType}s within 30km radius.
                                     </p>
                                     <button onClick={onClose} className="mt-6 md:mt-8 px-5 py-2.5 md:px-6 md:py-3 bg-blue-50 text-blue-600 font-bold rounded-xl text-xs md:text-sm hover:bg-blue-100 transition-colors">
                                         Expand Search Radius
