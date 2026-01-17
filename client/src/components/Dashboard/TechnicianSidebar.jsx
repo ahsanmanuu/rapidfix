@@ -167,33 +167,25 @@ const TechnicianSidebar = ({
                     })}
                 </div>
 
-                {/* Footer / Logout */}
-                <div className="p-4 border-t border-slate-800 shrink-0 relative">
-                    <button
-                        onClick={onLogout}
-                        className={`
-                            w-full flex items-center gap-3 px-3 py-3 rounded-xl 
-                            text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 
-                            transition-all duration-300 group
-                        `}
-                        title="Logout"
-                    >
-                        <LogOut size={22} className="shrink-0 transition-transform group-hover:-translate-x-1" />
-                        <span className={`whitespace-nowrap font-medium transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
-                            Log Out
-                        </span>
-                    </button>
+                {/* [MOVED] Toggle Button is now in the Header area for better visibility */}
+            </div>
+        </motion.aside >
 
-                    {/* Toggle Button for Desktop - [FIX] Position adjusted to be inside or overlay correctly */}
-                    <button
-                        onClick={toggleSidebar}
-                        className="hidden md:flex absolute -right-3 top-[-16px] bg-blue-600 text-white w-7 h-7 rounded-full items-center justify-center shadow-lg hover:bg-blue-500 transition-colors z-50 ring-4 ring-slate-50"
-                        style={{ right: '-14px', top: '10px' }} // Inline override for precision
-                    >
-                        <ChevronLeft size={16} className={`transition-transform duration-300 ${!isOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                </div>
-            </motion.aside>
+            {/* Desktop Toggle Button - Floating Outside */ }
+            < motion.button
+    onClick = { toggleSidebar }
+    initial = { false}
+    animate = {{
+        left: isOpen ? '260px' : '60px',
+            opacity: window.innerWidth >= 768 ? 1 : 0
+    }
+}
+transition = {{ type: 'spring', stiffness: 300, damping: 30 }}
+className = "hidden md:flex fixed top-24 z-50 bg-white text-slate-800 w-8 h-8 rounded-full items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer"
+style = {{ marginLeft: '-16px' }} 
+            >
+    <ChevronLeft size={16} className={`transition-transform duration-300 ${!isOpen ? 'rotate-180' : ''}`} />
+            </motion.button >
         </>
     );
 };

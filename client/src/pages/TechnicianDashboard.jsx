@@ -6,7 +6,7 @@ import {
     CheckCircle2, XCircle, TrendingUp, Star,
     Coffee, Briefcase, Zap, Menu, X,
     MoreVertical, User, ChevronDown, RefreshCw, Send, Image as ImageIcon, Lock, Shield,
-    ArrowUpRight, ArrowDownRight, PieChart, Signal
+    ArrowUpRight, ArrowDownRight, PieChart, Signal, Wifi
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
@@ -44,9 +44,9 @@ const StatCard = ({ title, value, icon: Icon, color, trend, onClick, subtext, gr
 
         <div className="relative z-10 flex justify-between items-start">
             <div>
-                <p className={`text-sm font-bold uppercase tracking-wider mb-2 ${gradient ? 'text-white/80' : 'text-slate-400'}`}>{title}</p>
-                <h3 className={`text-4xl font-black tracking-tight mb-2 ${gradient ? 'text-white' : 'text-slate-800'}`}>{value}</h3>
-                {subtext && <p className={`text-xs font-semibold ${gradient ? 'text-white/60' : 'text-slate-400'}`}>{subtext}</p>}
+                <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${gradient ? 'text-white/80' : 'text-slate-400'}`}>{title}</p>
+                <h3 className={`text-2xl font-black tracking-tight mb-1 ${gradient ? 'text-white' : 'text-slate-800'}`}>{value}</h3>
+                {subtext && <p className={`text-[10px] font-semibold ${gradient ? 'text-white/60' : 'text-slate-400'}`}>{subtext}</p>}
             </div>
             <div className={`
                 p-4 rounded-2xl backdrop-blur-md shadow-sm
@@ -1261,10 +1261,10 @@ const TechnicianDashboard = () => {
                 stats={stats}
             />
 
-            {/* [FIX] Increased Gap to prevent overlap */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 lg:gap-10 xl:gap-12 pb-12">
+            {/* [FIX] Increased Gap (Aggressive) to prevent overlap */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-12 lg:gap-16 xl:gap-20 pb-20">
                 {/* Main Job List & Offers */}
-                <div className="lg:col-span-2 space-y-10 sm:space-y-12">
+                <div className="lg:col-span-2 space-y-12 sm:space-y-16">
                     {/* [NEW] Direct Analytics Curve on Dashboard */}
                     <Card title="Earnings Dynamics" headerColor="border-t-blue-600" noPadding>
                         <div className="p-6">
@@ -1621,21 +1621,26 @@ const TechnicianDashboard = () => {
                             <Menu size={24} />
                         </button>
                         <div>
-                            <h2 className="text-xl font-bold text-slate-800 leading-tight">
+                            <h2 className="text-lg font-bold text-slate-800 leading-tight">
                                 {activeTab === 'dashboard' ? 'Overview' :
                                     activeTab === 'chat' ? 'Messages' :
                                         activeTab === 'jobs' ? 'My Contracts' :
                                             activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                             </h2>
-                            {/* [FIX] Restored Time & Location Display */}
-                            <div className="flex items-center gap-3 text-xs font-medium text-slate-500 mt-0.5">
+                            {/* [FIX] Restored Time & Location Display with Icons */}
+                            <div className="flex items-center gap-3 text-[10px] font-medium text-slate-500 mt-0.5">
                                 <div className="flex items-center gap-1">
-                                    <MapPin size={12} className="text-rose-500" />
+                                    <MapPin size={10} className="text-rose-500" />
                                     <span>{currentLocationName || 'Locating...'}</span>
                                 </div>
                                 <div className="hidden sm:flex items-center gap-1 pl-3 border-l border-slate-200">
-                                    <Clock size={12} className="text-blue-500" />
+                                    <Clock size={10} className="text-blue-500" />
                                     <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                {/* [NEW] Network Status Icons */}
+                                <div className="flex items-center gap-2 pl-3 border-l border-slate-200 text-slate-400">
+                                    <Wifi size={12} className="text-emerald-500" />
+                                    <Signal size={12} className="text-emerald-500" />
                                 </div>
                             </div>
                         </div>
@@ -1646,9 +1651,9 @@ const TechnicianDashboard = () => {
 
                         <div className="relative cursor-pointer" onClick={() => setActiveTab('notifications')}>
                             <div className="p-2 rounded-full hover:bg-slate-100 transition-colors relative">
-                                <Bell size={20} className="text-slate-600" />
+                                <Bell size={18} className="text-slate-600" />
                                 {unreadNotifications > 0 && (
-                                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white" />
+                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
                                 )}
                             </div>
                         </div>
@@ -1656,12 +1661,14 @@ const TechnicianDashboard = () => {
                         <div className="hidden sm:flex items-center gap-3 pl-6 border-l border-gray-200">
                             <div className="text-right hidden lg:block">
                                 <div className="text-sm font-bold text-slate-800">{user?.name}</div>
-                                <div className="text-xs text-slate-500">{user?.role === 'technician' ? 'Technician' : 'User'}</div>
+                                <div className="text-[10px] text-slate-500 font-semibold bg-slate-100 px-1.5 py-0.5 rounded inline-block mt-0.5">
+                                    {user?.role === 'technician' ? 'Senior Technician' : 'Technician'}
+                                </div>
                             </div>
                             <img
                                 src={user?.documents?.photo || user?.photo || "https://ui-avatars.com/api/?name=User"}
                                 alt="Profile"
-                                className="w-10 h-10 rounded-full border-2 border-slate-200 object-cover shadow-sm cursor-pointer"
+                                className="w-9 h-9 rounded-full border-2 border-slate-200 object-cover shadow-sm cursor-pointer"
                                 onClick={() => setActiveTab('profile')}
                             />
                         </div>
