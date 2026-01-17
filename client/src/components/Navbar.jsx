@@ -37,11 +37,12 @@ const Navbar = () => {
                         </Link>
 
                         {/* Desktop Menu */}
-                        <div className="hidden lg:flex items-center gap-4">
-                            <div className="flex items-center gap-1 bg-slate-50 p-2 rounded-full border border-slate-200">
-                                <NavLink to="/" icon={<Home size={18} />} text="Home" />
-                                <NavLink to="/about" icon={<Info size={18} />} text="About" />
-                                <NavLink to="/contact" icon={<Phone size={18} />} text="Contact" />
+                        <div className="hidden lg:flex items-center gap-6">
+                            {/* Nav Links - Clean Layout without background shape */}
+                            <div className="flex items-center gap-1">
+                                <NavLink to="/" text="Home" scrolled={scrolled} />
+                                <NavLink to="/about" text="About" scrolled={scrolled} />
+                                <NavLink to="/contact" text="Contact" scrolled={scrolled} />
                             </div>
 
                             {user ? (
@@ -71,31 +72,27 @@ const Navbar = () => {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-6">
+                                <div className={`flex items-center p-1 rounded-full border transition-all duration-300 ${scrolled
+                                    ? 'bg-slate-50 border-slate-200 shadow-sm'
+                                    : 'bg-white/10 border-white/20 backdrop-blur-md'
+                                    }`}>
                                     <Link
                                         to="/login"
-                                        className={`font-semibold text-sm transition-colors ${scrolled ? 'text-slate-600 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
+                                        className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${scrolled
+                                            ? 'text-slate-600 hover:bg-slate-200/50'
+                                            : 'text-white hover:bg-white/10'
+                                            }`}
                                     >
                                         Log In
                                     </Link>
                                     <Link
                                         to="/register"
-                                        className={`px-6 py-2.5 rounded-full font-bold text-sm shadow-lg transition-all duration-300 hover:-translate-y-0.5 ${scrolled
-                                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/30'
+                                        className={`px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all duration-300 transform hover:-translate-y-0.5 ${scrolled
+                                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/25'
                                             : 'bg-white text-blue-600 hover:bg-blue-50 shadow-black/20'
                                             }`}
                                     >
                                         Register
-                                    </Link>
-                                    <Link
-                                        to="/join-partner"
-                                        className={`hidden xl:flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm border transition-all duration-300 ${scrolled
-                                            ? 'border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900 hover:bg-slate-50'
-                                            : 'border-white/30 text-white hover:border-white/60 hover:bg-white/10'
-                                            }`}
-                                    >
-                                        <Briefcase size={16} />
-                                        <span>Join as Partner</span>
                                     </Link>
                                 </div>
                             )}
@@ -208,10 +205,15 @@ const Navbar = () => {
     );
 };
 
-const NavLink = ({ to, icon, text }) => (
-    <Link to={to} className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all">
-        {icon}
-        <span className="hidden xl:inline">{text}</span>
+const NavLink = ({ to, text, scrolled }) => (
+    <Link
+        to={to}
+        className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${scrolled
+            ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+            : 'text-white/90 hover:bg-white/10 hover:text-white'
+            }`}
+    >
+        {text}
     </Link>
 );
 
