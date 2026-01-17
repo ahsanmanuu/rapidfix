@@ -167,25 +167,23 @@ const TechnicianSidebar = ({
                     })}
                 </div>
 
-                {/* [MOVED] Toggle Button is now in the Header area for better visibility */}
-            </div>
-        </motion.aside >
+                {/* Toggle Button moved to outside */}
+            </motion.aside>
 
-            {/* Desktop Toggle Button - Floating Outside */ }
-            < motion.button
-    onClick = { toggleSidebar }
-    initial = { false}
-    animate = {{
-        left: isOpen ? '260px' : '60px',
-            opacity: window.innerWidth >= 768 ? 1 : 0
-    }
-}
-transition = {{ type: 'spring', stiffness: 300, damping: 30 }}
-className = "hidden md:flex fixed top-24 z-50 bg-white text-slate-800 w-8 h-8 rounded-full items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer"
-style = {{ marginLeft: '-16px' }} 
+            {/* Desktop Toggle Button - Floating Outside */}
+            <motion.button
+                onClick={toggleSidebar}
+                initial={false}
+                animate={{
+                    left: isOpen ? '260px' : '60px',
+                    opacity: window.innerWidth >= 768 ? 1 : 0
+                }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="hidden md:flex fixed top-24 z-50 bg-white text-slate-800 w-8 h-8 rounded-full items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer"
+                style={{ marginLeft: '-16px' }}
             >
-    <ChevronLeft size={16} className={`transition-transform duration-300 ${!isOpen ? 'rotate-180' : ''}`} />
-            </motion.button >
+                <ChevronLeft size={16} className={`transition-transform duration-300 ${!isOpen ? 'rotate-180' : ''}`} />
+            </motion.button>
         </>
     );
 };
