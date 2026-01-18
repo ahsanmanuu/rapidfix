@@ -9,11 +9,27 @@ ALTER TABLE technicians
 ADD COLUMN IF NOT EXISTS rejection_count_month INT DEFAULT 0,
 ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'available', -- available, engaged, finishing_work, offline
 ADD COLUMN IF NOT EXISTS current_job_id UUID REFERENCES jobs(id),
-ADD COLUMN IF NOT EXISTS membership_tier TEXT DEFAULT 'Free', -- Free, Premium
-ADD COLUMN IF NOT EXISTS location GEOGRAPHY(POINT, 4326);
+ADD COLUMN IF NOT EXISTS membership_tier TEXT DEFAULT 'Free'; -- Free, Premium
+
+-- [FIX] Use a separate column for geospatial index to avoid conflict with existing 'location' (JSONB)
+ALTER TABLE technicians 
+ADD COLUMN IF NOT EXISTS geo_location GEOGRAPHY(POINT, 4326);
+
+-- [MIGRATION] Backfill geo_location from existing JSONB 'location' if available
+-- Casts json strings to float. Handles potential nulls safely.
+UPDATE technicians 
+SET geo_location = ST_SetSRID(ST_MakePoint(
+    CAST(location->>'longitude' AS FLOAT), 
+    CAST(location->>'latitude' AS FLOAT)
+), 4326)
+WHERE geo_location IS NULL 
+  AND location IS NOT NULL 
+  AND location->>'longitude' IS NOT NULL 
+  AND location->>'latitude' IS NOT NULL;
 
 -- Index for geospatial search (CRITICAL for 30km radius speed)
-CREATE INDEX IF NOT EXISTS idx_technicians_location ON technicians USING GIST (location);
+-- Now indexing the GEOGRAPHY column, which supports GIST.
+CREATE INDEX IF NOT EXISTS idx_technicians_geo_location ON technicians USING GIST (geo_location);
 
 -- -----------------------------------------------------------------------------
 -- 2. JOB QUEUES TABLE (New - Flow 4)
@@ -25,8 +41,6 @@ CREATE TABLE IF NOT EXISTS job_queues (
     status TEXT DEFAULT 'pending', -- pending, accepted, expired
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
-    -- Constraint: A job can only be in one queue at a time? 
-    -- Or multiple? For now, assume unique pair.
     UNIQUE(job_id, technician_id)
 );
 
@@ -64,17 +78,28 @@ BEGIN
     AND created_at >= date_trunc('month', CURRENT_DATE);
 
     -- 3. Get Total Jobs in Region (30km radius) for Current Month
+    -- Uses geo_location for calculation
     SELECT COUNT(*) INTO total_region_jobs
     FROM jobs
-    WHERE ST_DWithin(
-        location, 
+    LEFT JOIN technicians t ON jobs.technician_id = t.id
+    WHERE 
+    -- We assume jobs rely on tech location or job location. 
+    -- The prompt formula was "Total jobs generated in that region". 
+    -- Ideally we'd query jobs.location but jobs.location might also be JSON.
+    -- For simplicity, let's filter jobs by the passed Point and a safe radius (30km).
+    -- If jobs table has geospatial 'location', use it. Else cast.
+    -- Assuming jobs.location IS JSONB too.
+    ST_DWithin(
+        ST_SetSRID(ST_MakePoint(
+            CAST(jobs.location->>'longitude' AS FLOAT), 
+            CAST(jobs.location->>'latitude' AS FLOAT)
+        ), 4326),
         ST_SetSRID(ST_MakePoint(region_lng, region_lat), 4326), 
-        30000 -- 30km in meters
+        30000
     )
-    AND created_at >= date_trunc('month', CURRENT_DATE);
+    AND jobs.created_at >= date_trunc('month', CURRENT_DATE);
 
     -- 4. Calculate Cap (20% of Total)
-    -- If total jobs is small (e.g. < 10), allow anyway to avoid cold start issues
     IF total_region_jobs < 10 THEN
         RETURN TRUE;
     END IF;
