@@ -542,13 +542,21 @@ const TechnicianDashboard = () => {
     useEffect(() => {
         if (!socket || !user) return;
 
-        socket.on('technician_status_update', (data) => {
+        const handleStatusUpdate = (data) => {
             if (data.technicianId === user?.id) {
-                if (updateProfile) {
-                    updateProfile({ status: data.status });
+                // [FIX] Use updateUser from AuthContext
+                if (updateUser) {
+                    updateUser({ ...user, status: data.status });
                 }
             }
-        });
+        };
+
+        const handleProfileUpdate = (updatedTech) => {
+            // [FIX] Sync full profile (including status, lat/lng, etc.)
+            if (updatedTech.id === user.id) {
+                updateUser({ ...user, ...updatedTech });
+            }
+        };
 
         const handleJobUpdate = (data) => {
             // Refresh data on any job change relevant to this tech
@@ -566,7 +574,7 @@ const TechnicianDashboard = () => {
                     rating: updatedTech.rating || prev.rating,
                     totalReviews: updatedTech.reviewCount || prev.totalReviews
                 }));
-                // Also persist to auth context if needed, but local state is faster for dashboard
+                // Also persist to auth context
                 updateUser({ ...user, ...updatedTech });
             }
         };
@@ -589,6 +597,7 @@ const TechnicianDashboard = () => {
         };
 
         socket.on('technician_status_update', handleStatusUpdate);
+        socket.on('profile_updated', handleProfileUpdate); // [NEW]
         socket.on('job_updated', handleJobUpdate);
         socket.on('job_status_updated', handleJobUpdate);
         socket.on('new_job_assigned', handleJobUpdate);
@@ -599,6 +608,7 @@ const TechnicianDashboard = () => {
 
         return () => {
             socket.off('technician_status_update', handleStatusUpdate);
+            socket.off('profile_updated', handleProfileUpdate);
             socket.off('job_updated', handleJobUpdate);
             socket.off('job_status_updated', handleJobUpdate);
             socket.off('new_job_assigned', handleJobUpdate);
