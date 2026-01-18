@@ -50,42 +50,40 @@ const DashboardJobs = ({ user, jobs, refreshJobs, variant = 'active' }) => {
     const [lastSubmittedRating, setLastSubmittedRating] = useState(null);
     const socket = useSocket();
 
+    // Unified Jobs Handling
+    // reliance on 'jobs' prop passed from Dashboard.jsx
+
+    // Manage local form state
+    const [showBooking, setShowBooking] = useState(false);
+    const [selectedJobForFeedback, setSelectedJobForFeedback] = useState(null);
+    const [newJob, setNewJob] = useState({ serviceType: 'Electrician', description: '', location: '', contactName: user?.name || '', contactPhone: user?.phone || '' });
+    const [submittedFeedbackJobs, setSubmittedFeedbackJobs] = useState(new Set());
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [lastSubmittedRating, setLastSubmittedRating] = useState(null);
+    const socket = useSocket();
+
     useEffect(() => {
         if (user) {
-            fetchJobs(user.id);
+            // Pre-fill contact info
             setNewJob(prev => ({ ...prev, contactName: user.name, contactPhone: user.phone, location: user.location?.latitude ? 'Current Location' : '' }));
         }
     }, [user]);
 
+    // Socket updates - trigger parent refresh
     useEffect(() => {
         if (socket) {
-            socket.on('job_status_updated', (updatedJob) => {
-                setJobs(prevJobs => Array.isArray(prevJobs) ? prevJobs.map(job =>
-                    job.id === updatedJob.id ? updatedJob : job
-                ) : []);
+            socket.on('job_status_updated', () => {
+                if (refreshJobs) refreshJobs();
             });
             return () => {
                 socket.off('job_status_updated');
             };
         }
-    }, [socket]);
+    }, [socket, refreshJobs]);
 
-    const fetchJobs = async (userId) => {
-        try {
-            const res = await getMyJobs(userId);
-            if (res.data.success) {
-                const jobsData = Array.isArray(res.data.jobs) ? res.data.jobs : [];
-                const sorted = jobsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                setJobs(sorted);
-            }
-        } catch (err) {
-            console.error("Failed to fetch jobs", err);
-        }
-    };
-
-    // [NEW] Supabase Realtime for Jobs
-    useSupabaseRealtime('jobs', (payload) => {
-        if (user) fetchJobs(user.id);
+    // Supabase Realtime - trigger parent refresh
+    useSupabaseRealtime('jobs', () => {
+        if (refreshJobs) refreshJobs();
     });
 
     const handleBookService = async (e) => {
@@ -106,7 +104,7 @@ const DashboardJobs = ({ user, jobs, refreshJobs, variant = 'active' }) => {
             await createJob(jobData);
             setShowBooking(false);
             setNewJob({ serviceType: 'Electrician', description: '', location: '', contactName: user.name, contactPhone: user.phone });
-            fetchJobs(user.id);
+            if (refreshJobs) refreshJobs();
         } catch (err) {
             console.error("Booking failed:", err);
             alert(`Failed to book service: ${err.response?.data?.error || err.message}`);
