@@ -21,7 +21,8 @@ import {
     History as HistoryIcon,
     ChevronLeft as ChevronLeftIcon,
     ReportProblem as ReportIcon,
-    LocalOffer as OfferIcon
+    LocalOffer as OfferIcon,
+    Category as CategoryIcon
 } from '@mui/icons-material';
 
 const drawerWidth = 260;
@@ -34,12 +35,13 @@ const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, us
 
     const navItems = [
         { id: 'home', label: 'Dashboard', icon: <HomeIcon /> },
+        { id: 'services', label: 'All Services', icon: <CategoryIcon /> },
+        { id: 'bookings', label: 'My Bookings', icon: <WorkIcon /> },
         { id: 'history', label: 'Job History', icon: <HistoryIcon /> },
-        { id: 'jobs', label: 'Services', icon: <WorkIcon /> },
         { id: 'chat', label: 'Live Chat', icon: <ChatIcon /> },
         { id: 'complaints', label: 'Complaints', icon: <ReportIcon /> },
         { id: 'offers', label: 'Latest Offers', icon: <OfferIcon /> },
-        { id: 'profile', label: 'Settings', icon: <PersonIcon /> }, // Mapped 'Profile' to 'Settings'
+        { id: 'profile', label: 'Settings', icon: <PersonIcon /> },
     ];
 
     const drawer = (

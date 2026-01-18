@@ -1,153 +1,88 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    Button,
-    Grid,
-    MenuItem,
-    Typography,
-    InputAdornment,
-    Box
+    Dialog, DialogTitle, DialogContent, DialogActions,
+    Button, TextField, Box, Typography, IconButton, InputAdornment
 } from '@mui/material';
-import { createJob } from '../../services/api';
+import { Close, AttachMoney, Image as ImageIcon } from '@mui/icons-material';
 
-const MakeOfferModal = ({ open, onClose, user, onSuccess }) => {
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        serviceType: 'Electrician',
+const MakeOfferModal = ({ open, onClose }) => {
+    const [offerData, setOfferData] = useState({
+        title: '',
+        price: '',
         description: '',
-        offerPrice: '',
-        contactName: user?.name || '',
-        contactPhone: user?.phone || '',
-        location: user?.location ? 'Current Location' : '' // Simplify for now
+        photos: []
     });
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setOfferData({ ...offerData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const jobData = {
-                userId: user.id,
-                ...formData,
-                location: user.location || { latitude: 0, longitude: 0 }, // Fallback
-                offerPrice: parseFloat(formData.offerPrice)
-            };
-
-            await createJob(jobData);
-            setLoading(false);
-            onSuccess();
-            onClose();
-            // Reset form (optional)
-            setFormData({
-                serviceType: 'Electrician',
-                description: '',
-                offerPrice: '',
-                contactName: user?.name || '',
-                contactPhone: user?.phone || '',
-                location: user?.location ? 'Current Location' : ''
-            });
-        } catch (error) {
-            console.error(error);
-            alert('Failed to submit offer');
-            setLoading(false);
-        }
+    const handleSubmit = () => {
+        alert(`Offer Submitted!\nTitle: ${offerData.title}\nPrice: $${offerData.price}`);
+        onClose();
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
-            <DialogTitle>
-                <Typography variant="h3">Make an Offer</Typography>
-                <Typography variant="body2" color="textSecondary">Post a custom job with your budget.</Typography>
-            </DialogTitle>
-            <DialogContent dividers>
-                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-                    <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                select
-                                fullWidth
-                                label="Service Type"
-                                name="serviceType"
-                                value={formData.serviceType}
-                                onChange={handleChange}
-                            >
-                                {['Electrician', 'Plumber', 'AC Technician', 'Painter', 'Carpenter', 'CCTV Technician', 'Biometrics Technician'].map((option) => (
-                                    <MenuItem key={option} value={option}>
-                                        {option}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                fullWidth
-                                label="Your Offer Price (₹)"
-                                name="offerPrice"
-                                type="number"
-                                value={formData.offerPrice}
-                                onChange={handleChange}
-                                required
-                                InputProps={{
-                                    startAdornment: <InputAdornment position="start">₹</InputAdornment>,
-                                }}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                multiline
-                                rows={3}
-                                label="Job Description"
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                required
-                                placeholder="Describe the work in detail..."
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                fullWidth
-                                label="Contact Name"
-                                name="contactName"
-                                value={formData.contactName}
-                                onChange={handleChange}
-                                required
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                fullWidth
-                                label="Contact Phone"
-                                name="contactPhone"
-                                value={formData.contactPhone}
-                                onChange={handleChange}
-                                required
-                            />
-                        </Grid>
-                    </Grid>
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '16px' } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderBottom: '1px solid #f1f5f9' }}>
+                <Typography variant="h6" fontWeight="bold">Make an Offer</Typography>
+                <IconButton onClick={onClose} size="small"><Close /></IconButton>
+            </Box>
+
+            <DialogContent sx={{ p: 3 }}>
+                <Typography variant="body2" sx={{ color: '#64748b', mb: 3 }}>
+                    Describe your custom job and propose a price. Technicians can accept or counter your offer.
+                </Typography>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <TextField
+                        fullWidth
+                        label="Job Title"
+                        placeholder="e.g., Fix Leaky Faucet & Install Shelf"
+                        name="title"
+                        value={offerData.title}
+                        onChange={handleChange}
+                    />
+
+                    <TextField
+                        fullWidth
+                        label="Your Offer Price"
+                        name="price"
+                        type="number"
+                        value={offerData.price}
+                        onChange={handleChange}
+                        InputProps={{
+                            startAdornment: <InputAdornment position="start"><AttachMoney /></InputAdornment>,
+                        }}
+                    />
+
+                    <TextField
+                        fullWidth
+                        multiline
+                        rows={4}
+                        label="Description"
+                        placeholder="Detailed explanation of the work required..."
+                        name="description"
+                        value={offerData.description}
+                        onChange={handleChange}
+                    />
+
+                    <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<ImageIcon />}
+                        sx={{ borderStyle: 'dashed', borderRadius: '8px', py: 2, color: '#64748b', borderColor: '#cbd5e1' }}
+                    >
+                        Upload Photos (Optional)
+                        <input type="file" hidden multiple />
+                    </Button>
                 </Box>
             </DialogContent>
-            <DialogActions sx={{ p: 3 }}>
-                <Button onClick={onClose} color="inherit" size="large" sx={{ borderRadius: '12px' }}>
-                    Cancel
-                </Button>
-                <Button
-                    onClick={handleSubmit}
-                    variant="contained"
-                    color="secondary"
-                    size="large"
-                    disabled={loading}
-                    sx={{ borderRadius: '12px', px: 4 }}
-                >
-                    {loading ? 'Posting...' : 'Post Offer'}
+
+            <DialogActions sx={{ p: 3, borderTop: '1px solid #f1f5f9' }}>
+                <Button onClick={onClose} sx={{ color: '#64748b' }}>Cancel</Button>
+                <Button variant="contained" onClick={handleSubmit} fullWidth sx={{ bgcolor: '#10b981', fontWeight: 'bold', '&:hover': { bgcolor: '#059669' } }}>
+                    Submit Offer
                 </Button>
             </DialogActions>
         </Dialog>

@@ -5,6 +5,7 @@ import api from '../services/api';
 import ErrorBoundary from '../components/ErrorBoundary';
 import DashboardLayout from '../components/Dashboard/DashboardLayout';
 import DashboardHome from '../components/Dashboard/DashboardHome';
+import ServiceHub from '../components/Dashboard/ServiceHub';
 import DashboardJobs from '../components/Dashboard/DashboardJobs';
 import DashboardProfile from '../components/Dashboard/DashboardProfile';
 import ChatInterface from '../components/Dashboard/ChatInterface';
@@ -190,8 +191,9 @@ const Dashboard = () => {
             >
                 <div className="animate-fade-in h-full">
                     {activeTab === 'home' && <DashboardHome user={user} jobs={jobs} />}
+                    {activeTab === 'services' && <ServiceHub />}
+                    {activeTab === 'bookings' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} variant="active" />}
                     {activeTab === 'history' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} variant="history" />}
-                    {activeTab === 'jobs' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} variant="active" />}
                     {activeTab === 'profile' && <DashboardProfile />}
                     {activeTab === 'chat' && <ChatInterface user={user} />}
                     {activeTab === 'finance' && <DashboardFinance user={user} />}

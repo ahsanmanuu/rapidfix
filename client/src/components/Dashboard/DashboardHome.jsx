@@ -4,13 +4,14 @@ import { useTheme } from '@mui/material/styles';
 import {
     Grid, Typography, Card, CardContent, Box, Chip, Avatar, Button,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    InputBase, IconButton, Divider, TextField
+    InputBase, IconButton, Divider, TextField, Stepper, Step, StepLabel, StepConnector
 } from '@mui/material';
 import {
     AccessTime, LocationOn, Search, Notifications, Verified,
     AcUnit, WaterDrop, Router, CheckCircle, ReportProblem,
     Forum, Star, Add, Send, ArrowForward, LocalOffer,
-    Download as DownloadIcon, History as HistoryIcon
+    Download as DownloadIcon, History as HistoryIcon,
+    DirectionsCar, Build, CheckCircleOutline, PendingActions
 } from '@mui/icons-material';
 
 import { useAuth } from '../../context/AuthContext';
@@ -72,7 +73,7 @@ const DashboardHome = ({ jobs = [] }) => {
     };
 
     return (
-        <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
+        <Box sx={{ width: '100%', fontFamily: 'Inter, sans-serif' }}>
 
             {/* --- Hero Banner --- */}
             <Box sx={{
@@ -115,12 +116,12 @@ const DashboardHome = ({ jobs = [] }) => {
                 </Grid>
             </Box>
 
-            {/* Main Dashboard Layout */}
-            <Grid container spacing={3}>
+            {/* Main Dashboard Layout (Flexbox) */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
 
-                {/* --- Left Column (md=7) --- */}
-                {/* Contains: Job History, Feedback, Upsell */}
-                <Grid item xs={12} md={7} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {/* --- Left Column (Flex ~58%) --- */}
+                <Box sx={{ flex: 7, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+
 
                     {/* 1. Job History Table */}
                     <Card sx={{ ...CardStyle, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
@@ -140,7 +141,7 @@ const DashboardHome = ({ jobs = [] }) => {
                                 />
                             </Box>
                         </Box>
-                        <TableContainer sx={{ maxHeight: 300 }}> {/* Fixed height for scrolling */}
+                        <TableContainer sx={{ maxHeight: 600 }}> {/* Expanded height for better alignment */}
                             <Table stickyHeader size="small">
                                 <TableHead>
                                     <TableRow>
@@ -238,14 +239,88 @@ const DashboardHome = ({ jobs = [] }) => {
                         </CardContent>
                     </Card>
 
-                </Grid>
+                    {/* 4. Real-time Job Status Timeline Widget */}
+                    <Card sx={{ ...CardStyle, p: 3, position: 'relative', overflow: 'hidden' }}>
+                        {/* CSS Animation Injection */}
+                        <style dangerouslySetInnerHTML={{
+                            __html: `
+                            @keyframes pulse-ring {
+                                0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+                                70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+                                100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+                            }
+                            @keyframes car-bounce {
+                                0%, 100% { transform: translateY(0); }
+                                50% { transform: translateY(-3px); }
+                            }
+                        `}} />
 
-                {/* --- Right Column (md=5) --- */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                            <Box>
+                                <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <AccessTime color="primary" /> Job Timeline
+                                </Typography>
+                                <Typography variant="caption" color="textSecondary">Active Job: <b>AC Repair - Split Unit</b></Typography>
+                            </Box>
+                            <Chip
+                                label="LIVE TRACKING"
+                                size="small"
+                                color="error"
+                                icon={<Verified style={{ animation: 'pulse-ring 2s infinite', borderRadius: '50%' }} />}
+                                sx={{ fontWeight: 'bold', animation: 'pulse-ring 2s infinite', bgcolor: '#ffe4e6', color: '#be123c', border: 'none' }}
+                            />
+                        </Box>
+
+                        <Stepper alternativeLabel activeStep={2} connector={<StepConnector sx={{ '& .MuiStepConnector-line': { borderColor: '#e2e8f0' } }} />}>
+                            {[
+                                { label: 'Requested', time: '10:30 AM', icon: <PendingActions /> },
+                                { label: 'Accepted', time: '10:35 AM', icon: <CheckCircle /> },
+                                { label: 'On The Way', time: '10:45 AM', icon: <DirectionsCar /> },
+                                { label: 'Finished', time: '--:--', icon: <Build /> },
+                            ].map((step, index) => (
+                                <Step key={step.label}>
+                                    <StepLabel
+                                        StepIconComponent={() => (
+                                            <Box sx={{
+                                                width: 40, height: 40, borderRadius: '50%',
+                                                bgcolor: index <= 2 ? (index === 2 ? '#2563eb' : '#dcfce7') : '#f1f5f9',
+                                                color: index <= 2 ? (index === 2 ? '#fff' : '#16a34a') : '#94a3b8',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                zIndex: 1, position: 'relative',
+                                                boxShadow: index === 2 ? '0 0 0 4px rgba(37, 99, 235, 0.2)' : 'none',
+                                                animation: index === 2 ? 'pulse-ring 2s infinite' : 'none'
+                                            }}>
+                                                {index === 2 ? <DirectionsCar fontSize="small" sx={{ animation: 'car-bounce 1s infinite' }} /> :
+                                                    index < 2 ? <CheckCircleOutline fontSize="small" /> : step.icon}
+                                            </Box>
+                                        )}
+                                    >
+                                        <Typography variant="body2" fontWeight="bold" sx={{ color: index <= 2 ? '#0f172a' : '#94a3b8' }}>{step.label}</Typography>
+                                        <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>{step.time}</Typography>
+                                    </StepLabel>
+                                </Step>
+                            ))}
+                        </Stepper>
+
+                        {/* Map/Technician Info Mini-Section */}
+                        <Box sx={{ mt: 3, p: 2, bgcolor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ width: 48, height: 48, bgcolor: '#0f172a' }}>AJ</Avatar>
+                            <Box sx={{ flex: 1 }}>
+                                <Typography variant="subtitle2" fontWeight="bold">Alex Johnson</Typography>
+                                <Typography variant="caption" color="textSecondary">Arriving in <b>5 mins</b> • White Van (XY-99)</Typography>
+                            </Box>
+                            <Button size="small" variant="contained" color="primary" sx={{ borderRadius: '8px', textTransform: 'none' }}>Call</Button>
+                        </Box>
+                    </Card>
+
+                </Box>
+
+                {/* --- Right Column (Flex ~42%) --- */}
                 {/* Contains: Live Chat, Complaints */}
-                <Grid item xs={12} md={5} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box sx={{ flex: 5, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
 
                     {/* 1. Live Support Widget */}
-                    <Card sx={{ ...CardStyle, overflow: 'hidden', height: 400, display: 'flex', flexDirection: 'column' }}>
+                    <Card sx={{ ...CardStyle, overflow: 'hidden', height: 600, display: 'flex', flexDirection: 'column' }}>
                         <Box sx={{ p: 2, bgcolor: '#2563eb', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Forum fontSize="small" />
@@ -294,8 +369,8 @@ const DashboardHome = ({ jobs = [] }) => {
                         </CardContent>
                     </Card>
 
-                </Grid>
-            </Grid>
+                </Box>
+            </Box>
 
             {/* Modals from Booking Flow */}
             <TechnicianSearchModal
