@@ -122,8 +122,12 @@ class UserManager extends BaseManager {
 
     async login(email, password) {
         try {
-            const user = await this.findOne('email', email);
-            if (user && user.password === password) {
+            if (!email || !password) return null;
+            const cleanEmail = String(email).trim().toLowerCase();
+            const cleanPassword = String(password).trim();
+
+            const user = await this.findOne('email', cleanEmail);
+            if (user && String(user.password).trim() === cleanPassword) {
                 const { password, ...userWithoutPass } = user;
                 return userWithoutPass;
             }
