@@ -10,7 +10,6 @@ import {
     useTheme,
     useMediaQuery,
     Avatar,
-    Chip,
     IconButton
 } from '@mui/material';
 import {
@@ -20,25 +19,27 @@ import {
     Chat as ChatIcon,
     AccountBalanceWallet as WalletIcon,
     History as HistoryIcon,
-    ChevronLeft as ChevronLeftIcon
+    ChevronLeft as ChevronLeftIcon,
+    ReportProblem as ReportIcon,
+    LocalOffer as OfferIcon
 } from '@mui/icons-material';
 
 const drawerWidth = 260;
 
-const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, user, roleConfig }) => {
+const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, user }) => {
     const theme = useTheme();
     const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
 
     const container = window !== undefined ? () => window().document.body : undefined;
 
-    // Original User Dashboard Links (Reverted as per user request)
     const navItems = [
         { id: 'home', label: 'Dashboard', icon: <HomeIcon /> },
-        { id: 'jobs', label: 'Request Services', icon: <WorkIcon /> },
         { id: 'history', label: 'Job History', icon: <HistoryIcon /> },
-        { id: 'profile', label: 'Profile', icon: <PersonIcon /> },
-        { id: 'chat', label: 'Messages', icon: <ChatIcon /> },
-        { id: 'finance', label: 'Billing', icon: <WalletIcon /> }
+        { id: 'jobs', label: 'Services', icon: <WorkIcon /> },
+        { id: 'chat', label: 'Live Chat', icon: <ChatIcon /> },
+        { id: 'complaints', label: 'Complaints', icon: <ReportIcon /> },
+        { id: 'offers', label: 'Latest Offers', icon: <OfferIcon /> },
+        { id: 'profile', label: 'Settings', icon: <PersonIcon /> }, // Mapped 'Profile' to 'Settings'
     ];
 
     const drawer = (
@@ -46,129 +47,94 @@ const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, us
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)', // Premium Dark Gradient
-            color: '#fff'
+            bgcolor: '#ffffff', // White background
+            borderRight: '1px solid #e2e8f0'
         }}>
             {/* Logo Section */}
             <Box sx={{
                 p: 3,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between', // Changed to space-between
-                borderBottom: '1px solid rgba(255,255,255,0.1)'
+                gap: 2,
+                height: 80 // Match header height
             }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar
-                        src="/logo.png"
-                        variant="rounded"
-                        sx={{
-                            width: 40,
-                            height: 40,
-                            bgcolor: 'transparent',
-                            '& img': { objectFit: 'contain' }
-                        }}
-                    >
-                        F
-                    </Avatar>
-                    <Typography variant="h5" fontWeight="bold" sx={{ color: '#fff', letterSpacing: '0.5px' }}>
-                        Fixofy
-                    </Typography>
+                <Box sx={{
+                    width: 40, height: 40,
+                    bgcolor: '#2563eb', // Primary Blue
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)'
+                }}>
+                    <HomeIcon sx={{ color: '#fff' }} />
                 </Box>
-                {/* Desktop Collapse Button */}
-                {matchUpMd && (
-                    <IconButton onClick={handleDrawerToggle} sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: '#fff' } }}>
-                        {/* We use ChevronLeft to indicate closing/collapsing */}
+                <Typography variant="h6" fontWeight="800" sx={{ color: '#0f172a', letterSpacing: '-0.5px' }}>
+                    Fixofy
+                </Typography>
+
+                {/* Mobile Close Button */}
+                {!matchUpMd && (
+                    <IconButton onClick={handleDrawerToggle} sx={{ ml: 'auto' }}>
                         <ChevronLeftIcon />
                     </IconButton>
                 )}
             </Box>
 
             {/* Navigation Items */}
-            <List sx={{ px: 2, py: 3, flexGrow: 1 }}>
-                <Typography variant="caption" sx={{ pl: 2, mb: 2, display: 'block', fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>
-                    MENU
-                </Typography>
-                {navItems.map((item) => (
-                    <ListItemButton
-                        key={item.id}
-                        selected={activeTab === item.id}
-                        onClick={() => {
-                            setActiveTab(item.id);
-                            if (!matchUpMd) handleDrawerToggle();
-                        }}
-                        sx={{
-                            mb: 1,
-                            borderRadius: '12px',
-                            minHeight: 48,
-                            transition: 'all 0.2s',
-                            '&.Mui-selected': {
-                                bgcolor: 'primary.main',
-                                color: '#fff',
-                                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)', // Glow effect
+            <List sx={{ px: 2, py: 2, flexGrow: 1 }}>
+                {navItems.map((item) => {
+                    const isActive = activeTab === item.id;
+                    return (
+                        <ListItemButton
+                            key={item.id}
+                            selected={isActive}
+                            onClick={() => {
+                                setActiveTab(item.id);
+                                if (!matchUpMd) handleDrawerToggle();
+                            }}
+                            sx={{
+                                mb: 1,
+                                borderRadius: '8px',
+                                py: 1.5,
+                                px: 2,
+                                transition: 'all 0.2s',
+                                position: 'relative',
+                                bgcolor: isActive ? '#eff6ff' : 'transparent', // Light Blue if active
+                                color: isActive ? '#2563eb' : '#64748b', // Blue text if active, Slate if not
+                                borderRight: isActive ? '3px solid #2563eb' : '3px solid transparent', // Right border indicator
                                 '&:hover': {
-                                    bgcolor: 'primary.dark',
-                                },
-                                '& .MuiListItemIcon-root': {
-                                    color: '#fff',
-                                },
-                            },
-                            '&:hover': {
-                                bgcolor: 'rgba(255,255,255,0.05)',
-                                transform: 'translateX(4px)'
-                            },
-                            '& .MuiListItemIcon-root': {
-                                color: activeTab === item.id ? '#fff' : 'rgba(255,255,255,0.5)',
-                                minWidth: 40
-                            },
-                            '& .MuiTypography-root': {
-                                fontWeight: activeTab === item.id ? 600 : 500,
-                                color: activeTab === item.id ? '#fff' : 'rgba(255,255,255,0.7)'
-                            }
-                        }}
-                    >
-                        <ListItemIcon>{item.icon}</ListItemIcon>
-                        <ListItemText primary={item.label} />
-                    </ListItemButton>
-                ))}
+                                    bgcolor: isActive ? '#eff6ff' : '#f1f5f9',
+                                    color: isActive ? '#2563eb' : '#1e293b'
+                                }
+                            }}
+                        >
+                            <ListItemIcon sx={{
+                                minWidth: 40,
+                                color: 'inherit' // Inherit color from parent (Blue or Slate)
+                            }}>
+                                {item.icon}
+                            </ListItemIcon>
+                            <ListItemText
+                                primary={item.label}
+                                primaryTypographyProps={{
+                                    fontWeight: isActive ? 600 : 500,
+                                    fontSize: '0.95rem'
+                                }}
+                            />
+                        </ListItemButton>
+                    );
+                })}
             </List>
 
-            {/* User Profile Footer */}
-            <Box sx={{ p: 2, mt: 'auto' }}>
-                <Box
-                    sx={{
-                        p: 2,
-                        bgcolor: 'rgba(255,255,255,0.05)',
-                        borderRadius: 3,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255,255,255,0.1)'
-                    }}
-                >
-                    <Avatar
-                        src={user.photo}
-                        sx={{ width: 44, height: 44, border: '2px solid rgba(255,255,255,0.2)' }}
-                    >
-                        {user.name ? user.name[0].toUpperCase() : 'U'}
-                    </Avatar>
-                    <Box sx={{ overflow: 'hidden' }}>
-                        <Typography variant="subtitle2" sx={{ color: '#fff', fontWeight: 600 }} noWrap>
-                            {user.name}
-                        </Typography>
-                        <Chip
-                            label={user.membership || 'Free'}
-                            size="small"
-                            sx={{
-                                height: 20,
-                                fontSize: '0.65rem',
-                                bgcolor: user.membership === 'Premium' ? '#f59e0b' : 'rgba(255,255,255,0.2)',
-                                color: '#fff',
-                                mt: 0.5
-                            }}
-                        />
-                    </Box>
-                </Box>
+            {/* Bottom Section (Logout/Profile Summary) */}
+            <Box sx={{ p: 2, borderTop: '1px solid #f1f5f9' }}>
+                <ListItemButton sx={{ borderRadius: '8px', color: '#ef4444', '&:hover': { bgcolor: '#fef2f2' } }}>
+                    <ListItemIcon sx={{ minWidth: 40, color: '#ef4444' }}>
+                        <ChevronLeftIcon sx={{ transform: 'rotate(180deg)' }} /> {/* Logout Icon substitute */}
+                    </ListItemIcon>
+                    <ListItemText primary="Logout" primaryTypographyProps={{ fontWeight: 600 }} />
+                </ListItemButton>
             </Box>
         </Box>
     );
@@ -176,12 +142,12 @@ const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, us
     return (
         <Box
             component="nav"
-            sx={{ flexShrink: { md: 0 }, width: matchUpMd ? drawerWidth : 'auto' }}
+            sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
             aria-label="mailbox folders"
         >
+            {/* Mobile Drawer */}
             <Drawer
                 container={container}
-                variant={matchUpMd ? 'persistent' : 'temporary'}
                 anchor="left"
                 open={open}
                 onClose={handleDrawerToggle}

@@ -1,93 +1,71 @@
 import { useState, useEffect } from 'react';
-import { Box, CssBaseline, useMediaQuery, useTheme, styled } from '@mui/material';
+import { Box, CssBaseline, useMediaQuery, useTheme } from '@mui/material';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
-
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open }) => ({
-    flexGrow: 1,
-    padding: theme.spacing(0),
-    transition: theme.transitions.create(['margin', 'width'], {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-    }),
-    marginLeft: 0,
-    width: '100%',
-    [theme.breakpoints.up('md')]: {
-        width: open ? `calc(100% - 260px)` : '100%',
-        marginLeft: open ? '260px' : 0,
-        transition: theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.easeOut,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
-    },
-}));
-
+const drawerWidth = 260;
 
 const DashboardLayout = ({ user, activeTab, setActiveTab, onLogout, children }) => {
     const theme = useTheme();
-    const matchDownMd = useMediaQuery(theme.breakpoints.down('md'));
-    // Default to CLOSED initially to prevent mobile flash
-    // Default to CLOSED initially to prevent mobile flash
-    // We strictly initialize to FALSE.
+    const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // Sync sidebar state: Open on Desktop, Close on Mobile
+    // Auto-open sidebar on desktop
     useEffect(() => {
-        if (!matchDownMd) {
-            setSidebarOpen(true);
-        } else {
-            setSidebarOpen(false);
-        }
-    }, [matchDownMd]);
+        setSidebarOpen(matchUpMd);
+    }, [matchUpMd]);
 
     const handleDrawerToggle = () => {
         setSidebarOpen(!sidebarOpen);
     };
 
     return (
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f8fafc' }}>
             <CssBaseline />
-            {/* Header */}
+
+            {/* Sidebar (Left Panel) */}
             <Box
-                position="fixed"
+                component="nav"
                 sx={{
-                    width: '100%',
-                    zIndex: 1200,
-                    backgroundColor: '#fff',
-                    transition: 'none',
-                    borderBottom: '1px solid #eef2f6'
+                    width: { md: drawerWidth },
+                    flexShrink: { md: 0 }
                 }}
             >
-                <Box sx={{ display: 'flex', alignItems: 'center', height: 80, px: 3 }}>
-                    <Header
-                        handleDrawerToggle={handleDrawerToggle}
-                        onLogout={onLogout}
-                        setActiveTab={setActiveTab}
-                        user={user}
-                    />
-                </Box>
+                <Sidebar
+                    open={sidebarOpen}
+                    handleDrawerToggle={handleDrawerToggle}
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    user={user}
+                />
             </Box>
 
-            {/* Sidebar */}
-            <Sidebar
-                open={sidebarOpen}
-                handleDrawerToggle={handleDrawerToggle}
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                user={user}
-            />
-
-            {/* Main Content */}
-            <Main open={sidebarOpen} sx={{
-                pt: { xs: 10, md: 10 }, // Reduced top padding
-                pb: 4,
-                px: { xs: 2, md: 3 }, // Kept padding but main logic handles width
-                minHeight: '100vh',
-                bgcolor: '#f4f6f8'
+            {/* Main Content Area (Right Panel) */}
+            <Box sx={{
+                flexGrow: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                minWidth: 0, // Prevent flex item overflow
+                height: '100vh',
+                overflow: 'hidden'
             }}>
-                {children}
-            </Main>
+                {/* Header (Sticky Top) */}
+                <Header
+                    handleDrawerToggle={handleDrawerToggle}
+                    onLogout={onLogout}
+                    user={user}
+                />
+
+                {/* Dashboard Content (Scrollable) */}
+                <Box component="main" sx={{
+                    flexGrow: 1,
+                    p: { xs: 2, md: 4 },
+                    overflowY: 'auto',
+                    bgcolor: '#f8fafc'
+                }}>
+                    {children}
+                </Box>
+            </Box>
         </Box>
     );
 };

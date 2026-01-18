@@ -1,272 +1,134 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import {
-    Avatar,
     Box,
-    ButtonBase,
     IconButton,
-    InputAdornment,
-    OutlinedInput,
-    useTheme,
-    Menu,
-    MenuItem,
-    ListItemIcon,
-    Divider,
-    Typography,
+    InputBase,
     Badge,
-    List,
-    ListItem,
-    ListItemText
+    Avatar,
+    Typography,
+    Divider
 } from '@mui/material';
 import {
-    Menu as MenuIcon,
     Search as SearchIcon,
-    NotificationsNone as NotificationsIcon,
-    Settings as SettingsIcon,
-    Person as PersonIcon,
-    Logout as LogoutIcon,
-    AccountBalanceWallet,
-    CheckCircle,
-    Info,
-    Warning
+    Notifications as NotificationsIcon,
+    Menu as MenuIcon
 } from '@mui/icons-material';
-import axios from '../../services/api'; // Assuming default axios verify later
 import { useSocket } from '../../context/SocketContext';
-import useSupabaseRealtime from '../../hooks/useSupabaseRealtime';
+import axios from '../../services/api';
 
-const Header = ({ handleDrawerToggle, onLogout, setActiveTab, user }) => {
-    const theme = useTheme();
-    const navigate = useNavigate();
+const Header = ({ handleDrawerToggle, user }) => {
     const socket = useSocket();
-
-    // State
-    const [anchorElSettings, setAnchorElSettings] = useState(null);
-    const [anchorElNotifications, setAnchorElNotifications] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
-    const handleClickSettings = (event) => setAnchorElSettings(event.currentTarget);
-    const handleCloseSettings = () => setAnchorElSettings(null);
-
-    const handleClickNotifications = (event) => setAnchorElNotifications(event.currentTarget);
-    const handleCloseNotifications = () => setAnchorElNotifications(null);
-
-    // Initial Fetch
+    // Basic Notification Logic
     useEffect(() => {
-        if (user?.id) fetchNotifications();
-    }, [user]);
-
-    // [NEW] Supabase Realtime for Notifications
-    useSupabaseRealtime('notifications', (payload) => {
-        if (user && payload.new && payload.new.userId === user.id) {
-            setNotifications(prev => [payload.new, ...prev]);
-            setUnreadCount(prev => prev + 1);
-        }
-    }, 'INSERT');
-
-    // Real-time Listener
-    useEffect(() => {
-        if (!socket) return;
-
-        socket.on('job_status_updated', (data) => {
-            // Optimistically add notification or refetch
-            // Since backend persists, we can just fetch or construct local
-            const newNotif = {
-                id: Date.now(),
-                title: `Job ${data.title || 'Update'}`,
-                message: `Job status updated to ${data.status}`,
-                type: 'job_update',
-                read: false,
-                createdAt: new Date().toISOString()
-            };
-            setNotifications(prev => [newNotif, ...prev]);
-            setUnreadCount(prev => prev + 1);
-        });
-
-        socket.on('membership_update', (data) => {
-            console.log("Header: Membership updated, refetching notifications");
-            fetchNotifications();
-        });
-
-        return () => {
-            socket.off('job_status_updated');
-            socket.off('membership_update');
-        };
-    }, [socket, user?.id]); // Adding user.id as dependency for fetchNotifications availability
-
-    const fetchNotifications = async () => {
-        try {
-            const res = await axios.get(`/notifications/${user.id}`);
-            if (res.data.success) {
-                const notifs = Array.isArray(res.data.notifications) ? res.data.notifications : [];
-                setNotifications(notifs);
-                setUnreadCount(notifs.filter(n => !n.read).length);
+        const fetchNotifications = async () => {
+            if (!user?.id) return;
+            try {
+                const res = await axios.get(`/notifications/${user.id}`);
+                if (res.data.success) {
+                    setNotifications(res.data.data);
+                    setUnreadCount(res.data.data.filter(n => !n.read).length);
+                }
+            } catch (e) {
+                console.error("Failed to fetch notifications", e);
             }
-        } catch (error) {
-            console.error("Failed to fetch notifications", error);
+        };
+
+        fetchNotifications();
+
+        if (socket) {
+            socket.on('job_status_updated', () => fetchNotifications());
         }
-    };
+        return () => {
+            if (socket) socket.off('job_status_updated');
+        };
+    }, [user?.id, socket]);
 
-    const handleMarkRead = async (id) => {
-        try {
-            await axios.put(`/notifications/${id}/read`);
-            setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-            setUnreadCount(prev => Math.max(0, prev - 1));
-        } catch (e) {
-            console.error("Failed to mark read", e);
-        }
-    };
-
-    const handleProfileClick = () => {
-        if (setActiveTab) setActiveTab('profile');
-        navigate('/dashboard');
-        handleCloseSettings();
-    };
-
-    const handleWalletClick = () => {
-        navigate('/wallet');
-        handleCloseSettings();
-    };
-
-    const getIcon = (type) => {
-        if (type?.includes('job')) return <CheckCircle color="success" fontSize="small" />;
-        if (type === 'payment') return <AccountBalanceWallet color="primary" fontSize="small" />;
-        return <Info color="info" fontSize="small" />;
-    };
 
     return (
-        <>
-            {/* Logo Section / Menu Toggle */}
-            <Box
-                sx={{
-                    width: 'auto', // Reduced from 228 to auto for better fit
-                    display: 'flex',
-                    alignItems: 'center',
-                    mr: 2, // Added margin right
-                    [theme.breakpoints.down('md')]: {
-                        width: 'auto',
-                        mr: 1
-                    }
-                }}
-            >
-                <Box component="span" sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 1 }}>
-                    {/* Logo is in Sidebar for Desktop */}
-                </Box>
-                <ButtonBase
-                    sx={{
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        display: { xs: 'flex', md: 'none' }, // Hide on Desktop
-                        '&:hover': {
-                            backgroundColor: theme.palette.secondary.light
-                        }
-                    }}
+        <Box sx={{
+            height: 80,
+            px: { xs: 2, md: 4 },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            bgcolor: 'rgba(255,255,255,0.8)',
+            backdropFilter: 'blur(12px)',
+            borderBottom: '1px solid #e2e8f0',
+            position: 'sticky',
+            top: 0,
+            zIndex: 1100
+        }}>
+            {/* Left: Search Bar & Mobile Toggle */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, maxWidth: 500 }}>
+                <IconButton
+                    color="inherit"
+                    aria-label="open drawer"
+                    edge="start"
                     onClick={handleDrawerToggle}
+                    sx={{ mr: 2, display: { md: 'none' }, color: '#64748b' }}
                 >
-                    <Avatar
-                        variant="rounded"
+                    <MenuIcon />
+                </IconButton>
+
+                <Box sx={{
+                    position: 'relative',
+                    width: '100%',
+                    display: { xs: 'none', sm: 'block' }
+                }}>
+                    <SearchIcon sx={{
+                        position: 'absolute',
+                        left: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#94a3b8'
+                    }} />
+                    <InputBase
+                        placeholder="Search services, orders, or help..."
                         sx={{
-                            ...theme.typography.commonAvatar,
-                            ...theme.typography.mediumAvatar,
-                            transition: 'all .2s ease-in-out',
-                            background: theme.palette.secondary.light,
-                            color: theme.palette.secondary.dark,
-                            '&:hover': {
-                                background: theme.palette.secondary.dark,
-                                color: theme.palette.secondary.light
+                            width: '100%',
+                            bgcolor: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            pl: 5,
+                            pr: 2,
+                            py: 1,
+                            fontSize: '0.9rem',
+                            transition: 'all 0.2s',
+                            '&.Mui-focused': {
+                                boxShadow: '0 0 0 2px rgba(37, 99, 235, 0.2)',
+                                borderColor: '#2563eb'
                             }
                         }}
-                    >
-                        <MenuIcon stroke={1.5} size="1.3rem" />
-                    </Avatar>
-                </ButtonBase>
+                    />
+                </Box>
             </Box>
 
-            {/* Search Section (Hidden on small, expands on lg) */}
-            <Box sx={{ flexGrow: 1 }} />
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'block' } }}>
-                {/* Search Bar - Preserved */}
-            </Box>
-            <Box sx={{ flexGrow: 1 }} />
-
-            {/* Notification & Settings */}
-            <Box sx={{ ml: 2, mr: 3, display: 'flex', alignItems: 'center' }}>
-                {/* Notifications */}
-                <IconButton
-                    color="inherit"
-                    onClick={handleClickNotifications}
-                    sx={{
-                        borderRadius: '12px',
-                        ml: 2,
-                        '&:hover': { backgroundColor: theme.palette.secondary.light, color: theme.palette.secondary.dark }
-                    }}
-                >
-                    <Badge badgeContent={unreadCount} color="error">
-                        <NotificationsIcon stroke={1.5} size="1.3rem" />
+            {/* Right: Actions & Profile */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <IconButton sx={{
+                    color: '#64748b',
+                    bgcolor: 'transparent',
+                    '&:hover': { bgcolor: '#f1f5f9' }
+                }}>
+                    <Badge badgeContent={unreadCount} color="error" variant="dot">
+                        <NotificationsIcon />
                     </Badge>
                 </IconButton>
-                <Menu
-                    anchorEl={anchorElNotifications}
-                    open={Boolean(anchorElNotifications)}
-                    onClose={handleCloseNotifications}
-                    PaperProps={{ sx: { width: 360, borderRadius: 3, mt: 1.5, maxHeight: 400 } }}
-                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                    <Box sx={{ p: 2, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Typography variant="h4">Notifications</Typography>
-                        <Typography variant="caption" color="primary" sx={{ cursor: 'pointer' }} onClick={() => Array.isArray(notifications) && notifications.forEach(n => handleMarkRead(n.id))}>Mark all read</Typography>
-                    </Box>
-                    <Divider />
-                    <List sx={{ p: 0 }}>
-                        {!Array.isArray(notifications) || notifications.length === 0 ? (
-                            <Box sx={{ p: 3, textAlign: 'center' }}>
-                                <Typography variant="body2" color="textSecondary">No new notifications</Typography>
-                            </Box>
-                        ) : (
-                            notifications.map((notif) => (
-                                <MenuItem key={notif.id} onClick={() => handleMarkRead(notif.id)} sx={{
-                                    whiteSpace: 'normal',
-                                    opacity: notif.read ? 0.6 : 1,
-                                    bgcolor: notif.read ? 'transparent' : theme.palette.action.hover
-                                }}>
-                                    <ListItemIcon sx={{ minWidth: 36 }}>
-                                        {getIcon(notif.type)}
-                                    </ListItemIcon>
-                                    <Box sx={{ flex: 1 }}>
-                                        <Typography variant="subtitle2" fontWeight={notif.read ? 400 : 700}>
-                                            {notif.title}
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary" sx={{ fontSize: '0.8rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                            {notif.message}
-                                        </Typography>
-                                        <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
-                                            {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </Typography>
-                                    </Box>
-                                </MenuItem>
-                            ))
-                        )}
-                    </List>
-                </Menu>
 
-                {/* Settings */}
-                <IconButton
-                    color="inherit"
-                    onClick={handleClickSettings}
-                    sx={{
-                        borderRadius: '12px',
-                        ml: 2,
-                        '&:hover': { backgroundColor: theme.palette.secondary.light, color: theme.palette.secondary.dark }
-                    }}
-                >
-                    <SettingsIcon stroke={1.5} size="1.3rem" />
-                </IconButton>
-                <Menu
-                    anchorEl={anchorElSettings}
-                    open={Boolean(anchorElSettings)}
-                    onClose={handleCloseSettings}
-                    PaperProps={{ sx: { width: 200, borderRadius: 3, mt: 1.5 } }}
+                <Divider orientation="vertical" flexItem sx={{ height: 32, alignSelf: 'center', borderColor: '#e2e8f0' }} />
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, cursor: 'pointer' }}>
+                    <Box sx={{ textAlign: 'right', display: { xs: 'none', md: 'block' } }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0f172a', lineHeight: 1.2 }}>
+                            {user?.name || 'User'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                            {user?.membership || 'Free Member'}
+                        </Typography>
+                    </Box>
                     transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 >
