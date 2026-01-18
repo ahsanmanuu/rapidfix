@@ -94,28 +94,47 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
     const handlePrecisionRefresh = useCallback(() => {
         if (!navigator.geolocation) return;
         setIsRefreshing(true);
+
+        const updateState = (pos) => {
+            const { latitude, longitude, accuracy } = pos.coords;
+            setAccuracy(accuracy);
+
+            if (map) {
+                map.panTo({ lat: latitude, lng: longitude });
+                if (accuracy < 100) map.setZoom(15);
+            }
+            performSearch({ latitude, longitude });
+        };
+
+        // 1. Fast Lock (Low Accuracy)
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                const { latitude, longitude, accuracy } = pos.coords;
-                setAccuracy(accuracy);
-                setIsRefreshing(false);
+                updateState(pos);
+                setIsRefreshing(false); // Clear loading state early
 
-                // Update map view
-                if (map) {
-                    map.panTo({ lat: latitude, lng: longitude });
-                    if (accuracy < 100) map.setZoom(15);
-                }
-
-                // Call search with new precise location
-                performSearch({ latitude, longitude });
+                // 2. Precision Lock (High Accuracy)
+                navigator.geolocation.getCurrentPosition(
+                    (betterPos) => {
+                        updateState(betterPos);
+                        console.log("TechnicianSearchModal: Precision Lock Updated");
+                    },
+                    (err) => console.warn("Modal Precision GPS failed", err),
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
             },
             (err) => {
-                console.error("Precision GPS failed", err);
-                setIsRefreshing(false);
-                // alert("Could not get precise GPS lock. Using last known location."); // [OPTIONAL] Suppress alert for background run?
-                // For now, keeping alert as it might be useful, or checking if triggered automatically.
+                console.warn("Modal Fast GPS failed", err);
+                // Fallback to Precise only
+                navigator.geolocation.getCurrentPosition(
+                    (p) => {
+                        updateState(p);
+                        setIsRefreshing(false);
+                    },
+                    () => setIsRefreshing(false),
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: false, timeout: 2000, maximumAge: 60000 }
         );
     }, [map, performSearch]);
 

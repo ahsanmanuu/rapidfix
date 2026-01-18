@@ -180,19 +180,42 @@ const DashboardHome = ({ jobs = [] }) => {
         // 1. Launch immediately (Modal will start its own internal fetch too)
         launchMap(null);
 
-        // 2. Start Parallel Fetch (Non-blocking) - "Precision Lock" at click time
+        // 2. Start Parallel Fetch (Non-blocking) - "Fast Lock" then "Precision Lock"
+        const updateLoc = (pos) => {
+            const newLoc = {
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                address: "Precise Location"
+            };
+            setBookingParams(prev => prev ? { ...prev, location: newLoc } : null);
+        };
+
+        // A. Fast Lock (Low Accuracy - Instant)
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                const newLoc = {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                    address: " Precise Location"
-                };
-                // Update params to feed the open modal
-                setBookingParams(prev => prev ? { ...prev, location: newLoc } : null);
+                console.log("[GPS] Fast Lock Acquired:", position.coords.latitude, position.coords.longitude);
+                updateLoc(position);
+
+                // B. Precision Lock (High Accuracy - Refinement)
+                navigator.geolocation.getCurrentPosition(
+                    (betterPos) => {
+                        console.log("[GPS] Precision Lock Acquired");
+                        updateLoc(betterPos);
+                    },
+                    (err) => console.warn("Background Precise GPS failed", err),
+                    { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
+                );
             },
-            (err) => console.warn("Background GPS pre-fetch failed", err),
-            { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
+            (err) => {
+                console.warn("Fast GPS failed, falling back to Precise...", err);
+                // Fallback: Try Precise directly if Fast fails
+                navigator.geolocation.getCurrentPosition(
+                    (p) => updateLoc(p),
+                    (e) => console.error("All GPS attempts failed", e),
+                    { timeout: 10000, enableHighAccuracy: true }
+                );
+            },
+            { timeout: 2000, enableHighAccuracy: false, maximumAge: 60000 } // Use cached if < 1 min old
         );
     };
 
