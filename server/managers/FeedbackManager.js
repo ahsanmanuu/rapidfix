@@ -36,14 +36,19 @@ class FeedbackManager {
     _mapToDb(fb) {
         if (!fb) return null;
         try {
-            const { userId, technicianId, jobId, createdAt, id, recommendationScore, ...rest } = fb;
-            const mapped = { ...rest };
+            const { userId, technicianId, jobId, createdAt, id, recommendationScore, ratings, comment } = fb;
+            const mapped = {};
+
+            // Explicitly map only existing columns to avoid Supabase errors
             if (userId !== undefined) mapped.user_id = userId;
             if (technicianId !== undefined) mapped.technician_id = technicianId;
             if (jobId !== undefined) mapped.job_id = jobId;
+            if (ratings !== undefined) mapped.ratings = ratings;
+            if (comment !== undefined) mapped.comment = comment;
+            if (recommendationScore !== undefined) mapped.recommendation_score = recommendationScore;
             if (createdAt !== undefined) mapped.created_at = createdAt;
             if (id !== undefined) mapped.id = id;
-            if (recommendationScore !== undefined) mapped.recommendation_score = recommendationScore;
+
             return mapped;
         } catch (err) {
             console.error("[FeedbackManager] Error mapping to DB:", err);
