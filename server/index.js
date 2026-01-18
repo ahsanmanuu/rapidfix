@@ -100,6 +100,9 @@ jobManager.setTechnicianManager(technicianManager);
 jobManager.setFinanceManager(financeManager);
 jobManager.setInvoiceManager(invoiceManager);
 
+// [NEW] Inject JobManager into TechnicianManager for Queue Watcher (Flow 4)
+technicianManager.setJobManager(jobManager);
+
 
 
 // Start Authentication Middleware

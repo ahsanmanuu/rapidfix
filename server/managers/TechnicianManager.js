@@ -454,6 +454,10 @@ class TechnicianManager extends BaseManager {
         }
     }
 
+    setJobManager(jobManager) {
+        this.jobManager = jobManager;
+    }
+
     async updateStatus(id, status) {
         try {
             console.log(`[TechnicianManager] Updating status for Tech ${id}: ${status}`);
@@ -487,6 +491,14 @@ class TechnicianManager extends BaseManager {
                 this.io.emit('technician_status_update', { technicianId: id, status: cleanStatus });
                 this.io.to(`tech_${id}`).emit('profile_updated', tech);
             }
+
+            // [NEW] Queue Watcher Hook
+            if (String(cleanStatus).toLowerCase() === 'available' && this.jobManager) {
+                console.log(`[TechnicianManager] Tech ${id} is now Available. Checking Queue...`);
+                // Fire and forget - verify queue in background
+                this.jobManager.checkQueueForTechnician(id).catch(err => console.error(`[TechnicianManager] Queue Check Error for ${id}:`, err));
+            }
+
             return tech;
         } catch (err) {
             console.error(`[TechnicianManager] Error updating status for tech ${id}:`, err);

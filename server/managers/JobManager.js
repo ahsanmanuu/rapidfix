@@ -550,6 +550,62 @@ class JobManager {
             return [];
         }
     }
+    // [NEW] Queue Processing Logic (Flow 4)
+    async checkQueueForTechnician(technicianId) {
+        console.log(`[JobManager] Checking Queue for Tech ${technicianId}...`);
+        try {
+            // Find jobs waiting for this specific tech
+            // We use the existing 'jobs' table with status 'waiting_confirmation'
+            // In a full implementation, we might query the 'job_queues' table, but 
+            // the simplified logic uses the job status directly as per Implementation Plan.
+            if (this.db.client) {
+                // Optimized Supabase Query
+                const { data: queuedJobs, error } = await this.db.client
+                    .from('jobs')
+                    .select('*')
+                    .eq('technician_id', technicianId)
+                    .eq('status', 'waiting_confirmation')
+                    .order('created_at', { ascending: true })
+                    .limit(1);
+
+                if (error) throw error;
+
+                if (queuedJobs && queuedJobs.length > 0) {
+                    const nextJob = queuedJobs[0];
+                    console.log(`[JobManager] Found queued job #${nextJob.id}. Auto-Assigning to Tech ${technicianId}.`);
+
+                    // Execute Assignment
+                    // We use updateStatus directly to trigger notifications
+                    await this.updateStatus(nextJob.id, 'accepted', { technicianId });
+
+                    // Set Tech back to Engaged
+                    await this.techManager.updateStatus(technicianId, 'engaged');
+
+                    // Notify
+                    await this.notificationManager.createNotification(technicianId, 'technician', 'Queue Job Activated 🚀', `You have been auto-assigned pending Job #${nextJob.id}.`, 'job_assigned', nextJob.id);
+                }
+            } else {
+                // JSON Fallback
+                const allJobs = await this.db.findAll('technician_id', technicianId);
+                const queuedJobs = allJobs.filter(j => j.status === 'waiting_confirmation');
+
+                if (queuedJobs.length > 0) {
+                    queuedJobs.sort((a, b) => new Date(a.created_at || a.createdAt) - new Date(b.created_at || b.createdAt));
+                    const nextJob = queuedJobs[0];
+
+                    console.log(`[JobManager] Found queued job #${nextJob.id}. Auto-Assigning. (JSON Mode)`);
+
+                    await this.updateStatus(nextJob.id, 'accepted', { technicianId });
+                    await this.techManager.updateStatus(technicianId, 'engaged');
+
+                    await this.notificationManager.createNotification(technicianId, 'technician', 'Queue Job Activated 🚀', `Queue Job #${nextJob.id} is now Active.`, 'job_assigned', nextJob.id);
+                }
+            }
+        } catch (err) {
+            console.error(`[JobManager] Error processing queue for tech ${technicianId}:`, err);
+        }
+    }
+
     // [NEW] Helpers for Advanced Auto-Assign Logic
 
     async _getMonthlyJobCountGlobal() {
