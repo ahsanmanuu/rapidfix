@@ -155,7 +155,7 @@ const ActiveBooking = () => {
 
             <Grid container spacing={2}>
                 {/* LEFT COL */}
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={4}>
                     <Stack spacing={2}>
                         {/* Professional Profile */}
                         <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
