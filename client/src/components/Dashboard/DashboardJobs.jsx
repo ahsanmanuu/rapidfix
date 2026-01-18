@@ -22,7 +22,24 @@ import {
 import { useTheme } from '@mui/material/styles';
 import { Add, ElectricBolt, Build, CalendarToday, LocationOn, Star, Person, AccountBalanceWallet } from '@mui/icons-material';
 
-const DashboardJobs = ({ user }) => {
+const DashboardJobs = ({ user, jobs, refreshJobs, variant = 'active' }) => {
+    const theme = useTheme();
+    const [activeJobs, setActiveJobs] = useState([]);
+
+    // Filter jobs based on variant
+    useEffect(() => {
+        if (!jobs) return;
+        let filtered = [];
+        if (variant === 'active') {
+            // Active: pending, accepted, in_progress, etc. (Not completed/cancelled)
+            filtered = jobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled')
+                .slice(0, 10);
+        } else {
+            // History: Completed or Cancelled
+            filtered = jobs.filter(j => j.status === 'completed' || j.status === 'cancelled');
+        }
+        setActiveJobs(filtered);
+    }, [jobs, variant]);
     const theme = useTheme();
     const [jobs, setJobs] = useState([]);
     const [showBooking, setShowBooking] = useState(false);
@@ -293,6 +310,33 @@ const DashboardJobs = ({ user }) => {
                                                             </Typography>
                                                         )}
                                                     </Box>
+                                                </Box>
+                                            )}
+
+                                            {/* Detailed Feedback Grid for History */}
+                                            {variant === 'history' && job.feedbacks && job.feedbacks[0] && (
+                                                <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(255, 255, 255, 0.6)', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                                    <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>My Feedback</Typography>
+                                                    <Grid container spacing={1}>
+                                                        {['Timeliness', 'Expertise', 'Professionalism', 'Knowledge', 'Behavior', 'Honesty', 'Respect', 'Overall'].map((metric) => (
+                                                            <Grid item xs={6} sm={3} key={metric}>
+                                                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                                                    <Typography variant="caption" color="textSecondary" sx={{ fontSize: '0.7rem' }}>{metric}</Typography>
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', color: theme.palette.warning.main }}>
+                                                                        <Star sx={{ fontSize: 14 }} />
+                                                                        <Typography variant="caption" fontWeight="bold" sx={{ ml: 0.5 }}>
+                                                                            {job.feedbacks[0][metric.toLowerCase()] || job.feedbacks[0].ratings?.[metric.toLowerCase()] || '-'}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                </Box>
+                                                            </Grid>
+                                                        ))}
+                                                    </Grid>
+                                                    {job.feedbacks[0].comment && (
+                                                        <Typography variant="caption" display="block" sx={{ mt: 1.5, fontStyle: 'italic', color: 'text.secondary' }}>
+                                                            "{job.feedbacks[0].comment}"
+                                                        </Typography>
+                                                    )}
                                                 </Box>
                                             )}
                                         </Grid>
