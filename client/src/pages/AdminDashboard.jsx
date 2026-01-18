@@ -32,7 +32,7 @@ import OfferManager from '../components/admin/offers/OfferManager';
 import TestimonialManager from '../components/admin/testimonials/TestimonialManager';
 import FinanceView from '../components/admin/finance/FinanceView';
 import SupportView from '../components/admin/support/SupportView';
-import FeedbackView from '../components/admin/feedback/FeedbackView';
+import FeedbackTable from '../components/admin/feedbacks/FeedbackTable';
 import InvoiceSettings from '../components/admin/finance/InvoiceSettings';
 
 // Mock Data & Constants
@@ -848,6 +848,18 @@ const AdminDashboard = () => {
                                     />
                                 </div>
                             )}
+
+                            {activeTab === 'feedback' && (
+                                <div className="p-6 max-w-[1400px] mx-auto">
+                                    <FeedbackTable />
+                                </div>
+                            )}
+
+                            {activeTab === 'finance' && <FinanceView />}
+                            {activeTab === 'support' && <SupportView />}
+                            {activeTab === 'invoices' && <InvoiceSettings />}
+                            {activeTab === 'offers' && <OfferManager />}
+                            {activeTab === 'testimonials' && <TestimonialManager />}
 
                             {/* OTHER TABS (Placeholder to ensure switching works) */}
                             {activeTab !== 'dashboard' && activeTab !== 'users' && activeTab !== 'jobs' && activeTab !== 'technicians' && (

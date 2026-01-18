@@ -1394,6 +1394,16 @@ app.post('/api/feedback', async (req, res) => {
   }
 });
 
+app.get('/api/feedback', async (req, res) => {
+  try {
+    const feedbacks = await feedbackManager.getAllFeedback();
+    res.json({ success: true, feedbacks });
+  } catch (error) {
+    console.error("Fetch Feedback Error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // --- Invoice Routes [NEW] ---
 app.get('/api/invoices/:jobId/download', async (req, res) => {
   try {
