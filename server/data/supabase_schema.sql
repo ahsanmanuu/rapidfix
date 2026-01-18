@@ -29,6 +29,18 @@ CREATE TABLE IF NOT EXISTS testimonials (
     active BOOLEAN DEFAULT TRUE
 );
 
+-- [NEW] Feedbacks Table (for specific job ratings)
+CREATE TABLE IF NOT EXISTS feedbacks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id),
+    technician_id UUID REFERENCES technicians(id),
+    job_id UUID REFERENCES jobs(id),
+    ratings JSONB DEFAULT '{}', -- stores detailed breakdown
+    comment TEXT,
+    recommendation_score INT DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
 -- [NEW] Locations Table (Missing - for Live Tracking History)
 CREATE TABLE IF NOT EXISTS locations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
