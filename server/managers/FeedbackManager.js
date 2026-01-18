@@ -125,6 +125,8 @@ class FeedbackManager {
             return result;
         } catch (err) {
             console.error("[FeedbackManager] Error adding feedback:", err);
+            if (err.code) console.error("DB Error Code:", err.code);
+            if (err.message) console.error("DB Error Message:", err.message);
             throw err;
         }
     }
