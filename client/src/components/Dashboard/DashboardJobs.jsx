@@ -336,19 +336,19 @@ const DashboardJobs = ({ user, jobs, refreshJobs, variant = 'active' }) => {
                                         <Box sx={{ mt: 3, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
                                             <Button
                                                 variant="contained"
-                                                color={submittedFeedbackJobs.has(job.id) ? "success" : "primary"}
+                                                color={(submittedFeedbackJobs.has(job.id) || (job.feedbacks && job.feedbacks.length > 0)) ? "success" : "primary"}
                                                 fullWidth
                                                 startIcon={<Star />}
-                                                disabled={submittedFeedbackJobs.has(job.id)}
+                                                disabled={submittedFeedbackJobs.has(job.id) || (job.feedbacks && job.feedbacks.length > 0)}
                                                 onClick={() => setSelectedJobForFeedback(job)}
                                                 sx={{
                                                     fontWeight: 'bold',
                                                     borderRadius: '12px',
-                                                    boxShadow: submittedFeedbackJobs.has(job.id) ? 'none' : '0 4px 12px rgba(33, 150, 243, 0.3)',
+                                                    boxShadow: (submittedFeedbackJobs.has(job.id) || (job.feedbacks && job.feedbacks.length > 0)) ? 'none' : '0 4px 12px rgba(33, 150, 243, 0.3)',
                                                     py: 1.5
                                                 }}
                                             >
-                                                {submittedFeedbackJobs.has(job.id) ? 'Rating Submitted ✓' : 'Rate Service'}
+                                                {(submittedFeedbackJobs.has(job.id) || (job.feedbacks && job.feedbacks.length > 0)) ? "Rated" : "Rate Service"}
                                             </Button>
                                         </Box>
                                     )}
