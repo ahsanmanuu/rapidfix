@@ -63,7 +63,7 @@ CREATE OR REPLACE FUNCTION check_market_cap_eligibility(
 ) 
 RETURNS BOOLEAN 
 LANGUAGE plpgsql 
-AS $$
+AS '
 DECLARE
     tech_jobs_count INT;
     total_region_jobs INT;
@@ -71,38 +71,31 @@ DECLARE
     is_premium BOOLEAN;
 BEGIN
     -- 1. Check if Premium (Bypass Cap)
-    SELECT (membership_tier = 'Premium') INTO is_premium FROM technicians WHERE id = tech_id;
+    SELECT (membership_tier = ''Premium'') INTO is_premium FROM technicians WHERE id = tech_id;
     IF is_premium THEN
         RETURN TRUE;
     END IF;
 
-    -- 2. Get Technician's Job Count for Current Month
+    -- 2. Get Technician''s Job Count for Current Month
     SELECT COUNT(*) INTO tech_jobs_count
     FROM jobs 
     WHERE technician_id = tech_id 
-    AND created_at >= date_trunc('month', CURRENT_DATE);
+    AND created_at >= date_trunc(''month'', CURRENT_DATE);
 
     -- 3. Get Total Jobs in Region (30km radius) for Current Month
-    -- Uses geo_location for calculation
     SELECT COUNT(*) INTO total_region_jobs
     FROM jobs
     LEFT JOIN technicians t ON jobs.technician_id = t.id
     WHERE 
-    -- We assume jobs rely on tech location or job location. 
-    -- The prompt formula was "Total jobs generated in that region". 
-    -- Ideally we'd query jobs.location but jobs.location might also be JSON.
-    -- For simplicity, let's filter jobs by the passed Point and a safe radius (30km).
-    -- If jobs table has geospatial 'location', use it. Else cast.
-    -- Assuming jobs.location IS JSONB too.
     ST_DWithin(
         ST_SetSRID(ST_MakePoint(
-            CAST(jobs.location->>'longitude' AS FLOAT), 
-            CAST(jobs.location->>'latitude' AS FLOAT)
+            CAST(jobs.location->>''longitude'' AS FLOAT), 
+            CAST(jobs.location->>''latitude'' AS FLOAT)
         ), 4326),
         ST_SetSRID(ST_MakePoint(region_lng, region_lat), 4326), 
         30000
     )
-    AND jobs.created_at >= date_trunc('month', CURRENT_DATE);
+    AND jobs.created_at >= date_trunc(''month'', CURRENT_DATE);
 
     -- 4. Calculate Cap (20% of Total)
     IF total_region_jobs < 10 THEN
@@ -118,4 +111,4 @@ BEGIN
         RETURN FALSE;
     END IF;
 END;
-$$;
+';
