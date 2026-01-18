@@ -36,6 +36,14 @@ CREATE TABLE IF NOT EXISTS feedbacks (
     technician_id UUID REFERENCES technicians(id),
     job_id UUID REFERENCES jobs(id),
     ratings JSONB DEFAULT '{}', -- stores detailed breakdown
+    timeliness INT DEFAULT 0,
+    expertise INT DEFAULT 0,
+    professionalism INT DEFAULT 0,
+    knowledge INT DEFAULT 0,
+    behavior INT DEFAULT 0,
+    honesty INT DEFAULT 0,
+    respect INT DEFAULT 0,
+    overall INT DEFAULT 0,
     comment TEXT,
     recommendation_score INT DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
@@ -134,5 +142,5 @@ SELECT
         WHEN (SELECT count FROM region_jobs) < 10 THEN TRUE
         WHEN (SELECT count FROM tech_jobs) < CEIL((SELECT count FROM region_jobs) * 0.20) THEN TRUE
         ELSE FALSE
-    END
-';
+    END;
+$$ LANGUAGE sql;

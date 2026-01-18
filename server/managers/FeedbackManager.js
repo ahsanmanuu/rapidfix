@@ -43,11 +43,24 @@ class FeedbackManager {
             if (userId !== undefined) mapped.user_id = userId;
             if (technicianId !== undefined) mapped.technician_id = technicianId;
             if (jobId !== undefined) mapped.job_id = jobId;
-            if (ratings !== undefined) mapped.ratings = ratings;
             if (comment !== undefined) mapped.comment = comment;
             if (recommendationScore !== undefined) mapped.recommendation_score = recommendationScore;
             if (createdAt !== undefined) mapped.created_at = createdAt;
             if (id !== undefined) mapped.id = id;
+
+            // Map ratings to both JSONB and individual columns
+            if (ratings !== undefined) {
+                mapped.ratings = ratings;
+                // Individual columns
+                mapped.timeliness = ratings.timeliness || 0;
+                mapped.expertise = ratings.expertise || 0;
+                mapped.professionalism = ratings.professionalism || 0;
+                mapped.knowledge = ratings.knowledge || 0;
+                mapped.behavior = ratings.behavior || 0;
+                mapped.honesty = ratings.honesty || 0;
+                mapped.respect = ratings.respect || 0;
+                mapped.overall = ratings.overall || 0;
+            }
 
             return mapped;
         } catch (err) {
