@@ -218,7 +218,7 @@ const DashboardJobs = ({ user }) => {
 
             <Grid item xs={12}>
                 <Grid container spacing={2}>
-                    {Array.isArray(jobs) && jobs.map(job => (
+                    {activeJobs.map(job => (
                         <Grid item xs={12} key={job.id}>
                             <Card sx={{ borderRadius: '16px', '&:hover': { boxShadow: theme.shadows[4] } }}>
                                 <CardContent>

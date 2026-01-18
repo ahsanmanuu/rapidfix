@@ -190,8 +190,8 @@ const Dashboard = () => {
             >
                 <div className="animate-fade-in h-full">
                     {activeTab === 'home' && <DashboardHome user={user} jobs={jobs} />}
-                    {activeTab === 'history' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} />}
-                    {activeTab === 'jobs' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} />}
+                    {activeTab === 'history' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} variant="history" />}
+                    {activeTab === 'jobs' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} variant="active" />}
                     {activeTab === 'profile' && <DashboardProfile />}
                     {activeTab === 'chat' && <ChatInterface user={user} />}
                     {activeTab === 'finance' && <DashboardFinance user={user} />}
