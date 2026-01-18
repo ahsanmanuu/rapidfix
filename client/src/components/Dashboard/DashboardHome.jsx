@@ -8,6 +8,7 @@ import api, { getWalletBalance, createJob } from '../../services/api';
 import TechnicianSearchModal from '../TechnicianSearchModal';
 import BookingConfirmationModal from '../BookingConfirmationModal';
 import { useAuth } from '../../context/AuthContext';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 const DashboardHome = ({ jobs = [] }) => {
     const { user, updateUser } = useAuth();

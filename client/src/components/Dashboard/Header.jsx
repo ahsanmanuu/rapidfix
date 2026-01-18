@@ -156,6 +156,7 @@ const Header = ({ handleDrawerToggle, onLogout, setActiveTab, user }) => {
                     sx={{
                         borderRadius: '12px',
                         overflow: 'hidden',
+                        display: { xs: 'flex', md: 'none' }, // Hide on Desktop
                         '&:hover': {
                             backgroundColor: theme.palette.secondary.light
                         }

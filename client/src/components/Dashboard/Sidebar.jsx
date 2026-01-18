@@ -10,7 +10,8 @@ import {
     useTheme,
     useMediaQuery,
     Avatar,
-    Chip
+    Chip,
+    IconButton
 } from '@mui/material';
 import {
     Home as HomeIcon,
@@ -18,7 +19,8 @@ import {
     Person as PersonIcon,
     Chat as ChatIcon,
     AccountBalanceWallet as WalletIcon,
-    History as HistoryIcon
+    History as HistoryIcon,
+    ChevronLeft as ChevronLeftIcon
 } from '@mui/icons-material';
 
 const drawerWidth = 260;
@@ -52,24 +54,33 @@ const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, us
                 p: 3,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 2,
+                justifyContent: 'space-between', // Changed to space-between
                 borderBottom: '1px solid rgba(255,255,255,0.1)'
             }}>
-                <Avatar
-                    src="/logo.png"
-                    variant="rounded"
-                    sx={{
-                        width: 40,
-                        height: 40,
-                        bgcolor: 'transparent',
-                        '& img': { objectFit: 'contain' }
-                    }}
-                >
-                    F
-                </Avatar>
-                <Typography variant="h5" fontWeight="bold" sx={{ color: '#fff', letterSpacing: '0.5px' }}>
-                    Fixofy
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar
+                        src="/logo.png"
+                        variant="rounded"
+                        sx={{
+                            width: 40,
+                            height: 40,
+                            bgcolor: 'transparent',
+                            '& img': { objectFit: 'contain' }
+                        }}
+                    >
+                        F
+                    </Avatar>
+                    <Typography variant="h5" fontWeight="bold" sx={{ color: '#fff', letterSpacing: '0.5px' }}>
+                        Fixofy
+                    </Typography>
+                </Box>
+                {/* Desktop Collapse Button */}
+                {matchUpMd && (
+                    <IconButton onClick={handleDrawerToggle} sx={{ color: 'rgba(255,255,255,0.5)', '&:hover': { color: '#fff' } }}>
+                        {/* We use ChevronLeft to indicate closing/collapsing */}
+                        <ChevronLeftIcon />
+                    </IconButton>
+                )}
             </Box>
 
             {/* Navigation Items */}
