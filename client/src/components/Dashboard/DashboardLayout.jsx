@@ -80,9 +80,9 @@ const DashboardLayout = ({ user, activeTab, setActiveTab, onLogout, children }) 
 
             {/* Main Content */}
             <Main open={sidebarOpen} sx={{
-                pt: { xs: 12, md: 12 }, // Keep top spacing for Header
+                pt: { xs: 10, md: 10 }, // Reduced top padding
                 pb: 4,
-                px: { xs: 2, md: 2 }, // Reduced horizontal padding
+                px: { xs: 2, md: 3 }, // Kept padding but main logic handles width
                 minHeight: '100vh',
                 bgcolor: '#f4f6f8'
             }}>
