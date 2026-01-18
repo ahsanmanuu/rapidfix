@@ -33,6 +33,15 @@ class SupabaseDatabase {
                 return await operation();
             } catch (error) {
                 lastError = error;
+
+                // [FIX] Suppress noisy Foreign Key errors (e.g. tracking for deleted users)
+                // These are permanent errors, do not retry.
+                if (error.code === '23503') {
+                    // specific log for tracking
+                    // console.warn(`[Supabase] FK Constraint Violation: ${error.details || error.message}`);
+                    throw error; // Fail immediately, let caller handle (LocationManager handles it)
+                }
+
                 console.warn(`[Supabase] Operation failed (attempt ${i + 1}/${maxRetries}):`, error.message);
                 if (i < maxRetries - 1) await new Promise(res => setTimeout(res, delay));
             }

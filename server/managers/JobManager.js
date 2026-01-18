@@ -203,7 +203,7 @@ class JobManager {
 
                         // Strict: If > 10 jobs exist and tech has >= 20% share, SKIP
                         if (allJobsThisMonth > 10 && share >= 0.20) {
-                            // console.log(`[AutoAssign] Cap Hit: ${tech.name} has ${share}% share.`);
+                            console.log(`[AutoAssign] Filtered ${tech.name}: Market Cap Hit (${(share * 100).toFixed(1)}%)`);
                             continue;
                         }
                     }
