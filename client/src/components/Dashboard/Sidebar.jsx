@@ -145,25 +145,42 @@ const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, us
             sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
             aria-label="mailbox folders"
         >
-            {/* Mobile Drawer */}
+            {/* Mobile Drawer (Temporary) */}
             <Drawer
                 container={container}
-                anchor="left"
+                variant="temporary"
                 open={open}
                 onClose={handleDrawerToggle}
-                sx={{
-                    '& .MuiDrawer-paper': {
-                        width: drawerWidth,
-                        borderRight: 'none',
-                        background: 'transparent', // Let the gradient box handle bg
-                        [theme.breakpoints.up('md')]: {
-                            top: '80px',
-                            height: 'calc(100vh - 80px)'
-                        }
-                    }
+                ModalProps={{
+                    keepMounted: true, // Better open performance on mobile.
                 }}
-                ModalProps={{ keepMounted: true }}
-                color="inherit"
+                sx={{
+                    display: { xs: 'block', md: 'none' },
+                    '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                }}
+            >
+                {drawer}
+            </Drawer>
+
+            {/* Desktop Drawer (Permanent & Fixed) */}
+            <Drawer
+                variant="permanent"
+                sx={{
+                    display: { xs: 'none', md: 'block' },
+                    '& .MuiDrawer-paper': {
+                        boxSizing: 'border-box',
+                        width: drawerWidth,
+                        borderRight: '1px solid #e2e8f0',
+                        height: '100vh',
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        zIndex: 100 // Ensure it sits below the header if header is z-1100, OR above if sidebar is full height?
+                        // User said "Side menu bar till top of the page".
+                        // Use zIndex 1200 to be safe/standard.
+                    },
+                }}
+                open
             >
                 {drawer}
             </Drawer>
