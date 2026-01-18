@@ -291,269 +291,265 @@ class JobManager {
             throw err;
         }
     }
-} catch (err) {
-    console.error(`[JobManager] Error assigning technician ${technicianId} to job ${jobId}:`, err);
-    throw err;
-}
-    }
+
 
     async _enrichJob(job) {
-    if (!job) return null;
-    try {
-        const customer = await this.userManager.getUser(job.userId);
-        const enriched = {
-            ...job,
-            customer,
-            contactName: job.contactName || customer?.name || "Customer",
-            contactPhone: job.contactPhone || customer?.phone || "",
-            customerMobile: job.customerMobile || job.contactPhone || customer?.phone || ""
-        };
+        if (!job) return null;
+        try {
+            const customer = await this.userManager.getUser(job.userId);
+            const enriched = {
+                ...job,
+                customer,
+                contactName: job.contactName || customer?.name || "Customer",
+                contactPhone: job.contactPhone || customer?.phone || "",
+                customerMobile: job.customerMobile || job.contactPhone || customer?.phone || ""
+            };
 
-        if (job.technicianId) {
-            const tech = await this.techManager.getTechnician(job.technicianId);
-            if (tech) {
-                enriched.technician = {
-                    id: tech.id,
-                    name: tech.name,
-                    phone: tech.phone,
-                    photo: tech.documents?.photo || tech.photo,
-                    serviceType: tech.serviceType,
-                    rating: tech.rating
-                };
+            if (job.technicianId) {
+                const tech = await this.techManager.getTechnician(job.technicianId);
+                if (tech) {
+                    enriched.technician = {
+                        id: tech.id,
+                        name: tech.name,
+                        phone: tech.phone,
+                        photo: tech.documents?.photo || tech.photo,
+                        serviceType: tech.serviceType,
+                        rating: tech.rating
+                    };
+                }
             }
+            return enriched;
+        } catch (err) {
+            console.error("[JobManager] Error enriching job:", err);
+            return job;
         }
-        return enriched;
-    } catch (err) {
-        console.error("[JobManager] Error enriching job:", err);
-        return job;
     }
-}
 
     async getJob(id) {
-    try {
-        const job = await this.db.find('id', id);
-        return await this._enrichJob(this._mapFromDb(job));
-    } catch (err) {
-        console.error(`[JobManager] Error getting job ${id}:`, err);
-        return null;
+        try {
+            const job = await this.db.find('id', id);
+            return await this._enrichJob(this._mapFromDb(job));
+        } catch (err) {
+            console.error(`[JobManager] Error getting job ${id}:`, err);
+            return null;
+        }
     }
-}
 
     async getAllJobs() {
-    try {
-        const jobs = await this.db.read();
-        return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
-    } catch (err) {
-        console.error("[JobManager] Error getting all jobs:", err);
-        return [];
+        try {
+            const jobs = await this.db.read();
+            return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
+        } catch (err) {
+            console.error("[JobManager] Error getting all jobs:", err);
+            return [];
+        }
     }
-}
 
     async updateStatus(id, status, details = {}) {
-    try {
-        const updates = { status, updatedAt: new Date().toISOString(), ...details };
-        const dbUpdates = this._mapToDb(updates);
-        const updated = await this.db.update('id', id, dbUpdates);
-        const enriched = await this._enrichJob(this._mapFromDb(updated));
+        try {
+            const updates = { status, updatedAt: new Date().toISOString(), ...details };
+            const dbUpdates = this._mapToDb(updates);
+            const updated = await this.db.update('id', id, dbUpdates);
+            const enriched = await this._enrichJob(this._mapFromDb(updated));
 
-        if (this.io) {
-            this.io.to(`user_${enriched.userId}`).emit('job_status_updated', enriched);
-            if (enriched.technicianId) {
-                this.io.to(`tech_${enriched.technicianId}`).emit('job_status_updated', enriched);
+            if (this.io) {
+                this.io.to(`user_${enriched.userId}`).emit('job_status_updated', enriched);
+                if (enriched.technicianId) {
+                    this.io.to(`tech_${enriched.technicianId}`).emit('job_status_updated', enriched);
 
-                // [REFACTORED] Centralized Side Effects
-                if (status === 'completed') {
-                    console.log(`[JobManager] Job ${id} completed, updating tech ${enriched.technicianId} stats and status`);
-                    await this.techManager.updateStats(enriched.technicianId, { type: 'complete' });
-                    await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
+                    // [REFACTORED] Centralized Side Effects
+                    if (status === 'completed') {
+                        console.log(`[JobManager] Job ${id} completed, updating tech ${enriched.technicianId} stats and status`);
+                        await this.techManager.updateStats(enriched.technicianId, { type: 'complete' });
+                        await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
 
-                    // Process Payment (Credit Tech) - 90% of price
-                    const amount = enriched.offerPrice || enriched.visitingCharges || 0;
-                    if (amount > 0) {
-                        await this.financeManager.processPayment(enriched.technicianId, amount * 0.9, 'credit', `Job Compensation #${enriched.id}`);
-                        this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
-                        this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
+                        // Process Payment (Credit Tech) - 90% of price
+                        const amount = enriched.offerPrice || enriched.visitingCharges || 0;
+                        if (amount > 0) {
+                            await this.financeManager.processPayment(enriched.technicianId, amount * 0.9, 'credit', `Job Compensation #${enriched.id}`);
+                            this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
+                            this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
+                        }
+
+                        // [NEW] Generate and Send Invoice (Async)
+                        if (this.invoiceManager) {
+                            // Don't await in critical path to keep response fast, but handle errors
+                            (async () => {
+                                try {
+                                    console.log(`[JobManager] Generating invoice for Job ${id}...`);
+                                    const pdfBuffer = await this.invoiceManager.generateInvoice(enriched);
+                                    const result = await this.invoiceManager.sendInvoiceEmail(enriched, pdfBuffer);
+                                    console.log(`[JobManager] Invoice processing for Job ${id}:`, result);
+                                } catch (invErr) {
+                                    console.error(`[JobManager] Invoice generation failed for Job ${id}:`, invErr);
+                                }
+                            })();
+                        } else {
+                            console.error('[JobManager] InvoiceManager not injected! Cannot send invoice.');
+                        }
+                    } else if (status === 'rejected') {
+                        console.log(`[JobManager] Job ${id} rejected, updating tech ${enriched.technicianId} stats and setting status to available`);
+                        await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
+                        await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
                     }
-
-                    // [NEW] Generate and Send Invoice (Async)
-                    if (this.invoiceManager) {
-                        // Don't await in critical path to keep response fast, but handle errors
-                        (async () => {
-                            try {
-                                console.log(`[JobManager] Generating invoice for Job ${id}...`);
-                                const pdfBuffer = await this.invoiceManager.generateInvoice(enriched);
-                                const result = await this.invoiceManager.sendInvoiceEmail(enriched, pdfBuffer);
-                                console.log(`[JobManager] Invoice processing for Job ${id}:`, result);
-                            } catch (invErr) {
-                                console.error(`[JobManager] Invoice generation failed for Job ${id}:`, invErr);
-                            }
-                        })();
-                    } else {
-                        console.error('[JobManager] InvoiceManager not injected! Cannot send invoice.');
+                    else if (status === 'accepted') {
+                        console.log(`[JobManager] Job ${id} accepted, updating tech ${enriched.technicianId} stats and setting status to engaged`);
+                        await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
+                        await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
+                    } else if (status === 'in_progress') {
+                        console.log(`[JobManager] Job ${id} in progress, setting tech ${enriched.technicianId} status to engaged`);
+                        await this.techManager.updateStatus(enriched.technicianId, 'engaged');
                     }
-                } else if (status === 'rejected') {
-                    console.log(`[JobManager] Job ${id} rejected, updating tech ${enriched.technicianId} stats and setting status to available`);
-                    await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
-                    await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
                 }
-                else if (status === 'accepted') {
-                    console.log(`[JobManager] Job ${id} accepted, updating tech ${enriched.technicianId} stats and setting status to engaged`);
-                    await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
-                    await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
-                } else if (status === 'in_progress') {
-                    console.log(`[JobManager] Job ${id} in progress, setting tech ${enriched.technicianId} status to engaged`);
-                    await this.techManager.updateStatus(enriched.technicianId, 'engaged');
-                }
+                this.io.emit('admin_job_update', enriched);
+                this.io.emit('job_status_updated_admin', enriched); // Sync with Admin listener
             }
-            this.io.emit('admin_job_update', enriched);
-            this.io.emit('job_status_updated_admin', enriched); // Sync with Admin listener
-        }
 
-        // [NEW] Persist Notifications
-        if (enriched.userId) {
-            await this.notificationManager.createNotification(enriched.userId, 'user', `Job ${status.replace('_', ' ')}`, `Your job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
+            // [NEW] Persist Notifications
+            if (enriched.userId) {
+                await this.notificationManager.createNotification(enriched.userId, 'user', `Job ${status.replace('_', ' ')}`, `Your job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
+            }
+            if (enriched.technicianId) {
+                await this.notificationManager.createNotification(enriched.technicianId, 'technician', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
+            }
+            // Admin Notification
+            await this.notificationManager.createNotification('admin', 'admin', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} updated to ${status}`, `job_status_update`, enriched.id);
+            return enriched;
+        } catch (err) {
+            console.error(`[JobManager] Error updating status for job ${id}:`, err);
+            throw err;
         }
-        if (enriched.technicianId) {
-            await this.notificationManager.createNotification(enriched.technicianId, 'technician', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
-        }
-        // Admin Notification
-        await this.notificationManager.createNotification('admin', 'admin', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} updated to ${status}`, `job_status_update`, enriched.id);
-        return enriched;
-    } catch (err) {
-        console.error(`[JobManager] Error updating status for job ${id}:`, err);
-        throw err;
     }
-}
 
     async updateJob(id, data) {
-    // [CRITICAL FIX] Delegate to updateStatus if status is changing.
-    // This ensures side effects (Invoice, Tech Status, Payment) trigger even if Admin updates job.
-    if (data.status) {
-        console.log(`[JobManager] updateJob detected status change to '${data.status}'. Delegating to updateStatus to ensure automation.`);
-        return this.updateStatus(id, data.status, data);
-    }
-
-    try {
-        const updates = {
-            ...this._mapToDb(data),
-            updated_at: new Date().toISOString()
-        };
-        delete updates.id; // Protect ID
-
-        const result = await this.db.update('id', id, updates);
-        const enriched = await this._enrichJob(this._mapFromDb(result));
-
-        if (this.io) {
-            this.io.to(`user_${enriched.userId}`).emit('job_updated', enriched);
-            if (enriched.technicianId) {
-                this.io.to(`tech_${enriched.technicianId}`).emit('job_updated', enriched);
-            }
-            this.io.emit('admin_job_update', enriched);
+        // [CRITICAL FIX] Delegate to updateStatus if status is changing.
+        // This ensures side effects (Invoice, Tech Status, Payment) trigger even if Admin updates job.
+        if (data.status) {
+            console.log(`[JobManager] updateJob detected status change to '${data.status}'. Delegating to updateStatus to ensure automation.`);
+            return this.updateStatus(id, data.status, data);
         }
-        return enriched;
-    } catch (err) {
-        console.error(`[JobManager] Error updating job ${id}:`, err);
-        throw err;
+
+        try {
+            const updates = {
+                ...this._mapToDb(data),
+                updated_at: new Date().toISOString()
+            };
+            delete updates.id; // Protect ID
+
+            const result = await this.db.update('id', id, updates);
+            const enriched = await this._enrichJob(this._mapFromDb(result));
+
+            if (this.io) {
+                this.io.to(`user_${enriched.userId}`).emit('job_updated', enriched);
+                if (enriched.technicianId) {
+                    this.io.to(`tech_${enriched.technicianId}`).emit('job_updated', enriched);
+                }
+                this.io.emit('admin_job_update', enriched);
+            }
+            return enriched;
+        } catch (err) {
+            console.error(`[JobManager] Error updating job ${id}:`, err);
+            throw err;
+        }
     }
-}
 
     async getJobStats(technicianId, monthOnly = false) {
-    try {
-        const jobs = await this.getJobsByTechnician(technicianId);
-        let filteredJobs = jobs; // Default to all
+        try {
+            const jobs = await this.getJobsByTechnician(technicianId);
+            let filteredJobs = jobs; // Default to all
 
-        if (monthOnly) {
-            const now = new Date();
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-            filteredJobs = jobs.filter(j => j.createdAt >= startOfMonth || j.created_at >= startOfMonth);
+            if (monthOnly) {
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                filteredJobs = jobs.filter(j => j.createdAt >= startOfMonth || j.created_at >= startOfMonth);
+            }
+
+            const total = filteredJobs.length;
+            if (total === 0) return { total: 0, rejected: 0, completed: 0, ratio: 0 };
+            const rejected = filteredJobs.filter(j => j.status === 'rejected' || j.status === 'cancelled').length;
+            const completed = filteredJobs.filter(j => j.status === 'completed').length;
+            return { total, rejected, completed, ratio: rejected / total };
+        } catch (err) {
+            console.error(`[JobManager] Error getting stats for tech ${technicianId}:`, err);
+            return { total: 0, rejected: 0, ratio: 0 };
         }
-
-        const total = filteredJobs.length;
-        if (total === 0) return { total: 0, rejected: 0, completed: 0, ratio: 0 };
-        const rejected = filteredJobs.filter(j => j.status === 'rejected' || j.status === 'cancelled').length;
-        const completed = filteredJobs.filter(j => j.status === 'completed').length;
-        return { total, rejected, completed, ratio: rejected / total };
-    } catch (err) {
-        console.error(`[JobManager] Error getting stats for tech ${technicianId}:`, err);
-        return { total: 0, rejected: 0, ratio: 0 };
     }
-}
 
     async getJobsByTechnician(technicianId) {
-    try {
-        const jobs = await this.db.findAll('technician_id', technicianId);
-        return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
-    } catch (err) {
-        console.error(`[JobManager] Error getting jobs for tech ${technicianId}:`, err);
-        return [];
+        try {
+            const jobs = await this.db.findAll('technician_id', technicianId);
+            return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
+        } catch (err) {
+            console.error(`[JobManager] Error getting jobs for tech ${technicianId}:`, err);
+            return [];
+        }
     }
-}
 
     async getJobsByUser(userId) {
-    try {
-        const jobs = await this.db.findAll('user_id', userId);
-        return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
-    } catch (err) {
-        console.error(`[JobManager] Error getting jobs for user ${userId}:`, err);
-        return [];
+        try {
+            const jobs = await this.db.findAll('user_id', userId);
+            return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
+        } catch (err) {
+            console.error(`[JobManager] Error getting jobs for user ${userId}:`, err);
+            return [];
+        }
     }
-}
 
     async getUnassignedJobs() {
-    try {
-        const allJobs = await this.db.read();
-        return allJobs
-            .filter(j => j.status === 'pending' && !j.technician_id)
-            .map(j => this._mapFromDb(j));
-    } catch (err) {
-        console.error('[JobManager] Error getting unassigned jobs:', err);
-        return [];
+        try {
+            const allJobs = await this.db.read();
+            return allJobs
+                .filter(j => j.status === 'pending' && !j.technician_id)
+                .map(j => this._mapFromDb(j));
+        } catch (err) {
+            console.error('[JobManager] Error getting unassigned jobs:', err);
+            return [];
+        }
     }
-}
 
     // [NEW] Get jobs within specific radius
     async getJobsByLocation(lat, lng, radiusKm = 30) {
-    try {
-        const allJobs = await this.getAllJobs();
-        if (!lat || !lng) return allJobs;
+        try {
+            const allJobs = await this.getAllJobs();
+            if (!lat || !lng) return allJobs;
 
-        const searchLat = parseFloat(lat);
-        const searchLng = parseFloat(lng);
+            const searchLat = parseFloat(lat);
+            const searchLng = parseFloat(lng);
 
-        return allJobs.filter(j => {
-            let jLat = null;
-            let jLon = null;
+            return allJobs.filter(j => {
+                let jLat = null;
+                let jLon = null;
 
-            // 1. Prioritize Job Location
-            if (j.location && (j.location.latitude || j.location.lat)) {
-                jLat = parseFloat(j.location.latitude || j.location.lat);
-                jLon = parseFloat(j.location.longitude || j.location.lng);
-            }
-            // 2. Fallback to Customer Location
-            else if (j.customer && j.customer.latitude) {
-                jLat = parseFloat(j.customer.latitude);
-                jLon = parseFloat(j.customer.longitude);
-            }
+                // 1. Prioritize Job Location
+                if (j.location && (j.location.latitude || j.location.lat)) {
+                    jLat = parseFloat(j.location.latitude || j.location.lat);
+                    jLon = parseFloat(j.location.longitude || j.location.lng);
+                }
+                // 2. Fallback to Customer Location
+                else if (j.customer && j.customer.latitude) {
+                    jLat = parseFloat(j.customer.latitude);
+                    jLon = parseFloat(j.customer.longitude);
+                }
 
-            if (jLat === null || jLon === null || isNaN(jLat) || isNaN(jLon)) return false;
+                if (jLat === null || jLon === null || isNaN(jLat) || isNaN(jLon)) return false;
 
-            // Simple Distance Calc
-            const R = 6371;
-            const dLat = (jLat - searchLat) * (Math.PI / 180);
-            const dLon = (jLon - searchLng) * (Math.PI / 180);
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(searchLat * (Math.PI / 180)) * Math.cos(jLat * (Math.PI / 180)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const dist = R * c;
+                // Simple Distance Calc
+                const R = 6371;
+                const dLat = (jLat - searchLat) * (Math.PI / 180);
+                const dLon = (jLon - searchLng) * (Math.PI / 180);
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(searchLat * (Math.PI / 180)) * Math.cos(jLat * (Math.PI / 180)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                const dist = R * c;
 
-            return dist <= radiusKm;
-        });
-    } catch (err) {
-        console.error("[JobManager] Error getting jobs by location:", err);
-        return [];
+                return dist <= radiusKm;
+            });
+        } catch (err) {
+            console.error("[JobManager] Error getting jobs by location:", err);
+            return [];
+        }
     }
-}
 }
 
 module.exports = JobManager;
