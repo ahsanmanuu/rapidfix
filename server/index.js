@@ -1495,14 +1495,26 @@ app.put('/api/technicians/:id/profile', async (req, res) => {
 });
 
 // --- Finance/Billing Routes ---
+// --- Finance/Billing Routes ---
 app.get('/api/finance/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    // Fetch completed jobs for the user to show as bills
-    const jobs = await jobManager.db.all(
-      `SELECT * FROM jobs WHERE user_id = ? AND (status = 'completed' OR status = 'work_done') ORDER BY created_at DESC`,
-      [userId]
-    );
+    // Fetch completed jobs with Tech details and Ratings
+    const query = `
+      SELECT 
+        j.id, j.created_at, j.completed_at, j.description, j.service_type, j.status, 
+        j.offer_price, j.visiting_charges, j.time_taken,
+        t.name as tech_name, t.phone as tech_phone, t.avatar as tech_avatar,
+        f.overall as rating
+      FROM jobs j
+      LEFT JOIN technicians t ON j.technician_id = t.id
+      LEFT JOIN feedbacks f ON j.id = f.job_id
+      WHERE j.user_id = ? 
+      AND (j.status = 'completed' OR j.status = 'work_done')
+      ORDER BY j.created_at DESC
+    `;
+
+    const jobs = await jobManager.db.all(query, [userId]);
 
     const bills = jobs.map(job => ({
       id: job.id,
@@ -1510,8 +1522,16 @@ app.get('/api/finance/user/:userId', async (req, res) => {
       completedAt: job.completed_at,
       description: job.description || 'Service Charge',
       serviceType: job.service_type,
-      amount: parseFloat(job.offer_price || job.visiting_charges || 0),
-      status: job.status
+      // Amount priority: Offer Price > Visiting Charges > 100 (fallback)
+      amount: parseFloat(job.offer_price || job.visiting_charges || 100),
+      status: job.status,
+      timeTaken: job.time_taken || '1h',
+      technician: {
+        name: job.tech_name || 'Unknown Technician',
+        phone: job.tech_phone,
+        avatar: job.tech_avatar,
+        rating: job.rating
+      }
     }));
 
     res.json({ success: true, bills });
@@ -1613,11 +1633,7 @@ app.delete('/api/offers/:id', async (req, res) => {
   res.json({ success: true });
 });
 // --- Finance Routes ---
-app.get('/api/finance/user/:id', (req, res) => {
-  // Generate/fetch bills for the user
-  const bills = financeManager.getBillsByUser(req.params.id);
-  res.json({ success: true, bills });
-});
+
 
 app.get('/api/finance/wallet/:userId', async (req, res) => { // [NEW] Get Balance
   const balance = await financeManager.getBalance(req.params.userId);
