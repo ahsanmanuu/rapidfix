@@ -5,6 +5,8 @@ CREATE EXTENSION IF NOT EXISTS postgis;
 -- 1. BASE TABLES (Enhancements)
 -- -----------------------------------------------------------------------------
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS agreement_accepted INT DEFAULT 0;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS visiting_charges INT DEFAULT 0;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS offer_price INT DEFAULT 0;
 
 -- -----------------------------------------------------------------------------
 -- 2. TECHNICIANS TABLE (Enhancements)
