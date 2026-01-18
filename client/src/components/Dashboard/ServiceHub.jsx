@@ -41,8 +41,61 @@ const ServiceHub = () => {
     ];
 
     const handleBookNow = (serviceName) => {
-        setSelectedService(serviceName);
-        setIsScheduleOpen(true);
+        // QUICK BOOKING LOGIC: Detect Location -> Open Map
+
+        const launchModal = (loc) => {
+            setBookingParams({
+                serviceType: serviceName,
+                location: loc,
+                scheduledDate: new Date().toISOString().split('T')[0],
+                scheduledTime: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                contactName: user ? user.name : '',
+                contactPhone: '',
+                description: 'Quick Tile Booking'
+            });
+            setIsSearchOpen(true);
+        };
+
+        const handleLocationError = (error = null) => {
+            console.error("Location detection failed:", error);
+            // Fallback 1: User Profile Location
+            if (user && user.location && user.location.latitude) {
+                const loc = {
+                    latitude: user.location.latitude,
+                    longitude: user.location.longitude,
+                    address: user.location.address || "Saved Profile Location"
+                };
+                launchModal(loc);
+                return;
+            }
+            // Fallback 2: Default Location (New Delhi)
+            const defaultLoc = {
+                latitude: 28.6139,
+                longitude: 77.2090,
+                address: "New Delhi (Default)"
+            };
+            launchModal(defaultLoc);
+        };
+
+        if (!navigator.geolocation) {
+            handleLocationError();
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const loc = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    address: "Current Location"
+                };
+                launchModal(loc);
+            },
+            (error) => {
+                handleLocationError(error);
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
     };
 
     const handleClaimOffer = (offer) => {
@@ -266,10 +319,20 @@ const ServiceHub = () => {
             />
 
             {/* Previous Modal (Legacy Support if needed) */}
+            {/* Previous Modal (Legacy Support if needed) */}
             <TechnicianSearchModal
-                open={isSearchOpen}
+                isOpen={isSearchOpen}
                 onClose={() => setIsSearchOpen(false)}
-                bookingParams={bookingParams}
+                userLocation={bookingParams?.location}
+                serviceType={bookingParams?.serviceType}
+                onBook={(technician) => {
+                    // Handle booking logic similar to Home or redirect to scheduling
+                    // For now, we can just close or open scheduling with pre-filled tech
+                    setIsSearchOpen(false);
+                    setSelectedService(bookingParams?.serviceType);
+                    // You might want to handle "Selected Technician" state here if needed
+                    setIsScheduleOpen(true);
+                }}
             />
 
         </Box>
