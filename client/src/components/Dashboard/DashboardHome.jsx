@@ -323,6 +323,11 @@ const DashboardHome = ({ jobs = [] }) => {
                 </Grid>
             </Grid>
 
+            {/* Active Offers / Jobs */}
+            <Grid item xs={12}>
+                <DashboardOffers jobs={jobs} />
+            </Grid>
+
             {/* Recent Activity (Completed Jobs) */}
             <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Recent Activity</Typography>
             <Grid container spacing={2}>
@@ -378,128 +383,4 @@ const DashboardHome = ({ jobs = [] }) => {
         </Box>
     );
 };
-
-                                </Grid >
-                            </Grid >
-                        </CardContent >
-                    </Card >
-                </Grid >
-            </Grid >
-        </Grid >
-
-    <Grid item xs={12}>
-        <DashboardOffers />
-    </Grid>
-
-{/* Quick Actions (Merged above) */ }
-
-{/* Recent Activity (Moved to Top & Made Horizontal) */ }
-<Grid item xs={12}>
-    <Card sx={{ borderRadius: '16px', mb: 1, backgroundColor: 'transparent', backgroundImage: 'none', boxShadow: 'none' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, px: 1 }}>
-            <Schedule color="primary" sx={{ mr: 1, fontSize: 20 }} />
-            <Typography variant="h6" fontWeight="bold">Recent Activity</Typography>
-        </Box>
-        <Box sx={{
-            display: 'flex',
-            gap: 2,
-            overflowX: 'auto',
-            pb: 1,
-            '::-webkit-scrollbar': { height: '6px' },
-            '::-webkit-scrollbar-track': { background: '#f1f1f1', borderRadius: '4px' },
-            '::-webkit-scrollbar-thumb': { background: '#ccc', borderRadius: '4px' }
-        }}>
-            {safeJobs.slice(0, 5).map((job) => (
-                <Card key={job.id} sx={{
-                    minWidth: 280,
-                    borderRadius: '12px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                    border: '1px solid ' + theme.palette.divider,
-                    flexShrink: 0
-                }}>
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Avatar sx={{
-                                    width: 32, height: 32,
-                                    bgcolor: theme.palette.primary.light,
-                                    color: theme.palette.primary.dark
-                                }}>
-                                    <WorkIcon fontSize="small" />
-                                </Avatar>
-                                <Typography variant="subtitle2" fontWeight="bold">{job.serviceType}</Typography>
-                            </Box>
-                            <Chip
-                                label={job.status}
-                                size="small"
-                                sx={{
-                                    height: 20,
-                                    fontSize: '0.65rem',
-                                    fontWeight: 'bold',
-                                    textTransform: 'uppercase',
-                                    bgcolor: job.status === 'completed' ? theme.palette.success.light :
-                                        job.status === 'in-progress' ? theme.palette.primary.light :
-                                            theme.palette.warning.light,
-                                    color: job.status === 'completed' ? theme.palette.success.dark :
-                                        job.status === 'in-progress' ? theme.palette.primary.dark :
-                                            theme.palette.warning.dark
-                                }}
-                            />
-                        </Box>
-                        <Typography variant="body2" color="textSecondary" noWrap title={job.description} sx={{ mb: 1 }}>
-                            {job.description}
-                        </Typography>
-                        <Typography variant="caption" color="textSecondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <AccessTime fontSize="inherit" />
-                            {new Date(job.createdAt).toLocaleDateString()} • {new Date(job.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </Typography>
-                    </CardContent>
-                </Card>
-            ))}
-            {safeJobs.length === 0 && (
-                <Box sx={{ width: '100%', py: 3, textAlign: 'center', bgcolor: '#f9f9f9', borderRadius: '12px' }}>
-                    <Typography variant="body2" color="textSecondary">No recent activity found.</Typography>
-                </Box>
-            )}
-        </Box>
-    </Card>
-</Grid>
-
-
-
-{/* Modals */ }
-<MakeOfferModal
-    open={openOfferModal}
-    onClose={() => setOpenOfferModal(false)}
-    user={user}
-    onSuccess={handleOfferSuccess}
-/>
-
-{/* Booking Flow Modals */ }
-{
-    isSearchOpen && (
-        <TechnicianSearchModal
-            isOpen={isSearchOpen}
-            onClose={() => setIsSearchOpen(false)}
-            userLocation={bookingParams?.location}
-            serviceType={bookingParams?.serviceType}
-            onBook={handleTechnicianSelect}
-        />
-    )
-}
-{
-    isConfirmOpen && (
-        <BookingConfirmationModal
-            isOpen={isConfirmOpen}
-            onClose={() => setIsConfirmOpen(false)}
-            technician={selectedTechnician}
-            jobDetails={bookingParams}
-            onConfirm={handleConfirmBooking}
-        />
-    )
-}
-    </Grid >
-);
-};
-
 export default DashboardHome;
