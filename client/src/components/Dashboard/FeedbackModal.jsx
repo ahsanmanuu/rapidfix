@@ -83,8 +83,8 @@ const FeedbackModal = ({ job, onClose, onSubmit }) => {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 10 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="w-full max-w-md bg-white/95 backdrop-blur-xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden flex flex-col relative"
-                style={{ height: '520px' }} // Fixed height for consistency during transitions
+                className="w-full max-w-md bg-white/95 backdrop-blur-xl border border-white/50 shadow-2xl rounded-3xl overflow-hidden flex flex-col relative min-h-[420px]"
+            // Removed fixed height to allow content to dictate size
             >
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-white/50 backdrop-blur-md">

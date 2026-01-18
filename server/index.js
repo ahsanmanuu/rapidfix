@@ -1372,6 +1372,28 @@ app.put('/api/jobs/:id/status', async (req, res) => {
   else res.status(500).json({ success: false, error: 'Failed to update job' });
 });
 
+// --- Feedback Routes ---
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { userId, technicianId, jobId, ratings, comment } = req.body;
+    // Extract recommendationScore from ratings payload if present, to ensure it's saved in the top-level column
+    const recommendationScore = ratings?.recommendationScore || 0;
+
+    const feedback = await feedbackManager.addFeedback(
+      userId,
+      technicianId,
+      jobId,
+      ratings,
+      comment,
+      { recommendationScore } // Pass as metadata for specific column mapping
+    );
+    res.json({ success: true, feedback });
+  } catch (error) {
+    console.error("Feedback Submission Error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // --- Invoice Routes [NEW] ---
 app.get('/api/invoices/:jobId/download', async (req, res) => {
   try {
