@@ -116,25 +116,25 @@ CREATE OR REPLACE FUNCTION check_market_cap_eligibility(
 ) 
 RETURNS BOOLEAN 
 LANGUAGE sql 
-AS '
+AS $$
 WITH tech_status AS (
-    SELECT membership_tier = ''Premium'' AS is_premium FROM technicians WHERE id = tech_id
+    SELECT membership_tier = 'Premium' AS is_premium FROM technicians WHERE id = tech_id
 ),
 tech_jobs AS (
     SELECT COUNT(*) AS count FROM jobs 
     WHERE technician_id = tech_id 
-    AND created_at >= date_trunc(''month'', CURRENT_DATE)
+    AND created_at >= date_trunc('month', CURRENT_DATE)
 ),
 region_jobs AS (
     SELECT COUNT(*) AS count 
     FROM jobs 
     WHERE location IS NOT NULL
     AND ST_DWithin(
-        ST_SetSRID(ST_MakePoint(CAST(location->>''longitude'' AS FLOAT), CAST(location->>''latitude'' AS FLOAT)), 4326),
+        ST_SetSRID(ST_MakePoint(CAST(location->>'longitude' AS FLOAT), CAST(location->>'latitude' AS FLOAT)), 4326),
         ST_SetSRID(ST_MakePoint(region_lng, region_lat), 4326), 
         30000
     )
-    AND created_at >= date_trunc(''month'', CURRENT_DATE)
+    AND created_at >= date_trunc('month', CURRENT_DATE)
 )
 SELECT 
     CASE 
@@ -143,4 +143,4 @@ SELECT
         WHEN (SELECT count FROM tech_jobs) < CEIL((SELECT count FROM region_jobs) * 0.20) THEN TRUE
         ELSE FALSE
     END;
-$$ LANGUAGE sql;
+$$;
