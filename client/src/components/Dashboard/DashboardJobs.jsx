@@ -40,15 +40,7 @@ const DashboardJobs = ({ user, jobs, refreshJobs, variant = 'active' }) => {
         }
         setActiveJobs(filtered);
     }, [jobs, variant]);
-    const theme = useTheme();
-    const [jobs, setJobs] = useState([]);
-    const [showBooking, setShowBooking] = useState(false);
-    const [selectedJobForFeedback, setSelectedJobForFeedback] = useState(null);
-    const [newJob, setNewJob] = useState({ serviceType: 'Electrician', description: '', location: '', contactName: user?.name || '', contactPhone: user?.phone || '' });
-    const [submittedFeedbackJobs, setSubmittedFeedbackJobs] = useState(new Set());
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [lastSubmittedRating, setLastSubmittedRating] = useState(null);
-    const socket = useSocket();
+
 
     // Unified Jobs Handling
     // reliance on 'jobs' prop passed from Dashboard.jsx
