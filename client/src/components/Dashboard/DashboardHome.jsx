@@ -1,386 +1,354 @@
+
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { Grid, Typography, Card, CardContent, Box, Chip, Avatar, List, ListItem, ListItemAvatar, ListItemText, Divider, ListItemButton, ListItemIcon, Button, Modal, IconButton, Backdrop, CircularProgress } from '@mui/material';
-import { AccessTime, LocationOn, Assessment, Schedule, Chat, AccountBalanceWallet, Work as WorkIcon, FlashOn, InvertColors as PlumbingIcon, FormatPaint, AcUnit, Videocam, Print, BatteryChargingFull, Fingerprint } from '@mui/icons-material';
-import MakeOfferModal from './MakeOfferModal';
-import DashboardOffers from './DashboardOffers';
-import api, { getWalletBalance, createJob } from '../../services/api';
+import {
+    Grid, Typography, Card, CardContent, Box, Chip, Avatar, Button,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+    InputBase, IconButton, Divider, TextField
+} from '@mui/material';
+import {
+    AccessTime, LocationOn, Search, Notifications, Verified,
+    AcUnit, WaterDrop, Router, CheckCircle, ReportProblem,
+    Forum, Star, Add, Send, ArrowForward, LocalOffer,
+    Download as DownloadIcon, History as HistoryIcon
+} from '@mui/icons-material';
+
+import { useAuth } from '../../context/AuthContext';
 import TechnicianSearchModal from '../TechnicianSearchModal';
 import BookingConfirmationModal from '../BookingConfirmationModal';
-import { useAuth } from '../../context/AuthContext';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { createJob } from '../../services/api';
+
+// --- Styled Components Helper ---
+const CardStyle = {
+    borderRadius: '16px',
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
+    transition: 'all 0.2s ease-in-out',
+    '&:hover': {
+        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05)'
+    },
+    backgroundColor: '#fff'
+};
 
 const DashboardHome = ({ jobs = [] }) => {
-    const { user, updateUser } = useAuth();
+    const { user } = useAuth();
     const theme = useTheme();
-    const [currentTime, setCurrentTime] = useState(new Date());
-    const [openOfferModal, setOpenOfferModal] = useState(false);
-    const [walletBalance, setWalletBalance] = useState(0);
-    const [locationName, setLocationName] = useState({ city: 'Detecting...', area: 'Unknown Area' });
+    const [searchTerm, setSearchTerm] = useState('');
 
-    // Live Location State (Synced with Backend)
-    const [liveLocation, setLiveLocation] = useState(null);
-
-    // Booking Flow State
+    // Booking State
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const [bookingParams, setBookingParams] = useState(null);
     const [selectedTechnician, setSelectedTechnician] = useState(null);
+    const [bookingParams, setBookingParams] = useState(null);
 
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        return () => clearInterval(timer);
-    }, []);
-
-    useEffect(() => {
-        if (user?.id) {
-            fetchWallet(user.id);
-        }
-
-        const syncLocation = async () => {
-            if (!navigator.geolocation) return;
-
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-
-                    // 1. Fetch Readable Address
-                    let addressText = "Unknown Location";
-                    try {
-                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-                        const data = await response.json();
-                        if (data && data.address) {
-                            const city = data.address.city || data.address.town || data.address.village || 'Unknown City';
-                            const area = data.address.suburb || data.address.neighbourhood || data.address.road || 'Unknown Area';
-                            addressText = `${area}, ${city}`;
-                            setLocationName({ city, area });
-                        }
-                    } catch (e) {
-                        console.error("Address lookup failed", e);
-                        setLocationName({ city: `${lat.toFixed(4)}, ${lon.toFixed(4)}`, area: "GPS Location" });
-                    }
-
-                    // 2. Sync to Backend (The "User Manager")
-                    if (user?.id) {
-                        try {
-                            const newLocation = {
-                                latitude: lat,
-                                longitude: lon,
-                                address: addressText
-                            };
-
-                            // Save to DB
-                            await api.put(`/users/${user.id}`, { location: newLocation });
-
-                            // Update Context (Single Source of Truth)
-                            updateUser({ location: newLocation });
-
-                            // Update React State for Booking usage
-                            setLiveLocation(newLocation);
-
-                            console.log("Location synced to backend:", newLocation);
-                        } catch (err) {
-                            console.error("Failed to sync location to backend", err);
-                        }
-                    }
-                },
-                (err) => {
-                    console.warn("GPS access denied, using saved profile", err);
-                    if (user?.location) {
-                        setLiveLocation(user.location);
-                        const parts = (user.location.address || "").split(',');
-                        if (parts.length >= 2) {
-                            setLocationName({
-                                city: parts[parts.length - 1]?.trim(),
-                                area: parts.slice(0, parts.length - 1).join(',')?.trim()
-                            });
-                        } else {
-                            setLocationName({ city: user.location.address || "Saved Location", area: "" });
-                        }
-                    }
-                }
-            );
-        };
-
-        syncLocation();
-    }, [user]);
-
-    const fetchAddress = async (lat, lon) => {
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-            const data = await response.json();
-            if (data && data.address) {
-                const city = data.address.city || data.address.town || data.address.village || 'Unknown City';
-                const area = data.address.suburb || data.address.neighbourhood || data.address.road || 'Unknown Area';
-                setLocationName({ city, area });
-            }
-        } catch (error) {
-            console.error("Reverse geocoding failed", error);
-            setLocationName({
-                city: `${parseFloat(lat).toFixed(4)}, ${parseFloat(lon).toFixed(4)}`,
-                area: 'Address lookup failed'
-            });
-        }
-    };
-
-    const fetchWallet = async (userId) => {
-        try {
-            const res = await getWalletBalance(userId);
-            if (res.data.success) {
-                setWalletBalance(res.data.balance);
-            }
-        } catch (error) {
-            console.error("Failed to fetch wallet", error);
-        }
-    };
-
-    const handleOfferSuccess = () => {
-        alert('Your offer has been posted successfully!');
-    };
-
-    // --- Booking Logic ---
-    const handleBookNow = (serviceType) => {
-        const launchMap = (loc) => {
-            setBookingParams({
-                serviceType,
-                location: loc,
-                scheduledDate: new Date().toISOString().split('T')[0],
-                scheduledTime: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
-                contactName: user?.name || '',
-                contactPhone: user?.phone || '',
-                description: 'Quick Dashboard Booking'
-            });
-            setIsSearchOpen(true);
-        };
-
-        if (liveLocation) launchMap(liveLocation);
-        else if (user?.location?.latitude) launchMap(user.location);
-        else launchMap(null);
-    };
-
-    // --- Stats Calculation ---
+    // Derived Data
     const completedJobs = jobs.filter(j => j.status === 'completed');
-    // "Rejected" might mean 'cancelled' or specific status. User said "Rejected".
-    const rejectedJobs = jobs.filter(j => j.status === 'cancelled' || j.status === 'rejected');
-    const activeJobs = jobs.filter(j => ['pending', 'accepted', 'in_progress'].includes(j.status));
+    // Find a job pending feedback (mock logic or real if backend supports 'feedbackGiven' flag)
+    const jobForFeedback = completedJobs.find(j => !j.feedbackGiven) || completedJobs[0];
+    const recentActivity = jobs.slice(0, 5);
 
-    // Spending Data
-    const totalSpent = completedJobs.reduce((sum, j) => sum + (Number(j.offerPrice) || Number(j.visitingCharges) || 0), 0);
+    const handleBookNow = (serviceTitle) => {
+        setBookingParams({
+            serviceType: serviceTitle,
+            location: user?.location,
+            contactName: user?.name,
+            contactPhone: user?.phone,
+            description: 'Quick Request'
+        });
+        setIsSearchOpen(true);
+    };
 
-    // "Saving chart per job" -> Maybe compare offerPrice vs real market price? 
-    // Or just Spending History. I'll stick to Spending History for now as we don't have "market price" easily.
-    const spendingData = completedJobs
-        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-        .map(j => ({
-            name: j.serviceType, // or Date
-            date: new Date(j.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-            amount: Number(j.offerPrice) || Number(j.visitingCharges) || 0
-        }));
-
-    // Service Distribution
-    const serviceDist = jobs.reduce((acc, j) => {
-        acc[j.serviceType] = (acc[j.serviceType] || 0) + 1;
-        return acc;
-    }, {});
-    const pieData = Object.keys(serviceDist).map(k => ({ name: k, value: serviceDist[k] }));
-
-    const COLORS = [theme.palette.primary.main, theme.palette.secondary.main, theme.palette.success.main, theme.palette.error.main, '#8884d8'];
+    const handleConfirmBooking = async (finalData) => {
+        try {
+            const payload = { ...bookingParams, ...finalData, userId: user.id };
+            await createJob(payload);
+            setIsConfirmOpen(false);
+            alert(`Booking Confirmed!`);
+            window.location.reload();
+        } catch (e) {
+            console.error(e);
+            alert('Booking failed');
+        }
+    };
 
     return (
-        <Box>
-            {/* Header / Welcome */}
-            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                    <Typography variant="h4" fontWeight="bold" sx={{ mb: 1, color: theme.palette.text.primary }}>
-                        Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋
-                    </Typography>
-                    <Typography variant="body1" color="textSecondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <LocationOn fontSize="small" color="primary" />
-                        {locationName.area || locationName.city || 'Locating...'}
-                        {liveLocation && <Chip label="Live" color="success" size="small" sx={{ height: 20, fontSize: '0.65rem' }} />}
-                    </Typography>
-                </Box>
-                {/* Book Now Button for easy access */}
-                <Button
-                    variant="contained"
-                    size="large"
-                    startIcon={<FlashOn />}
-                    onClick={() => setIsSearchOpen(true)}
-                    sx={{
-                        borderRadius: '12px',
-                        px: 4,
-                        py: 1.5,
-                        textTransform: 'none',
-                        fontSize: '1rem',
-                        fontWeight: 'bold',
-                        boxShadow: '0 8px 16px rgba(33, 150, 243, 0.24)',
-                        background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
-                    }}
-                >
-                    Quick Book Professional
-                </Button>
+        <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: '#f8fafc', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
+
+            {/* --- Hero Banner --- */}
+            <Box sx={{
+                width: '100%',
+                background: 'linear-gradient(to right, #2563eb, #4338ca)',
+                borderRadius: '16px',
+                p: { xs: 3, md: 4 },
+                color: '#fff',
+                mb: 4,
+                position: 'relative',
+                overflow: 'hidden',
+                boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.2)'
+            }}>
+                <Box sx={{ position: 'absolute', top: 0, right: 0, width: 256, height: 256, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: '50%', transform: 'translate(30%, -30%)', filter: 'blur(40px)' }} />
+
+                <Grid container alignItems="center" spacing={3} sx={{ position: 'relative', zIndex: 1 }}>
+                    <Grid item xs={12} md={8}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <Chip label="Limited Time" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 'bold', borderRadius: '4px' }} />
+                            <Verified fontSize="small" sx={{ opacity: 0.8 }} />
+                        </Box>
+                        <Typography variant="h4" fontWeight="900" sx={{ letterSpacing: '-0.025em', mb: 1 }}>
+                            Summer Refresh Sale!
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: 'blue.100', fontWeight: 500 }}>
+                            Get 20% off all HVAC and Deep Cleaning services this week.
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                        <Box sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box sx={{ flex: 1 }}>
+                                <Typography variant="caption" sx={{ color: 'blue.100', textTransform: 'uppercase', fontWeight: 600 }}>Promo Code</Typography>
+                                <Typography variant="h5" sx={{ fontFamily: 'monospace', fontWeight: 'bold' }}>SUMMER20</Typography>
+                            </Box>
+                            <Button variant="contained" sx={{ bgcolor: '#fff', color: '#2563eb', fontWeight: 'bold', '&:hover': { bgcolor: '#eff6ff' } }}>
+                                Copy Code
+                            </Button>
+                        </Box>
+                    </Grid>
+                </Grid>
             </Box>
 
-            {/* Stats Grid */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                {[
-                    { label: 'Total Spent', val: `₹${totalSpent}`, icon: <AccountBalanceWallet />, color: theme.palette.primary.main, bg: 'rgba(33, 150, 243, 0.1)' },
-                    { label: 'Completed Jobs', val: completedJobs.length, icon: <Assessment />, color: theme.palette.success.main, bg: 'rgba(0, 200, 83, 0.1)' },
-                    { label: 'Active Requests', val: activeJobs.length, icon: <WorkIcon />, color: theme.palette.warning.main, bg: 'rgba(255, 171, 0, 0.1)' },
-                    { label: 'Rejected/Cancelled', val: rejectedJobs.length, icon: <AccessTime />, color: theme.palette.error.main, bg: 'rgba(255, 82, 82, 0.1)' }
-                ].map((stat, i) => (
-                    <Grid item xs={12} sm={6} md={3} key={i}>
-                        <Card sx={{
-                            borderRadius: '20px',
-                            boxShadow: '0 4px 24px rgba(0,0,0,0.04)',
-                            border: '1px solid rgba(0,0,0,0.03)',
-                            height: '100%'
-                        }}>
-                            <CardContent sx={{ display: 'flex', alignItems: 'center', p: 3 }}>
-                                <Avatar variant="rounded" sx={{
-                                    width: 56, height: 56,
-                                    bgcolor: stat.bg, color: stat.color,
-                                    borderRadius: '14px', mr: 2
-                                }}>
-                                    {stat.icon}
-                                </Avatar>
-                                <Box>
-                                    <Typography variant="h4" fontWeight="800" sx={{ color: theme.palette.text.primary }}>
-                                        {stat.val}
-                                    </Typography>
-                                    <Typography variant="body2" fontWeight="500" sx={{ color: theme.palette.text.secondary }}>
-                                        {stat.label}
-                                    </Typography>
-                                </Box>
+            <Grid container spacing={4}>
+                {/* --- Left Column (Main) --- */}
+                <Grid item xs={12} lg={8}>
+
+                    {/* Job History Table */}
+                    <Card sx={{ ...CardStyle, mb: 4, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                        <Box sx={{ p: 3, borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                            <Box>
+                                <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#0f172a' }}>
+                                    <HistoryIcon sx={{ color: '#2563eb' }} />
+                                    Job History
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">Track your past services and payments</Typography>
+                            </Box>
+                            <Box sx={{ position: 'relative' }}>
+                                <Search sx={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                <InputBase
+                                    placeholder="Search invoices..."
+                                    sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', pl: 5, pr: 2, py: 0.5, fontSize: '0.875rem', width: { xs: '100%', sm: 200 } }}
+                                />
+                            </Box>
+                        </Box>
+                        <TableContainer>
+                            <Table sx={{ minWidth: 650 }}>
+                                <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                                    <TableRow>
+                                        <TableCell sx={{ color: '#64748b', fontWeight: 600 }}>Service Details</TableCell>
+                                        <TableCell sx={{ color: '#64748b', fontWeight: 600 }}>Date</TableCell>
+                                        <TableCell sx={{ color: '#64748b', fontWeight: 600 }}>Status</TableCell>
+                                        <TableCell sx={{ color: '#64748b', fontWeight: 600 }}>Invoice</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {recentActivity.map((job) => (
+                                        <TableRow key={job.id} hover>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                    <Avatar variant="rounded" sx={{ bgcolor: '#eff6ff', color: '#2563eb' }}>
+                                                        {job.serviceType.includes('AC') ? <AcUnit /> : job.serviceType.includes('Plumb') ? <WaterDrop /> : <Router />}
+                                                    </Avatar>
+                                                    <Box>
+                                                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#0f172a' }}>{job.serviceType}</Typography>
+                                                        <Typography variant="caption" color="textSecondary">Pro: {job.technicianName || 'Pending'}</Typography>
+                                                    </Box>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell sx={{ color: '#475569', fontWeight: 500 }}>
+                                                {new Date(job.createdAt).toLocaleDateString()}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={job.status}
+                                                    size="small"
+                                                    sx={{
+                                                        bgcolor: job.status === 'completed' ? '#dcfce7' : '#f1f5f9',
+                                                        color: job.status === 'completed' ? '#15803d' : '#475569',
+                                                        fontWeight: 'bold',
+                                                        textTransform: 'capitalize'
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                {job.status === 'completed' ? (
+                                                    <Button size="small" startIcon={<DownloadIcon />} sx={{ textTransform: 'none', borderRadius: '6px', color: '#2563eb', bgcolor: 'rgba(37, 99, 235, 0.05)' }}>
+                                                        PDF
+                                                    </Button>
+                                                ) : (
+                                                    <Typography variant="caption" color="textSecondary" sx={{ fontStyle: 'italic' }}>No Invoice</Typography>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {recentActivity.length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={4} align="center" sx={{ py: 3, color: '#64748b' }}>No recent jobs found.</TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                        <Box sx={{ p: 2, bgcolor: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
+                            <Button sx={{ textTransform: 'none', fontWeight: 'bold', color: '#2563eb' }}>View All Transactions</Button>
+                        </Box>
+                    </Card>
+
+                    {/* Feedback Card */}
+                    {jobForFeedback && (
+                        <Card sx={{ ...CardStyle, position: 'relative', overflow: 'hidden' }}>
+                            <Box sx={{ position: 'absolute', right: 0, top: 0, width: 100, height: 100, bgcolor: 'rgba(250, 204, 21, 0.1)', borderRadius: '0 0 0 100%', zIndex: 0 }} />
+                            <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+                                <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Star sx={{ color: '#eab308' }} /> Leave Feedback
+                                </Typography>
+                                <Grid container spacing={3}>
+                                    <Grid item>
+                                        <Avatar
+                                            src={jobForFeedback.technicianPhoto}
+                                            sx={{ width: 80, height: 80, borderRadius: '12px', bgcolor: '#e2e8f0' }}
+                                        >T</Avatar>
+                                    </Grid>
+                                    <Grid item xs sx={{ display: 'flex', flexDirection: 'column' }}>
+                                        <Typography variant="subtitle1">
+                                            How was your <Box component="span" fontWeight="bold">{jobForFeedback.serviceType}</Box> with {jobForFeedback.technicianName}?
+                                        </Typography>
+                                        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                                            Service completed on {new Date(jobForFeedback.completedAt || Date.now()).toLocaleDateString()}
+                                        </Typography>
+
+                                        <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
+                                            {[1, 2, 3, 4, 5].map((s) => (
+                                                <Star key={s} sx={{ color: '#cbd5e1', fontSize: 32, cursor: 'pointer', '&:hover': { color: '#eab308' } }} />
+                                            ))}
+                                        </Box>
+
+                                        <Box sx={{ display: 'flex', gap: 2 }}>
+                                            <TextField fullWidth placeholder="Write a comment (optional)..." size="small" sx={{ bgcolor: '#f8fafc' }} />
+                                            <Button variant="contained" sx={{ bgcolor: '#0f172a', textTransform: 'none', fontWeight: 'bold', '&:hover': { bgcolor: '#1e293b' } }}>Submit</Button>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
                             </CardContent>
                         </Card>
-                    </Grid>
-                ))}
-            </Grid>
-
-            {/* Charts Section */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                {/* Spending Chart */}
-                <Grid item xs={12} md={8}>
-                    <Card sx={{ borderRadius: '24px', boxShadow: 'none', border: '1px solid rgba(0,0,0,0.05)', height: '100%', bgcolor: '#fff' }}>
-                        <Box sx={{ p: 3, borderBottom: '1px solid rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="h6" fontWeight="bold">Spending Analysis</Typography>
-                            <Chip label="Last 30 Days" size="small" sx={{ bgcolor: 'rgba(0,0,0,0.03)' }} />
-                        </Box>
-                        <Box sx={{ p: 3, height: 350 }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={spendingData.length ? spendingData : [{ date: 'No Data', amount: 0 }]}>
-                                    <defs>
-                                        <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor={theme.palette.primary.main} stopOpacity={0.2} />
-                                            <stop offset="95%" stopColor={theme.palette.primary.main} stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#9eaebb', fontSize: 12 }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9eaebb', fontSize: 12 }} />
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 30px rgba(0,0,0,0.1)' }}
-                                        cursor={{ stroke: theme.palette.primary.main, strokeWidth: 1, strokeDasharray: '4 4' }}
-                                    />
-                                    <Area type="monotone" dataKey="amount" stroke={theme.palette.primary.main} strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </Box>
-                    </Card>
+                    )}
                 </Grid>
 
-                {/* Service Mix Pie Chart */}
-                <Grid item xs={12} md={4}>
-                    <Card sx={{ borderRadius: '24px', boxShadow: 'none', border: '1px solid rgba(0,0,0,0.05)', height: '100%', bgcolor: '#fff' }}>
-                        <Box sx={{ p: 3, borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                            <Typography variant="h6" fontWeight="bold">Service Distribution</Typography>
-                        </Box>
-                        <Box sx={{ p: 3, height: 350, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={pieData.length ? pieData : [{ name: 'None', value: 1 }]}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={80}
-                                        outerRadius={100}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                        stroke="none"
-                                    >
-                                        {pieData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip />
-                                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        </Box>
-                    </Card>
-                </Grid>
-            </Grid>
+                {/* --- Right Column (Sidebar) --- */}
+                <Grid item xs={12} lg={4}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
 
-            {/* Active Offers / Jobs */}
-            <Grid item xs={12}>
-                <DashboardOffers jobs={jobs} />
-            </Grid>
+                        {/* Live Support Widget */}
+                        <Card sx={{ ...CardStyle, overflow: 'hidden', height: 400, display: 'flex', flexDirection: 'column' }}>
+                            <Box sx={{ p: 2, bgcolor: '#2563eb', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Forum fontSize="small" />
+                                    <Typography variant="subtitle2" fontWeight="bold">Live Support</Typography>
+                                </Box>
+                                <Chip
+                                    icon={<Box sx={{ width: 6, height: 6, bgcolor: '#4ade80', borderRadius: '50%' }} />}
+                                    label="Online"
+                                    size="small"
+                                    sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', height: 24, fontSize: '0.7rem' }}
+                                />
+                            </Box>
+                            <Box sx={{ flex: 1, bgcolor: '#f8fafc', p: 2, display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#e2e8f0' }}>S</Avatar>
+                                    <Box sx={{ bgcolor: '#fff', p: 1.5, borderRadius: '12px 12px 12px 0', border: '1px solid #e2e8f0', maxWidth: '85%' }}>
+                                        <Typography variant="body2" color="textSecondary">Hello! How can I help you with your booking today?</Typography>
+                                    </Box>
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 1, flexDirection: 'row-reverse' }}>
+                                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#eff6ff', color: '#2563eb', fontSize: '0.7rem' }}>ME</Avatar>
+                                    <Box sx={{ bgcolor: '#2563eb', color: '#fff', p: 1.5, borderRadius: '12px 12px 0 12px', maxWidth: '85%' }}>
+                                        <Typography variant="body2">Hi, I need to reschedule my plumbing appointment.</Typography>
+                                    </Box>
+                                </Box>
+                            </Box>
+                            <Box sx={{ p: 2, borderTop: '1px solid #e2e8f0' }}>
+                                <Box sx={{ position: 'relative' }}>
+                                    <InputBase fullWidth placeholder="Type a message..." sx={{ bgcolor: '#f8fafc', borderRadius: '20px', pl: 2, pr: 5, py: 1, border: '1px solid #e2e8f0' }} />
+                                    <IconButton size="small" sx={{ position: 'absolute', right: 4, top: 4, bgcolor: '#2563eb', color: '#fff', '&:hover': { bgcolor: '#1d4ed8' } }}>
+                                        <Send fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            </Box>
+                        </Card>
 
-            {/* Recent Activity (Completed Jobs) */}
-            <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Recent Activity</Typography>
-            <Grid container spacing={2}>
-                {jobs.slice(0, 3).map((job) => (
-                    <Grid item xs={12} key={job.id}>
-                        <Card sx={{
-                            borderRadius: '16px',
-                            boxShadow: 'none',
-                            border: '1px solid rgba(0,0,0,0.05)',
-                            transition: 'all 0.2s',
-                            '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }
-                        }}>
-                            <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2, '&:last-child': { pb: 2 } }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Avatar sx={{ bgcolor: theme.palette.primary.lighter, color: theme.palette.primary.main }}>
-                                        {job.serviceType.includes('Plumb') ? <PlumbingIcon /> : <WorkIcon />}
-                                    </Avatar>
+                        {/* Complaints Widget */}
+                        <Card sx={{ ...CardStyle }}>
+                            <CardContent>
+                                <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <ReportProblem color="error" /> Complaints
+                                </Typography>
+                                <Box sx={{ bgcolor: '#f8fafc', borderRadius: '8px', p: 3, textAlign: 'center', border: '1px solid #f1f5f9', mb: 2 }}>
+                                    <CheckCircle sx={{ fontSize: 40, color: '#cbd5e1', mb: 1 }} />
+                                    <Typography variant="subtitle2" fontWeight="bold">No Open Issues</Typography>
+                                    <Typography variant="caption" color="textSecondary">Great! All your services are running smoothly.</Typography>
+                                </Box>
+                                <Button fullWidth variant="outlined" startIcon={<Add />} sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 'bold', color: '#475569', borderColor: '#e2e8f0' }}>
+                                    File New Complaint
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        {/* Upsell / You Might Need */}
+                        <Card sx={{ ...CardStyle, background: 'linear-gradient(to bottom right, #ffffff, #f8fafc)' }}>
+                            <CardContent>
+                                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>You might need</Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                                    <Box sx={{ width: 64, height: 64, borderRadius: '8px', bgcolor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <WaterDrop color="primary" />
+                                    </Box>
                                     <Box>
-                                        <Typography variant="subtitle1" fontWeight="bold">{job.serviceType}</Typography>
-                                        <Typography variant="caption" color="textSecondary">
-                                            {new Date(job.createdAt).toLocaleDateString()} • {job.status}
+                                        <Typography variant="subtitle2" fontWeight="bold">Pool Cleaning</Typography>
+                                        <Typography variant="body2" fontWeight="bold" color="primary">
+                                            $120 <Box component="span" sx={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '0.8em', fontWeight: 'normal' }}>$150</Box>
                                         </Typography>
                                     </Box>
                                 </Box>
-                                <Typography variant="h6" fontWeight="bold" color={job.status === 'completed' ? 'success.main' : 'text.secondary'}>
-                                    ₹{job.offerPrice || 0}
-                                </Typography>
+                                <Button fullWidth variant="contained" sx={{ bgcolor: 'rgba(37, 99, 235, 0.1)', color: '#2563eb', fontWeight: 'bold', boxShadow: 'none', '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.2)', boxShadow: 'none' } }}>
+                                    View Details
+                                </Button>
                             </CardContent>
                         </Card>
-                    </Grid>
-                ))}
-                {jobs.length === 0 && (
-                    <Grid item xs={12}>
-                        <Box sx={{ p: 4, textAlign: 'center', bgcolor: '#fff', borderRadius: '16px' }}>
-                            <Typography color="textSecondary">No recent activity found.</Typography>
-                        </Box>
-                    </Grid>
-                )}
+
+                    </Box>
+                </Grid>
             </Grid>
 
-            {/* Modals */}
+            {/* Modals from Booking Flow */}
             <TechnicianSearchModal
                 open={isSearchOpen}
                 onClose={() => setIsSearchOpen(false)}
-                userLocation={liveLocation || user?.location}
+                userLocation={user?.location}
                 onSelectTechnician={(tech) => {
                     setSelectedTechnician(tech);
                     setIsSearchOpen(false);
-                    setBookingParams({ ...bookingParams, technician: tech });
-                    alert(`Selected ${tech.name}. Redirecting to booking...`);
+                    setIsConfirmOpen(true);
                 }}
             />
+
+            {selectedTechnician && bookingParams && (
+                <BookingConfirmationModal
+                    open={isConfirmOpen}
+                    onClose={() => setIsConfirmOpen(false)}
+                    technician={selectedTechnician}
+                    serviceType={bookingParams.serviceType}
+                    location={bookingParams.location}
+                    scheduledDate={new Date().toISOString().split('T')[0]} // Default to today
+                    onConfirm={handleConfirmBooking}
+                />
+            )}
         </Box>
     );
 };
+
 export default DashboardHome;
