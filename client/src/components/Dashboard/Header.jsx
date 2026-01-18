@@ -139,10 +139,13 @@ const Header = ({ handleDrawerToggle, onLogout, setActiveTab, user }) => {
             {/* Logo Section / Menu Toggle */}
             <Box
                 sx={{
-                    width: 228,
+                    width: 'auto', // Reduced from 228 to auto for better fit
                     display: 'flex',
+                    alignItems: 'center',
+                    mr: 2, // Added margin right
                     [theme.breakpoints.down('md')]: {
-                        width: 'auto'
+                        width: 'auto',
+                        mr: 1
                     }
                 }}
             >
