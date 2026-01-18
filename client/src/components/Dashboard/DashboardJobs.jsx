@@ -121,8 +121,9 @@ const DashboardJobs = ({ user }) => {
             setLastSubmittedRating(ratings.overall);
             setShowSuccessModal(true);
         } catch (error) {
-            console.error(error);
-            alert('Failed to submit feedback. Please try again.');
+            console.error("Feedback Submission Error:", error);
+            const msg = error.response?.data?.error || error.message || "Unknown error";
+            alert(`Failed to submit feedback: ${msg}`);
         }
     };
 
