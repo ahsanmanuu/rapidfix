@@ -38,6 +38,7 @@ const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, us
         { id: 'services', label: 'All Services', icon: <CategoryIcon /> },
         { id: 'bookings', label: 'My Bookings', icon: <WorkIcon /> },
         { id: 'history', label: 'Job History', icon: <HistoryIcon /> },
+        { id: 'finance', label: 'Payments & Wallet', icon: <WalletIcon /> },
         { id: 'chat', label: 'Live Chat', icon: <ChatIcon /> },
         { id: 'complaints', label: 'Complaints', icon: <ReportIcon /> },
         { id: 'offers', label: 'Latest Offers', icon: <OfferIcon /> },
