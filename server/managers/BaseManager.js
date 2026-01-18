@@ -84,6 +84,11 @@ class BaseManager {
      */
     async findOne(field, value) {
         try {
+            // [FIX] Handle single-argument call (findOne(id))
+            if (value === undefined) {
+                value = field;
+                field = 'id';
+            }
             const record = await this.db.find(field, value);
             return this._mapFromDb(record);
         } catch (err) {
