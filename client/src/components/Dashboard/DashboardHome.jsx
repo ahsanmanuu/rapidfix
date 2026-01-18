@@ -141,7 +141,7 @@ const DashboardHome = ({ jobs = [] }) => {
     // --- Booking Logic ---
     const handleBookNow = (serviceType) => {
         const launchMap = (loc) => {
-            setIsLocating(false); // Stop loading
+            // setIsLocating(false); // Removed
             setBookingParams({
                 serviceType,
                 location: loc,
@@ -171,15 +171,29 @@ const DashboardHome = ({ jobs = [] }) => {
             return;
         }
 
-        // Priority 3: Final GPS Attempt (Delegate to Modal)
-        // If no location found, we open the modal anyway and let it fetch precise location via 'Auto Precision Lock'
+        // Priority 3: Final GPS Attempt (Delegate to Modal + Pre-fetch)
         if (!navigator.geolocation) {
-            alert('Geolocation is not supported'); // Keep this check simple
+            alert('Geolocation is not supported');
             return;
         }
 
-        // Launch immediately with null location - Modal will auto-fetch
+        // 1. Launch immediately (Modal will start its own internal fetch too)
         launchMap(null);
+
+        // 2. Start Parallel Fetch (Non-blocking) - "Precision Lock" at click time
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const newLoc = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    address: " Precise Location"
+                };
+                // Update params to feed the open modal
+                setBookingParams(prev => prev ? { ...prev, location: newLoc } : null);
+            },
+            (err) => console.warn("Background GPS pre-fetch failed", err),
+            { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
+        );
     };
 
     const handleTechnicianSelect = (tech) => {

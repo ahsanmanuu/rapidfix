@@ -121,13 +121,22 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
 
     useEffect(() => {
         if (isOpen) {
-            // 1. Initial Search (Fast, using passed prop)
             performSearch();
 
-            // 2. Background Precision Lock (Auto-Run)
-            handlePrecisionRefresh();
+            // 2. Background Precision Lock (Auto-Run only if location missing)
+            if (!userLocation) {
+                handlePrecisionRefresh();
+            }
         }
-    }, [isOpen, performSearch, handlePrecisionRefresh]);
+    }, [isOpen, performSearch, handlePrecisionRefresh, userLocation]);
+
+    // [NEW] Pan Map when Location updates (e.g. from Parent pre-fetch)
+    useEffect(() => {
+        if (map && userLocation?.latitude) {
+            map.panTo({ lat: parseFloat(userLocation.latitude), lng: parseFloat(userLocation.longitude) });
+            map.setZoom(15);
+        }
+    }, [map, userLocation]);
 
     // Real-time Updates (Status & Location)
     // Helper: Calculate Distance (Haversine)
