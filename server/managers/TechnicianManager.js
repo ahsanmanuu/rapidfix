@@ -276,12 +276,18 @@ class TechnicianManager extends BaseManager {
     async login(email, password, currentLat, currentLng) {
         try {
             if (!email || !password) return null;
-            const cleanEmail = email.trim().toLowerCase();
+            const cleanEmail = String(email).trim().toLowerCase();
+            const cleanPassword = String(password).trim();
+
             const tech = await this.db.find('email', cleanEmail);
 
-            if (!tech) return null;
+            if (!tech) {
+                console.log(`[TechnicianManager] Login failed: Tech not found for ${cleanEmail}`);
+                return null;
+            }
 
-            if (tech.password === password) {
+            const dbPassword = String(tech.password).trim();
+            if (dbPassword === cleanPassword) {
                 // Prepare return object
                 let techObj = this._mapFromDb(tech);
 
@@ -296,8 +302,10 @@ class TechnicianManager extends BaseManager {
 
                 const { password, ...techWithoutPass } = techObj;
                 return techWithoutPass;
+            } else {
+                console.log(`[TechnicianManager] Login failed: Incorrect password for ${cleanEmail}. (Input: ${cleanPassword.length}, DB: ${dbPassword.length})`);
+                return null;
             }
-            return null;
         } catch (err) {
             console.error("[TechnicianManager] Login error:", err);
             return null;

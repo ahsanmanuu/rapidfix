@@ -57,13 +57,22 @@ class SuperAdminManager {
 
     async login(email, password) {
         try {
-            const admin = await this.db.find('email', email);
-            if (admin && admin.password === password && admin.role === 'superadmin') {
-                const { password, ...rest } = admin;
-                if (this.io) {
-                    this.io.emit('superadmin_login', { email, time: new Date().toISOString() });
+            const cleanEmail = String(email).trim().toLowerCase();
+            const cleanPassword = String(password).trim();
+
+            const admin = await this.db.find('email', cleanEmail);
+            if (admin && admin.role === 'superadmin') {
+                const dbPassword = String(admin.password).trim();
+
+                if (dbPassword === cleanPassword) {
+                    const { password, ...rest } = admin;
+                    if (this.io) {
+                        this.io.emit('superadmin_login', { email: cleanEmail, time: new Date().toISOString() });
+                    }
+                    return rest;
+                } else {
+                    console.log(`[SuperAdminManager] Password mismatch for ${cleanEmail}`);
                 }
-                return rest;
             }
             return null;
         } catch (err) {
