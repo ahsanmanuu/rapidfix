@@ -58,17 +58,17 @@ const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, us
                 gap: 2,
                 height: 80 // Match header height
             }}>
-                <Box sx={{
-                    width: 40, height: 40,
-                    bgcolor: '#2563eb', // Primary Blue
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)'
-                }}>
-                    <HomeIcon sx={{ color: '#fff' }} />
-                </Box>
+                <Avatar
+                    src="/logo.png"
+                    variant="rounded"
+                    alt="Fixofy Logo"
+                    sx={{
+                        width: 40,
+                        height: 40,
+                        bgcolor: 'transparent',
+                        '& img': { objectFit: 'contain' }
+                    }}
+                />
                 <Typography variant="h6" fontWeight="800" sx={{ color: '#0f172a', letterSpacing: '-0.5px' }}>
                     Fixofy
                 </Typography>

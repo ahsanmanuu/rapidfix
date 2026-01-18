@@ -115,53 +115,56 @@ const DashboardHome = ({ jobs = [] }) => {
                 </Grid>
             </Box>
 
-            <Grid container spacing={4}>
-                {/* --- Left Column (Main) --- */}
-                <Grid item xs={12} lg={8}>
+            {/* Main Dashboard Layout */}
+            <Grid container spacing={3}>
 
-                    {/* Job History Table */}
-                    <Card sx={{ ...CardStyle, mb: 4, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                        <Box sx={{ p: 3, borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                {/* --- Left Column (md=7) --- */}
+                {/* Contains: Job History, Feedback, Upsell */}
+                <Grid item xs={12} md={7} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+                    {/* 1. Job History Table */}
+                    <Card sx={{ ...CardStyle, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                        <Box sx={{ p: 2, borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                             <Box>
                                 <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#0f172a' }}>
                                     <HistoryIcon sx={{ color: '#2563eb' }} />
                                     Job History
                                 </Typography>
-                                <Typography variant="body2" color="textSecondary">Track your past services and payments</Typography>
+                                <Typography variant="caption" color="textSecondary">Track your past services</Typography>
                             </Box>
                             <Box sx={{ position: 'relative' }}>
-                                <Search sx={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                <Search sx={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '1rem' }} />
                                 <InputBase
-                                    placeholder="Search invoices..."
-                                    sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', pl: 5, pr: 2, py: 0.5, fontSize: '0.875rem', width: { xs: '100%', sm: 200 } }}
+                                    placeholder="Search..."
+                                    sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', pl: 4, pr: 2, py: 0.5, fontSize: '0.8rem', width: 140 }}
                                 />
                             </Box>
                         </Box>
-                        <TableContainer>
-                            <Table sx={{ minWidth: 650 }}>
-                                <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                        <TableContainer sx={{ maxHeight: 300 }}> {/* Fixed height for scrolling */}
+                            <Table stickyHeader size="small">
+                                <TableHead>
                                     <TableRow>
-                                        <TableCell sx={{ color: '#64748b', fontWeight: 600 }}>Service Details</TableCell>
-                                        <TableCell sx={{ color: '#64748b', fontWeight: 600 }}>Date</TableCell>
-                                        <TableCell sx={{ color: '#64748b', fontWeight: 600 }}>Status</TableCell>
-                                        <TableCell sx={{ color: '#64748b', fontWeight: 600 }}>Invoice</TableCell>
+                                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 'bold' }}>Service Details</TableCell>
+                                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 'bold' }}>Date</TableCell>
+                                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 'bold' }}>Status</TableCell>
+                                        <TableCell sx={{ bgcolor: '#f8fafc', fontWeight: 'bold' }}>Invoice</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
                                     {recentActivity.map((job) => (
                                         <TableRow key={job.id} hover>
                                             <TableCell>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                    <Avatar variant="rounded" sx={{ bgcolor: '#eff6ff', color: '#2563eb' }}>
-                                                        {job.serviceType.includes('AC') ? <AcUnit /> : job.serviceType.includes('Plumb') ? <WaterDrop /> : <Router />}
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                    <Avatar variant="rounded" sx={{ bgcolor: '#eff6ff', color: '#2563eb', width: 32, height: 32 }}>
+                                                        {job.serviceType.includes('AC') ? <AcUnit fontSize="small" /> : job.serviceType.includes('Plumb') ? <WaterDrop fontSize="small" /> : <Router fontSize="small" />}
                                                     </Avatar>
                                                     <Box>
-                                                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#0f172a' }}>{job.serviceType}</Typography>
-                                                        <Typography variant="caption" color="textSecondary">Pro: {job.technicianName || 'Pending'}</Typography>
+                                                        <Typography variant="body2" fontWeight="bold" sx={{ color: '#0f172a' }}>{job.serviceType}</Typography>
+                                                        <Typography variant="caption" color="textSecondary" noWrap>Pro: {job.technicianName || 'Pending'}</Typography>
                                                     </Box>
                                                 </Box>
                                             </TableCell>
-                                            <TableCell sx={{ color: '#475569', fontWeight: 500 }}>
+                                            <TableCell sx={{ color: '#475569', fontSize: '0.85rem' }}>
                                                 {new Date(job.createdAt).toLocaleDateString()}
                                             </TableCell>
                                             <TableCell>
@@ -172,155 +175,125 @@ const DashboardHome = ({ jobs = [] }) => {
                                                         bgcolor: job.status === 'completed' ? '#dcfce7' : '#f1f5f9',
                                                         color: job.status === 'completed' ? '#15803d' : '#475569',
                                                         fontWeight: 'bold',
-                                                        textTransform: 'capitalize'
+                                                        textTransform: 'capitalize',
+                                                        height: 22,
+                                                        fontSize: '0.7rem'
                                                     }}
                                                 />
                                             </TableCell>
                                             <TableCell>
                                                 {job.status === 'completed' ? (
-                                                    <Button size="small" startIcon={<DownloadIcon />} sx={{ textTransform: 'none', borderRadius: '6px', color: '#2563eb', bgcolor: 'rgba(37, 99, 235, 0.05)' }}>
-                                                        PDF
-                                                    </Button>
+                                                    <Typography variant="caption" sx={{ color: '#2563eb', fontWeight: 'bold', cursor: 'pointer' }}>Download</Typography>
                                                 ) : (
-                                                    <Typography variant="caption" color="textSecondary" sx={{ fontStyle: 'italic' }}>No Invoice</Typography>
+                                                    <Typography variant="caption" color="textSecondary" sx={{ fontStyle: 'italic' }}>--</Typography>
                                                 )}
                                             </TableCell>
                                         </TableRow>
                                     ))}
-                                    {recentActivity.length === 0 && (
-                                        <TableRow>
-                                            <TableCell colSpan={4} align="center" sx={{ py: 3, color: '#64748b' }}>No recent jobs found.</TableCell>
-                                        </TableRow>
-                                    )}
                                 </TableBody>
                             </Table>
                         </TableContainer>
-                        <Box sx={{ p: 2, bgcolor: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
-                            <Button sx={{ textTransform: 'none', fontWeight: 'bold', color: '#2563eb' }}>View All Transactions</Button>
-                        </Box>
                     </Card>
 
-                    {/* Feedback Card */}
+                    {/* 2. Feedback Card (Moved Here) */}
                     {jobForFeedback && (
                         <Card sx={{ ...CardStyle, position: 'relative', overflow: 'hidden' }}>
-                            <Box sx={{ position: 'absolute', right: 0, top: 0, width: 100, height: 100, bgcolor: 'rgba(250, 204, 21, 0.1)', borderRadius: '0 0 0 100%', zIndex: 0 }} />
-                            <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-                                <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ position: 'absolute', right: 0, top: 0, width: 80, height: 80, bgcolor: 'rgba(250, 204, 21, 0.1)', borderRadius: '0 0 0 100%', zIndex: 0 }} />
+                            <CardContent sx={{ p: 2, position: 'relative', zIndex: 1 }}>
+                                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Star sx={{ color: '#eab308' }} /> Leave Feedback
                                 </Typography>
-                                <Grid container spacing={3}>
-                                    <Grid item>
-                                        <Avatar
-                                            src={jobForFeedback.technicianPhoto}
-                                            sx={{ width: 80, height: 80, borderRadius: '12px', bgcolor: '#e2e8f0' }}
-                                        >T</Avatar>
-                                    </Grid>
-                                    <Grid item xs sx={{ display: 'flex', flexDirection: 'column' }}>
-                                        <Typography variant="subtitle1">
-                                            How was your <Box component="span" fontWeight="bold">{jobForFeedback.serviceType}</Box> with {jobForFeedback.technicianName}?
-                                        </Typography>
-                                        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                                            Service completed on {new Date(jobForFeedback.completedAt || Date.now()).toLocaleDateString()}
-                                        </Typography>
-
-                                        <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
-                                            {[1, 2, 3, 4, 5].map((s) => (
-                                                <Star key={s} sx={{ color: '#cbd5e1', fontSize: 32, cursor: 'pointer', '&:hover': { color: '#eab308' } }} />
-                                            ))}
-                                        </Box>
-
-                                        <Box sx={{ display: 'flex', gap: 2 }}>
-                                            <TextField fullWidth placeholder="Write a comment (optional)..." size="small" sx={{ bgcolor: '#f8fafc' }} />
-                                            <Button variant="contained" sx={{ bgcolor: '#0f172a', textTransform: 'none', fontWeight: 'bold', '&:hover': { bgcolor: '#1e293b' } }}>Submit</Button>
-                                        </Box>
-                                    </Grid>
-                                </Grid>
+                                <Typography variant="body2" sx={{ mb: 2 }}>
+                                    How was your <b>{jobForFeedback.serviceType}</b>?
+                                </Typography>
+                                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                                    {[1, 2, 3, 4, 5].map((s) => (
+                                        <Star key={s} sx={{ color: '#cbd5e1', fontSize: 28, cursor: 'pointer', '&:hover': { color: '#eab308' } }} />
+                                    ))}
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <TextField fullWidth placeholder="Comment..." size="small" sx={{ bgcolor: '#f8fafc' }} />
+                                    <Button variant="contained" size="small" sx={{ bgcolor: '#0f172a', textTransform: 'none' }}>Submit</Button>
+                                </Box>
                             </CardContent>
                         </Card>
                     )}
+
+                    {/* 3. Upsell Card (Moved Here) */}
+                    <Card sx={{ ...CardStyle, background: 'linear-gradient(to right, #eff6ff, #fff)' }}>
+                        <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Box sx={{ width: 48, height: 48, borderRadius: '8px', bgcolor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                    <WaterDrop color="primary" />
+                                </Box>
+                                <Box>
+                                    <Typography variant="subtitle2" fontWeight="bold">Pool Cleaning</Typography>
+                                    <Typography variant="caption" color="textSecondary">Summer Special Offer</Typography>
+                                </Box>
+                            </Box>
+                            <Box sx={{ textAlign: 'right' }}>
+                                <Typography variant="h6" fontWeight="bold" color="primary">$120</Typography>
+                                <Button size="small" variant="outlined" sx={{ borderRadius: '6px', textTransform: 'none', mt: 0.5 }}>View</Button>
+                            </Box>
+                        </CardContent>
+                    </Card>
+
                 </Grid>
 
-                {/* --- Right Column (Sidebar) --- */}
-                <Grid item xs={12} lg={4}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {/* --- Right Column (md=5) --- */}
+                {/* Contains: Live Chat, Complaints */}
+                <Grid item xs={12} md={5} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
-                        {/* Live Support Widget */}
-                        <Card sx={{ ...CardStyle, overflow: 'hidden', height: 400, display: 'flex', flexDirection: 'column' }}>
-                            <Box sx={{ p: 2, bgcolor: '#2563eb', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Forum fontSize="small" />
-                                    <Typography variant="subtitle2" fontWeight="bold">Live Support</Typography>
-                                </Box>
-                                <Chip
-                                    icon={<Box sx={{ width: 6, height: 6, bgcolor: '#4ade80', borderRadius: '50%' }} />}
-                                    label="Online"
-                                    size="small"
-                                    sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', height: 24, fontSize: '0.7rem' }}
-                                />
+                    {/* 1. Live Support Widget */}
+                    <Card sx={{ ...CardStyle, overflow: 'hidden', height: 400, display: 'flex', flexDirection: 'column' }}>
+                        <Box sx={{ p: 2, bgcolor: '#2563eb', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Forum fontSize="small" />
+                                <Typography variant="subtitle2" fontWeight="bold">Live Support</Typography>
                             </Box>
-                            <Box sx={{ flex: 1, bgcolor: '#f8fafc', p: 2, display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#e2e8f0' }}>S</Avatar>
-                                    <Box sx={{ bgcolor: '#fff', p: 1.5, borderRadius: '12px 12px 12px 0', border: '1px solid #e2e8f0', maxWidth: '85%' }}>
-                                        <Typography variant="body2" color="textSecondary">Hello! How can I help you with your booking today?</Typography>
-                                    </Box>
-                                </Box>
-                                <Box sx={{ display: 'flex', gap: 1, flexDirection: 'row-reverse' }}>
-                                    <Avatar sx={{ width: 32, height: 32, bgcolor: '#eff6ff', color: '#2563eb', fontSize: '0.7rem' }}>ME</Avatar>
-                                    <Box sx={{ bgcolor: '#2563eb', color: '#fff', p: 1.5, borderRadius: '12px 12px 0 12px', maxWidth: '85%' }}>
-                                        <Typography variant="body2">Hi, I need to reschedule my plumbing appointment.</Typography>
-                                    </Box>
+                            <Chip label="Online" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', height: 20, fontSize: '0.65rem' }} />
+                        </Box>
+                        <Box sx={{ flex: 1, bgcolor: '#f8fafc', p: 2, display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Avatar sx={{ width: 28, height: 28, bgcolor: '#e2e8f0' }}>S</Avatar>
+                                <Box sx={{ bgcolor: '#fff', p: 1.5, borderRadius: '12px 12px 12px 0', border: '1px solid #e2e8f0', maxWidth: '85%' }}>
+                                    <Typography variant="caption" color="textSecondary">Hello! How can I help?</Typography>
                                 </Box>
                             </Box>
-                            <Box sx={{ p: 2, borderTop: '1px solid #e2e8f0' }}>
-                                <Box sx={{ position: 'relative' }}>
-                                    <InputBase fullWidth placeholder="Type a message..." sx={{ bgcolor: '#f8fafc', borderRadius: '20px', pl: 2, pr: 5, py: 1, border: '1px solid #e2e8f0' }} />
-                                    <IconButton size="small" sx={{ position: 'absolute', right: 4, top: 4, bgcolor: '#2563eb', color: '#fff', '&:hover': { bgcolor: '#1d4ed8' } }}>
-                                        <Send fontSize="small" />
-                                    </IconButton>
+                            <Box sx={{ display: 'flex', gap: 1, flexDirection: 'row-reverse' }}>
+                                <Avatar sx={{ width: 28, height: 28, bgcolor: '#eff6ff', color: '#2563eb', fontSize: '0.6rem' }}>ME</Avatar>
+                                <Box sx={{ bgcolor: '#2563eb', color: '#fff', p: 1.5, borderRadius: '12px 12px 0 12px', maxWidth: '85%' }}>
+                                    <Typography variant="caption">Reschedule my appointment.</Typography>
                                 </Box>
                             </Box>
-                        </Card>
+                        </Box>
+                        <Box sx={{ p: 1.5, borderTop: '1px solid #e2e8f0' }}>
+                            <Box sx={{ position: 'relative' }}>
+                                <InputBase fullWidth placeholder="Type..." sx={{ bgcolor: '#fff', borderRadius: '20px', pl: 2, pr: 5, py: 0.5, border: '1px solid #e2e8f0', fontSize: '0.85rem' }} />
+                                <IconButton size="small" sx={{ position: 'absolute', right: 4, top: 2, color: '#2563eb' }}>
+                                    <Send fontSize="small" />
+                                </IconButton>
+                            </Box>
+                        </Box>
+                    </Card>
 
-                        {/* Complaints Widget */}
-                        <Card sx={{ ...CardStyle }}>
-                            <CardContent>
-                                <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <ReportProblem color="error" /> Complaints
-                                </Typography>
-                                <Box sx={{ bgcolor: '#f8fafc', borderRadius: '8px', p: 3, textAlign: 'center', border: '1px solid #f1f5f9', mb: 2 }}>
-                                    <CheckCircle sx={{ fontSize: 40, color: '#cbd5e1', mb: 1 }} />
-                                    <Typography variant="subtitle2" fontWeight="bold">No Open Issues</Typography>
-                                    <Typography variant="caption" color="textSecondary">Great! All your services are running smoothly.</Typography>
-                                </Box>
-                                <Button fullWidth variant="outlined" startIcon={<Add />} sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 'bold', color: '#475569', borderColor: '#e2e8f0' }}>
-                                    File New Complaint
-                                </Button>
-                            </CardContent>
-                        </Card>
+                    {/* 2. Complaints Widget */}
+                    <Card sx={{ ...CardStyle }}>
+                        <CardContent sx={{ p: 2 }}>
+                            <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <ReportProblem color="error" fontSize="small" /> Complaints & Issues
+                            </Typography>
+                            <Box sx={{ bgcolor: '#fef2f2', borderRadius: '8px', p: 2, textAlign: 'center', border: '1px solid #fee2e2', mb: 2 }}>
+                                <CheckCircle sx={{ fontSize: 32, color: '#ef4444', mb: 1 }} />
+                                <Typography variant="body2" fontWeight="bold" color="error">No Open Issues</Typography>
+                                <Typography variant="caption" color="textSecondary">Everything is running smoothly.</Typography>
+                            </Box>
+                            <Button fullWidth variant="outlined" color="error" size="small" sx={{ borderRadius: '8px', textTransform: 'none' }}>
+                                Report a Problem
+                            </Button>
+                        </CardContent>
+                    </Card>
 
-                        {/* Upsell / You Might Need */}
-                        <Card sx={{ ...CardStyle, background: 'linear-gradient(to bottom right, #ffffff, #f8fafc)' }}>
-                            <CardContent>
-                                <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>You might need</Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                    <Box sx={{ width: 64, height: 64, borderRadius: '8px', bgcolor: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <WaterDrop color="primary" />
-                                    </Box>
-                                    <Box>
-                                        <Typography variant="subtitle2" fontWeight="bold">Pool Cleaning</Typography>
-                                        <Typography variant="body2" fontWeight="bold" color="primary">
-                                            $120 <Box component="span" sx={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: '0.8em', fontWeight: 'normal' }}>$150</Box>
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                                <Button fullWidth variant="contained" sx={{ bgcolor: 'rgba(37, 99, 235, 0.1)', color: '#2563eb', fontWeight: 'bold', boxShadow: 'none', '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.2)', boxShadow: 'none' } }}>
-                                    View Details
-                                </Button>
-                            </CardContent>
-                        </Card>
-
-                    </Box>
                 </Grid>
             </Grid>
 
