@@ -143,73 +143,69 @@ class JobManager {
     }
 
     async autoAssignJob(jobId) {
-        console.log(`[JobManager] Starting Real-Time AutoAssign for Job #${jobId}`);
+        console.log(`[JobManager] Starting Advanced Real-Time AutoAssign for Job #${jobId}`);
         try {
             const job = await this.getJob(jobId);
-            if (!job || job.technicianId || job.status !== 'pending') {
-                return job;
-            }
+            if (!job || job.technicianId || job.status !== 'pending') return job;
 
             const { location, serviceType, technicianId: requestedTechId } = job;
 
             // --- CONDITION 2 & 3: Direct Assignment (Quick Booking / Tech of Month) ---
             if (requestedTechId) {
-                console.log(`[JobManager] Condition 2/3 Met: Direct Assignment requested for ${requestedTechId}`);
+                console.log(`[JobManager] Direct Assignment requested for ${requestedTechId}`);
+                // [Flow 2] - Availability check is handled inside assignTechnician
                 return await this.assignTechnician(jobId, requestedTechId);
             }
 
             // --- CONDITION 1: Auto-Search & Filter ---
             if (location && (location.latitude || location.lat) && (location.longitude || location.lng)) {
-                const lat = location.latitude || location.lat;
-                const lon = location.longitude || location.lng;
+                const lat = parseFloat(location.latitude || location.lat);
+                const lon = parseFloat(location.longitude || location.lng);
 
                 // Step A: Search Nearby (Radius 30km [FIXED])
                 const radius = 30.0;
                 let candidates = await this.techManager.searchTechnicians(lat, lon, serviceType, radius);
 
-                // Filter only available technicians
-                // Note: We only auto-assign to 'available' techs. 
-                // Busy techs can only be booked via Direct Booking (Queue).
+                // Only consider 'available' techs for auto-assignment
+                // Busy techs are excluded from Flow 1 (Generic Search)
                 candidates = candidates.filter(t => t.status === 'available');
-
                 console.log(`[AutoAssign] Found ${candidates.length} candidates within ${radius}km for ${serviceType}`);
 
                 const allJobsThisMonth = await this._getMonthlyJobCountGlobal();
-
                 const qualifiedTechs = [];
 
                 for (const tech of candidates) {
                     // --- CRITERIA CHECKS ---
 
-                    // 1. Check Star Rating (>= 3.0 OR New/0)
+                    // 1. Star Rating Filter (> 3.0 OR New/0)
                     const rating = tech.rating || 0;
                     if (rating > 0 && rating < 3.0) {
-                        // console.debug(`[AutoAssign] Skipping ${tech.name}: Low Rating (${rating})`);
                         continue;
                     }
 
-                    // 2. Check Job Rejection Rate (<= 20% in CURRENT MONTH) [FIXED: <=]
-                    const jobStats = await this.getJobStats(tech.id, true); // true = current month only
-                    // jobStats.ratio is rejection ratio (0.0 to 1.0)
-                    if (jobStats.total >= 3 && jobStats.ratio > 0.20) {
-                        // console.debug(`[AutoAssign] Skipping ${tech.name}: High Monthly Rejection Rate (${(jobStats.ratio * 100).toFixed(1)}% > 20%)`);
+                    // 2. Rejection Rate Filter (< 20% in CURRENT MONTH)
+                    const jobStats = await this.getJobStats(tech.id, true);
+                    if (jobStats.total >= 3 && jobStats.ratio >= 0.20) {
                         continue;
                     }
 
                     // 3. Market Share / Workload Caps
-                    // Condition: Free < 20%, Premium <= 100% (No Cap) [FIXED]
+                    // Condition: Free < 20%
                     const isPremium = tech.membership === 'Premium' || tech.subscription === 'premium';
-                    const volumeCap = isPremium ? 1.00 : 0.20;
 
-                    const techMonthlyJobs = await this._getMonthlyJobCount(tech.id);
-                    // Avoid division by zero
-                    const volumeShare = allJobsThisMonth > 0 ? (techMonthlyJobs / allJobsThisMonth) : 0;
+                    // Condition B: Underutilized Logic (Implicit - they pass simpler checks)
 
-                    // Only apply cap if there is somewhat significant volume (e.g., > 10 jobs in system)
-                    // Strict adherence: If Free and share >= 20%, SKIP.
-                    if (allJobsThisMonth > 10 && volumeShare >= volumeCap) {
-                        // console.debug(`[AutoAssign] Skipping ${tech.name}: Over volume cap (${(volumeShare * 100).toFixed(1)}% / ${(volumeCap * 100).toFixed(1)}%)`);
-                        if (!isPremium) continue; // Only skip if NOT premium (since premium is 100%)
+                    // Condition C: Free Tier Cap
+                    if (!isPremium) {
+                        const techMonthlyJobs = await this._getMonthlyJobCount(tech.id);
+                        const regionTotal = Math.max(allJobsThisMonth, 1);
+                        const share = techMonthlyJobs / regionTotal;
+
+                        // Strict: If > 10 jobs exist and tech has >= 20% share, SKIP
+                        if (allJobsThisMonth > 10 && share >= 0.20) {
+                            // console.log(`[AutoAssign] Cap Hit: ${tech.name} has ${share}% share.`);
+                            continue;
+                        }
                     }
 
                     qualifiedTechs.push(tech);
@@ -218,26 +214,24 @@ class JobManager {
                 // If found, pick the best one
                 if (qualifiedTechs.length > 0) {
                     // Sort Priority:
-                    // 1. Rating (Desc)
-                    // 2. Premium Status (Privilege)
+                    // 1. Premium Status (Privilege)
+                    // 2. Rating (Desc)
                     // 3. Distance (Asc)
                     qualifiedTechs.sort((a, b) => {
-                        const scoreA = (a.rating || 0) + (a.membership === 'Premium' ? 1 : 0);
-                        const scoreB = (b.rating || 0) + (b.membership === 'Premium' ? 1 : 0);
-                        return (scoreB - scoreA) || (a.distance - b.distance);
+                        const isPremA = (a.membership === 'Premium' || a.subscription === 'premium') ? 1 : 0;
+                        const isPremB = (b.membership === 'Premium' || b.subscription === 'premium') ? 1 : 0;
+
+                        if (isPremA !== isPremB) return isPremB - isPremA;
+                        if ((b.rating || 0) !== (a.rating || 0)) return (b.rating || 0) - (a.rating || 0);
+                        return a.distance - b.distance;
                     });
 
-                    const bestTech = qualifiedTechs[0];
-
-                    console.log(`[JobManager] Auto-pairing Job #${jobId} with ${bestTech.name} (Dist: ${bestTech.distance}km, Rate: ${bestTech.rating})`);
-
-                    // Assign
-                    return await this.assignTechnician(jobId, bestTech.id);
+                    const winner = qualifiedTechs[0];
+                    console.log(`[JobManager] Winner Selected: ${winner.name} (Premium: ${winner.membership}, Dist: ${winner.distance}km)`);
+                    return await this.assignTechnician(jobId, winner.id);
                 } else {
-                    // console.debug(`[JobManager] No qualified technicians found for Job #${jobId} after filtering.`);
+                    console.log(`[JobManager] No qualified technicians found for Job #${jobId} after filtering.`);
                 }
-            } else {
-                // console.debug(`[JobManager] AutoAssign skipped: Missing location data for Job #${jobId}`);
             }
             return job;
         } catch (err) {
@@ -246,33 +240,26 @@ class JobManager {
         }
     }
 
-    // Renaming original autoAssignJob to _autoAssignJobInternal or just keeping it 
-    // Wait, I should just modify assignment logic.
-    // The previous tool didn't show autoAssignJob fully. I'll rely on assignTechnician.
-
-    // Re-implementing autoAssignJob to be safe, or just relying on assignTechnician update.
-    // I will Only update assignTechnician and createJob in this chunk.
-    // WAIT, I need to keep autoAssignJob available.
-    // I will just paste createJob and assignTechnician.
-
-    // ...
-
     async assignTechnician(jobId, technicianId) {
         try {
             console.log(`[JobManager] Assigning Technician ${technicianId} to Job ${jobId}`);
 
-            // Check Tech Status First
             const tech = await this.techManager.getTechnician(technicianId);
             const techStatus = (tech?.status || 'available').toLowerCase();
+            // Check if tech is busy (Flow 4)
             const isBusy = ['engaged', 'finishing_work', 'finishing work'].includes(techStatus);
 
             let newJobStatus = 'accepted';
+            let flowType = 'Direct Assignment';
 
             if (isBusy) {
-                console.log(`[JobManager] Tech ${technicianId} is ${techStatus}. Creating Queue/Waiting Confirmation Booking.`);
+                // Flow 4: Queue Management
+                console.log(`[JobManager] Tech ${technicianId} is BUSY (${techStatus}). Activating Queue Logic.`);
                 newJobStatus = 'waiting_confirmation';
-                // Do NOT update tech status to 'engaged' (already is)
+                flowType = 'Queue Request';
+                // Tech status remains 'engaged' or 'finishing_work'
             } else {
+                // Standard Assignment
                 newJobStatus = 'accepted';
                 await this.techManager.updateStatus(technicianId, 'engaged');
             }
@@ -280,287 +267,293 @@ class JobManager {
             const updatedJob = await this.updateStatus(jobId, newJobStatus, { technicianId });
 
             if (this.io) {
+                // Only broadcast 'engaged' if they weren't already busy
                 if (!isBusy) this.io.emit('technician_status_update', { technicianId, status: 'engaged' });
 
-                this.io.to(`tech_${technicianId}`).emit('new_job_assigned', updatedJob);
+                this.io.to(`tech_${technicianId}`).emit('new_job_assigned', { ...updatedJob, flowType });
                 this.io.to(`user_${updatedJob.userId}`).emit('job_status_updated', updatedJob);
                 this.io.emit('admin_job_update', updatedJob);
             }
 
-            const notifTitle = isBusy ? 'New Queue Request' : 'New Job Assigned';
+            const notifTitle = isBusy ? 'New Job Queued 🕒' : 'New Job Assigned ✅';
             const notifBody = isBusy
-                ? `Job #${jobId} added to your queue. Please CALL customer to confirm time when free.`
+                ? `Job #${jobId} added to your queue. Please accept when you finish current work.`
                 : `Job #${jobId} has been assigned to you.`;
 
             await this.notificationManager.createNotification(technicianId, 'technician', notifTitle, notifBody, 'job_assigned', jobId);
 
-            // [NEW] Update Stats
+            // Update Stats
             await this.techManager.updateStats(technicianId, { type: 'assign' });
 
             return updatedJob;
         } catch (err) {
-            console.error(`[JobManager] Error assigning technician ${technicianId} to job ${jobId}:`, err);
+            console.error("[JobManager] Assign Error:", err);
             throw err;
         }
+    }
+} catch (err) {
+    console.error(`[JobManager] Error assigning technician ${technicianId} to job ${jobId}:`, err);
+    throw err;
+}
     }
 
     async _enrichJob(job) {
-        if (!job) return null;
-        try {
-            const customer = await this.userManager.getUser(job.userId);
-            const enriched = {
-                ...job,
-                customer,
-                contactName: job.contactName || customer?.name || "Customer",
-                contactPhone: job.contactPhone || customer?.phone || "",
-                customerMobile: job.customerMobile || job.contactPhone || customer?.phone || ""
-            };
+    if (!job) return null;
+    try {
+        const customer = await this.userManager.getUser(job.userId);
+        const enriched = {
+            ...job,
+            customer,
+            contactName: job.contactName || customer?.name || "Customer",
+            contactPhone: job.contactPhone || customer?.phone || "",
+            customerMobile: job.customerMobile || job.contactPhone || customer?.phone || ""
+        };
 
-            if (job.technicianId) {
-                const tech = await this.techManager.getTechnician(job.technicianId);
-                if (tech) {
-                    enriched.technician = {
-                        id: tech.id,
-                        name: tech.name,
-                        phone: tech.phone,
-                        photo: tech.documents?.photo || tech.photo,
-                        serviceType: tech.serviceType,
-                        rating: tech.rating
-                    };
-                }
+        if (job.technicianId) {
+            const tech = await this.techManager.getTechnician(job.technicianId);
+            if (tech) {
+                enriched.technician = {
+                    id: tech.id,
+                    name: tech.name,
+                    phone: tech.phone,
+                    photo: tech.documents?.photo || tech.photo,
+                    serviceType: tech.serviceType,
+                    rating: tech.rating
+                };
             }
-            return enriched;
-        } catch (err) {
-            console.error("[JobManager] Error enriching job:", err);
-            return job;
         }
+        return enriched;
+    } catch (err) {
+        console.error("[JobManager] Error enriching job:", err);
+        return job;
     }
+}
 
     async getJob(id) {
-        try {
-            const job = await this.db.find('id', id);
-            return await this._enrichJob(this._mapFromDb(job));
-        } catch (err) {
-            console.error(`[JobManager] Error getting job ${id}:`, err);
-            return null;
-        }
+    try {
+        const job = await this.db.find('id', id);
+        return await this._enrichJob(this._mapFromDb(job));
+    } catch (err) {
+        console.error(`[JobManager] Error getting job ${id}:`, err);
+        return null;
     }
+}
 
     async getAllJobs() {
-        try {
-            const jobs = await this.db.read();
-            return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
-        } catch (err) {
-            console.error("[JobManager] Error getting all jobs:", err);
-            return [];
-        }
+    try {
+        const jobs = await this.db.read();
+        return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
+    } catch (err) {
+        console.error("[JobManager] Error getting all jobs:", err);
+        return [];
     }
+}
 
     async updateStatus(id, status, details = {}) {
-        try {
-            const updates = { status, updatedAt: new Date().toISOString(), ...details };
-            const dbUpdates = this._mapToDb(updates);
-            const updated = await this.db.update('id', id, dbUpdates);
-            const enriched = await this._enrichJob(this._mapFromDb(updated));
+    try {
+        const updates = { status, updatedAt: new Date().toISOString(), ...details };
+        const dbUpdates = this._mapToDb(updates);
+        const updated = await this.db.update('id', id, dbUpdates);
+        const enriched = await this._enrichJob(this._mapFromDb(updated));
 
-            if (this.io) {
-                this.io.to(`user_${enriched.userId}`).emit('job_status_updated', enriched);
-                if (enriched.technicianId) {
-                    this.io.to(`tech_${enriched.technicianId}`).emit('job_status_updated', enriched);
-
-                    // [REFACTORED] Centralized Side Effects
-                    if (status === 'completed') {
-                        console.log(`[JobManager] Job ${id} completed, updating tech ${enriched.technicianId} stats and status`);
-                        await this.techManager.updateStats(enriched.technicianId, { type: 'complete' });
-                        await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
-
-                        // Process Payment (Credit Tech) - 90% of price
-                        const amount = enriched.offerPrice || enriched.visitingCharges || 0;
-                        if (amount > 0) {
-                            await this.financeManager.processPayment(enriched.technicianId, amount * 0.9, 'credit', `Job Compensation #${enriched.id}`);
-                            this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
-                            this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
-                        }
-
-                        // [NEW] Generate and Send Invoice (Async)
-                        if (this.invoiceManager) {
-                            // Don't await in critical path to keep response fast, but handle errors
-                            (async () => {
-                                try {
-                                    console.log(`[JobManager] Generating invoice for Job ${id}...`);
-                                    const pdfBuffer = await this.invoiceManager.generateInvoice(enriched);
-                                    const result = await this.invoiceManager.sendInvoiceEmail(enriched, pdfBuffer);
-                                    console.log(`[JobManager] Invoice processing for Job ${id}:`, result);
-                                } catch (invErr) {
-                                    console.error(`[JobManager] Invoice generation failed for Job ${id}:`, invErr);
-                                }
-                            })();
-                        } else {
-                            console.error('[JobManager] InvoiceManager not injected! Cannot send invoice.');
-                        }
-                    } else if (status === 'rejected') {
-                        console.log(`[JobManager] Job ${id} rejected, updating tech ${enriched.technicianId} stats and setting status to available`);
-                        await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
-                        await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
-                    }
-                    else if (status === 'accepted') {
-                        console.log(`[JobManager] Job ${id} accepted, updating tech ${enriched.technicianId} stats and setting status to engaged`);
-                        await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
-                        await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
-                    } else if (status === 'in_progress') {
-                        console.log(`[JobManager] Job ${id} in progress, setting tech ${enriched.technicianId} status to engaged`);
-                        await this.techManager.updateStatus(enriched.technicianId, 'engaged');
-                    }
-                }
-                this.io.emit('admin_job_update', enriched);
-                this.io.emit('job_status_updated_admin', enriched); // Sync with Admin listener
-            }
-
-            // [NEW] Persist Notifications
-            if (enriched.userId) {
-                await this.notificationManager.createNotification(enriched.userId, 'user', `Job ${status.replace('_', ' ')}`, `Your job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
-            }
+        if (this.io) {
+            this.io.to(`user_${enriched.userId}`).emit('job_status_updated', enriched);
             if (enriched.technicianId) {
-                await this.notificationManager.createNotification(enriched.technicianId, 'technician', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
+                this.io.to(`tech_${enriched.technicianId}`).emit('job_status_updated', enriched);
+
+                // [REFACTORED] Centralized Side Effects
+                if (status === 'completed') {
+                    console.log(`[JobManager] Job ${id} completed, updating tech ${enriched.technicianId} stats and status`);
+                    await this.techManager.updateStats(enriched.technicianId, { type: 'complete' });
+                    await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
+
+                    // Process Payment (Credit Tech) - 90% of price
+                    const amount = enriched.offerPrice || enriched.visitingCharges || 0;
+                    if (amount > 0) {
+                        await this.financeManager.processPayment(enriched.technicianId, amount * 0.9, 'credit', `Job Compensation #${enriched.id}`);
+                        this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
+                        this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
+                    }
+
+                    // [NEW] Generate and Send Invoice (Async)
+                    if (this.invoiceManager) {
+                        // Don't await in critical path to keep response fast, but handle errors
+                        (async () => {
+                            try {
+                                console.log(`[JobManager] Generating invoice for Job ${id}...`);
+                                const pdfBuffer = await this.invoiceManager.generateInvoice(enriched);
+                                const result = await this.invoiceManager.sendInvoiceEmail(enriched, pdfBuffer);
+                                console.log(`[JobManager] Invoice processing for Job ${id}:`, result);
+                            } catch (invErr) {
+                                console.error(`[JobManager] Invoice generation failed for Job ${id}:`, invErr);
+                            }
+                        })();
+                    } else {
+                        console.error('[JobManager] InvoiceManager not injected! Cannot send invoice.');
+                    }
+                } else if (status === 'rejected') {
+                    console.log(`[JobManager] Job ${id} rejected, updating tech ${enriched.technicianId} stats and setting status to available`);
+                    await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
+                    await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
+                }
+                else if (status === 'accepted') {
+                    console.log(`[JobManager] Job ${id} accepted, updating tech ${enriched.technicianId} stats and setting status to engaged`);
+                    await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
+                    await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
+                } else if (status === 'in_progress') {
+                    console.log(`[JobManager] Job ${id} in progress, setting tech ${enriched.technicianId} status to engaged`);
+                    await this.techManager.updateStatus(enriched.technicianId, 'engaged');
+                }
             }
-            // Admin Notification
-            await this.notificationManager.createNotification('admin', 'admin', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} updated to ${status}`, `job_status_update`, enriched.id);
-            return enriched;
-        } catch (err) {
-            console.error(`[JobManager] Error updating status for job ${id}:`, err);
-            throw err;
+            this.io.emit('admin_job_update', enriched);
+            this.io.emit('job_status_updated_admin', enriched); // Sync with Admin listener
         }
+
+        // [NEW] Persist Notifications
+        if (enriched.userId) {
+            await this.notificationManager.createNotification(enriched.userId, 'user', `Job ${status.replace('_', ' ')}`, `Your job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
+        }
+        if (enriched.technicianId) {
+            await this.notificationManager.createNotification(enriched.technicianId, 'technician', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
+        }
+        // Admin Notification
+        await this.notificationManager.createNotification('admin', 'admin', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} updated to ${status}`, `job_status_update`, enriched.id);
+        return enriched;
+    } catch (err) {
+        console.error(`[JobManager] Error updating status for job ${id}:`, err);
+        throw err;
     }
+}
 
     async updateJob(id, data) {
-        // [CRITICAL FIX] Delegate to updateStatus if status is changing.
-        // This ensures side effects (Invoice, Tech Status, Payment) trigger even if Admin updates job.
-        if (data.status) {
-            console.log(`[JobManager] updateJob detected status change to '${data.status}'. Delegating to updateStatus to ensure automation.`);
-            return this.updateStatus(id, data.status, data);
-        }
-
-        try {
-            const updates = {
-                ...this._mapToDb(data),
-                updated_at: new Date().toISOString()
-            };
-            delete updates.id; // Protect ID
-
-            const result = await this.db.update('id', id, updates);
-            const enriched = await this._enrichJob(this._mapFromDb(result));
-
-            if (this.io) {
-                this.io.to(`user_${enriched.userId}`).emit('job_updated', enriched);
-                if (enriched.technicianId) {
-                    this.io.to(`tech_${enriched.technicianId}`).emit('job_updated', enriched);
-                }
-                this.io.emit('admin_job_update', enriched);
-            }
-            return enriched;
-        } catch (err) {
-            console.error(`[JobManager] Error updating job ${id}:`, err);
-            throw err;
-        }
+    // [CRITICAL FIX] Delegate to updateStatus if status is changing.
+    // This ensures side effects (Invoice, Tech Status, Payment) trigger even if Admin updates job.
+    if (data.status) {
+        console.log(`[JobManager] updateJob detected status change to '${data.status}'. Delegating to updateStatus to ensure automation.`);
+        return this.updateStatus(id, data.status, data);
     }
+
+    try {
+        const updates = {
+            ...this._mapToDb(data),
+            updated_at: new Date().toISOString()
+        };
+        delete updates.id; // Protect ID
+
+        const result = await this.db.update('id', id, updates);
+        const enriched = await this._enrichJob(this._mapFromDb(result));
+
+        if (this.io) {
+            this.io.to(`user_${enriched.userId}`).emit('job_updated', enriched);
+            if (enriched.technicianId) {
+                this.io.to(`tech_${enriched.technicianId}`).emit('job_updated', enriched);
+            }
+            this.io.emit('admin_job_update', enriched);
+        }
+        return enriched;
+    } catch (err) {
+        console.error(`[JobManager] Error updating job ${id}:`, err);
+        throw err;
+    }
+}
 
     async getJobStats(technicianId, monthOnly = false) {
-        try {
-            const jobs = await this.getJobsByTechnician(technicianId);
-            let filteredJobs = jobs; // Default to all
+    try {
+        const jobs = await this.getJobsByTechnician(technicianId);
+        let filteredJobs = jobs; // Default to all
 
-            if (monthOnly) {
-                const now = new Date();
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-                filteredJobs = jobs.filter(j => j.createdAt >= startOfMonth || j.created_at >= startOfMonth);
-            }
-
-            const total = filteredJobs.length;
-            if (total === 0) return { total: 0, rejected: 0, completed: 0, ratio: 0 };
-            const rejected = filteredJobs.filter(j => j.status === 'rejected' || j.status === 'cancelled').length;
-            const completed = filteredJobs.filter(j => j.status === 'completed').length;
-            return { total, rejected, completed, ratio: rejected / total };
-        } catch (err) {
-            console.error(`[JobManager] Error getting stats for tech ${technicianId}:`, err);
-            return { total: 0, rejected: 0, ratio: 0 };
+        if (monthOnly) {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+            filteredJobs = jobs.filter(j => j.createdAt >= startOfMonth || j.created_at >= startOfMonth);
         }
+
+        const total = filteredJobs.length;
+        if (total === 0) return { total: 0, rejected: 0, completed: 0, ratio: 0 };
+        const rejected = filteredJobs.filter(j => j.status === 'rejected' || j.status === 'cancelled').length;
+        const completed = filteredJobs.filter(j => j.status === 'completed').length;
+        return { total, rejected, completed, ratio: rejected / total };
+    } catch (err) {
+        console.error(`[JobManager] Error getting stats for tech ${technicianId}:`, err);
+        return { total: 0, rejected: 0, ratio: 0 };
     }
+}
 
     async getJobsByTechnician(technicianId) {
-        try {
-            const jobs = await this.db.findAll('technician_id', technicianId);
-            return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
-        } catch (err) {
-            console.error(`[JobManager] Error getting jobs for tech ${technicianId}:`, err);
-            return [];
-        }
+    try {
+        const jobs = await this.db.findAll('technician_id', technicianId);
+        return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
+    } catch (err) {
+        console.error(`[JobManager] Error getting jobs for tech ${technicianId}:`, err);
+        return [];
     }
+}
 
     async getJobsByUser(userId) {
-        try {
-            const jobs = await this.db.findAll('user_id', userId);
-            return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
-        } catch (err) {
-            console.error(`[JobManager] Error getting jobs for user ${userId}:`, err);
-            return [];
-        }
+    try {
+        const jobs = await this.db.findAll('user_id', userId);
+        return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
+    } catch (err) {
+        console.error(`[JobManager] Error getting jobs for user ${userId}:`, err);
+        return [];
     }
+}
 
     async getUnassignedJobs() {
-        try {
-            const allJobs = await this.db.read();
-            return allJobs
-                .filter(j => j.status === 'pending' && !j.technician_id)
-                .map(j => this._mapFromDb(j));
-        } catch (err) {
-            console.error('[JobManager] Error getting unassigned jobs:', err);
-            return [];
-        }
+    try {
+        const allJobs = await this.db.read();
+        return allJobs
+            .filter(j => j.status === 'pending' && !j.technician_id)
+            .map(j => this._mapFromDb(j));
+    } catch (err) {
+        console.error('[JobManager] Error getting unassigned jobs:', err);
+        return [];
     }
+}
 
     // [NEW] Get jobs within specific radius
     async getJobsByLocation(lat, lng, radiusKm = 30) {
-        try {
-            const allJobs = await this.getAllJobs();
-            if (!lat || !lng) return allJobs;
+    try {
+        const allJobs = await this.getAllJobs();
+        if (!lat || !lng) return allJobs;
 
-            const searchLat = parseFloat(lat);
-            const searchLng = parseFloat(lng);
+        const searchLat = parseFloat(lat);
+        const searchLng = parseFloat(lng);
 
-            return allJobs.filter(j => {
-                let jLat = null;
-                let jLon = null;
+        return allJobs.filter(j => {
+            let jLat = null;
+            let jLon = null;
 
-                // 1. Prioritize Job Location
-                if (j.location && (j.location.latitude || j.location.lat)) {
-                    jLat = parseFloat(j.location.latitude || j.location.lat);
-                    jLon = parseFloat(j.location.longitude || j.location.lng);
-                }
-                // 2. Fallback to Customer Location
-                else if (j.customer && j.customer.latitude) {
-                    jLat = parseFloat(j.customer.latitude);
-                    jLon = parseFloat(j.customer.longitude);
-                }
+            // 1. Prioritize Job Location
+            if (j.location && (j.location.latitude || j.location.lat)) {
+                jLat = parseFloat(j.location.latitude || j.location.lat);
+                jLon = parseFloat(j.location.longitude || j.location.lng);
+            }
+            // 2. Fallback to Customer Location
+            else if (j.customer && j.customer.latitude) {
+                jLat = parseFloat(j.customer.latitude);
+                jLon = parseFloat(j.customer.longitude);
+            }
 
-                if (jLat === null || jLon === null || isNaN(jLat) || isNaN(jLon)) return false;
+            if (jLat === null || jLon === null || isNaN(jLat) || isNaN(jLon)) return false;
 
-                // Simple Distance Calc
-                const R = 6371;
-                const dLat = (jLat - searchLat) * (Math.PI / 180);
-                const dLon = (jLon - searchLng) * (Math.PI / 180);
-                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                    Math.cos(searchLat * (Math.PI / 180)) * Math.cos(jLat * (Math.PI / 180)) *
-                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                const dist = R * c;
+            // Simple Distance Calc
+            const R = 6371;
+            const dLat = (jLat - searchLat) * (Math.PI / 180);
+            const dLon = (jLon - searchLng) * (Math.PI / 180);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(searchLat * (Math.PI / 180)) * Math.cos(jLat * (Math.PI / 180)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const dist = R * c;
 
-                return dist <= radiusKm;
-            });
-        } catch (err) {
-            console.error("[JobManager] Error getting jobs by location:", err);
-            return [];
-        }
+            return dist <= radiusKm;
+        });
+    } catch (err) {
+        console.error("[JobManager] Error getting jobs by location:", err);
+        return [];
     }
+}
 }
 
 module.exports = JobManager;
