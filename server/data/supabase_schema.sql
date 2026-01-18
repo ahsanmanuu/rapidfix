@@ -16,6 +16,37 @@ ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'available', -- available, engaged,
 ADD COLUMN IF NOT EXISTS current_job_id UUID REFERENCES jobs(id),
 ADD COLUMN IF NOT EXISTS membership_tier TEXT DEFAULT 'Free'; -- Free, Premium
 
+-- [NEW] Testimonials Table (Missing)
+CREATE TABLE IF NOT EXISTS testimonials (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    technician_id UUID REFERENCES technicians(id) ON DELETE SET NULL,
+    rating INT,
+    comment TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    active BOOLEAN DEFAULT TRUE
+);
+
+-- [NEW] Locations Table (Missing - for Live Tracking History)
+CREATE TABLE IF NOT EXISTS locations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    technician_id UUID REFERENCES technicians(id) ON DELETE CASCADE,
+    latitude FLOAT NOT NULL,
+    longitude FLOAT NOT NULL,
+    city TEXT,
+    area TEXT,
+    pincode TEXT,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Ensure at least one ID is present
+    CONSTRAINT locations_owner_check CHECK (user_id IS NOT NULL OR technician_id IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS idx_locations_user_id ON locations(user_id);
+CREATE INDEX IF NOT EXISTS idx_locations_technician_id ON locations(technician_id);
+
 -- [FIX] Use a separate column for geospatial index to avoid conflict with existing 'location' (JSONB)
 ALTER TABLE technicians 
 ADD COLUMN IF NOT EXISTS geo_location GEOGRAPHY(POINT, 4326);
