@@ -139,6 +139,26 @@ const DashboardHome = ({ jobs = [] }) => {
         alert('Your offer has been posted successfully!');
     };
 
+    // --- Booking Logic ---
+    const handleBookNow = (serviceType) => {
+        const launchMap = (loc) => {
+            setBookingParams({
+                serviceType,
+                location: loc,
+                scheduledDate: new Date().toISOString().split('T')[0],
+                scheduledTime: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                contactName: user?.name || '',
+                contactPhone: user?.phone || '',
+                description: 'Quick Dashboard Booking'
+            });
+            setIsSearchOpen(true);
+        };
+
+        if (liveLocation) launchMap(liveLocation);
+        else if (user?.location?.latitude) launchMap(user.location);
+        else launchMap(null);
+    };
+
     // --- Stats Calculation ---
     const completedJobs = jobs.filter(j => j.status === 'completed');
     // "Rejected" might mean 'cancelled' or specific status. User said "Rejected".
@@ -361,79 +381,71 @@ const DashboardHome = ({ jobs = [] }) => {
 
 export default DashboardHome;
 
-const handleBookNow = (serviceTitle) => {
-    setBookingParams({
-        serviceType: serviceTitle,
-        location: liveLocation || user?.location,
-        contactName: user?.name || '',
-        contactPhone: user?.phone || '',
-        description: 'Quick Dashboard Booking'
-setIsSearchOpen(true);
+
+
+// Priority 1: Use Live Synced Location (Fresh from GPS + DB)
+if (liveLocation) {
+    launchMap(liveLocation);
+    return;
+}
+
+// Priority 2: Fallback to existing User Prop (if sync hasn't finished yet)
+if (user?.location?.latitude) {
+    const loc = {
+        latitude: user.location.latitude,
+        longitude: user.location.longitude,
+        address: user.location.address || (locationName.area + ", " + locationName.city)
     };
+    launchMap(loc);
+    return;
+}
 
-    // Priority 1: Use Live Synced Location (Fresh from GPS + DB)
-    if (liveLocation) {
-        launchMap(liveLocation);
-        return;
-    }
+// Priority 3: Final GPS Attempt (Delegate to Modal + Pre-fetch)
+if (!navigator.geolocation) {
+    alert('Geolocation is not supported');
+    return;
+}
 
-    // Priority 2: Fallback to existing User Prop (if sync hasn't finished yet)
-    if (user?.location?.latitude) {
-        const loc = {
-            latitude: user.location.latitude,
-            longitude: user.location.longitude,
-            address: user.location.address || (locationName.area + ", " + locationName.city)
-        };
-        launchMap(loc);
-        return;
-    }
+// 1. Launch immediately (Modal will start its own internal fetch too)
+launchMap(null);
 
-    // Priority 3: Final GPS Attempt (Delegate to Modal + Pre-fetch)
-    if (!navigator.geolocation) {
-        alert('Geolocation is not supported');
-        return;
-    }
-
-    // 1. Launch immediately (Modal will start its own internal fetch too)
-    launchMap(null);
-
-    // 2. Start Parallel Fetch (Non-blocking) - "Fast Lock" then "Precision Lock"
-    const updateLoc = (pos) => {
-        const newLoc = {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            address: "Precise Location"
-        };
-        setBookingParams(prev => prev ? { ...prev, location: newLoc } : null);
+// 2. Start Parallel Fetch (Non-blocking) - "Fast Lock" then "Precision Lock"
+const updateLoc = (pos) => {
+    const newLoc = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        address: "Precise Location"
     };
+    setBookingParams(prev => prev ? { ...prev, location: newLoc } : null);
+};
 
-    // A. Fast Lock (Low Accuracy - Instant)
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            console.log("[GPS] Fast Lock Acquired:", position.coords.latitude, position.coords.longitude);
-            updateLoc(position);
+// A. Fast Lock (Low Accuracy - Instant)
+navigator.geolocation.getCurrentPosition(
+    (position) => {
+        console.log("[GPS] Fast Lock Acquired:", position.coords.latitude, position.coords.longitude);
+        updateLoc(position);
 
-            // B. Precision Lock (High Accuracy - Refinement)
-            navigator.geolocation.getCurrentPosition(
-                (betterPos) => {
-                    console.log("[GPS] Precision Lock Acquired");
-                    updateLoc(betterPos);
-                },
-                (err) => console.warn("Background Precise GPS failed", err),
-                { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
-            );
-        },
-        (err) => {
-            console.warn("Fast GPS failed, falling back to Precise...", err);
-            // Fallback: Try Precise directly if Fast fails
-            navigator.geolocation.getCurrentPosition(
-                (p) => updateLoc(p),
-                (e) => console.error("All GPS attempts failed", e),
-                { timeout: 10000, enableHighAccuracy: true }
-            );
-        },
-        { timeout: 2000, enableHighAccuracy: false, maximumAge: 60000 } // Use cached if < 1 min old
-    );
+        // B. Precision Lock (High Accuracy - Refinement)
+        navigator.geolocation.getCurrentPosition(
+            (betterPos) => {
+                console.log("[GPS] Precision Lock Acquired");
+                updateLoc(betterPos);
+            },
+            (err) => console.warn("Background Precise GPS failed", err),
+            { timeout: 10000, enableHighAccuracy: true, maximumAge: 0 }
+        );
+    },
+    (err) => {
+        console.warn("Fast GPS failed, falling back to Precise...", err);
+        // Fallback: Try Precise directly if Fast fails
+        navigator.geolocation.getCurrentPosition(
+            (p) => updateLoc(p),
+            (e) => console.error("All GPS attempts failed", e),
+            { timeout: 10000, enableHighAccuracy: true }
+        );
+    },
+    { timeout: 2000, enableHighAccuracy: false, maximumAge: 60000 } // Use cached if < 1 min old
+);
 };
 
 const handleTechnicianSelect = (tech) => {
