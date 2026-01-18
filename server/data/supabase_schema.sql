@@ -49,6 +49,19 @@ CREATE TABLE IF NOT EXISTS feedbacks (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+-- RLS Policies for Feedbacks
+ALTER TABLE feedbacks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable insert for authenticated users only" ON "public"."feedbacks"
+AS PERMISSIVE FOR INSERT
+TO authenticated
+WITH CHECK (true);
+
+CREATE POLICY "Enable read access for all users" ON "public"."feedbacks"
+AS PERMISSIVE FOR SELECT
+TO public
+USING (true);
+
 -- [NEW] Locations Table (Missing - for Live Tracking History)
 CREATE TABLE IF NOT EXISTS locations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
