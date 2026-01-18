@@ -10,6 +10,7 @@ import DashboardJobs from '../components/Dashboard/DashboardJobs';
 import DashboardProfile from '../components/Dashboard/DashboardProfile';
 import ChatInterface from '../components/Dashboard/ChatInterface';
 import DashboardFinance from '../components/Dashboard/DashboardFinance';
+import DashboardHistory from '../components/Dashboard/DashboardHistory';
 import { getMyJobs, getUserProfile } from '../services/api';
 import { useSocket } from '../context/SocketContext';
 
@@ -193,7 +194,9 @@ const Dashboard = () => {
                     {activeTab === 'home' && <DashboardHome user={user} jobs={jobs} />}
                     {activeTab === 'services' && <ServiceHub />}
                     {activeTab === 'bookings' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} variant="active" />}
-                    {activeTab === 'history' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} variant="history" />}
+                    {activeTab === 'bookings' && <DashboardJobs user={user} jobs={jobs} refreshJobs={() => fetchJobs(user.id)} variant="active" />}
+                    {activeTab === 'history' && <DashboardHistory />}
+                    {activeTab === 'profile' && <DashboardProfile />}
                     {activeTab === 'profile' && <DashboardProfile />}
                     {activeTab === 'chat' && <ChatInterface user={user} />}
                     {activeTab === 'finance' && <DashboardFinance user={user} />}
