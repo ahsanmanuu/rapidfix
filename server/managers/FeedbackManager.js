@@ -18,13 +18,14 @@ class FeedbackManager {
     _mapFromDb(fb) {
         if (!fb) return null;
         try {
-            const { user_id, technician_id, job_id, created_at, ...rest } = fb;
+            const { user_id, technician_id, job_id, created_at, recommendation_score, ...rest } = fb;
             return {
                 ...rest,
                 userId: user_id,
                 technicianId: technician_id,
                 jobId: job_id,
-                createdAt: created_at
+                createdAt: created_at,
+                recommendationScore: recommendation_score
             };
         } catch (err) {
             console.error("[FeedbackManager] Error mapping from DB:", err);
@@ -35,13 +36,14 @@ class FeedbackManager {
     _mapToDb(fb) {
         if (!fb) return null;
         try {
-            const { userId, technicianId, jobId, createdAt, id, ...rest } = fb;
+            const { userId, technicianId, jobId, createdAt, id, recommendationScore, ...rest } = fb;
             const mapped = { ...rest };
             if (userId !== undefined) mapped.user_id = userId;
             if (technicianId !== undefined) mapped.technician_id = technicianId;
             if (jobId !== undefined) mapped.job_id = jobId;
             if (createdAt !== undefined) mapped.created_at = createdAt;
             if (id !== undefined) mapped.id = id;
+            if (recommendationScore !== undefined) mapped.recommendation_score = recommendationScore;
             return mapped;
         } catch (err) {
             console.error("[FeedbackManager] Error mapping to DB:", err);
