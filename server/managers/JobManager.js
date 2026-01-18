@@ -550,6 +550,52 @@ class JobManager {
             return [];
         }
     }
+    // [NEW] Helpers for Advanced Auto-Assign Logic
+
+    async _getMonthlyJobCountGlobal() {
+        try {
+            const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+            // Determine filter key based on DB usage (Supabase returns snake_case usually, but mapFromDb might handle it)
+            // Ideally we query with filter.
+            if (this.db.client) {
+                // Optimized Supabase Query
+                const { count, error } = await this.db.client
+                    .from('jobs')
+                    .select('*', { count: 'exact', head: true })
+                    .gte('created_at', startOfMonth);
+                if (error) throw error;
+                return count || 0;
+            } else {
+                // Fallback for JSON DB
+                const allJobs = await this.db.read();
+                return allJobs.filter(j => (j.created_at || j.createdAt) >= startOfMonth).length;
+            }
+        } catch (err) {
+            console.error('[JobManager] Error getting global monthly job count:', err);
+            return 0; // Fail safe
+        }
+    }
+
+    async _getMonthlyJobCount(technicianId) {
+        try {
+            const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+            if (this.db.client) {
+                const { count, error } = await this.db.client
+                    .from('jobs')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('technician_id', technicianId)
+                    .gte('created_at', startOfMonth);
+                if (error) throw error;
+                return count || 0;
+            } else {
+                const jobs = await this.getJobsByTechnician(technicianId);
+                return jobs.filter(j => (j.createdAt || j.created_at) >= startOfMonth).length;
+            }
+        } catch (err) {
+            console.error(`[JobManager] Error getting monthly job count for tech ${technicianId}:`, err);
+            return 0;
+        }
+    }
 }
 
 module.exports = JobManager;
