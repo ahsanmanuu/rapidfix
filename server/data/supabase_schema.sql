@@ -62,53 +62,32 @@ CREATE OR REPLACE FUNCTION check_market_cap_eligibility(
     region_lng FLOAT
 ) 
 RETURNS BOOLEAN 
-LANGUAGE plpgsql 
+LANGUAGE sql 
 AS '
-DECLARE
-    tech_jobs_count INT;
-    total_region_jobs INT;
-    cap_limit INT;
-    is_premium BOOLEAN;
-BEGIN
-    -- 1. Check if Premium (Bypass Cap)
-    SELECT (membership_tier = ''Premium'') INTO is_premium FROM technicians WHERE id = tech_id;
-    IF is_premium THEN
-        RETURN TRUE;
-    END IF;
-
-    -- 2. Get Technician''s Job Count for Current Month
-    SELECT COUNT(*) INTO tech_jobs_count
-    FROM jobs 
+WITH tech_status AS (
+    SELECT membership_tier = ''Premium'' AS is_premium FROM technicians WHERE id = tech_id
+),
+tech_jobs AS (
+    SELECT COUNT(*) AS count FROM jobs 
     WHERE technician_id = tech_id 
-    AND created_at >= date_trunc(''month'', CURRENT_DATE);
-
-    -- 3. Get Total Jobs in Region (30km radius) for Current Month
-    SELECT COUNT(*) INTO total_region_jobs
-    FROM jobs
-    LEFT JOIN technicians t ON jobs.technician_id = t.id
-    WHERE 
-    ST_DWithin(
-        ST_SetSRID(ST_MakePoint(
-            CAST(jobs.location->>''longitude'' AS FLOAT), 
-            CAST(jobs.location->>''latitude'' AS FLOAT)
-        ), 4326),
+    AND created_at >= date_trunc(''month'', CURRENT_DATE)
+),
+region_jobs AS (
+    SELECT COUNT(*) AS count 
+    FROM jobs 
+    WHERE location IS NOT NULL
+    AND ST_DWithin(
+        ST_SetSRID(ST_MakePoint(CAST(location->>''longitude'' AS FLOAT), CAST(location->>''latitude'' AS FLOAT)), 4326),
         ST_SetSRID(ST_MakePoint(region_lng, region_lat), 4326), 
         30000
     )
-    AND jobs.created_at >= date_trunc(''month'', CURRENT_DATE);
-
-    -- 4. Calculate Cap (20% of Total)
-    IF total_region_jobs < 10 THEN
-        RETURN TRUE;
-    END IF;
-
-    cap_limit := CEIL(total_region_jobs * 0.20);
-
-    -- 5. Return Eligibility
-    IF tech_jobs_count < cap_limit THEN
-        RETURN TRUE;
-    ELSE
-        RETURN FALSE;
-    END IF;
-END;
+    AND created_at >= date_trunc(''month'', CURRENT_DATE)
+)
+SELECT 
+    CASE 
+        WHEN COALESCE((SELECT is_premium FROM tech_status), FALSE) THEN TRUE
+        WHEN (SELECT count FROM region_jobs) < 10 THEN TRUE
+        WHEN (SELECT count FROM tech_jobs) < CEIL((SELECT count FROM region_jobs) * 0.20) THEN TRUE
+        ELSE FALSE
+    END
 ';
