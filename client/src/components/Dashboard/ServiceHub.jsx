@@ -6,7 +6,7 @@ import {
 import {
     ArrowForward, Bolt, Plumbing, FormatPaint, AcUnit,
     BatteryChargingFull, Videocam, Fingerprint, Print,
-    CardGiftcard, Star, LocalOffer as LocalOfferIcon
+    CardGiftcard, Star, LocalOffer as LocalOfferIcon, CalendarToday
 } from '@mui/icons-material';
 import TechnicianSearchModal from '../TechnicianSearchModal';
 import ServiceScheduleModal from './ServiceScheduleModal';
@@ -107,7 +107,7 @@ const ServiceHub = () => {
         <Box sx={{ display: 'flex', gap: 4, width: '100%', minHeight: '100vh', bgcolor: '#f8fafc' }}>
 
             {/* Main Content Area */}
-            <Box sx={{ flex: 1, p: 3 }}>
+            <Box sx={{ flex: 1, p: { xs: 2, md: 3 } }}>
                 <Box sx={{ maxWidth: '1200px', mx: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
 
                     {/* Hero Slider */}
@@ -179,47 +179,101 @@ const ServiceHub = () => {
                         <Box sx={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', mb: 2 }}>
                             <Box>
                                 <Typography variant="h5" fontWeight="bold" sx={{ color: '#0f172a' }}>Instant Technician booking</Typography>
-
                             </Box>
+                        </Box>
+
+                        {/* MOBILE ONLY: Schedule & Make Offer Buttons */}
+                        <Box sx={{ display: { xs: 'flex', lg: 'none' }, flexDirection: 'column', gap: 2, mb: 3 }}>
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                onClick={() => setIsScheduleOpen(true)}
+                                startIcon={<CalendarToday sx={{ fontSize: 18 }} />}
+                                sx={{
+                                    bgcolor: '#447aee',
+                                    fontSize: '0.75rem',
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    py: 1,
+                                    '&:hover': { bgcolor: '#3366d6' }
+                                }}
+                            >
+                                Schedule
+                            </Button>
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                onClick={() => setIsMakeOfferOpen(true)}
+                                startIcon={<LocalOfferIcon sx={{ fontSize: 18 }} />}
+                                sx={{
+                                    borderColor: '#447aee',
+                                    color: '#447aee',
+                                    fontSize: '0.75rem',
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    py: 1,
+                                    '&:hover': { borderColor: '#3366d6', bgcolor: '#eff6ff' }
+                                }}
+                            >
+                                Make Offer
+                            </Button>
                         </Box>
 
                         <Grid container spacing={2} sx={{ width: '100%', pb: 8 }}>
                             {services.map((service) => (
-                                <Grid item xs={6} sm={3} md={3} lg={3} key={service.name} sx={{ minWidth: 0 }}>
-                                    <Card sx={{
-                                        borderRadius: '12px',
-                                        border: '1px solid #f1f5f9',
-                                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                                        height: '100%',
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center',
-                                        p: 2,
-                                        transition: 'all 0.2s',
-                                        '&:hover': {
-                                            transform: 'translateY(-2px)',
-                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                            borderColor: 'rgba(68, 122, 238, 0.3)'
-                                        }
-                                    }}>
-                                        <Box sx={{
-                                            width: 48, height: 48, borderRadius: '50%', bgcolor: service.bg,
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1.5,
-                                            transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.1)' }
+                                <Grid item xs={12} sm={3} md={3} lg={3} key={service.name} sx={{ minWidth: 0 }}>
+                                    <Card
+                                        onClick={() => handleBookNow(service.name)}
+                                        sx={{
+                                            borderRadius: '12px',
+                                            border: '1px solid #f1f5f9',
+                                            boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                                            height: '100%',
+                                            display: 'flex',
+                                            flexDirection: { xs: 'row', md: 'column' }, // Row on mobile, Column on desktop
+                                            alignItems: 'center',
+                                            textAlign: { xs: 'left', md: 'center' }, // Left align text on mobile
+                                            justifyContent: { xs: 'space-between', md: 'flex-start' },
+                                            p: 2,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            '&:hover': {
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                                borderColor: 'rgba(68, 122, 238, 0.3)'
+                                            }
                                         }}>
-                                            {React.cloneElement(service.icon, { fontSize: "medium", sx: { fontSize: '1.5rem', color: service.icon.props.sx.color } })}
+                                        {/* Icon & Text Container for Mobile Row */}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Box sx={{
+                                                width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 }, borderRadius: '50%', bgcolor: service.bg,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.1)' },
+                                                flexShrink: 0
+                                            }}>
+                                                {React.cloneElement(service.icon, { sx: { fontSize: '1.5rem', color: service.icon.props.sx.color } })}
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1e293b', lineHeight: 1.2 }}>{service.name}</Typography>
+                                                <Typography variant="caption" sx={{ color: '#94a3b8', display: { xs: 'block', md: 'block' }, lineHeight: 1.2 }}>
+                                                    {service.desc}
+                                                </Typography>
+                                            </Box>
                                         </Box>
-                                        <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1e293b', mb: 0.5 }}>{service.name}</Typography>
-                                        <Typography variant="caption" sx={{ color: '#94a3b8', mb: 2, display: 'block', lineHeight: 1.2 }}>{service.desc}</Typography>
+
                                         <Button
-                                            fullWidth
                                             size="small"
                                             variant="outlined"
-                                            onClick={() => handleBookNow(service.name)}
+                                            onClick={(e) => { e.stopPropagation(); handleBookNow(service.name); }}
                                             sx={{
-                                                mt: 'auto',
+                                                mt: { xs: 0, md: 2 },
+                                                ml: { xs: 2, md: 0 },
+                                                width: { xs: 'auto', md: '100%' },
                                                 borderColor: '#e2e8f0',
                                                 color: '#334155',
                                                 fontWeight: 600,
                                                 textTransform: 'none',
+                                                whiteSpace: 'nowrap',
                                                 '&:hover': {
                                                     borderColor: 'transparent',
                                                     bgcolor: '#447aee',

@@ -198,7 +198,7 @@ const Dashboard = () => {
 
                     {activeTab === 'history' && <DashboardHistory />}
                     {activeTab === 'profile' && <DashboardProfile />}
-                    {activeTab === 'profile' && <DashboardProfile />}
+
                     {activeTab === 'chat' && <ChatInterface user={user} />}
                     {activeTab === 'finance' && <DashboardFinance user={user} />}
                 </div>

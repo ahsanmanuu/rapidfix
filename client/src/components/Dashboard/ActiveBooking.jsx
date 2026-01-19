@@ -38,6 +38,7 @@ import {
     ChevronRight,
     Home
 } from '@mui/icons-material';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 
 const PRIMARY_BLUE = '#2463eb';
 const TEXT_DARK = '#111318';
@@ -107,8 +108,15 @@ function ColorlibStepIcon(props) {
 }
 
 const ActiveBooking = () => {
+    // Google Maps Loader
+    console.log("ActiveBooking: Map Key Present?", !!import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
+    const { isLoaded, loadError } = useJsApiLoader({
+        id: 'active-booking-map-script',
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+    });
+
     // Mock Data based on the design
-    const activeStep = 2; // "In Transit" (0-indexed: Confirmed, Assigned, In Transit) -> actually index is 2
+    const activeStep = 2; // "In Transit" (0-indexed: Confirmed, Assigned, In Transit) -> actually index is 2 // "In Transit" (0-indexed: Confirmed, Assigned, In Transit) -> actually index is 2
     const steps = ['Confirmed', 'Assigned', 'In Transit', 'In Progress', 'Completed'];
 
     return (
@@ -239,21 +247,30 @@ const ActiveBooking = () => {
                                     </Grid>
                                     {/* Map */}
                                     <Grid item xs={12}>
-                                        <Box sx={{
-                                            height: '100%', minHeight: 180, borderRadius: 2, bgcolor: '#f3f4f6', position: 'relative', overflow: 'hidden',
-                                            backgroundImage: 'url(https://lh3.googleusercontent.com/aida-public/AB6AXuAGLNFqfs6g7rpUTg9jy6wM2quXVSDv00TIXlmzzdcy__Encp94205od2lW6ysWAswBOue4KZsYpEEaHomQYuNWRiDeBOnQEBfCoMXF4TtroQFfpBREne0CAdQgoar7omZwVnMxUjbzvqB3rHcd0FnkNuT7DU8GA0wiB2zBWYM3kXb9TMXQaVTYOhdiq2gt2HP74woWnGwcKlV4jYDry2Ae-YGN1sfhiVDtvAu6Ch8JztmnCap76qT0fsj_i9Oe9wYmssTEIzio6g)',
-                                            backgroundSize: 'cover',
-                                            backgroundPosition: 'center',
-                                            cursor: 'pointer'
-                                        }}>
-                                            <Box sx={{ position: 'absolute', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                <Box sx={{ bgcolor: 'white', p: 1, borderRadius: '50%', boxShadow: 3 }}>
-                                                    <NearMe sx={{ color: PRIMARY_BLUE }} />
+                                        <Box sx={{ height: 200, borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+                                            {loadError ? (
+                                                <Box sx={{ height: '100%', bgcolor: '#fef2f2', color: '#dc2626', p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                                                    <Typography variant="caption">Map Error: {loadError.message}</Typography>
                                                 </Box>
-                                            </Box>
-                                            <Box sx={{ position: 'absolute', bottom: 8, right: 8, bgcolor: 'rgba(255,255,255,0.9)', px: 1, py: 0.5, borderRadius: 1 }}>
-                                                <Typography variant="caption" sx={{ fontWeight: 600 }}>Get Directions</Typography>
-                                            </Box>
+                                            ) : isLoaded ? (
+                                                <GoogleMap
+                                                    mapContainerStyle={{ width: '100%', height: '100%' }}
+                                                    center={{ lat: 39.7817, lng: -89.6501 }} // Springfield, IL (Mock)
+                                                    zoom={15}
+                                                    options={{
+                                                        disableDefaultUI: true,
+                                                        zoomControl: true,
+                                                        mapTypeControl: false,
+                                                        streetViewControl: false
+                                                    }}
+                                                >
+                                                    <Marker position={{ lat: 39.7817, lng: -89.6501 }} />
+                                                </GoogleMap>
+                                            ) : (
+                                                <Box sx={{ height: '100%', bgcolor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <Typography variant="caption" color="text.secondary">Loading Map...</Typography>
+                                                </Box>
+                                            )}
                                         </Box>
                                     </Grid>
                                 </Grid>

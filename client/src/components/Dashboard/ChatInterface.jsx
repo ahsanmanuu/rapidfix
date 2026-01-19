@@ -75,7 +75,7 @@ const ChatInterface = ({ user }) => {
     };
 
     return (
-        <Card sx={{ borderRadius: '16px', height: 600, display: 'flex', flexDirection: 'column' }}>
+        <Card sx={{ borderRadius: '16px', height: { xs: '40vh', md: 600 }, display: 'flex', flexDirection: 'column' }}>
             <CardHeader
                 avatar={
                     <Avatar sx={{ bgcolor: theme.palette.primary.main }}>

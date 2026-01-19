@@ -257,7 +257,8 @@ const DashboardFinance = () => {
                     </Box>
                 </Box>
 
-                <TableContainer>
+                {/* DESKTOP TABLE VIEW */}
+                <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
                     <Table>
                         <TableHead>
                             <TableRow sx={{ bgcolor: '#f8fafc' }}>
@@ -314,6 +315,53 @@ const DashboardFinance = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+
+                {/* MOBILE CARD VIEW */}
+                <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column' }}>
+                    {transactions.map((txn, index) => (
+                        <Box key={txn.id} sx={{
+                            p: 2,
+                            borderBottom: index !== transactions.length - 1 ? '1px solid #f1f5f9' : 'none',
+                            bgcolor: 'white'
+                        }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                                <Box sx={{ display: 'flex', gap: 1.5 }}>
+                                    <Box sx={{
+                                        width: 40, height: 40, borderRadius: '8px',
+                                        bgcolor: txn.iconBg, color: txn.iconColor,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}>
+                                        {React.cloneElement(txn.icon, { fontSize: 'medium' })}
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="subtitle2" fontWeight="600" color="#0f172a">{txn.service}</Typography>
+                                        <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#64748b' }}>{txn.txnId}</Typography>
+                                    </Box>
+                                </Box>
+                                <Box sx={{ textAlign: 'right' }}>
+                                    <Typography variant="body2" fontWeight="800" sx={{ color: txn.amountColor ? txn.amountColor : (txn.isPositive ? '#059669' : (txn.isStruck ? '#94a3b8' : '#0f172a')), textDecoration: txn.isStruck ? 'line-through' : 'none' }}>
+                                        {txn.amount}
+                                    </Typography>
+                                    <Typography variant="caption" color="#94a3b8" display="block">{txn.date}</Typography>
+                                </Box>
+                            </Box>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Chip
+                                    label={txn.status}
+                                    size="small"
+                                    sx={{
+                                        bgcolor: txn.statusColor, color: txn.statusText,
+                                        fontWeight: 'bold', fontSize: '0.7rem', height: 24
+                                    }}
+                                />
+                                <IconButton size="small" sx={{ color: '#94a3b8', border: '1px solid #e2e8f0', borderRadius: '6px', p: 0.5 }}>
+                                    <Download fontSize="small" />
+                                </IconButton>
+                            </Box>
+                        </Box>
+                    ))}
+                </Box>
             </Card>
         </Box>
     );

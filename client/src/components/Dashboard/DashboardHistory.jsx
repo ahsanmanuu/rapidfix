@@ -70,37 +70,37 @@ const Row = ({ row, isExpanded, onToggle }) => {
                 }}
                 onClick={onToggle}
             >
-                <TableCell sx={{ py: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <TableCell sx={{ py: { xs: 1.5, md: 2 } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 } }}>
                         <Box sx={{
-                            width: 40, height: 40, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            bgcolor: row.iconBg, color: row.iconColor
+                            width: { xs: 32, md: 40 }, height: { xs: 32, md: 40 }, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            bgcolor: row.iconBg, color: row.iconColor, flexShrink: 0
                         }}>
-                            {row.icon}
+                            {React.cloneElement(row.icon, { sx: { fontSize: { xs: 18, md: 24 } } })}
                         </Box>
                         <Box>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>{row.service}</Typography>
-                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>{row.subService}</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', fontSize: { xs: '0.8rem', md: '0.875rem' } }}>{row.service}</Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>{row.subService}</Typography>
                         </Box>
                     </Box>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                     <Typography variant="body2" sx={{ color: PRIMARY_BLUE, fontWeight: 500 }}>{row.id}</Typography>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <Avatar src={row.proImg} sx={{ width: 32, height: 32 }} />
                         <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>{row.proName}</Typography>
                     </Box>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                         <Typography variant="body2" sx={{ color: 'text.primary' }}>{row.date}</Typography>
                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>{row.time}</Typography>
                     </Box>
                 </TableCell>
                 <TableCell>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{row.cost}</Typography>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>{row.cost}</Typography>
                 </TableCell>
                 <TableCell>
                     <Chip
@@ -111,11 +111,13 @@ const Row = ({ row, isExpanded, onToggle }) => {
                             color: row.statusColor,
                             fontWeight: 600,
                             borderRadius: '999px',
-                            '& .MuiChip-label': { px: 1.5 }
+                            height: 24,
+                            fontSize: '0.7rem',
+                            '& .MuiChip-label': { px: 1 }
                         }}
                     />
                 </TableCell>
-                <TableCell align="right">
+                <TableCell align="right" sx={{ px: { xs: 1, md: 2 } }}>
                     <IconButton size="small" sx={{ color: isExpanded ? PRIMARY_BLUE : 'text.secondary' }}>
                         {isExpanded ? <ExpandLess /> : <ExpandMore />}
                     </IconButton>
@@ -124,7 +126,30 @@ const Row = ({ row, isExpanded, onToggle }) => {
             <TableRow>
                 <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
                     <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                        <Box sx={{ p: 3, bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'divider' }}>
+                        <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'divider' }}>
+
+                            {/* Mobile Only Details (Hidden columns appear here) */}
+                            <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2, mb: 3 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Box>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>Job ID</Typography>
+                                        <Typography variant="body2" sx={{ fontWeight: 600, color: PRIMARY_BLUE }}>{row.id}</Typography>
+                                    </Box>
+                                    <Box sx={{ textAlign: 'right' }}>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>Date & Time</Typography>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{row.date}, {row.time}</Typography>
+                                    </Box>
+                                </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, bgcolor: 'white', p: 1.5, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                                    <Avatar src={row.proImg} sx={{ width: 40, height: 40 }} />
+                                    <Box>
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>Professional</Typography>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{row.proName}</Typography>
+                                    </Box>
+                                </Box>
+                                <Divider />
+                            </Box>
+
                             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4, justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 {/* Timeline */}
                                 <Box sx={{ flex: 1, width: '100%' }}>
@@ -142,7 +167,7 @@ const Row = ({ row, isExpanded, onToggle }) => {
                                                 }}>
                                                     <Check sx={{ fontSize: 16 }} />
                                                 </Box>
-                                                <Typography variant="caption" sx={{ fontWeight: 600, color: index === 3 ? '#10b981' : 'text.secondary' }}>
+                                                <Typography variant="caption" sx={{ fontWeight: 600, color: index === 3 ? '#10b981' : 'text.secondary', fontSize: '0.7rem', textAlign: 'center' }}>
                                                     {step}
                                                 </Typography>
                                             </Box>
@@ -151,18 +176,18 @@ const Row = ({ row, isExpanded, onToggle }) => {
                                 </Box>
 
                                 {/* Actions */}
-                                <Box sx={{ display: 'flex', gap: 2 }}>
+                                <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', md: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
                                     <Button
                                         variant="outlined"
                                         startIcon={<Description />}
-                                        sx={{ textTransform: 'none', color: 'text.primary', borderColor: 'grey.300' }}
+                                        sx={{ textTransform: 'none', color: 'text.primary', borderColor: 'grey.300', width: { xs: '100%', sm: 'auto' } }}
                                     >
                                         Download Invoice
                                     </Button>
                                     <Button
                                         variant="contained"
                                         startIcon={<Star />}
-                                        sx={{ textTransform: 'none', bgcolor: PRIMARY_BLUE, '&:hover': { bgcolor: '#1d4ed8' } }}
+                                        sx={{ textTransform: 'none', bgcolor: PRIMARY_BLUE, '&:hover': { bgcolor: '#1d4ed8' }, width: { xs: '100%', sm: 'auto' } }}
                                     >
                                         Rate Professional
                                     </Button>
@@ -296,8 +321,8 @@ const DashboardHistory = () => {
                     </Stack>
                 </Box>
 
-                {/* Table */}
-                <TableContainer>
+                {/* DESKTOP TABLE VIEW */}
+                <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
                     <Table>
                         <TableHead sx={{ bgcolor: '#f8fafc' }}>
                             <TableRow>
@@ -322,6 +347,100 @@ const DashboardHistory = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+
+                {/* MOBILE CARD VIEW */}
+                <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column' }}>
+                    {rows.map((row, index) => {
+                        const isExpanded = expandedId === index;
+                        return (
+                            <Box key={row.id} sx={{ borderBottom: '1px solid', borderColor: 'divider', bgcolor: isExpanded ? 'rgba(36, 99, 235, 0.04)' : 'white' }}>
+                                {/* Mobile Row Header */}
+                                <Box
+                                    onClick={() => handleToggle(index)}
+                                    sx={{ p: 2, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', cursor: 'pointer' }}
+                                >
+                                    <Box sx={{ display: 'flex', gap: 2 }}>
+                                        {/* Icon */}
+                                        <Box sx={{
+                                            width: 40, height: 40, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            bgcolor: row.iconBg, color: row.iconColor, flexShrink: 0
+                                        }}>
+                                            {React.cloneElement(row.icon, { sx: { fontSize: 20 } })}
+                                        </Box>
+
+                                        {/* Main Info */}
+                                        <Box>
+                                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', lineHeight: 1.2, mb: 0.5 }}>
+                                                {row.service}
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                                <Typography variant="caption" sx={{ color: PRIMARY_BLUE, fontWeight: 500 }}>{row.id}</Typography>
+                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>• {row.date}</Typography>
+                                            </Box>
+                                            <Typography variant="body2" sx={{ fontWeight: 700, mt: 0.5 }}>{row.cost}</Typography>
+                                        </Box>
+                                    </Box>
+
+                                    {/* Status & Toggle */}
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                                        <Chip
+                                            label={row.status}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: row.statusBg,
+                                                color: row.statusColor,
+                                                fontWeight: 600,
+                                                borderRadius: '6px',
+                                                height: 24,
+                                                fontSize: '0.7rem',
+                                            }}
+                                        />
+                                        <IconButton size="small" sx={{ color: isExpanded ? PRIMARY_BLUE : 'text.secondary', p: 0.5 }}>
+                                            {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                                        </IconButton>
+                                    </Box>
+                                </Box>
+
+                                {/* Mobile Expanded Content */}
+                                <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                    <Box sx={{ px: 2, pb: 2 }}>
+                                        <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+
+                                            {/* Pro Details */}
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                                                <Avatar src={row.proImg} sx={{ width: 32, height: 32 }} />
+                                                <Box>
+                                                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', lineHeight: 1 }}>Professional</Typography>
+                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{row.proName}</Typography>
+                                                </Box>
+                                            </Box>
+
+                                            <Divider sx={{ mb: 2 }} />
+
+                                            {/* Timeline Short */}
+                                            <Typography variant="caption" sx={{ fontWeight: 600, mb: 1, display: 'block' }}>Status</Typography>
+                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                                                <Chip size="small" label="Request Received" color="primary" variant="outlined" />
+                                                <Chip size="small" label="Work Started" color="primary" variant="outlined" />
+                                                <Chip size="small" label="Completed" color="success" />
+                                            </Box>
+
+                                            {/* Actions */}
+                                            <Stack spacing={1}>
+                                                <Button size="small" variant="outlined" startIcon={<Description />} fullWidth>
+                                                    Invoice
+                                                </Button>
+                                                <Button size="small" variant="contained" startIcon={<Star />} fullWidth sx={{ bgcolor: PRIMARY_BLUE }}>
+                                                    Rate Pro
+                                                </Button>
+                                            </Stack>
+                                        </Box>
+                                    </Box>
+                                </Collapse>
+                            </Box>
+                        );
+                    })}
+                </Box>
 
                 {/* Pagination */}
                 <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#f9fafb' }}>

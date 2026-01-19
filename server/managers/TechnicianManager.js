@@ -276,10 +276,21 @@ class TechnicianManager extends BaseManager {
     async login(email, password, currentLat, currentLng) {
         try {
             if (!email || !password) return null;
-            const cleanEmail = String(email).trim().toLowerCase();
+            const cleanEmail = String(email).trim(); // Remove toLowerCase logic here, handle in query
             const cleanPassword = String(password).trim();
 
-            const tech = await this.db.find('email', cleanEmail);
+            let tech = null;
+            // Case-insensitive search
+            if (this.db.client) {
+                const { data } = await this.db.client
+                    .from(this.tableName)
+                    .select('*')
+                    .ilike('email', cleanEmail)
+                    .maybeSingle();
+                if (data) tech = this._mapFromDb(data);
+            } else {
+                tech = await this.db.find('email', cleanEmail.toLowerCase());
+            }
 
             if (!tech) {
                 console.log(`[TechnicianManager] Login failed: Tech not found for ${cleanEmail}`);

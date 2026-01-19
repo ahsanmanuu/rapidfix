@@ -120,16 +120,51 @@ class UserManager extends BaseManager {
         return await this.update(id, updates);
     }
 
+    async findByEmail(email) {
+        try {
+            // Case-insensitive search if using Supabase
+            if (this.db.client) {
+                const { data, error } = await this.db.client
+                    .from(this.tableName)
+                    .select('*')
+                    .ilike('email', email)
+                    .maybeSingle(); // Use maybeSingle to avoid 406 on multiple
+
+                if (data) return this._mapFromDb(data);
+            }
+
+            // Fallback for JSON DB or basic find
+            return await this.findOne('email', email.toString().toLowerCase());
+        } catch (err) {
+            console.error("[UserManager] findByEmail error:", err);
+            return null;
+        }
+    }
+
     async login(email, password) {
         try {
             if (!email || !password) return null;
-            const cleanEmail = String(email).trim().toLowerCase();
+            const cleanEmail = String(email).trim(); // Remove toLowerCase() here, let findByEmail handle it
             const cleanPassword = String(password).trim();
 
-            const user = await this.findOne('email', cleanEmail);
-            if (user && String(user.password).trim() === cleanPassword) {
-                const { password, ...userWithoutPass } = user;
-                return userWithoutPass;
+            const user = await this.findByEmail(cleanEmail);
+
+            // DEBUG LOGS
+            console.log(`[UserManager] Login Attempt for: ${cleanEmail}`);
+            if (!user) {
+                console.log("[UserManager] User NOT FOUND in database.");
+            } else {
+                console.log("[UserManager] User found. ID:", user.id);
+                const dbPass = String(user.password).trim();
+                const inputPass = cleanPassword;
+                // console.log(`[UserManager] Password Check: Input Length=${inputPass.length}, DB Length=${dbPass.length}`);
+
+                if (dbPass === inputPass) {
+                    const { password, ...userWithoutPass } = user;
+                    return userWithoutPass;
+                } else {
+                    console.log(`[UserManager] Login Failed: Password Mismatch.`);
+                }
             }
             return null;
         } catch (err) {
