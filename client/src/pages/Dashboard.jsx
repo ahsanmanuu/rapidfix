@@ -12,6 +12,8 @@ import ChatInterface from '../components/Dashboard/ChatInterface';
 import DashboardFinance from '../components/Dashboard/DashboardFinance';
 import DashboardHistory from '../components/Dashboard/DashboardHistory';
 import ActiveBooking from '../components/Dashboard/ActiveBooking';
+import Offers from '../pages/Offers';
+import Complaints from '../pages/Complaints';
 import { getMyJobs, getUserProfile } from '../services/api';
 import { useSocket } from '../context/SocketContext';
 
@@ -66,9 +68,12 @@ const Dashboard = () => {
         try {
             console.log("Dashboard: Fetching jobs for user", userId);
             const res = await getMyJobs(userId);
+            console.log("Dashboard: API Response:", res.data);
             if (res.data.success) {
-                console.log("Dashboard: Jobs fetched successfully", res.data.jobs?.length);
-                setJobs(Array.isArray(res.data.jobs) ? res.data.jobs : []);
+                const jobsArray = Array.isArray(res.data.jobs) ? res.data.jobs : [];
+                console.log("Dashboard: Jobs fetched successfully, count:", jobsArray.length);
+                console.log("Dashboard: First job:", jobsArray[0]?.id, jobsArray[0]?.status);
+                setJobs(jobsArray);
             }
         } catch (err) {
             console.error("Dashboard: Failed to fetch jobs", err);
@@ -127,7 +132,10 @@ const Dashboard = () => {
         // Listen to generic job updates (covers creation, status change, acceptance)
         socket.on('job_updated', handleRealtimeUpdate);
         socket.on('job_status_change', handleRealtimeUpdate);
+        socket.on('job_status_updated', handleRealtimeUpdate); // [FIX] Backend emits this
+        socket.on('job_status_update', handleRealtimeUpdate);  // [FIX] Variation
         socket.on('new_job', handleRealtimeUpdate);
+        socket.on('new_job_created', handleRealtimeUpdate);    // [FIX] Backend emits this
         socket.on('notification', handleRealtimeUpdate); // Catch-all for notifications
 
         return () => {
@@ -135,10 +143,13 @@ const Dashboard = () => {
             socket.off('membership_update', handleMembershipUpdate);
             socket.off('job_updated', handleRealtimeUpdate);
             socket.off('job_status_change', handleRealtimeUpdate);
+            socket.off('job_status_updated', handleRealtimeUpdate);
+            socket.off('job_status_update', handleRealtimeUpdate);
             socket.off('new_job', handleRealtimeUpdate);
+            socket.off('new_job_created', handleRealtimeUpdate);
             socket.off('notification', handleRealtimeUpdate);
         };
-    }, [socket]);
+    }, [socket, user?.id]);
 
     // Explicit Loading State
     if (isLoading || !user) {
@@ -192,11 +203,13 @@ const Dashboard = () => {
                 onLogout={handleLogout}
             >
                 <div className="animate-fade-in h-full">
-                    {activeTab === 'home' && <DashboardHome user={user} jobs={jobs} />}
+                    {activeTab === 'home' && <DashboardHome user={user} jobs={jobs} setActiveTab={setActiveTab} />}
                     {activeTab === 'services' && <ServiceHub />}
-                    {activeTab === 'bookings' && <ActiveBooking />}
+                    {activeTab === 'bookings' && <ActiveBooking job={jobs.find(j => !['completed', 'cancelled', 'rejected'].includes(j.status)) || jobs[0]} />}
 
-                    {activeTab === 'history' && <DashboardHistory />}
+                    {activeTab === 'history' && <DashboardHistory jobs={jobs} />}
+                    {activeTab === 'complaints' && <Complaints />}
+                    {activeTab === 'offers' && <Offers />}
                     {activeTab === 'profile' && <DashboardProfile />}
 
                     {activeTab === 'chat' && <ChatInterface user={user} />}

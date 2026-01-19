@@ -6,6 +6,7 @@ import { X, Calendar, Clock, MapPin, ShieldCheck, CheckCircle, Star, Zap, User }
 const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onConfirm }) => {
     const [agreement, setAgreement] = useState(false);
     const [readableAddress, setReadableAddress] = useState(jobDetails?.location?.address || "Current Location");
+    const [description, setDescription] = useState(jobDetails?.description || '');
 
     useEffect(() => {
         if (isOpen && jobDetails?.location?.latitude && jobDetails?.location?.longitude) {
@@ -163,8 +164,20 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                                     </div>
                                 </div>
 
+
+                                {/* Description / Problem Note */}
+                                <div className="mt-4 md:mt-6">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Problem Description / Note</label>
+                                    <textarea
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        placeholder="Describe the issue (e.g., 'Main breaker keeps tripping...')"
+                                        className="w-full p-3 md:p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none h-24 text-sm md:text-base"
+                                    />
+                                </div>
+
                                 {/* Financials (Clean) */}
-                                <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-dashed border-slate-200">
+                                <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-dashed border-slate-200">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wide">Visiting Charge</p>
@@ -201,7 +214,13 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                                         alert("Please agree to the terms to continue.");
                                         return;
                                     }
-                                    onConfirm({ ...jobDetails, visitingCharges, agreementAccepted: true, technicianId: technician?.id || null });
+                                    onConfirm({
+                                        ...jobDetails,
+                                        description, // [NEW] Pass user edited description
+                                        visitingCharges,
+                                        agreementAccepted: true,
+                                        technicianId: technician?.id || null
+                                    });
                                 }}
                                 className={`w-full py-3 md:py-4 rounded-xl text-white font-bold shadow-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${agreement ? (['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase()) ? 'bg-amber-600 shadow-amber-600/20' : 'bg-slate-900 shadow-slate-900/20') : 'bg-slate-300 shadow-none cursor-not-allowed'}`}
                             >

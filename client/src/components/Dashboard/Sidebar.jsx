@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Drawer,
@@ -30,6 +31,7 @@ const drawerWidth = 260;
 const Sidebar = ({ open, handleDrawerToggle, window, activeTab, setActiveTab, user }) => {
     const theme = useTheme();
     const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
+    const navigate = useNavigate();
 
     const container = window !== undefined ? () => window().document.body : undefined;
 

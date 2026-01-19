@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -13,9 +13,7 @@ import {
     Step,
     StepLabel,
     StepConnector,
-    StepIcon,
     styled,
-    Paper,
     Stack
 } from '@mui/material';
 import {
@@ -29,16 +27,15 @@ import {
     AcUnit,
     CalendarToday,
     LocationOn,
-    NearMe,
     SupportAgent,
     CalendarMonth,
     Cancel,
     Security,
     Info,
     ChevronRight,
-    Home
 } from '@mui/icons-material';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { useSocket } from '../../context/SocketContext';
 
 const PRIMARY_BLUE = '#2463eb';
 const TEXT_DARK = '#111318';
@@ -50,6 +47,11 @@ const QontoConnector = styled(StepConnector)(({ theme }) => ({
         top: 10,
         left: 'calc(-50% + 16px)',
         right: 'calc(50% + 16px)',
+        [theme.breakpoints.down('sm')]: {
+            top: 7,
+            left: 'calc(-50% + 12px)',
+            right: 'calc(50% + 12px)',
+        },
     },
     [`&.${stepConnectorClasses.active}`]: {
         [`& .${stepConnectorClasses.line}`]: {
@@ -76,6 +78,10 @@ const ColorlibStepIconRoot = styled('div')(({ theme, ownerState }) => ({
     color: '#fff',
     width: 35,
     height: 35,
+    [theme.breakpoints.down('sm')]: {
+        width: 24,
+        height: 24,
+    },
     display: 'flex',
     borderRadius: '50%',
     justifyContent: 'center',
@@ -107,17 +113,72 @@ function ColorlibStepIcon(props) {
     );
 }
 
-const ActiveBooking = () => {
+const ActiveBooking = ({ job }) => {
+    const socket = useSocket();
+    const [currentJob, setCurrentJob] = useState(job);
+    const [techLocation, setTechLocation] = useState(null);
+
+    // Sync prop changes
+    useEffect(() => {
+        if (job) setCurrentJob(job);
+    }, [job]);
+
+    // Socket listeners
+    useEffect(() => {
+        if (!socket || !currentJob) return;
+
+        // Job Status Update
+        socket.on('job_status_updated', (updatedJob) => {
+            if (updatedJob.id === currentJob.id) {
+                setCurrentJob(prev => ({ ...prev, ...updatedJob }));
+            }
+        });
+
+        // Job Full Update
+        socket.on('job_updated', (updatedJob) => {
+            if (updatedJob.id === currentJob.id) {
+                setCurrentJob(updatedJob);
+            }
+        });
+
+        // Technician Location Update
+        socket.on('technician_location_update', (data) => {
+            if (data.technicianId === currentJob.technicianId) {
+                setTechLocation({ lat: data.latitude, lng: data.longitude });
+            }
+        });
+
+        return () => {
+            socket.off('job_status_updated');
+            socket.off('job_updated');
+            socket.off('technician_location_update');
+        };
+    }, [socket, currentJob]);
+
+
     // Google Maps Loader
-    console.log("ActiveBooking: Map Key Present?", !!import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
     const { isLoaded, loadError } = useJsApiLoader({
-        id: 'active-booking-map-script',
+        id: 'google-map-script',
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
     });
 
-    // Mock Data based on the design
-    const activeStep = 2; // "In Transit" (0-indexed: Confirmed, Assigned, In Transit) -> actually index is 2 // "In Transit" (0-indexed: Confirmed, Assigned, In Transit) -> actually index is 2
-    const steps = ['Confirmed', 'Assigned', 'In Transit', 'In Progress', 'Completed'];
+    const steps = ['Request Received', 'Pro Assigned', 'Work Started', 'Completed'];
+
+    // Calculate Active Step based on Status
+    let activeStep = 0;
+    const status = (currentJob?.status || 'pending').toLowerCase();
+    if (['pending'].includes(status)) activeStep = 0;
+    else if (['assigned', 'accepted', 'waiting_confirmation'].includes(status)) activeStep = 1;
+    else if (['in_progress', 'ongoing', 'started'].includes(status)) activeStep = 2; // Tech on way or started? Usually 'on_way' is separate
+    else if (['completed'].includes(status)) activeStep = 4;
+
+    // Refine 'Work Started' to capture 'on_way' if needed, but keeping simple mapping
+    if (status === 'on_way') activeStep = 2; // Treat as part of active phase
+
+    // Job Location
+    const jobLat = parseFloat(currentJob?.location?.latitude || 28.6139);
+    const jobLng = parseFloat(currentJob?.location?.longitude || 77.2090);
+    const jobPos = { lat: jobLat, lng: jobLng };
 
     return (
         <Box sx={{ maxWidth: 800, mx: 'auto', p: { xs: 2, md: 3 }, fontFamily: 'Inter, sans-serif' }}>
@@ -128,7 +189,7 @@ const ActiveBooking = () => {
                 <ChevronRight sx={{ fontSize: 14 }} />
                 <Typography variant="body2" sx={{ color: 'inherit', '&:hover': { color: PRIMARY_BLUE }, cursor: 'pointer', fontSize: 'inherit' }}>My Bookings</Typography>
                 <ChevronRight sx={{ fontSize: 14 }} />
-                <Typography variant="body2" sx={{ fontWeight: 600, color: TEXT_DARK, fontSize: 'inherit' }}>Job #4291</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: TEXT_DARK, fontSize: 'inherit' }}>Job #{currentJob?.id}</Typography>
             </Box>
 
             {/* Header */}
@@ -139,19 +200,26 @@ const ActiveBooking = () => {
                 </Box>
                 <Chip
                     icon={<Box sx={{ width: 6, height: 6, bgcolor: '#22c55e', borderRadius: '50%', ml: 1 }} className="animate-pulse" />}
-                    label="In Progress"
+                    label={status.replace('_', ' ').toUpperCase()}
                     sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 600, fontSize: 12, height: 28, '& .MuiChip-label': { px: 1.5 } }}
                 />
             </Box>
 
             {/* Stepper Card */}
             <Card sx={{ mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
-                <CardContent sx={{ py: 3, px: { xs: 2, md: 4 } }}>
+                <CardContent sx={{ py: { xs: 2, md: 3 }, px: { xs: 0, md: 4 } }}>
                     <Stepper alternativeLabel activeStep={activeStep} connector={<QontoConnector />}>
                         {steps.map((label) => (
-                            <Step key={label}>
+                            <Step key={label} sx={{ px: 0 }}>
                                 <StepLabel StepIconComponent={ColorlibStepIcon}>
-                                    <Typography variant="caption" sx={{ fontWeight: 600, color: activeStep >= steps.indexOf(label) ? PRIMARY_BLUE : TEXT_LIGHT }}>
+                                    <Typography variant="caption" sx={{
+                                        fontWeight: 600,
+                                        color: activeStep >= steps.indexOf(label) ? PRIMARY_BLUE : TEXT_LIGHT,
+                                        fontSize: { xs: '0.55rem', md: '0.75rem' },
+                                        lineHeight: 1,
+                                        display: 'block',
+                                        mt: 0.5
+                                    }}>
                                         {label}
                                     </Typography>
                                 </StepLabel>
@@ -166,46 +234,55 @@ const ActiveBooking = () => {
                 <Grid item xs={12} sm={4}>
                     <Stack spacing={2}>
                         {/* Professional Profile */}
-                        <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
-                            <CardContent sx={{ p: 2 }}>
-                                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5, alignItems: { xs: 'center', sm: 'start' } }}>
-                                    <Box sx={{ position: 'relative' }}>
-                                        <Avatar
-                                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-gpy0eRvo5gWIJv0EUz5OBf0vKdPxz7jjeDL0isA6TuVTchlRu-ZTnCxjj65y-z1AEuzN_LOpHPUMQdxcLTD6BG73YXWNovUa2Z8NRn1LAiHI57jVg6pf7IhfoLmO9D3qAECRO2nNoYLrqxryfxRtQFmtNZ1CeD9eiEgPguRPQYrHXyGbbtxyNWxcB8Wv9IQIf6ELbzVKU0ZNQnEsAQRs-y-67waBW2lhPhoAfGUMR_Z_djkIND7hsX8QafOIgyzBhHXvCMSD4w"
-                                            sx={{ width: 50, height: 50, border: '2px solid white', boxShadow: 2 }}
-                                        />
-                                        <Box sx={{ position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, bgcolor: '#22c55e', borderRadius: '50%', border: '2px solid white' }} />
-                                    </Box>
-                                    <Box sx={{ flex: 1, width: '100%', textAlign: { xs: 'center', sm: 'left' } }}>
-                                        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'center', sm: 'start' }, mb: 1 }}>
-                                            <Box>
-                                                <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2 }}>Michael Roberts</Typography>
-                                                <Typography variant="caption" sx={{ color: TEXT_LIGHT, display: 'block', mb: 0.5, fontSize: '0.7rem' }}>Senior AC Technician • 500+ Jobs</Typography>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'center', sm: 'start' }, gap: 0.5 }}>
-                                                    <Star sx={{ color: '#facc15', fontSize: 14 }} />
-                                                    <Typography variant="caption" sx={{ fontWeight: 700 }}>4.9</Typography>
-                                                    <Typography variant="caption" sx={{ color: TEXT_LIGHT, fontSize: '0.65rem' }}>(124 Reviews)</Typography>
-                                                </Box>
-                                            </Box>
-                                            <Button
-                                                variant="contained"
-                                                startIcon={<Chat sx={{ fontSize: 16 }} />}
-                                                size="small"
-                                                sx={{ mt: { xs: 1.5, sm: 0 }, bgcolor: 'rgba(36, 99, 235, 0.1)', color: PRIMARY_BLUE, boxShadow: 'none', '&:hover': { bgcolor: 'rgba(36, 99, 235, 0.2)' }, textTransform: 'none', fontWeight: 600, height: 28, fontSize: '0.75rem', minWidth: 'auto', px: 1.5 }}
+                        {currentJob?.technician ? (
+                            <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)' }}>
+                                <CardContent sx={{ p: 2 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5, alignItems: { xs: 'center', sm: 'start' } }}>
+                                        <Box sx={{ position: 'relative' }}>
+                                            <Avatar
+                                                src={currentJob.technician.avatar || null}
+                                                sx={{ width: 50, height: 50, border: '2px solid white', boxShadow: 2 }}
                                             >
-                                                Message
-                                            </Button>
+                                                {currentJob.technician.name?.[0]}
+                                            </Avatar>
+                                            <Box sx={{ position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, bgcolor: '#22c55e', borderRadius: '50%', border: '2px solid white' }} />
                                         </Box>
-                                        <Box sx={{ bgcolor: '#f6f6f8', p: 1.5, borderRadius: 2, mt: 1, display: 'flex', gap: 1, alignItems: 'start' }}>
-                                            <FormatQuote sx={{ color: TEXT_LIGHT, transform: 'rotate(180deg)', fontSize: 16 }} />
-                                            <Typography variant="caption" sx={{ color: TEXT_LIGHT, fontStyle: 'italic', lineHeight: 1.3, fontSize: '0.7rem' }}>
-                                                Hi, I'm Michael. I'm about 15 minutes away...
-                                            </Typography>
+                                        <Box sx={{ flex: 1, width: '100%', textAlign: { xs: 'center', sm: 'left' } }}>
+                                            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'center', sm: 'start' }, mb: 1 }}>
+                                                <Box>
+                                                    <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2 }}>{currentJob.technician.name}</Typography>
+                                                    <Typography variant="caption" sx={{ color: TEXT_LIGHT, display: 'block', mb: 0.5, fontSize: '0.7rem' }}>Technician</Typography>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: { xs: 'center', sm: 'start' }, gap: 0.5 }}>
+                                                        <Star sx={{ color: '#facc15', fontSize: 14 }} />
+                                                        <Typography variant="caption" sx={{ fontWeight: 700 }}>4.9</Typography>
+                                                    </Box>
+                                                </Box>
+                                                <Button
+                                                    variant="contained"
+                                                    startIcon={<Chat sx={{ fontSize: 16 }} />}
+                                                    size="small"
+                                                    sx={{ mt: { xs: 1.5, sm: 0 }, bgcolor: 'rgba(36, 99, 235, 0.1)', color: PRIMARY_BLUE, boxShadow: 'none', '&:hover': { bgcolor: 'rgba(36, 99, 235, 0.2)' }, textTransform: 'none', fontWeight: 600, height: 28, fontSize: '0.75rem', minWidth: 'auto', px: 1.5 }}
+                                                >
+                                                    Message
+                                                </Button>
+                                            </Box>
+                                            {techLocation && (
+                                                <Box sx={{ bgcolor: '#f6f6f8', p: 1.5, borderRadius: 2, mt: 1, display: 'flex', gap: 1, alignItems: 'start' }}>
+                                                    <LocalShipping sx={{ color: TEXT_LIGHT, fontSize: 16 }} />
+                                                    <Typography variant="caption" sx={{ color: TEXT_LIGHT, fontStyle: 'italic', lineHeight: 1.3, fontSize: '0.7rem' }}>
+                                                        Technician is moving...
+                                                    </Typography>
+                                                </Box>
+                                            )}
                                         </Box>
                                     </Box>
-                                </Box>
-                            </CardContent>
-                        </Card>
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', p: 2 }}>
+                                <Typography variant="body2" color="text.secondary">Waiting for technician assignment...</Typography>
+                            </Card>
+                        )}
 
                         {/* Booking Details */}
                         <Card sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', overflow: 'hidden' }}>
@@ -220,29 +297,43 @@ const ActiveBooking = () => {
                                                 <Typography variant="caption" sx={{ textTransform: 'uppercase', color: TEXT_LIGHT, fontWeight: 700, fontSize: '0.7rem' }}>Service Type</Typography>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                                                     <AcUnit sx={{ color: PRIMARY_BLUE, fontSize: 18 }} />
-                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>AC Repair & Service</Typography>
+                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>{currentJob?.serviceType || 'Service'}</Typography>
                                                 </Box>
                                             </Box>
                                             <Box>
                                                 <Typography variant="caption" sx={{ textTransform: 'uppercase', color: TEXT_LIGHT, fontWeight: 700, fontSize: '0.7rem' }}>Job ID</Typography>
-                                                <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>#4291-XA-09</Typography>
+                                                <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>#{currentJob?.id || '---'}</Typography>
                                             </Box>
                                             <Box>
                                                 <Typography variant="caption" sx={{ textTransform: 'uppercase', color: TEXT_LIGHT, fontWeight: 700, fontSize: '0.7rem' }}>Date & Time</Typography>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                                                     <CalendarToday sx={{ color: TEXT_LIGHT, fontSize: 18 }} />
-                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>Oct 24, 2023 • 10:00 AM</Typography>
+                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                        {currentJob?.scheduledDate ? new Date(currentJob.scheduledDate).toLocaleDateString() : 'TBD'} • {currentJob?.scheduledTime || '--:--'}
+                                                    </Typography>
                                                 </Box>
                                             </Box>
                                             <Box>
                                                 <Typography variant="caption" sx={{ textTransform: 'uppercase', color: TEXT_LIGHT, fontWeight: 700, fontSize: '0.7rem' }}>Service Address</Typography>
                                                 <Box sx={{ display: 'flex', alignItems: 'start', gap: 1, mt: 0.5 }}>
                                                     <LocationOn sx={{ color: TEXT_LIGHT, fontSize: 18 }} />
-                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                                        123 Maple Avenue, Apt 4B<br />Springfield, IL 62704
+                                                    <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: 'break-word' }}>
+                                                        {currentJob?.location?.address || currentJob?.address || 'Location provided'}
                                                     </Typography>
                                                 </Box>
                                             </Box>
+
+                                            {/* [NEW] Customer Note */}
+                                            {currentJob?.description && (
+                                                <Box sx={{ bgcolor: '#f8fafc', p: 2, borderRadius: 2, border: '1px dashed #cbd5e1' }}>
+                                                    <Typography variant="caption" sx={{ textTransform: 'uppercase', color: TEXT_LIGHT, fontWeight: 700, fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Chat sx={{ fontSize: 14 }} /> Customer Note
+                                                    </Typography>
+                                                    <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#334155', mt: 1 }}>
+                                                        "{currentJob.description}"
+                                                    </Typography>
+                                                </Box>
+                                            )}
                                         </Stack>
                                     </Grid>
                                     {/* Map */}
@@ -255,8 +346,8 @@ const ActiveBooking = () => {
                                             ) : isLoaded ? (
                                                 <GoogleMap
                                                     mapContainerStyle={{ width: '100%', height: '100%' }}
-                                                    center={{ lat: 39.7817, lng: -89.6501 }} // Springfield, IL (Mock)
-                                                    zoom={15}
+                                                    center={jobPos}
+                                                    zoom={13}
                                                     options={{
                                                         disableDefaultUI: true,
                                                         zoomControl: true,
@@ -264,7 +355,24 @@ const ActiveBooking = () => {
                                                         streetViewControl: false
                                                     }}
                                                 >
-                                                    <Marker position={{ lat: 39.7817, lng: -89.6501 }} />
+                                                    {/* Job Location Marker */}
+                                                    <Marker position={jobPos} />
+
+                                                    {/* Technician Location Marker */}
+                                                    {techLocation && (
+                                                        <Marker
+                                                            position={techLocation}
+                                                            icon={{
+                                                                path: window.google?.maps?.SymbolPath?.FORWARD_CLOSED_ARROW,
+                                                                scale: 4,
+                                                                fillColor: PRIMARY_BLUE,
+                                                                fillOpacity: 1,
+                                                                strokeWeight: 1,
+                                                                rotation: 0 // Could calculate bearing if previous loc is known
+                                                            }}
+                                                            label="Tech"
+                                                        />
+                                                    )}
                                                 </GoogleMap>
                                             ) : (
                                                 <Box sx={{ height: '100%', bgcolor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -291,7 +399,7 @@ const ActiveBooking = () => {
                                 <Stack spacing={1.5}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <Typography variant="body2" sx={{ color: TEXT_LIGHT }}>Service Fee</Typography>
-                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>$45.00</Typography>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>₹{currentJob?.visitingCharges || 0}</Typography>
                                     </Box>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <Typography variant="body2" sx={{ color: TEXT_LIGHT }}>Spare Parts</Typography>
@@ -299,12 +407,12 @@ const ActiveBooking = () => {
                                     </Box>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <Typography variant="body2" sx={{ color: TEXT_LIGHT }}>Tax (10%)</Typography>
-                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>$4.50</Typography>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>₹{(currentJob?.visitingCharges || 0) * 0.1}</Typography>
                                     </Box>
                                     <Divider sx={{ my: 0.5 }} />
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <Typography variant="body2" sx={{ fontWeight: 700 }}>Total Amount</Typography>
-                                        <Typography variant="h6" sx={{ fontWeight: 900, color: PRIMARY_BLUE }}>$49.50</Typography>
+                                        <Typography variant="h6" sx={{ fontWeight: 900, color: PRIMARY_BLUE }}>₹{currentJob?.totalCost || ((currentJob?.visitingCharges || 0) * 1.1)}</Typography>
                                     </Box>
                                     <Box sx={{ bgcolor: '#eff6ff', p: 1, borderRadius: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
                                         <Info sx={{ color: PRIMARY_BLUE, fontSize: 16 }} />
@@ -338,7 +446,7 @@ const ActiveBooking = () => {
                             <Box>
                                 <Typography variant="subtitle2" sx={{ color: '#1e3a8a', fontWeight: 700, fontSize: '0.875rem' }}>Safety First</Typography>
                                 <Typography variant="caption" sx={{ color: '#1d4ed8', lineHeight: 1.2 }}>
-                                    Share your OTP <Box component="span" sx={{ bgcolor: 'white', px: 0.5, borderRadius: 0.5, fontWeight: 700, fontFamily: 'monospace' }}>8921</Box> with the professional.
+                                    Share your OTP <Box component="span" sx={{ bgcolor: 'white', px: 0.5, borderRadius: 0.5, fontWeight: 700, fontFamily: 'monospace' }}>{currentJob?.otp || '----'}</Box> with the professional.
                                 </Typography>
                             </Box>
                         </Box>

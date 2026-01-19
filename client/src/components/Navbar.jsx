@@ -1,21 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, LogOut, User, LayoutDashboard, Wallet, Briefcase, Home, Info, Phone } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, LogOut, Wallet, LayoutDashboard, ChevronDown, Wrench, Briefcase } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 10);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    // Design specifies sticky white nav always
+    const navClasses = "sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-solid border-b-[#f0f2f4]";
 
     const handleLogout = () => {
         logout();
@@ -24,223 +18,93 @@ const Navbar = () => {
 
     return (
         <>
-            <nav
-                className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-500 ease-in-out h-24 flex items-center ${scrolled ? 'bg-white/95 backdrop-blur-lg shadow-xl' : 'bg-transparent'
-                    }`}
-            >
-                <div className="container mx-auto px-4">
-                    <div className="flex justify-between items-center h-full">
-                        {/* Logo */}
-                        <Link to="/" className={`text-4xl font-extrabold flex items-center gap-3 group tracking-tight ${scrolled ? 'text-slate-900' : 'text-white'}`}>
-                            <img src="/logo.png" alt="Fixofy Logo" className="h-14 w-auto group-hover:scale-110 transition-transform duration-300" />
-                            <span className="tracking-tighter">Fixofy</span>
+            <nav className={navClasses}>
+                <div className="container mx-auto px-4 lg:px-10 flex justify-center">
+                    <div className="flex w-full max-w-[1280px] items-center justify-between py-3">
+                        {/* Logo Area */}
+                        <Link to="/" className="flex items-center gap-3 select-none group">
+                            <img src="/logo.png" alt="Fixofy Logo" className="h-10 w-auto group-hover:scale-105 transition-transform" />
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-[#FF6B00] text-3xl font-black tracking-tighter lowercase m-0 leading-none">fixofy</h1>
+                            </div>
                         </Link>
 
-                        {/* Desktop Menu */}
-                        <div className="hidden lg:flex items-center gap-6">
-                            {/* Nav Links - Clean Layout without background shape */}
-                            <div className="flex items-center gap-1">
-                                <NavLink to="/" text="Home" scrolled={scrolled} />
-                                <NavLink to="/about" text="About" scrolled={scrolled} />
-                                <NavLink to="/contact" text="Contact" scrolled={scrolled} />
+                        {/* Desktop Links */}
+                        <div className="hidden md:flex flex-1 justify-end items-center gap-8">
+                            <div className="flex items-center gap-6">
+                                <a href="#" className="flex items-center gap-1 text-[#111418] text-sm font-medium hover:text-[#FF6B00] transition-colors cursor-pointer group">
+                                    Categories
+                                    <ChevronDown size={18} className="group-hover:rotate-180 transition-transform" />
+                                </a>
+                                <Link to="/join-partner" className="text-[#111418] text-sm font-medium hover:text-[#FF6B00] transition-colors">Become a Pro</Link>
                             </div>
 
-                            {user ? (
-                                <div className="flex items-center gap-4">
-                                    <Link to="/wallet" className={`flex items-center gap-2 font-medium transition-colors ${scrolled ? 'text-slate-600 hover:text-slate-900' : 'text-white/90 hover:text-white'}`}>
-                                        <Wallet size={20} />
-                                        <span>Wallet</span>
-                                    </Link>
-                                    <Link
-                                        to={user.role === 'technician' ? '/technician-dashboard' : '/dashboard'}
-                                        className={`p-2 rounded-full transition-colors ${scrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-white/20 hover:bg-white/30 text-white'}`}
-                                        title="Dashboard"
-                                    >
-                                        <LayoutDashboard size={20} />
-                                    </Link>
-                                    <div className={`flex items-center gap-3 px-4 pl-2 border-l ${scrolled ? 'border-slate-200' : 'border-white/20'}`}>
-                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-sm text-blue-700 font-bold border-2 border-white shadow-sm">
-                                            {user.name && user.name.length > 0 ? user.name.charAt(0) : 'U'}
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={handleLogout}
-                                        className={`p-3 rounded-full transition-colors ${scrolled ? 'text-slate-400 hover:bg-red-50 hover:text-red-600' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
-                                        title="Logout"
-                                    >
-                                        <LogOut size={20} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-4">
-                                    {/* Technician/Partner Link */}
-                                    <Link
-                                        to="/join-partner"
-                                        className={`hidden xl:flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm border transition-all duration-300 ${scrolled
-                                            ? 'border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900 hover:bg-slate-50'
-                                            : 'border-white/30 text-white hover:border-white/60 hover:bg-white/10'
-                                            }`}
-                                    >
-                                        <Briefcase size={16} />
-                                        <span>Join as Partner</span>
-                                    </Link>
-
-                                    {/* User Auth Pill */}
-                                    <div className={`flex items-center p-1 rounded-full border transition-all duration-300 ${scrolled
-                                        ? 'bg-slate-50 border-slate-200 shadow-sm'
-                                        : 'bg-white/10 border-white/20 backdrop-blur-md'
-                                        }`}>
+                            <div className="flex gap-2">
+                                {user ? (
+                                    <>
                                         <Link
-                                            to="/login"
-                                            className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${scrolled
-                                                ? 'text-slate-600 hover:bg-slate-200/50'
-                                                : 'text-white hover:bg-white/10'
-                                                }`}
+                                            to={user.role === 'technician' ? '/technician-dashboard' : '/dashboard'}
+                                            className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-transparent border border-[#dbe0e6] hover:bg-[#f0f2f4] text-[#111418] text-sm font-bold leading-normal transition-colors gap-2"
                                         >
-                                            Log In
+                                            <LayoutDashboard size={16} />
+                                            <span className="truncate">Dashboard</span>
                                         </Link>
-                                        <Link
-                                            to="/register"
-                                            className={`px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all duration-300 transform hover:-translate-y-0.5 ${scrolled
-                                                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/25'
-                                                : 'bg-white text-blue-600 hover:bg-blue-50 shadow-black/20'
-                                                }`}
+                                        <button
+                                            onClick={handleLogout}
+                                            className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#FF6B00] hover:bg-orange-600 text-white text-sm font-bold leading-normal shadow-sm transition-colors"
                                         >
-                                            Register
+                                            <span className="truncate">Logout</span>
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Link to="/login" className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-transparent border border-[#dbe0e6] hover:bg-[#f0f2f4] text-[#111418] text-sm font-bold leading-normal transition-colors">
+                                            <span className="truncate">Login</span>
                                         </Link>
-                                    </div>
-                                </div>
-                            )}
+                                        <Link to="/register" className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#FF6B00] hover:bg-orange-600 text-white text-sm font-bold leading-normal shadow-sm transition-colors">
+                                            <span className="truncate">Sign Up</span>
+                                        </Link>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
                         {/* Mobile Menu Button */}
-                        <div className="lg:hidden flex items-center">
-                            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-800 p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                        <div className="md:hidden flex items-center">
+                            <span
+                                className="material-symbols-outlined text-[24px] cursor-pointer"
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            >
                                 {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
-                            </button>
+                            </span>
                         </div>
                     </div>
                 </div>
             </nav>
 
-            {/* Mobile Menu Backdrop & Drawer - Moved Outside Nav */}
-            <div className={`lg:hidden fixed inset-0 z-[10000] transition-opacity duration-300 ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                {/* Backdrop */}
-                <div
-                    className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-                    onClick={() => setIsMenuOpen(false)}
-                />
+            {/* Mobile Drawer */}
+            {isMenuOpen && (
+                <div className="md:hidden fixed inset-0 z-[40] bg-white pt-24 px-6 flex flex-col gap-4">
+                    {/* Links */}
+                    <Link to="/" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold py-2 border-b">Home</Link>
+                    <a href="#" className="text-xl font-bold py-2 border-b flex justify-between items-center">Categories <ChevronDown size={20} /></a>
+                    <Link to="/join-partner" onClick={() => setIsMenuOpen(false)} className="text-xl font-bold py-2 border-b">Become a Pro</Link>
 
-                {/* Drawer Panel */}
-                <div
-                    className={`absolute inset-y-0 right-0 w-[80%] max-w-sm bg-white shadow-2xl transform transition-transform duration-300 ease-out flex flex-col ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
-                >
-                    {/* Header with Close Button */}
-                    <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                        <span className="text-xl font-bold text-slate-900 tracking-tight">Menu</span>
-                        <button
-                            onClick={() => setIsMenuOpen(false)}
-                            className="p-2 rounded-full bg-slate-50 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
-                    </div>
-
-                    {/* Menu Content */}
-                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                        <div className="space-y-2">
-                            <MobileLink to="/" icon={<Home size={20} />} onClick={() => setIsMenuOpen(false)}>Home</MobileLink>
-                            <MobileLink to="/about" icon={<Info size={20} />} onClick={() => setIsMenuOpen(false)}>About Us</MobileLink>
-                            <MobileLink to="/contact" icon={<Phone size={20} />} onClick={() => setIsMenuOpen(false)}>Contact Us</MobileLink>
-                            <MobileLink to="/join-partner" icon={<Briefcase size={20} />} onClick={() => setIsMenuOpen(false)} className="text-blue-600 bg-blue-50/50">Join as Partner</MobileLink>
+                    {user ? (
+                        <>
+                            <Link to={user.role === 'technician' ? '/technician-dashboard' : '/dashboard'} onClick={() => setIsMenuOpen(false)} className="text-xl font-bold py-2 text-[#FF6B00]">Dashboard</Link>
+                            <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="text-left text-xl font-bold py-2 text-red-500">Logout</button>
+                        </>
+                    ) : (
+                        <div className="flex flex-col gap-3 mt-4">
+                            <Link to="/login" onClick={() => setIsMenuOpen(false)} className="w-full py-3 rounded-lg border border-gray-300 text-center font-bold">Login</Link>
+                            <Link to="/register" onClick={() => setIsMenuOpen(false)} className="w-full py-3 rounded-lg bg-[#FF6B00] text-white text-center font-bold">Sign Up</Link>
                         </div>
-
-                        <div className="h-px bg-slate-100 my-2"></div>
-
-                        {user ? (
-                            <div className="space-y-4">
-                                <Link
-                                    to="/wallet"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex items-center gap-3 w-full p-4 rounded-xl bg-slate-50 hover:bg-blue-50 transition-colors"
-                                >
-                                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm">
-                                        <Wallet size={20} />
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-slate-800">My Wallet</p>
-                                        <p className="text-xs text-slate-500">View transactions</p>
-                                    </div>
-                                </Link>
-
-                                <Link
-                                    to="/dashboard"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex items-center gap-3 w-full p-4 rounded-xl bg-slate-50 hover:bg-blue-50 transition-colors"
-                                >
-                                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm">
-                                        <LayoutDashboard size={20} />
-                                    </div>
-                                    <div>
-                                        <p className="font-bold text-slate-800">Dashboard</p>
-                                        <p className="text-xs text-slate-500">Manage account</p>
-                                    </div>
-                                </Link>
-
-                                <button
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center justify-center gap-2 p-4 rounded-xl border border-red-100 text-red-600 hover:bg-red-50 font-bold transition-all mt-4"
-                                >
-                                    <LogOut size={20} />
-                                    Logout
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="space-y-4 mt-auto">
-                                <Link
-                                    to="/login"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="block w-full text-center py-4 rounded-xl border-2 border-slate-200 font-bold text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all"
-                                >
-                                    Log In
-                                </Link>
-                                <Link
-                                    to="/register"
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="block w-full text-center py-4 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-xl transition-all"
-                                >
-                                    Register Now
-                                </Link>
-                            </div>
-                        )}
-                    </div>
+                    )}
                 </div>
-            </div>
+            )}
         </>
     );
 };
-
-const NavLink = ({ to, text, scrolled }) => (
-    <Link
-        to={to}
-        className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${scrolled
-            ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            : 'text-white/90 hover:bg-white/10 hover:text-white'
-            }`}
-    >
-        {text}
-    </Link>
-);
-
-const MobileLink = ({ children, to, icon, onClick, className = "" }) => (
-    <Link
-        to={to}
-        onClick={onClick}
-        className={`flex items-center gap-4 px-4 py-3 rounded-xl text-slate-600 font-semibold hover:bg-slate-50 hover:text-blue-600 transition-all ${className}`}
-    >
-        {icon && <span className="text-slate-400 group-hover:text-blue-500">{icon}</span>}
-        <span className="text-base">{children}</span>
-    </Link>
-);
 
 export default Navbar;

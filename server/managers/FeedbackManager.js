@@ -15,6 +15,10 @@ class FeedbackManager {
         this.techManager = techManager;
     }
 
+    setJobManager(jobManager) {
+        this.jobManager = jobManager;
+    }
+
     _mapFromDb(fb) {
         if (!fb) return null;
         try {
@@ -73,7 +77,15 @@ class FeedbackManager {
         try {
             console.log(`[FeedbackManager] Adding feedback for job ${jobId}, tech ${technicianId}`);
 
-            // 1. Strict Validation
+            // 1. Check for Duplicate Feedback (via JobManager)
+            if (this.jobManager) {
+                const job = await this.jobManager.getJob(jobId);
+                if (job && job.feedbackGiven) {
+                    throw new Error("Feedback already submitted for this job.");
+                }
+            }
+
+            // 2. Strict Validation
             this._validateRatings(ratings);
 
             const feedback = {
@@ -93,6 +105,11 @@ class FeedbackManager {
             const dbFb = this._mapToDb(feedback);
             const saved = await this.db.add(dbFb);
             const result = this._mapFromDb(saved);
+
+            // [NEW] Mark Job as Feedback Given
+            if (this.jobManager) {
+                await this.jobManager.markFeedbackGiven(jobId);
+            }
 
             // Calculate and update average rating for technician
             const avgRating = await this.calculateAverageRating(technicianId);

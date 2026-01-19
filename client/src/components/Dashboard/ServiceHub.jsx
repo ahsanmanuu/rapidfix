@@ -11,8 +11,10 @@ import {
 import TechnicianSearchModal from '../TechnicianSearchModal';
 import ServiceScheduleModal from './ServiceScheduleModal';
 import ClaimOfferModal from './ClaimOfferModal';
+import BookingConfirmationModal from '../BookingConfirmationModal'; // [NEW]
 import MakeOfferModal from './MakeOfferModal';
 import { useAuth } from '../../context/AuthContext';
+import { createJob } from '../../services/api'; // [NEW]
 
 
 
@@ -24,6 +26,8 @@ const ServiceHub = () => {
 
     // New Modals State
     const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false); // [NEW]
+    const [selectedTechnician, setSelectedTechnician] = useState(null); // [NEW]
     const [selectedService, setSelectedService] = useState('');
     const [isOfferOpen, setIsOfferOpen] = useState(false);
     const [selectedOffer, setSelectedOffer] = useState(null);
@@ -102,6 +106,44 @@ const ServiceHub = () => {
         setSelectedOffer(offer);
         setIsOfferOpen(true);
     };
+
+    // [New] Handle Technician Select from Map
+    const handleTechnicianSelect = (technician) => {
+        setSelectedTechnician(technician);
+        setIsSearchOpen(false);
+        setIsConfirmOpen(true);
+    };
+
+    // [New] Handle Confirmation & Booking
+    const handleConfirmBooking = (finalBookingData) => {
+        if (!user) {
+            alert("Please login to book a service"); // Should be handled by AuthGuard ideally
+            return;
+        }
+        createJobRequest({ ...bookingParams, ...finalBookingData, userId: user.id });
+    };
+
+    // [New] API Call
+    const createJobRequest = async (fullData) => {
+        try {
+            const payload = {
+                ...fullData,
+                technicianId: fullData.technicianId || selectedTechnician?.id,
+            };
+
+            const res = await createJob(payload);
+            if (res.data.success) {
+                setIsConfirmOpen(false);
+                alert("Booking created successfully!");
+                // Optionally redirect to Active Booking or History
+            }
+        } catch (error) {
+            console.error("Job Creation Failed", error);
+            const errorMsg = error.response?.data?.error || error.message || "Unknown error";
+            alert(`Failed to create booking: ${errorMsg}`);
+        }
+    };
+
 
     return (
         <Box sx={{ display: 'flex', gap: 4, width: '100%', minHeight: '100vh', bgcolor: '#f8fafc' }}>
@@ -219,74 +261,82 @@ const ServiceHub = () => {
                             </Button>
                         </Box>
 
-                        <Grid container spacing={2} sx={{ width: '100%', pb: 8 }}>
+                        <Box sx={{
+                            display: 'grid',
+                            gridTemplateColumns: {
+                                xs: '1fr',
+                                sm: 'repeat(2, 1fr)',
+                                md: 'repeat(4, 1fr)'
+                            },
+                            gap: 2,
+                            width: '100%',
+                            pb: 8
+                        }}>
                             {services.map((service) => (
-                                <Grid item xs={12} sm={3} md={3} lg={3} key={service.name} sx={{ minWidth: 0 }}>
-                                    <Card
-                                        onClick={() => handleBookNow(service.name)}
-                                        sx={{
-                                            borderRadius: '12px',
-                                            border: '1px solid #f1f5f9',
-                                            boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                                            height: '100%',
-                                            display: 'flex',
-                                            flexDirection: { xs: 'row', md: 'column' }, // Row on mobile, Column on desktop
-                                            alignItems: 'center',
-                                            textAlign: { xs: 'left', md: 'center' }, // Left align text on mobile
-                                            justifyContent: { xs: 'space-between', md: 'flex-start' },
-                                            p: 2,
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                            '&:hover': {
-                                                transform: 'translateY(-2px)',
-                                                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                                                borderColor: 'rgba(68, 122, 238, 0.3)'
-                                            }
+                                <Card
+                                    key={service.name}
+                                    onClick={() => {
+                                        setSelectedService(service.name);
+                                        handleBookNow(service.name);
+                                    }}
+                                    sx={{
+                                        borderRadius: '12px',
+                                        border: '1px solid #f1f5f9',
+                                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
+                                        p: 2,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        '&:hover': {
+                                            transform: 'translateY(-2px)',
+                                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                            borderColor: 'rgba(68, 122, 238, 0.3)'
+                                        }
+                                    }}>
+                                    {/* Icon & Text Container */}
+                                    <Box sx={{ display: 'flex', flexDirection: { xs: 'row', md: 'column' }, alignItems: { xs: 'center', md: 'center' }, gap: 2, textAlign: { xs: 'left', md: 'center' }, width: '100%' }}>
+                                        <Box sx={{
+                                            width: { xs: 48, md: 56 }, height: { xs: 48, md: 56 }, borderRadius: '50%', bgcolor: service.bg,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.1)' },
+                                            flexShrink: 0, mx: { md: 'auto' }
                                         }}>
-                                        {/* Icon & Text Container for Mobile Row */}
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <Box sx={{
-                                                width: { xs: 40, md: 48 }, height: { xs: 40, md: 48 }, borderRadius: '50%', bgcolor: service.bg,
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.1)' },
-                                                flexShrink: 0
-                                            }}>
-                                                {React.cloneElement(service.icon, { sx: { fontSize: '1.5rem', color: service.icon.props.sx.color } })}
-                                            </Box>
-                                            <Box>
-                                                <Typography variant="subtitle2" fontWeight="bold" sx={{ color: '#1e293b', lineHeight: 1.2 }}>{service.name}</Typography>
-                                                <Typography variant="caption" sx={{ color: '#94a3b8', display: { xs: 'block', md: 'block' }, lineHeight: 1.2 }}>
-                                                    {service.desc}
-                                                </Typography>
-                                            </Box>
+                                            {React.cloneElement(service.icon, { sx: { fontSize: '1.75rem', color: service.icon.props.sx.color } })}
                                         </Box>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="subtitle1" fontWeight="bold" sx={{ color: '#1e293b', lineHeight: 1.2, mb: 0.5 }}>{service.name}</Typography>
+                                            <Typography variant="body2" sx={{ color: '#64748b', lineHeight: 1.3, minHeight: { md: '2.6em' } }}>
+                                                {service.desc}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
 
-                                        <Button
-                                            size="small"
-                                            variant="outlined"
-                                            onClick={(e) => { e.stopPropagation(); handleBookNow(service.name); }}
-                                            sx={{
-                                                mt: { xs: 0, md: 2 },
-                                                ml: { xs: 2, md: 0 },
-                                                width: { xs: 'auto', md: '100%' },
-                                                borderColor: '#e2e8f0',
-                                                color: '#334155',
-                                                fontWeight: 600,
-                                                textTransform: 'none',
-                                                whiteSpace: 'nowrap',
-                                                '&:hover': {
-                                                    borderColor: 'transparent',
-                                                    bgcolor: '#447aee',
-                                                    color: '#fff'
-                                                }
-                                            }}
-                                        >
-                                            Book Now
-                                        </Button>
-                                    </Card>
-                                </Grid>
+                                    <Button
+                                        fullWidth
+                                        size="small"
+                                        variant="outlined"
+                                        onClick={(e) => { e.stopPropagation(); handleBookNow(service.name); }}
+                                        sx={{
+                                            mt: 2.5,
+                                            borderColor: '#e2e8f0',
+                                            color: '#334155',
+                                            fontWeight: 600,
+                                            textTransform: 'none',
+                                            '&:hover': {
+                                                borderColor: 'transparent',
+                                                bgcolor: '#447aee',
+                                                color: '#fff'
+                                            }
+                                        }}
+                                    >
+                                        Book Now
+                                    </Button>
+                                </Card>
                             ))}
-                        </Grid>
+                        </Box>
                     </Box>
                 </Box>
             </Box>
@@ -357,6 +407,7 @@ const ServiceHub = () => {
                 onClose={() => setIsScheduleOpen(false)}
                 serviceType={selectedService}
                 user={user}
+                onJobCreated={() => window.location.reload()}
             />
 
             {/* Offer Modal */}
@@ -372,21 +423,22 @@ const ServiceHub = () => {
                 onClose={() => setIsMakeOfferOpen(false)}
             />
 
-            {/* Previous Modal (Legacy Support if needed) */}
-            {/* Previous Modal (Legacy Support if needed) */}
+            {/* Technician Search Modal */}
             <TechnicianSearchModal
                 isOpen={isSearchOpen}
                 onClose={() => setIsSearchOpen(false)}
                 userLocation={bookingParams?.location}
                 serviceType={bookingParams?.serviceType}
-                onBook={(technician) => {
-                    // Handle booking logic similar to Home or redirect to scheduling
-                    // For now, we can just close or open scheduling with pre-filled tech
-                    setIsSearchOpen(false);
-                    setSelectedService(bookingParams?.serviceType);
-                    // You might want to handle "Selected Technician" state here if needed
-                    setIsScheduleOpen(true);
-                }}
+                onBook={handleTechnicianSelect} // [UPDATED]
+            />
+
+            {/* [NEW] Booking Confirmation Modal */}
+            <BookingConfirmationModal
+                isOpen={isConfirmOpen}
+                onClose={() => setIsConfirmOpen(false)}
+                technician={selectedTechnician}
+                jobDetails={bookingParams}
+                onConfirm={handleConfirmBooking}
             />
 
         </Box>

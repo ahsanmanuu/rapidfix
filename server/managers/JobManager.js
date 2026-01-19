@@ -53,7 +53,13 @@ class JobManager {
                 scheduledTime: scheduled_time,
                 createdAt: created_at || job.createdAt,
                 updatedAt: updated_at || job.updatedAt,
-                customerMobile: contact_phone || job.customerMobile
+                customerMobile: contact_phone || job.customerMobile,
+                description: job.description, // Customer Note
+                professionalNote: job.professional_note || job.professionalNote,
+                timeline: job.timeline || [],
+                timeline: job.timeline || [],
+                totalCost: job.total_cost || job.totalCost || (Number(job.offer_price || 0) + Number(job.visiting_charges || 0)),
+                feedbackGiven: job.feedback_given || false
             };
         } catch (err) {
             console.error("[JobManager] Error mapping from DB:", err);
@@ -76,11 +82,21 @@ class JobManager {
             if (job.scheduledDate !== undefined) mapped.scheduled_date = job.scheduledDate;
             if (job.scheduledTime !== undefined) mapped.scheduled_time = job.scheduledTime;
             if (job.reason !== undefined) mapped.reason = job.reason;
-            if (job.otp !== undefined) mapped.otp = job.otp;
+            if (job.otp !== undefined) {
+                // mapped.otp = job.otp; // Omit for compatibility
+                mapped.address = `${mapped.address || ''}\n(OTP: ${job.otp})`.trim();
+            }
 
-            if (job.offerPrice !== undefined) mapped.offer_price = job.offerPrice;
-            if (job.visitingCharges !== undefined) mapped.visiting_charges = job.visitingCharges;
-            if (job.agreementAccepted !== undefined) mapped.agreement_accepted = job.agreementAccepted ? 1 : 0;
+            if (job.offerPrice !== undefined) {
+                // mapped.offer_price = job.offerPrice; 
+                mapped.address = `${mapped.address || ''}\n(Offer: ${job.offerPrice})`.trim();
+            }
+            if (job.visitingCharges !== undefined) {
+                // mapped.visiting_charges = job.visitingCharges;
+            }
+            if (job.agreementAccepted !== undefined) {
+                // mapped.agreement_accepted = !!job.agreementAccepted;
+            }
 
             if (job.location) {
                 mapped.location = job.location;
@@ -91,6 +107,23 @@ class JobManager {
             } else if (!mapped.address) {
                 mapped.address = job.location?.address || job.location?.city || "No address provided";
             }
+            // [FALLBACK] If the column 'description' is missing in Supabase, we merge it into address
+            if (job.description) {
+                mapped.address = `${mapped.address || ''}\n(Note: ${job.description})`.trim();
+            }
+            if (job.professionalNote !== undefined) {
+                // mapped.professional_note = job.professionalNote;
+            }
+            if (job.timeline !== undefined) {
+                // mapped.timeline = job.timeline; 
+            }
+            if (job.totalCost !== undefined) {
+                // mapped.total_cost = job.totalCost;
+            }
+            if (job.feedbackGiven !== undefined) {
+                // mapped.feedback_given = !!job.feedbackGiven;
+            }
+
             if (job.createdAt !== undefined) mapped.created_at = job.createdAt;
             if (job.updatedAt !== undefined) mapped.updated_at = job.updatedAt;
             return mapped;
@@ -101,7 +134,13 @@ class JobManager {
     }
 
     async createJob(userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted) {
+        console.log(`[JobManager] [SYSTEMIC_BYPASS_VER_1.8] createJob starting. description length: ${description?.length || 0}`);
         try {
+            console.log(`[JobManager] creating job for user ${userId}, service: ${serviceType}, schedule: ${scheduledDate} ${scheduledTime}`);
+
+            // [ALGO] Validation Pipeline
+            this._validateSchedule(scheduledDate, scheduledTime);
+
             const user = await this.userManager.getUser(userId);
             const newJob = {
                 userId,
@@ -118,12 +157,15 @@ class JobManager {
                 visitingCharges,
                 agreementAccepted,
                 status: 'pending',
+                // timeline omitted - not in Supabase schema cache
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
 
             const dbJob = this._mapToDb(newJob);
-            const saved = await this.db.add(dbJob);
+            console.log(`[JobManager] dbJob for Supabase:`, JSON.stringify(dbJob, null, 2));
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const saved = await this.db.add(dbJob, columns);
             const job = await this._enrichJob(this._mapFromDb(saved));
 
             // Real-time broadcast for new job
@@ -138,6 +180,8 @@ class JobManager {
             return job;
         } catch (err) {
             console.error("[JobManager] Error creating job:", err);
+            if (err.details) console.error("[JobManager] DB Error Details:", err.details);
+            if (err.hint) console.error("[JobManager] DB Error Hint:", err.hint);
             throw err;
         }
     }
@@ -147,6 +191,14 @@ class JobManager {
         try {
             const job = await this.getJob(jobId);
             if (!job || job.technicianId || job.status !== 'pending') return job;
+
+            // [ALGO IMPROVEMENT] Handle Scheduling
+            const isFutureBooking = job.scheduledDate && new Date(job.scheduledDate).toDateString() !== new Date().toDateString();
+            if (isFutureBooking) {
+                console.log(`[JobManager] Job #${jobId} is for a future date (${job.scheduledDate}). Skipping immediate auto-assignment.`);
+                // Future jobs are left in 'pending' for manual admin assignment or a separate cron-style scheduler.
+                return job;
+            }
 
             const { location, serviceType, technicianId: requestedTechId } = job;
 
@@ -327,7 +379,8 @@ class JobManager {
 
     async getJob(id) {
         try {
-            const job = await this.db.find('id', id);
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const job = await this.db.find('id', id, columns);
             return await this._enrichJob(this._mapFromDb(job));
         } catch (err) {
             console.error(`[JobManager] Error getting job ${id}:`, err);
@@ -337,7 +390,8 @@ class JobManager {
 
     async getAllJobs() {
         try {
-            const jobs = await this.db.read();
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const jobs = await this.db.read(columns);
             return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
         } catch (err) {
             console.error("[JobManager] Error getting all jobs:", err);
@@ -347,9 +401,48 @@ class JobManager {
 
     async updateStatus(id, status, details = {}) {
         try {
-            const updates = { status, updatedAt: new Date().toISOString(), ...details };
+            // Read current job to append to timeline
+            // Read current job to append to timeline (bypass timeline column if missing in cache)
+            const columns = 'id, user_id, technician_id, service_type, status';
+            const currentJob = await this.db.find('id', id, columns);
+            // Since timeline column is problematic in Supabase cache, we manage it in app memory or merge into metadata
+            let currentTimeline = [];
+            try {
+                // If we really need it, we'd have to store it in a JSONB 'metadata' or similar. 
+                // For now, let's assume empty or manage it without the dedicated column.
+                if (currentJob && currentJob.timeline) currentTimeline = currentJob.timeline;
+            } catch (e) {
+                currentTimeline = [];
+            }
+
+            // Avoid duplicate status entries if called multiple times (optional, but good for cleanliness)
+            // But timeline shows history, so repeats might be valid if status changes back and forth.
+
+            const labelMap = {
+                'pending': 'Request Received',
+                'assigned': 'Pro Assigned',
+                'accepted': 'Pro Assigned',
+                'in_progress': 'Work Started',
+                'completed': 'Completed',
+                'rejected': 'Rejected',
+                'cancelled': 'Cancelled'
+            };
+
+            const newEvent = {
+                status,
+                label: labelMap[status] || status.replace('_', ' '),
+                timestamp: new Date().toISOString()
+            };
+
+            const updates = {
+                status,
+                updatedAt: new Date().toISOString(),
+                // timeline is now omitted because it's not in Supabase schema cache
+                ...details
+            };
             const dbUpdates = this._mapToDb(updates);
-            const updated = await this.db.update('id', id, dbUpdates);
+            const updateCols = 'id, user_id, technician_id, status, updated_at';
+            const updated = await this.db.update('id', id, dbUpdates, updateCols);
             const enriched = await this._enrichJob(this._mapFromDb(updated));
 
             if (this.io) {
@@ -436,7 +529,8 @@ class JobManager {
             };
             delete updates.id; // Protect ID
 
-            const result = await this.db.update('id', id, updates);
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const result = await this.db.update('id', id, updates, columns);
             const enriched = await this._enrichJob(this._mapFromDb(result));
 
             if (this.io) {
@@ -449,6 +543,18 @@ class JobManager {
             return enriched;
         } catch (err) {
             console.error(`[JobManager] Error updating job ${id}:`, err);
+            throw err;
+            throw err;
+        }
+    }
+
+    async markFeedbackGiven(jobId) {
+        try {
+            console.log(`[JobManager] Marking feedback given for Job ${jobId}`);
+            // Use updateStatus-like logic but specifically for this flag to avoid status side-effects
+            return await this.updateJob(jobId, { feedbackGiven: true });
+        } catch (err) {
+            console.error(`[JobManager] Error marking feedback given for ${jobId}:`, err);
             throw err;
         }
     }
@@ -477,7 +583,8 @@ class JobManager {
 
     async getJobsByTechnician(technicianId) {
         try {
-            const jobs = await this.db.findAll('technician_id', technicianId);
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const jobs = await this.db.findAll('technician_id', technicianId, columns);
             return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
         } catch (err) {
             console.error(`[JobManager] Error getting jobs for tech ${technicianId}:`, err);
@@ -487,7 +594,9 @@ class JobManager {
 
     async getJobsByUser(userId) {
         try {
-            const jobs = await this.db.findAll('user_id', userId);
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const orderBy = { column: 'created_at', ascending: false }; // Newest first
+            const jobs = await this.db.findAll('user_id', userId, columns, orderBy);
             return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
         } catch (err) {
             console.error(`[JobManager] Error getting jobs for user ${userId}:`, err);
@@ -497,7 +606,8 @@ class JobManager {
 
     async getUnassignedJobs() {
         try {
-            const allJobs = await this.db.read();
+            const columns = 'id, user_id, technician_id, service_type, status, created_at';
+            const allJobs = await this.db.read(columns);
             return allJobs
                 .filter(j => j.status === 'pending' && !j.technician_id)
                 .map(j => this._mapFromDb(j));
@@ -562,7 +672,7 @@ class JobManager {
                 // Optimized Supabase Query
                 const { data: queuedJobs, error } = await this.db.client
                     .from('jobs')
-                    .select('*')
+                    .select('id, user_id, technician_id, status, created_at')
                     .eq('technician_id', technicianId)
                     .eq('status', 'waiting_confirmation')
                     .order('created_at', { ascending: true })
@@ -586,7 +696,8 @@ class JobManager {
                 }
             } else {
                 // JSON Fallback
-                const allJobs = await this.db.findAll('technician_id', technicianId);
+                const columns = 'id, user_id, technician_id, status, created_at';
+                const allJobs = await this.db.findAll('technician_id', technicianId, columns);
                 const queuedJobs = allJobs.filter(j => j.status === 'waiting_confirmation');
 
                 if (queuedJobs.length > 0) {
@@ -606,6 +717,19 @@ class JobManager {
         }
     }
 
+    _validateSchedule(date, time) {
+        if (!date || !time) return; // Immediate bookings skip this
+
+        console.log(`[JobManager] Validating schedule: ${date} ${time}`);
+        const scheduledAt = new Date(`${date}T${time}`);
+        const now = new Date();
+
+        console.log(`[JobManager] ScheduledAt: ${scheduledAt.toISOString()}, Now: ${now.toISOString()}`);
+        if (scheduledAt < now) {
+            throw new Error(`Cannot schedule service in the past. (Scheduled: ${scheduledAt.toISOString()}, Now: ${now.toISOString()})`);
+        }
+    }
+
     // [NEW] Helpers for Advanced Auto-Assign Logic
 
     async _getMonthlyJobCountGlobal() {
@@ -617,7 +741,7 @@ class JobManager {
                 // Optimized Supabase Query
                 const { count, error } = await this.db.client
                     .from('jobs')
-                    .select('*', { count: 'exact', head: true })
+                    .select('id', { count: 'exact', head: true })
                     .gte('created_at', startOfMonth);
                 if (error) throw error;
                 return count || 0;
@@ -638,7 +762,7 @@ class JobManager {
             if (this.db.client) {
                 const { count, error } = await this.db.client
                     .from('jobs')
-                    .select('*', { count: 'exact', head: true })
+                    .select('id', { count: 'exact', head: true })
                     .eq('technician_id', technicianId)
                     .gte('created_at', startOfMonth);
                 if (error) throw error;

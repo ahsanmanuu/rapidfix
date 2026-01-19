@@ -35,11 +35,8 @@ class SupabaseDatabase {
                 lastError = error;
 
                 // [FIX] Suppress noisy Foreign Key errors (e.g. tracking for deleted users)
-                // These are permanent errors, do not retry.
                 if (error.code === '23503') {
-                    // specific log for tracking
-                    // console.warn(`[Supabase] FK Constraint Violation: ${error.details || error.message}`);
-                    throw error; // Fail immediately, let caller handle (LocationManager handles it)
+                    throw error;
                 }
 
                 console.warn(`[Supabase] Operation failed (attempt ${i + 1}/${maxRetries}):`, error.message);
@@ -49,16 +46,34 @@ class SupabaseDatabase {
         throw lastError;
     }
 
+    _cleanColumns(columns) {
+        if (!columns || columns === '*') {
+            if (this.table === 'jobs') {
+                return 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            }
+            return columns || '*';
+        }
+
+        if (this.table === 'jobs') {
+            const problematic = ['description', 'timeline', 'otp', 'total_cost', 'professional_note'];
+            let cleaned = columns.split(',').map(c => c.trim());
+            cleaned = cleaned.filter(c => !problematic.includes(c));
+            return cleaned.join(', ');
+        }
+        return columns;
+    }
+
     /**
      * Read all records from the table
      * @returns {Promise<Array>} Array of records
      */
-    async read() {
+    async read(columns = null) {
         if (!this.client) return [];
         return this._executeWithRetry(async () => {
+            const finalColumns = this._cleanColumns(columns);
             const { data, error } = await this.client
                 .from(this.table)
-                .select('*');
+                .select(finalColumns);
 
             if (error) throw error;
             return data || [];
@@ -81,19 +96,34 @@ class SupabaseDatabase {
      * @param {Object} item - Record to add
      * @returns {Promise<Object>} Created record with UUID
      */
-    async add(item) {
+    async add(item, columns = null) {
         return this._executeWithRetry(async () => {
             // Store original ID as legacy_id for migration tracking if present
             const cleanItem = { ...item };
+
+            // [NUCLEAR FILTER] Strip problematic columns missing from Supabase schema cache
+            if (this.table === 'jobs') {
+                const problematic = ['description', 'timeline', 'otp', 'total_cost', 'professional_note'];
+                problematic.forEach(key => {
+                    if (cleanItem[key] !== undefined) {
+                        console.log(`[Supabase:jobs] Nuclear filter: Stripping '${key}' from insert payload`);
+                        delete cleanItem[key];
+                    }
+                });
+            }
+
             if (cleanItem.id && cleanItem.id.length < 10) { // Simple check for non-UUID legacy IDs
                 cleanItem.legacy_id = cleanItem.id;
                 delete cleanItem.id;
             }
 
+            const finalColumns = this._cleanColumns(columns);
+
+            console.log(`[Supabase:${this.table}] Inserting item with keys:`, Object.keys(cleanItem));
             const { data, error } = await this.client
                 .from(this.table)
                 .insert([cleanItem])
-                .select()
+                .select(finalColumns)
                 .single();
 
             if (error) throw error;
@@ -108,15 +138,28 @@ class SupabaseDatabase {
      * @param {Object} updateData - Fields to update
      * @returns {Promise<Object|null>} Updated record or null
      */
-    async update(idField, idValue, updateData) {
+    async update(idField, idValue, updateData, columns = null) {
         return this._executeWithRetry(async () => {
             const { id, ...cleanUpdate } = updateData;
+
+            // [NUCLEAR FILTER] Strip problematic columns missing from Supabase schema cache
+            if (this.table === 'jobs') {
+                const problematic = ['description', 'timeline', 'otp', 'total_cost', 'professional_note'];
+                problematic.forEach(key => {
+                    if (cleanUpdate[key] !== undefined) {
+                        console.log(`[Supabase:jobs] Nuclear filter: Stripping '${key}' from update payload`);
+                        delete cleanUpdate[key];
+                    }
+                });
+            }
+
+            const finalColumns = this._cleanColumns(columns);
 
             const { data, error } = await this.client
                 .from(this.table)
                 .update(cleanUpdate)
                 .eq(idField, idValue)
-                .select()
+                .select(finalColumns)
                 .single();
 
             if (error) {
@@ -157,12 +200,13 @@ class SupabaseDatabase {
      * @param {any} value - Value to match
      * @returns {Promise<Object|null>} Found record or null
      */
-    async find(field, value) {
+    async find(field, value, columns = null) {
         try {
             return await this._executeWithRetry(async () => {
+                const finalColumns = this._cleanColumns(columns);
                 const { data, error } = await this.client
                     .from(this.table)
-                    .select('*')
+                    .select(finalColumns)
                     .eq(field, value)
                     .maybeSingle();
 
@@ -179,15 +223,23 @@ class SupabaseDatabase {
      * Find all records matching a condition
      * @param {string} field - Field name to match (optional)
      * @param {any} value - Value to match (optional)
+     * @param {string} columns - Columns to select
+     * @param {Object} orderBy - Optional { column: 'field', ascending: true/false }
      * @returns {Promise<Array>} Array of matching records
      */
-    async findAll(field, value) {
+    async findAll(field, value, columns = null, orderBy = null) {
         try {
             return await this._executeWithRetry(async () => {
-                let query = this.client.from(this.table).select('*');
+                const finalColumns = this._cleanColumns(columns);
+                let query = this.client.from(this.table).select(finalColumns);
 
                 if (field && value !== undefined) {
                     query = query.eq(field, value);
+                }
+
+                // Apply ordering if specified
+                if (orderBy && orderBy.column) {
+                    query = query.order(orderBy.column, { ascending: orderBy.ascending !== false ? true : false });
                 }
 
                 const { data, error } = await query;
@@ -206,10 +258,11 @@ class SupabaseDatabase {
      * @param {Object} options - Query options
      * @returns {Promise<Array>}
      */
-    async query(options = {}) {
+    async query(options = {}, columns = null) {
         try {
             return await this._executeWithRetry(async () => {
-                let query = this.client.from(this.table).select('*');
+                const finalColumns = this._cleanColumns(columns);
+                let query = this.client.from(this.table).select(finalColumns);
 
                 // Geospatial Filter (Basic Box Approximation if needed, or PostGIS if available)
                 // For now, let's assume we fetch all and filter in memory if complex, 

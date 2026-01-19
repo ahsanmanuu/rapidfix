@@ -13,14 +13,17 @@ class OfferManager {
     _mapFromDb(offer) {
         if (!offer) return null;
         try {
-            const { created_by, expiry_date, is_active, created_at, badge_text, ...rest } = offer;
+            const { created_by, expiry_date, is_active, created_at, badge_text, discount_type, discount_value, image_url, ...rest } = offer;
             return {
                 ...rest,
                 createdBy: created_by,
                 expiryDate: expiry_date,
                 isActive: is_active,
                 createdAt: created_at,
-                badgeText: badge_text
+                badgeText: badge_text,
+                discountType: discount_type || 'percentage',
+                discountValue: discount_value || 0,
+                imageUrl: image_url
             };
         } catch (err) {
             console.error("[OfferManager] Error mapping from DB:", err);
@@ -31,13 +34,16 @@ class OfferManager {
     _mapToDb(offer) {
         if (!offer) return null;
         try {
-            const { createdBy, expiryDate, isActive, createdAt, badgeText, id, ...rest } = offer;
+            const { createdBy, expiryDate, isActive, createdAt, badgeText, id, discountType, discountValue, imageUrl, ...rest } = offer;
             const mapped = { ...rest };
             if (createdBy !== undefined) mapped.created_by = createdBy;
             if (expiryDate !== undefined) mapped.expiry_date = expiryDate;
             if (isActive !== undefined) mapped.is_active = isActive;
             if (createdAt !== undefined) mapped.created_at = createdAt;
             if (badgeText !== undefined) mapped.badge_text = badgeText;
+            if (discountType !== undefined) mapped.discount_type = discountType;
+            if (discountValue !== undefined) mapped.discount_value = discountValue;
+            if (imageUrl !== undefined) mapped.image_url = imageUrl;
             if (id !== undefined) mapped.id = id;
             return mapped;
         } catch (err) {
@@ -46,14 +52,18 @@ class OfferManager {
         }
     }
 
-    async createOffer(title, description, badgeText, createdBy, expiryDate) {
+    async createOffer(title, description, code, discountType, discountValue, badgeText, createdBy, expiryDate, imageUrl) {
         try {
             const offer = {
                 title,
                 description,
+                code,
+                discountType: discountType || 'percentage',
+                discountValue: discountValue || 0,
                 badgeText,
                 createdBy,
                 expiryDate,
+                imageUrl,
                 isActive: true,
                 createdAt: new Date().toISOString()
             };

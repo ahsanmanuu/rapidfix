@@ -28,11 +28,12 @@ class ComplaintManager {
     _mapToDb(complaint) {
         if (!complaint) return null;
         try {
-            const { userId, technicianId, id, ...rest } = complaint;
+            const { userId, technicianId, id, timeline, ...rest } = complaint;
             const mapped = { ...rest };
             if (userId !== undefined) mapped.user_id = userId;
             if (technicianId !== undefined) mapped.technician_id = technicianId;
             if (id !== undefined) mapped.id = id;
+            if (timeline !== undefined) mapped.timeline = timeline; // JSONB
             return mapped;
         } catch (err) {
             console.error("[ComplaintManager] Error mapping to DB:", err);
@@ -40,15 +41,20 @@ class ComplaintManager {
         }
     }
 
-    async createComplaint(userId, technicianId, subject, description) {
+    async createComplaint(userId, technicianId, subject, description, category, evidence) {
         try {
             const complaint = {
                 userId,
                 technicianId,
                 subject,
                 description,
+                category: category || 'General',
+                evidence: evidence || [], // JSONB in DB
                 status: 'open',
-                date: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                timeline: [
+                    { status: 'open', message: 'Complaint filed', timestamp: new Date().toISOString() }
+                ]
             };
             const dbComplaint = this._mapToDb(complaint);
             const saved = await this.db.add(dbComplaint);

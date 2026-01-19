@@ -5,13 +5,15 @@ import {
     Select, MenuItem, InputLabel, FormControl
 } from '@mui/material';
 import { Close, CalendarMonth, AccessTime, LocationOn } from '@mui/icons-material';
+import { createJob } from '../../services/api';
 
-const ServiceScheduleModal = ({ open, onClose, serviceType, user }) => {
+const ServiceScheduleModal = ({ open, onClose, serviceType, user, onJobCreated }) => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         serviceType: serviceType || '',
         date: '',
         time: '',
-        address: user?.location || '',
+        address: user?.location?.address || user?.location || '',
         description: ''
     });
 
@@ -20,6 +22,13 @@ const ServiceScheduleModal = ({ open, onClose, serviceType, user }) => {
             setFormData(prev => ({ ...prev, serviceType }));
         }
     }, [serviceType]);
+
+    // Pre-fill address when user changes
+    React.useEffect(() => {
+        if (user?.location) {
+            setFormData(prev => ({ ...prev, address: user.location.address || user.location }));
+        }
+    }, [user]);
 
     const serviceOptions = [
         'Electrician', 'Plumber', 'Painter', 'A.C. Technician',
@@ -30,9 +39,40 @@ const ServiceScheduleModal = ({ open, onClose, serviceType, user }) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = () => {
-        alert(`Service Scheduled!\nType: ${formData.serviceType}\nDate: ${formData.date} at ${formData.time}`);
-        onClose();
+    const handleSubmit = async () => {
+        if (!formData.serviceType || !formData.date || !formData.time || !formData.address) {
+            return alert("Please fill in all required fields.");
+        }
+
+        setIsSubmitting(true);
+        try {
+            const payload = {
+                userId: user.id,
+                serviceType: formData.serviceType,
+                scheduledDate: formData.date,
+                scheduledTime: formData.time,
+                address: formData.address,
+                description: formData.description || "Scheduled through Service Hub",
+                status: 'pending'
+            };
+
+            console.log("[ScheduleModal] Sending payload:", JSON.stringify(payload, null, 2));
+            const response = await createJob(payload);
+            if (response.data.success || response.status === 200) {
+                alert(`Successfully scheduled ${formData.serviceType} for ${formData.date} at ${formData.time}`);
+                onClose();
+                // Trigger a refresh via callback instead of full page reload
+                if (onJobCreated) onJobCreated(response.data.job);
+            }
+        } catch (err) {
+            console.error("Scheduling failed:", err);
+            const errorMsg = err.response?.data?.error || err.message;
+            const details = err.response?.data?.details ? `\n\nDetails: ${err.response.data.details}` : '';
+            const hint = err.response?.data?.hint ? `\nHint: ${err.response.data.hint}` : '';
+            alert(`Failed to schedule service: ${errorMsg}${details}${hint}`);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -111,9 +151,9 @@ const ServiceScheduleModal = ({ open, onClose, serviceType, user }) => {
             </DialogContent>
 
             <DialogActions sx={{ p: 3, borderTop: '1px solid #f1f5f9' }}>
-                <Button onClick={onClose} sx={{ color: '#64748b' }}>Cancel</Button>
-                <Button variant="contained" onClick={handleSubmit} fullWidth sx={{ bgcolor: '#447aee', fontWeight: 'bold' }}>
-                    Confirm Schedule
+                <Button onClick={onClose} sx={{ color: '#64748b' }} disabled={isSubmitting}>Cancel</Button>
+                <Button variant="contained" onClick={handleSubmit} fullWidth sx={{ bgcolor: '#447aee', fontWeight: 'bold' }} disabled={isSubmitting}>
+                    {isSubmitting ? 'Scheduling...' : 'Confirm Schedule'}
                 </Button>
             </DialogActions>
         </Dialog>

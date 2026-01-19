@@ -15,9 +15,10 @@ import {
 } from '@mui/icons-material';
 
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 import TechnicianSearchModal from '../TechnicianSearchModal';
 import BookingConfirmationModal from '../BookingConfirmationModal';
-import { createJob } from '../../services/api';
+import api, { createJob } from '../../services/api';
 
 // --- Styled Components Helper ---
 const CardStyle = {
@@ -31,16 +32,141 @@ const CardStyle = {
     backgroundColor: '#fff'
 };
 
-const DashboardHome = ({ jobs = [] }) => {
+const DashboardHome = ({ jobs = [], setActiveTab }) => {
     const { user } = useAuth();
+    const socket = useSocket();
     const theme = useTheme();
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Debug: Log received jobs
+    console.log("[DashboardHome] Jobs received:", jobs.length, jobs.map(j => ({ id: j.id?.slice(0, 8), status: j.status })));
 
     // Booking State
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [selectedTechnician, setSelectedTechnician] = useState(null);
     const [bookingParams, setBookingParams] = useState(null);
+
+    // Support Chat State
+    const [activeSession, setActiveSession] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState('');
+    const [loadingChat, setLoadingChat] = useState(false);
+    const messagesEndRef = React.useRef(null);
+
+    // [NEW] Real-time Data State
+    const [activeOffer, setActiveOffer] = useState(null);
+    const [complaintsCount, setComplaintsCount] = useState(0);
+
+    // Derived Data: Active Job (Find first job that is NOT completed/cancelled)
+    // Priority: Arriving > In Progress > Accepted > Pending
+    const activeJob = jobs.find(j => ['arriving', 'on_the_way', 'in_progress', 'accepted', 'pending'].includes(j.status));
+
+    // [NEW] Feedback State
+    const [feedbackRating, setFeedbackRating] = useState(0);
+    const [feedbackComment, setFeedbackComment] = useState('');
+    const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+
+    // Initial Data Fetch
+    useEffect(() => {
+        if (!user) return; // Wait for user
+
+        // 1. Fetch Offers & Complaints
+        const fetchDashboardData = async () => {
+            try {
+                const [offersRes, complaintsRes] = await Promise.all([
+                    api.get('/api/offers'),
+                    api.get(`/api/complaints/user/${user.id}`)
+                ]);
+
+                if (offersRes.data.success && offersRes.data.offers?.length > 0) {
+                    setActiveOffer(offersRes.data.offers[0]); // Pick latest/first
+                }
+                if (complaintsRes.data.success) {
+                    setComplaintsCount(complaintsRes.data.complaints?.filter(c => c.status !== 'resolved').length || 0);
+                }
+            } catch (err) {
+                console.error("Dashboard Data Fetch Error:", err);
+            }
+        };
+
+        // 2. Fetch Support Session
+        const fetchSupportData = async () => {
+            try {
+                const { data: res } = await api.post('/api/support/session', { userId: user.id });
+                if (res.success && res.session) {
+                    setActiveSession(res.session);
+                    const existingMessages = Array.isArray(res.session.messages) ? res.session.messages : [];
+                    setMessages(existingMessages);
+                }
+            } catch (err) {
+                console.error("Failed to load support chat:", err);
+            }
+        };
+
+        fetchDashboardData();
+        fetchSupportData();
+    }, [user]);
+
+    // Socket Listener for Chat
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on('support_message', (msg) => {
+            // Only add if it belongs to current session or if we are just starting
+            setMessages(prev => {
+                // Avoid duplicates
+                if (prev.find(m => m.id === msg.id)) return prev;
+                return [...prev, msg];
+            });
+        });
+
+        return () => {
+            socket.off('support_message');
+        };
+    }, [socket]);
+
+    // Auto-scroll to bottom
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
+
+    const handleSendMessage = async () => {
+        if (!newMessage.trim()) return;
+
+        const tempMsg = {
+            id: Date.now(), // temp id
+            sender: 'user',
+            message: newMessage,
+            createdAt: new Date().toISOString()
+        };
+
+        // Optimistic UI update
+        setMessages(prev => [...prev, tempMsg]);
+        setNewMessage('');
+
+        try {
+            let sessionId = activeSession?.id;
+
+            // If no active session, create one
+            if (!sessionId) {
+                const { data: newSession } = await api.post('/support/session', { userId: user.id });
+                setActiveSession(newSession);
+                sessionId = newSession.id;
+            }
+
+            // Send message
+            await api.post('/support/message', {
+                sessionId,
+                message: tempMsg.message,
+                sender: 'user'
+            });
+
+        } catch (err) {
+            console.error("Failed to send message:", err);
+            // Optionally remove the optimistic message or show error
+        }
+    };
 
     // Derived Data
     const completedJobs = jobs.filter(j => j.status === 'completed');
@@ -72,6 +198,45 @@ const DashboardHome = ({ jobs = [] }) => {
         }
     };
 
+    const handleSubmitFeedback = async () => {
+        if (!feedbackRating) return alert("Please select a rating.");
+        setIsSubmittingFeedback(true);
+        try {
+            await api.post('/feedback', {
+                userId: user.id,
+                technicianId: jobForFeedback.technicianId || jobForFeedback.technician?.id, // Ensure correct ID access
+                jobId: jobForFeedback.id,
+                ratings: {
+                    overall: feedbackRating,
+                    timeliness: feedbackRating,
+                    expertise: feedbackRating,
+                    professionalism: feedbackRating,
+                    honesty: feedbackRating,
+                    behavior: feedbackRating,
+                    knowledge: feedbackRating,
+                    respect: feedbackRating
+                },
+                comment: feedbackComment
+            });
+            alert('Feedback submitted! Thank you.');
+            // Ideally remove the card or refresh jobs. reloading page for simplicity:
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to submit feedback.');
+        } finally {
+            setIsSubmittingFeedback(false);
+        }
+    };
+
+    const handleReportProblem = () => {
+        if (setActiveTab) {
+            setActiveTab('complaints');
+        } else {
+            console.warn("setActiveTab prop missing");
+        }
+    };
+
     return (
         <Box sx={{ width: '100%', fontFamily: 'Inter, sans-serif' }}>
 
@@ -92,27 +257,29 @@ const DashboardHome = ({ jobs = [] }) => {
                 <Grid container alignItems="center" spacing={3} sx={{ position: 'relative', zIndex: 1 }}>
                     <Grid item xs={12} md={8}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <Chip label="Limited Time" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 'bold', borderRadius: '4px' }} />
+                            <Chip label={activeOffer ? "Special Offer" : "Welcome"} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', fontWeight: 'bold', borderRadius: '4px' }} />
                             <Verified fontSize="small" sx={{ opacity: 0.8 }} />
                         </Box>
                         <Typography variant="h4" fontWeight="900" sx={{ letterSpacing: '-0.025em', mb: 1 }}>
-                            Summer Refresh Sale!
+                            {activeOffer ? activeOffer.title : `Welcome back, ${user?.name?.split(' ')[0] || 'User'}!`}
                         </Typography>
                         <Typography variant="body1" sx={{ color: 'blue.100', fontWeight: 500 }}>
-                            Get 20% off all HVAC and Deep Cleaning services this week.
+                            {activeOffer ? activeOffer.description : "Find the perfect professional for your home needs today."}
                         </Typography>
                     </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Box sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ flex: 1 }}>
-                                <Typography variant="caption" sx={{ color: 'blue.100', textTransform: 'uppercase', fontWeight: 600 }}>Promo Code</Typography>
-                                <Typography variant="h5" sx={{ fontFamily: 'monospace', fontWeight: 'bold' }}>SUMMER20</Typography>
+                    {activeOffer && (
+                        <Grid item xs={12} md={4}>
+                            <Box sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant="caption" sx={{ color: 'blue.100', textTransform: 'uppercase', fontWeight: 600 }}>Promo Code</Typography>
+                                    <Typography variant="h5" sx={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{activeOffer.code}</Typography>
+                                </Box>
+                                <Button variant="contained" onClick={() => navigator.clipboard.writeText(activeOffer.code)} sx={{ bgcolor: '#fff', color: '#2563eb', fontWeight: 'bold', '&:hover': { bgcolor: '#eff6ff' } }}>
+                                    Copy Code
+                                </Button>
                             </Box>
-                            <Button variant="contained" sx={{ bgcolor: '#fff', color: '#2563eb', fontWeight: 'bold', '&:hover': { bgcolor: '#eff6ff' } }}>
-                                Copy Code
-                            </Button>
-                        </Box>
-                    </Grid>
+                        </Grid>
+                    )}
                 </Grid>
             </Box>
 
@@ -161,7 +328,7 @@ const DashboardHome = ({ jobs = [] }) => {
                                                     </Avatar>
                                                     <Box>
                                                         <Typography variant="body2" fontWeight="bold" sx={{ color: '#0f172a' }}>{job.serviceType}</Typography>
-                                                        <Typography variant="caption" color="textSecondary" noWrap>Pro: {job.technicianName || 'Pending'}</Typography>
+                                                        <Typography variant="caption" color="textSecondary" noWrap>Pro: {job.technician?.name || 'Pending'}</Typography>
                                                     </Box>
                                                 </Box>
                                             </TableCell>
@@ -205,16 +372,41 @@ const DashboardHome = ({ jobs = [] }) => {
                                     <Star sx={{ color: '#eab308' }} /> Leave Feedback
                                 </Typography>
                                 <Typography variant="body2" sx={{ mb: 2 }}>
-                                    How was your <b>{jobForFeedback.serviceType}</b>?
+                                    How was your <b>{jobForFeedback.technician?.serviceType || jobForFeedback.serviceType}</b>?
                                 </Typography>
                                 <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                                     {[1, 2, 3, 4, 5].map((s) => (
-                                        <Star key={s} sx={{ color: '#cbd5e1', fontSize: 28, cursor: 'pointer', '&:hover': { color: '#eab308' } }} />
+                                        <Star
+                                            key={s}
+                                            onClick={() => !isSubmittingFeedback && setFeedbackRating(s)}
+                                            sx={{
+                                                color: s <= feedbackRating ? '#eab308' : '#cbd5e1',
+                                                fontSize: 28,
+                                                cursor: isSubmittingFeedback ? 'default' : 'pointer',
+                                                '&:hover': { color: isSubmittingFeedback ? undefined : '#eab308' }
+                                            }}
+                                        />
                                     ))}
                                 </Box>
                                 <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <TextField fullWidth placeholder="Comment..." size="small" sx={{ bgcolor: '#f8fafc' }} />
-                                    <Button variant="contained" size="small" sx={{ bgcolor: '#0f172a', textTransform: 'none' }}>Submit</Button>
+                                    <TextField
+                                        fullWidth
+                                        placeholder={feedbackRating > 0 ? "Tell us more..." : "Select a rating first..."}
+                                        size="small"
+                                        value={feedbackComment}
+                                        onChange={(e) => setFeedbackComment(e.target.value)}
+                                        disabled={isSubmittingFeedback}
+                                        sx={{ bgcolor: '#f8fafc' }}
+                                    />
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        onClick={handleSubmitFeedback}
+                                        disabled={isSubmittingFeedback || feedbackRating === 0}
+                                        sx={{ bgcolor: '#0f172a', textTransform: 'none' }}
+                                    >
+                                        {isSubmittingFeedback ? '...' : 'Submit'}
+                                    </Button>
                                 </Box>
                             </CardContent>
                         </Card>
@@ -234,84 +426,137 @@ const DashboardHome = ({ jobs = [] }) => {
                             </Box>
                             <Box sx={{ textAlign: 'right' }}>
                                 <Typography variant="h6" fontWeight="bold" color="primary">$120</Typography>
-                                <Button size="small" variant="outlined" sx={{ borderRadius: '6px', textTransform: 'none', mt: 0.5 }}>View</Button>
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={() => setActiveTab && setActiveTab('offers')}
+                                    sx={{ borderRadius: '6px', textTransform: 'none', mt: 0.5 }}
+                                >
+                                    View
+                                </Button>
                             </Box>
                         </CardContent>
                     </Card>
 
                     {/* 4. Real-time Job Status Timeline Widget */}
-                    <Card sx={{ ...CardStyle, p: 3, position: 'relative', overflow: 'hidden' }}>
-                        {/* CSS Animation Injection */}
-                        <style dangerouslySetInnerHTML={{
-                            __html: `
-                            @keyframes pulse-ring {
-                                0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
-                                70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
-                                100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
-                            }
-                            @keyframes car-bounce {
-                                0%, 100% { transform: translateY(0); }
-                                50% { transform: translateY(-3px); }
-                            }
-                        `}} />
+                    {activeJob ? (
+                        <Card sx={{ ...CardStyle, p: 3, position: 'relative', overflow: 'hidden' }}>
+                            {/* CSS Animation Injection */}
+                            <style dangerouslySetInnerHTML={{
+                                __html: `
+                                @keyframes pulse-ring {
+                                    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+                                    70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+                                    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+                                }
+                                @keyframes car-bounce {
+                                    0%, 100% { transform: translateY(0); }
+                                    50% { transform: translateY(-3px); }
+                                }
+                            `}} />
 
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                            <Box>
-                                <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <AccessTime color="primary" /> Job Timeline
-                                </Typography>
-                                <Typography variant="caption" color="textSecondary">Active Job: <b>AC Repair - Split Unit</b></Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                                <Box>
+                                    <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <AccessTime color="primary" /> Job Timeline
+                                    </Typography>
+                                    <Typography variant="caption" color="textSecondary">Active Job: <b>{activeJob.serviceType}</b></Typography>
+                                </Box>
+                                <Chip
+                                    label="LIVE TRACKING"
+                                    size="small"
+                                    color="error"
+                                    icon={<Verified style={{ animation: 'pulse-ring 2s infinite', borderRadius: '50%' }} />}
+                                    sx={{ fontWeight: 'bold', animation: 'pulse-ring 2s infinite', bgcolor: '#ffe4e6', color: '#be123c', border: 'none' }}
+                                />
                             </Box>
-                            <Chip
-                                label="LIVE TRACKING"
-                                size="small"
-                                color="error"
-                                icon={<Verified style={{ animation: 'pulse-ring 2s infinite', borderRadius: '50%' }} />}
-                                sx={{ fontWeight: 'bold', animation: 'pulse-ring 2s infinite', bgcolor: '#ffe4e6', color: '#be123c', border: 'none' }}
-                            />
-                        </Box>
 
-                        <Stepper alternativeLabel activeStep={2} connector={<StepConnector sx={{ '& .MuiStepConnector-line': { borderColor: '#e2e8f0' } }} />}>
-                            {[
-                                { label: 'Requested', time: '10:30 AM', icon: <PendingActions /> },
-                                { label: 'Accepted', time: '10:35 AM', icon: <CheckCircle /> },
-                                { label: 'On The Way', time: '10:45 AM', icon: <DirectionsCar /> },
-                                { label: 'Finished', time: '--:--', icon: <Build /> },
-                            ].map((step, index) => (
-                                <Step key={step.label}>
-                                    <StepLabel
-                                        StepIconComponent={() => (
-                                            <Box sx={{
-                                                width: 40, height: 40, borderRadius: '50%',
-                                                bgcolor: index <= 2 ? (index === 2 ? '#2563eb' : '#dcfce7') : '#f1f5f9',
-                                                color: index <= 2 ? (index === 2 ? '#fff' : '#16a34a') : '#94a3b8',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                zIndex: 1, position: 'relative',
-                                                boxShadow: index === 2 ? '0 0 0 4px rgba(37, 99, 235, 0.2)' : 'none',
-                                                animation: index === 2 ? 'pulse-ring 2s infinite' : 'none'
-                                            }}>
-                                                {index === 2 ? <DirectionsCar fontSize="small" sx={{ animation: 'car-bounce 1s infinite' }} /> :
-                                                    index < 2 ? <CheckCircleOutline fontSize="small" /> : step.icon}
-                                            </Box>
-                                        )}
+                            <Stepper alternativeLabel activeStep={
+                                activeJob.status === 'pending' || activeJob.status === 'waiting_confirmation' ? 0 :
+                                    activeJob.status === 'accepted' ? 1 :
+                                        ['arriving', 'on_the_way', 'in_progress'].includes(activeJob.status) ? 2 : 3
+                            } connector={<StepConnector sx={{ '& .MuiStepConnector-line': { borderColor: '#e2e8f0' } }} />}>
+                                {[
+                                    { label: 'Requested', time: new Date(activeJob.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), icon: <PendingActions /> },
+                                    { label: 'Accepted', time: activeJob.status !== 'pending' ? 'Done' : '--:--', icon: <CheckCircle /> },
+                                    { label: 'On The Way', time: ['arriving', 'on_the_way', 'in_progress', 'completed'].includes(activeJob.status) ? 'Live' : '--:--', icon: <DirectionsCar /> },
+                                    { label: 'Finished', time: '--:--', icon: <Build /> },
+                                ].map((step, index) => (
+                                    <Step key={step.label}>
+                                        <StepLabel
+                                            StepIconComponent={() => {
+                                                const currentStep = activeJob.status === 'pending' || activeJob.status === 'waiting_confirmation' ? 0 :
+                                                    activeJob.status === 'accepted' ? 1 :
+                                                        ['arriving', 'on_the_way', 'in_progress'].includes(activeJob.status) ? 2 : 3;
+
+                                                const isActive = index === currentStep;
+                                                const isCompleted = index < currentStep;
+
+                                                return (
+                                                    <Box sx={{
+                                                        width: 40, height: 40, borderRadius: '50%',
+                                                        bgcolor: isActive ? '#2563eb' : (isCompleted ? '#dcfce7' : '#f1f5f9'),
+                                                        color: isActive ? '#fff' : (isCompleted ? '#16a34a' : '#94a3b8'),
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        zIndex: 1, position: 'relative',
+                                                        boxShadow: isActive ? '0 0 0 4px rgba(37, 99, 235, 0.2)' : 'none',
+                                                        animation: isActive ? 'pulse-ring 2s infinite' : 'none'
+                                                    }}>
+                                                        {isActive && index === 2 ? <DirectionsCar fontSize="small" sx={{ animation: 'car-bounce 1s infinite' }} /> :
+                                                            isCompleted ? <CheckCircleOutline fontSize="small" /> : step.icon}
+                                                    </Box>
+                                                );
+                                            }}
+                                        >
+                                            <Typography variant="body2" fontWeight="bold" sx={{ color: '#0f172a' }}>{step.label}</Typography>
+                                            <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>{step.time}</Typography>
+                                        </StepLabel>
+                                    </Step>
+                                ))}
+                            </Stepper>
+
+                            {/* Map/Technician Info Mini-Section */}
+                            {activeJob.technician ? (
+                                <Box sx={{ mt: 3, p: 2, bgcolor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Avatar src={activeJob.technician.photo} sx={{ width: 48, height: 48, bgcolor: '#0f172a' }}>
+                                        {activeJob.technician.name?.[0] || 'T'}
+                                    </Avatar>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="subtitle2" fontWeight="bold">{activeJob.technician.name}</Typography>
+                                        <Typography variant="caption" color="textSecondary">
+                                            {activeJob.status === 'arriving' || activeJob.status === 'on_the_way'
+                                                ? 'Arriving soon • Live GPS'
+                                                : 'Technician Assigned'}
+                                        </Typography>
+                                    </Box>
+                                    <Button
+                                        size="small"
+                                        variant="contained"
+                                        color="primary"
+                                        href={activeJob.technician.phone ? `tel:${activeJob.technician.phone}` : '#'}
+                                        sx={{ borderRadius: '8px', textTransform: 'none' }}
                                     >
-                                        <Typography variant="body2" fontWeight="bold" sx={{ color: index <= 2 ? '#0f172a' : '#94a3b8' }}>{step.label}</Typography>
-                                        <Typography variant="caption" sx={{ color: '#64748b', display: 'block' }}>{step.time}</Typography>
-                                    </StepLabel>
-                                </Step>
-                            ))}
-                        </Stepper>
-
-                        {/* Map/Technician Info Mini-Section */}
-                        <Box sx={{ mt: 3, p: 2, bgcolor: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Avatar sx={{ width: 48, height: 48, bgcolor: '#0f172a' }}>AJ</Avatar>
-                            <Box sx={{ flex: 1 }}>
-                                <Typography variant="subtitle2" fontWeight="bold">Alex Johnson</Typography>
-                                <Typography variant="caption" color="textSecondary">Arriving in <b>5 mins</b> • White Van (XY-99)</Typography>
+                                        Call
+                                    </Button>
+                                </Box>
+                            ) : (
+                                <Box sx={{ mt: 3, p: 2, bgcolor: '#fffbed', borderRadius: '12px', border: '1px solid #fcd34d', display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <PendingActions sx={{ color: '#d97706' }} />
+                                    <Typography variant="body2" color="#b45309">Looking for a nearby professional...</Typography>
+                                </Box>
+                            )}
+                        </Card>
+                    ) : (
+                        // Fallback/Empty State for Active Job Widget
+                        <Card sx={{ ...CardStyle, p: 3, borderStyle: 'dashed', borderColor: '#cbd5e1', bgcolor: '#f8fafc' }}>
+                            <Box sx={{ textAlign: 'center', py: 2 }}>
+                                <HistoryIcon sx={{ fontSize: 40, color: '#94a3b8', mb: 1 }} />
+                                <Typography variant="subtitle1" fontWeight="bold" color="textSecondary">No Active Jobs</Typography>
+                                <Typography variant="caption" color="textSecondary" sx={{ mb: 2, display: 'block' }}>Ready to book your next service?</Typography>
+                                <Button variant="outlined" size="small" onClick={() => handleBookNow('General')} sx={{ borderRadius: '8px' }}>Book Now</Button>
                             </Box>
-                            <Button size="small" variant="contained" color="primary" sx={{ borderRadius: '8px', textTransform: 'none' }}>Call</Button>
-                        </Box>
-                    </Card>
+                        </Card>
+                    )}
 
                 </Box>
 
@@ -329,23 +574,55 @@ const DashboardHome = ({ jobs = [] }) => {
                             <Chip label="Online" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: '#fff', height: 20, fontSize: '0.65rem' }} />
                         </Box>
                         <Box sx={{ flex: 1, bgcolor: '#f8fafc', p: 2, display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                <Avatar sx={{ width: 28, height: 28, bgcolor: '#e2e8f0' }}>S</Avatar>
-                                <Box sx={{ bgcolor: '#fff', p: 1.5, borderRadius: '12px 12px 12px 0', border: '1px solid #e2e8f0', maxWidth: '85%' }}>
-                                    <Typography variant="caption" color="textSecondary">Hello! How can I help?</Typography>
+                            {messages.map((msg) => (
+                                <Box
+                                    key={msg.id}
+                                    sx={{
+                                        display: 'flex',
+                                        gap: 1,
+                                        flexDirection: msg.sender === 'user' ? 'row-reverse' : 'row'
+                                    }}
+                                >
+                                    <Avatar
+                                        sx={{
+                                            width: 28,
+                                            height: 28,
+                                            bgcolor: msg.sender === 'user' ? '#eff6ff' : '#e2e8f0',
+                                            color: msg.sender === 'user' ? '#2563eb' : '#64748b',
+                                            fontSize: '0.6rem'
+                                        }}
+                                    >
+                                        {msg.sender === 'user' ? 'ME' : 'S'}
+                                    </Avatar>
+                                    <Box sx={{
+                                        bgcolor: msg.sender === 'user' ? '#2563eb' : '#fff',
+                                        color: msg.sender === 'user' ? '#fff' : 'text.primary',
+                                        p: 1.5,
+                                        borderRadius: msg.sender === 'user' ? '12px 12px 0 12px' : '12px 12px 12px 0',
+                                        border: msg.sender === 'user' ? 'none' : '1px solid #e2e8f0',
+                                        maxWidth: '85%'
+                                    }}>
+                                        <Typography variant="caption" sx={{ display: 'block', lineHeight: 1.4 }}>{msg.message}</Typography>
+                                    </Box>
                                 </Box>
-                            </Box>
-                            <Box sx={{ display: 'flex', gap: 1, flexDirection: 'row-reverse' }}>
-                                <Avatar sx={{ width: 28, height: 28, bgcolor: '#eff6ff', color: '#2563eb', fontSize: '0.6rem' }}>ME</Avatar>
-                                <Box sx={{ bgcolor: '#2563eb', color: '#fff', p: 1.5, borderRadius: '12px 12px 0 12px', maxWidth: '85%' }}>
-                                    <Typography variant="caption">Reschedule my appointment.</Typography>
-                                </Box>
-                            </Box>
+                            ))}
+                            <div ref={messagesEndRef} />
                         </Box>
                         <Box sx={{ p: 1.5, borderTop: '1px solid #e2e8f0' }}>
                             <Box sx={{ position: 'relative' }}>
-                                <InputBase fullWidth placeholder="Type..." sx={{ bgcolor: '#fff', borderRadius: '20px', pl: 2, pr: 5, py: 0.5, border: '1px solid #e2e8f0', fontSize: '0.85rem' }} />
-                                <IconButton size="small" sx={{ position: 'absolute', right: 4, top: 2, color: '#2563eb' }}>
+                                <InputBase
+                                    fullWidth
+                                    placeholder="Type a message..."
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                                    sx={{ bgcolor: '#fff', borderRadius: '20px', pl: 2, pr: 5, py: 0.5, border: '1px solid #e2e8f0', fontSize: '0.85rem' }}
+                                />
+                                <IconButton
+                                    size="small"
+                                    onClick={handleSendMessage}
+                                    sx={{ position: 'absolute', right: 4, top: 2, color: '#2563eb' }}
+                                >
                                     <Send fontSize="small" />
                                 </IconButton>
                             </Box>
@@ -359,11 +636,28 @@ const DashboardHome = ({ jobs = [] }) => {
                                 <ReportProblem color="error" fontSize="small" /> Complaints & Issues
                             </Typography>
                             <Box sx={{ bgcolor: '#fef2f2', borderRadius: '8px', p: 2, textAlign: 'center', border: '1px solid #fee2e2', mb: 2 }}>
-                                <CheckCircle sx={{ fontSize: 32, color: '#ef4444', mb: 1 }} />
-                                <Typography variant="body2" fontWeight="bold" color="error">No Open Issues</Typography>
-                                <Typography variant="caption" color="textSecondary">Everything is running smoothly.</Typography>
+                                {complaintsCount > 0 ? (
+                                    <>
+                                        <ReportProblem sx={{ fontSize: 32, color: '#ef4444', mb: 1 }} />
+                                        <Typography variant="body2" fontWeight="bold" color="error">{complaintsCount} Open Issue{complaintsCount > 1 ? 's' : ''}</Typography>
+                                        <Typography variant="caption" color="textSecondary">Our support team is on it.</Typography>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle sx={{ fontSize: 32, color: '#16a34a', mb: 1 }} />
+                                        <Typography variant="body2" fontWeight="bold" color="#16a34a">No Open Issues</Typography>
+                                        <Typography variant="caption" color="textSecondary">Everything is running smoothly.</Typography>
+                                    </>
+                                )}
                             </Box>
-                            <Button fullWidth variant="outlined" color="error" size="small" sx={{ borderRadius: '8px', textTransform: 'none' }}>
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                color="error"
+                                size="small"
+                                onClick={handleReportProblem}
+                                sx={{ borderRadius: '8px', textTransform: 'none' }}
+                            >
                                 Report a Problem
                             </Button>
                         </CardContent>

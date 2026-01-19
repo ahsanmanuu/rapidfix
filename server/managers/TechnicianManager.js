@@ -282,9 +282,10 @@ class TechnicianManager extends BaseManager {
             let tech = null;
             // Case-insensitive search
             if (this.db.client) {
+                const columns = 'id, name, email, phone, service_type, experience, rating, review_count, status, membership, joined_at, updated_at, location, documents';
                 const { data } = await this.db.client
                     .from(this.tableName)
-                    .select('*')
+                    .select(columns)
                     .ilike('email', cleanEmail)
                     .maybeSingle();
                 if (data) tech = this._mapFromDb(data);
@@ -356,13 +357,19 @@ class TechnicianManager extends BaseManager {
             const lon = parseFloat(userLon);
             const type = this._normalizeType(serviceType);
 
+            // [UPDATED] Relaxed limit for testing/demo availability
+            // const effectiveRadius = Math.min(Number(radius) || 30, 30);
+            const effectiveRadius = Number(radius) || 10000; // Global search for demo
+
+            // Fix: Fetch technicians from DB if not available in scope
             const allTechs = await this.db.read();
+
             const techs = allTechs
                 .map(t => this._mapFromDb(t))
                 .filter(t => {
                     const dbType = t.serviceType || t.service_type || '';
                     const normalizedDbType = this._normalizeType(dbType);
-                    // [FIX] Flexible matching for "CCTV" vs "CCTV Technician"
+                    // Match Service Type
                     return normalizedDbType === type || normalizedDbType.includes(type) || type.includes(normalizedDbType);
                 });
 
@@ -378,9 +385,9 @@ class TechnicianManager extends BaseManager {
                 }
 
                 // Checking valid numbers
-                if (tLat === undefined || tLon === undefined || isNaN(tLat) || isNaN(tLon)) return null;
+                if (tLat === undefined || tLon === undefined || isNaN(parseFloat(tLat)) || isNaN(parseFloat(tLon))) return null;
 
-                const dist = this.calculateDistance(lat, lon, tLat, tLon);
+                const dist = this.calculateDistance(lat, lon, parseFloat(tLat), parseFloat(tLon));
                 const { password, ...rest } = tech;
 
                 return {
@@ -388,7 +395,7 @@ class TechnicianManager extends BaseManager {
                     location: { latitude: tLat, longitude: tLon, address: tech.baseAddress || '' },
                     distance: parseFloat(dist.toFixed(1))
                 };
-            }).filter(item => item !== null && item.distance <= radius);
+            }).filter(item => item !== null && item.distance <= effectiveRadius);
 
             const enrichedTechs = await this._enrichWithRatings(nearbyTechs);
             return enrichedTechs.sort((a, b) => a.distance - b.distance);

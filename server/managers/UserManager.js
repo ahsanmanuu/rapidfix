@@ -124,11 +124,12 @@ class UserManager extends BaseManager {
         try {
             // Case-insensitive search if using Supabase
             if (this.db.client) {
+                const columns = 'id, name, email, phone, password, role, status, membership, membership_expiry, photo, location, created_at, updated_at';
                 const { data, error } = await this.db.client
                     .from(this.tableName)
-                    .select('*')
+                    .select(columns)
                     .ilike('email', email)
-                    .maybeSingle(); // Use maybeSingle to avoid 406 on multiple
+                    .maybeSingle();
 
                 if (data) return this._mapFromDb(data);
             }

@@ -163,10 +163,10 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
     // ...
 
     return (
-        <div className="max-w-[680px] w-full bg-white rounded-2xl md:rounded-[2.5rem] shadow-xl md:shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 md:border-2 md:border-red-500 overflow-hidden mx-auto font-sans relative z-30">
+        <div className={`w-full bg-white rounded-xl md:rounded-[2.5rem] shadow-xl md:shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 font-sans relative z-30 mx-auto`}>
             {/* [NEW] Expert Booking Banner */}
             {preselectedTechnician && (
-                <div className="bg-blue-50/50 border-b border-blue-100 p-3 md:p-4 rounded-t-xl flex items-center justify-center gap-2 text-blue-700">
+                <div className="bg-blue-50/50 border-b border-blue-100 p-3 md:p-4 rounded-t-xl md:rounded-t-[2.5rem] flex items-center justify-center gap-2 text-blue-700">
                     <CheckCircle size={18} className="fill-blue-100 shrink-0" />
                     <span className="font-semibold text-xs md:text-sm">Booking Expert: {preselectedTechnician.name}</span>
                 </div>

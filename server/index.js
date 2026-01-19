@@ -21,6 +21,7 @@ const SuperAdminManager = require('./managers/SuperAdminManager');
 const SessionManager = require('./managers/SessionManager');
 const ChatManager = require('./managers/ChatManager');
 const OfferManager = require('./managers/OfferManager');
+const SupportManager = require('./managers/SupportManager');
 const StorageManager = require('./managers/StorageManager');
 const NotificationManager = require('./managers/NotificationManager');
 const BroadcastManager = require('./managers/BroadcastManager');
@@ -61,6 +62,7 @@ const sessionManager = new SessionManager();
 const superAdminManager = new SuperAdminManager();
 const chatManager = new ChatManager();
 const offerManager = new OfferManager();
+const supportManager = new SupportManager();
 const notificationManager = new NotificationManager();
 const storageManager = new StorageManager();
 const broadcastManager = new BroadcastManager();
@@ -80,7 +82,8 @@ const allManagers = [
   locationManager, complaintManager, jobManager, financeManager,
   rideManager, sessionManager, superAdminManager, chatManager,
   offerManager, notificationManager, storageManager, broadcastManager,
-  testimonialManager, performerManager, invoiceManager, invoiceSettingsManager
+  testimonialManager, performerManager, invoiceManager, invoiceSettingsManager,
+  supportManager
 ];
 
 allManagers.forEach(m => {
@@ -102,6 +105,10 @@ jobManager.setInvoiceManager(invoiceManager);
 
 // [NEW] Inject JobManager into TechnicianManager for Queue Watcher (Flow 4)
 technicianManager.setJobManager(jobManager);
+
+// [NEW] Inject Dependencies into FeedbackManager
+feedbackManager.setJobManager(jobManager);
+feedbackManager.setTechnicianManager(technicianManager);
 
 
 
@@ -671,8 +678,8 @@ app.get('/api/offers', async (req, res) => {
   res.json({ success: true, offers: list });
 });
 app.post('/api/offers', async (req, res) => {
-  const { title, description, badgeText, createdBy, expiryDate } = req.body;
-  const o = await offerManager.createOffer(title, description, badgeText, createdBy, expiryDate);
+  const { title, description, code, discountType, discountValue, badgeText, createdBy, expiryDate, imageUrl } = req.body;
+  const o = await offerManager.createOffer(title, description, code, discountType, discountValue, badgeText, createdBy, expiryDate, imageUrl);
   res.json({ success: true, offer: o });
 });
 app.delete('/api/offers/:id', async (req, res) => {
@@ -1279,8 +1286,8 @@ app.post('/api/locations', async (req, res) => {
 // --- Complaint Routes ---
 app.post('/api/complaints', async (req, res) => {
   try {
-    const { userId, technicianId, subject, description } = req.body;
-    const complaint = await complaintManager.createComplaint(userId, technicianId, subject, description);
+    const { userId, technicianId, subject, description, category, evidence } = req.body;
+    const complaint = await complaintManager.createComplaint(userId, technicianId, subject, description, category, evidence);
     res.json({ success: true, complaint });
   } catch (error) {
     console.error('[API] Complaint Create Error:', error);
@@ -1288,10 +1295,25 @@ app.post('/api/complaints', async (req, res) => {
   }
 });
 
+app.put('/api/complaints/:id/status', async (req, res) => {
+  const { status } = req.body;
+  const updated = await complaintManager.updateStatus(req.params.id, status);
+  res.json({ success: true, complaint: updated });
+});
+
 app.get('/api/complaints', async (req, res) => {
   // Should be admin only
   const complaints = await complaintManager.getAllComplaints();
   res.json({ success: true, complaints });
+});
+
+app.get('/api/complaints/user/:userId', async (req, res) => {
+  try {
+    const complaints = await complaintManager.getComplaintsByUser(req.params.userId);
+    res.json({ success: true, complaints });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // --- Job Routes ---
@@ -1310,7 +1332,13 @@ app.post('/api/jobs', authenticateSession, async (req, res) => {
     res.json({ success: true, job });
   } catch (error) {
     console.error('[API] Job Create Error:', error);
-    res.status(400).json({ success: false, error: error.message });
+    res.status(400).json({
+      success: false,
+      error: error.message,
+      details: error.details || null,
+      hint: error.hint || null,
+      code: error.code || null
+    });
   }
 });
 
@@ -2047,12 +2075,74 @@ if (invoiceManager && invoiceSettingsManager) {
   invoiceManager.setSettingsManager(invoiceSettingsManager);
 }
 
+// [Moved Catch-all to end]
+// --- Support Routes ---
+app.post('/api/support/session', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const session = await supportManager.createSession(userId);
+    res.json({ success: true, session });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// [NEW] Feedback Route
+app.post('/api/feedback', async (req, res) => {
+  try {
+    const { userId, technicianId, jobId, ratings, comment } = req.body;
+    const feedback = await feedbackManager.addFeedback(userId, technicianId, jobId, ratings, comment);
+    res.json({ success: true, feedback });
+  } catch (err) {
+    console.error("Feedback error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/support/message', async (req, res) => {
+  try {
+    const { sessionId, sender, text, userId } = req.body; // userId needed for notification if sender=agent
+    const session = await supportManager.addMessage(sessionId, sender, text, userId);
+    res.json({ success: true, session });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/support/active', async (req, res) => {
+  const sessions = await supportManager.getActiveSessions();
+  res.json({ success: true, sessions });
+});
+
+app.get('/api/support/session/:id', async (req, res) => {
+  const session = await supportManager.getSession(req.params.id);
+  if (session) res.json({ success: true, session });
+  else res.status(404).json({ success: false, error: "Session not found" });
+});
+
+// [NEW] Feedback Route
+// [NEW] Feedback Route
+app.post('/api/feedback', async (req, res) => {
+  try {
+    console.log("[API] /api/feedback request received:", JSON.stringify(req.body, null, 2));
+    const { userId, technicianId, jobId, ratings, comment } = req.body;
+    const feedback = await feedbackManager.addFeedback(userId, technicianId, jobId, ratings, comment);
+    console.log("[API] Feedback added successfully:", feedback);
+    res.json({ success: true, feedback });
+  } catch (err) {
+    console.error("Feedback error FULL:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
+// Start Server
 server.listen(port, () => {
-  console.log(`Fixofy Server listening on port ${port}`);
+  console.log(`Fixofy Server running on port ${port}`);
+  console.log(`Environment: ${process.env.USE_SUPABASE === 'true' ? 'Production (Supabase)' : 'Development (Local JSON)'}`);
 });

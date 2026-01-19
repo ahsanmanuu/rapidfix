@@ -69,6 +69,7 @@ function App() {
                 path="/wallet"
                 element={user ? <Wallet /> : <Navigate to="/login" />}
               />
+              <Route path="/support" element={<Navigate to="/dashboard" replace />} />
               <Route path="/join-partner" element={<TechnicianAuth />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
