@@ -509,9 +509,16 @@ app.post('/api/technicians/login', async (req, res) => {
 
   if (technician) {
     // Create Session
-    const session = sessionManager.createSession(technician.id, 'technician', req.body.deviceId);
+    const session = await sessionManager.createSession(technician.id, 'technician', req.body.deviceId); // [FIX] Added await
     res.json({ success: true, technician, sessionToken: session.token });
   } else {
+    // [DIAGNOSTIC] Check if failure is due to DB connection
+    try {
+      await technicianManager.getAllTechnicians();
+    } catch (dbErr) {
+      console.error("Tech Login failed due to DB Error:", dbErr);
+      return res.status(500).json({ success: false, error: 'Server Error: Database Connection Failed. Please check Render Environment Variables.' });
+    }
     res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
 });
