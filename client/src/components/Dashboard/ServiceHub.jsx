@@ -421,6 +421,7 @@ const ServiceHub = () => {
             <MakeOfferModal
                 open={isMakeOfferOpen}
                 onClose={() => setIsMakeOfferOpen(false)}
+                user={user}
             />
 
             {/* Technician Search Modal */}

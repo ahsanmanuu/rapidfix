@@ -1,5 +1,10 @@
--- Add feedback_given column to jobs table to track if a user has already rated a job
-ALTER TABLE jobs ADD COLUMN IF NOT EXISTS feedback_given BOOLEAN DEFAULT FALSE;
+-- Add new columns to jobs table for Active Booking Panel
+ALTER TABLE jobs 
+ADD COLUMN IF NOT EXISTS otp VARCHAR(10),
+ADD COLUMN IF NOT EXISTS visiting_charges NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS spare_parts_cost NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS tax NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS total_cost NUMERIC DEFAULT 0;
 
--- Create index for faster lookup on feedback status
-CREATE INDEX IF NOT EXISTS idx_jobs_feedback_given ON jobs(feedback_given);
+-- Ensure logic for total_cost calculation can be done in app, but column stores final snapshot
+COMMENT ON COLUMN jobs.otp IS '4-digit OTP for job verification';

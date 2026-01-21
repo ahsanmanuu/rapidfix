@@ -75,6 +75,10 @@ const invoiceSettingsManager = new InvoiceSettingsManager(invoiceSettingsDb);
 const invoiceManager = new InvoiceManager(invoiceSettingsManager, adminManager);
 
 const jobManager = new JobManager(); // Will link invoiceManager below
+offerManager.setJobManager(jobManager);
+offerManager.setUserManager(userManager);
+offerManager.setTechnicianManager(technicianManager);
+offerManager.setNotificationManager(notificationManager);
 
 // Link Managers to Socket.io for automatic broadcasts
 const allManagers = [
@@ -678,9 +682,16 @@ app.get('/api/offers', async (req, res) => {
   res.json({ success: true, offers: list });
 });
 app.post('/api/offers', async (req, res) => {
-  const { title, description, code, discountType, discountValue, badgeText, createdBy, expiryDate, imageUrl } = req.body;
-  const o = await offerManager.createOffer(title, description, code, discountType, discountValue, badgeText, createdBy, expiryDate, imageUrl);
-  res.json({ success: true, offer: o });
+  try {
+    const offerData = req.body;
+    // Map Frontend keys to Manager expected keys if needed, but Manager handles camelCase.
+    // Ensure all fields are passed.
+    const o = await offerManager.createOffer(offerData);
+    res.json({ success: true, offer: o });
+  } catch (err) {
+    console.error("Create Offer Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 app.delete('/api/offers/:id', async (req, res) => {
   await offerManager.deleteOffer(req.params.id);
@@ -2109,6 +2120,59 @@ app.post('/api/support/message', async (req, res) => {
   }
 });
 
+// --- Offer Routes (Job Bids) ---
+app.get('/api/offers/bids', async (req, res) => {
+  try {
+    const bids = await offerManager.getOpenBids();
+    res.json({ success: true, offers: bids });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/offers/:id/accept', async (req, res) => {
+  try {
+    const { technicianId } = req.body;
+    const job = await offerManager.acceptOffer(req.params.id, technicianId);
+    res.json({ success: true, job });
+  } catch (err) {
+    console.error("Accept Offer Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/offers', async (req, res) => {
+  try {
+    const offers = await offerManager.getAllOffers();
+    // Filter to show only 'coupon' type for public board, hiding job bids
+    const publicOffers = offers.filter(o => !o.type || o.type === 'coupon');
+    res.json({ success: true, offers: publicOffers });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/offers', async (req, res) => {
+  try {
+    const offer = await offerManager.createOffer(req.body);
+    res.json({ success: true, offer });
+  } catch (err) {
+    console.error("Create Offer Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/offers/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const offers = await offerManager.getOffersByUser(userId);
+    res.json({ success: true, offers });
+  } catch (err) {
+    console.error("Fetch User Offers Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/api/support/active', async (req, res) => {
   const sessions = await supportManager.getActiveSessions();
   res.json({ success: true, sessions });
@@ -2141,8 +2205,29 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
-// Start Server
-server.listen(port, () => {
-  console.log(`Fixofy Server running on port ${port}`);
+// --- Socket.IO Connection Handler ---
+io.on('connection', (socket) => {
+  console.log(`A user connected: ${socket.id}`);
+
+  socket.on('join_room', (room) => {
+    socket.join(room);
+    console.log(`User ${socket.id} joined room ${room}`);
+  });
+
+  socket.on('update_location', async (data) => {
+    if (data && data.userId && data.location) {
+      // console.log(`Location update from ${data.userId}`, data.location);
+      await locationManager.saveUserRealtimeLocation(data.userId, data.location);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`User disconnected: ${socket.id}`);
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Fixofy Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.USE_SUPABASE === 'true' ? 'Production (Supabase)' : 'Development (Local JSON)'}`);
 });

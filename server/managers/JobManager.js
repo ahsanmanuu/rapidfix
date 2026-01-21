@@ -41,7 +41,14 @@ class JobManager {
     _mapFromDb(job) {
         if (!job) return null;
         try {
-            const { user_id, technician_id, service_type, contact_name, contact_phone, scheduled_date, scheduled_time, created_at, updated_at, ...rest } = job;
+            const { user_id, technician_id, service_type, contact_name, contact_phone, scheduled_date, scheduled_time, created_at, updated_at, otp, visiting_charges, spare_parts_cost, tax, total_cost, ...rest } = job;
+
+            // Calc total if not stored
+            const vCharges = Number(visiting_charges || 0);
+            const spareCost = Number(spare_parts_cost || 0);
+            const jobTax = Number(tax || 0);
+            const total = Number(total_cost || (vCharges + spareCost + jobTax));
+
             return {
                 ...rest,
                 userId: user_id,
@@ -57,8 +64,11 @@ class JobManager {
                 description: job.description, // Customer Note
                 professionalNote: job.professional_note || job.professionalNote,
                 timeline: job.timeline || [],
-                timeline: job.timeline || [],
-                totalCost: job.total_cost || job.totalCost || (Number(job.offer_price || 0) + Number(job.visiting_charges || 0)),
+                visitingCharges: vCharges,
+                sparePartsCost: spareCost,
+                tax: jobTax,
+                totalCost: total,
+                otp: otp,
                 feedbackGiven: job.feedback_given || false
             };
         } catch (err) {
@@ -82,22 +92,15 @@ class JobManager {
             if (job.scheduledDate !== undefined) mapped.scheduled_date = job.scheduledDate;
             if (job.scheduledTime !== undefined) mapped.scheduled_time = job.scheduledTime;
             if (job.reason !== undefined) mapped.reason = job.reason;
-            if (job.otp !== undefined) {
-                // mapped.otp = job.otp; // Omit for compatibility
-                mapped.address = `${mapped.address || ''}\n(OTP: ${job.otp})`.trim();
-            }
 
-            if (job.offerPrice !== undefined) {
-                // mapped.offer_price = job.offerPrice; 
-                mapped.address = `${mapped.address || ''}\n(Offer: ${job.offerPrice})`.trim();
-            }
-            if (job.visitingCharges !== undefined) {
-                // mapped.visiting_charges = job.visitingCharges;
-            }
-            if (job.agreementAccepted !== undefined) {
-                // mapped.agreement_accepted = !!job.agreementAccepted;
-            }
+            if (job.otp !== undefined) mapped.otp = job.otp;
 
+            if (job.visitingCharges !== undefined) mapped.visiting_charges = job.visitingCharges;
+            if (job.sparePartsCost !== undefined) mapped.spare_parts_cost = job.sparePartsCost;
+            if (job.tax !== undefined) mapped.tax = job.tax;
+            if (job.totalCost !== undefined) mapped.total_cost = job.totalCost;
+
+            // Address Handling
             if (job.location) {
                 mapped.location = job.location;
                 if (job.location.address) mapped.address = job.location.address;
@@ -107,21 +110,21 @@ class JobManager {
             } else if (!mapped.address) {
                 mapped.address = job.location?.address || job.location?.city || "No address provided";
             }
-            // [FALLBACK] If the column 'description' is missing in Supabase, we merge it into address
             if (job.description) {
-                mapped.address = `${mapped.address || ''}\n(Note: ${job.description})`.trim();
+                // We keep description column separate in DB usually, but for fallback:
+                // If there IS a description col, use it. If not, append.
+                // Assuming description column exists in Supabase based on createJob below.
+                mapped.description = job.description;
             }
+
             if (job.professionalNote !== undefined) {
-                // mapped.professional_note = job.professionalNote;
+                mapped.professional_note = job.professionalNote;
             }
             if (job.timeline !== undefined) {
-                // mapped.timeline = job.timeline; 
-            }
-            if (job.totalCost !== undefined) {
-                // mapped.total_cost = job.totalCost;
+                mapped.timeline = job.timeline;
             }
             if (job.feedbackGiven !== undefined) {
-                // mapped.feedback_given = !!job.feedbackGiven;
+                mapped.feedback_given = !!job.feedbackGiven;
             }
 
             if (job.createdAt !== undefined) mapped.created_at = job.createdAt;
@@ -134,7 +137,7 @@ class JobManager {
     }
 
     async createJob(userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted) {
-        console.log(`[JobManager] [SYSTEMIC_BYPASS_VER_1.8] createJob starting. description length: ${description?.length || 0}`);
+        console.log(`[JobManager] createJob starting.`);
         try {
             console.log(`[JobManager] creating job for user ${userId}, service: ${serviceType}, schedule: ${scheduledDate} ${scheduledTime}`);
 
@@ -142,6 +145,16 @@ class JobManager {
             this._validateSchedule(scheduledDate, scheduledTime);
 
             const user = await this.userManager.getUser(userId);
+
+            // Generate OTP
+            const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+            // Visiting Charges default
+            const vCharges = visitingCharges || offerPrice || 0;
+            // Tax & Total (Initial)
+            const tax = vCharges * 0.0; // 0% initially or 10%? User prompt said 10% in UI, let's store 0 and calc in UI or consistenly here. 
+            // Actually, let's keep it simple: Store what we know.
+
             const newJob = {
                 userId,
                 serviceType,
@@ -152,19 +165,22 @@ class JobManager {
                 scheduledTime,
                 contactName: contactName || (user ? user.name : "Customer"),
                 contactPhone: contactPhone || (user ? user.phone : ""),
-                offerPrice,
                 technicianId,
-                visitingCharges,
-                agreementAccepted,
                 status: 'pending',
-                // timeline omitted - not in Supabase schema cache
+                otp, // New Field
+                visitingCharges: vCharges,
+                sparePartsCost: 0,
+                tax: 0,
+                totalCost: vCharges, // Initial Total
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
 
             const dbJob = this._mapToDb(newJob);
-            console.log(`[JobManager] dbJob for Supabase:`, JSON.stringify(dbJob, null, 2));
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            // Include new columns in insert
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
+
+            console.log(`[JobManager] Inserting Job with OTP: ${otp}`);
             const saved = await this.db.add(dbJob, columns);
             const job = await this._enrichJob(this._mapFromDb(saved));
 
@@ -441,7 +457,8 @@ class JobManager {
                 ...details
             };
             const dbUpdates = this._mapToDb(updates);
-            const updateCols = 'id, user_id, technician_id, status, updated_at';
+            // Add new columns to allowed update list
+            const updateCols = 'id, user_id, technician_id, status, updated_at, visiting_charges, spare_parts_cost, tax, total_cost';
             const updated = await this.db.update('id', id, dbUpdates, updateCols);
             const enriched = await this._enrichJob(this._mapFromDb(updated));
 

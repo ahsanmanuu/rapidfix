@@ -22,6 +22,7 @@ import useSupabaseRealtime from '../hooks/useSupabaseRealtime';
 import GoogleMapReact from 'google-map-react';
 import LiveRideModal from '../components/Dashboard/LiveRideModal';
 import TechnicianSidebar from '../components/Dashboard/TechnicianSidebar';
+import TechnicianJobMarket from '../components/Dashboard/TechnicianJobMarket';
 
 // --- AdminLTE Style Components ---
 
@@ -1694,6 +1695,7 @@ const TechnicianDashboard = () => {
                     />
 
                     {activeTab === 'dashboard' && renderDashboardContent()}
+                    {activeTab === 'market' && <TechnicianJobMarket />}
                     {activeTab === 'chat' && renderChat()}
                     {activeTab === 'profile' && renderSettings()}
 

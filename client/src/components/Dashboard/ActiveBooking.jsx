@@ -403,16 +403,22 @@ const ActiveBooking = ({ job }) => {
                                     </Box>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <Typography variant="body2" sx={{ color: TEXT_LIGHT }}>Spare Parts</Typography>
-                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>--</Typography>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                            {currentJob?.sparePartsCost ? `₹${currentJob.sparePartsCost}` : '--'}
+                                        </Typography>
                                     </Box>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <Typography variant="body2" sx={{ color: TEXT_LIGHT }}>Tax (10%)</Typography>
-                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>₹{(currentJob?.visitingCharges || 0) * 0.1}</Typography>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                            {currentJob?.tax ? `₹${currentJob.tax}` : `₹${(currentJob?.visitingCharges || 0) * 0.1}`}
+                                        </Typography>
                                     </Box>
                                     <Divider sx={{ my: 0.5 }} />
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <Typography variant="body2" sx={{ fontWeight: 700 }}>Total Amount</Typography>
-                                        <Typography variant="h6" sx={{ fontWeight: 900, color: PRIMARY_BLUE }}>₹{currentJob?.totalCost || ((currentJob?.visitingCharges || 0) * 1.1)}</Typography>
+                                        <Typography variant="h6" sx={{ fontWeight: 900, color: PRIMARY_BLUE }}>
+                                            ₹{currentJob?.totalCost || ((currentJob?.visitingCharges || 0) * 1.1)}
+                                        </Typography>
                                     </Box>
                                     <Box sx={{ bgcolor: '#eff6ff', p: 1, borderRadius: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
                                         <Info sx={{ color: PRIMARY_BLUE, fontSize: 16 }} />

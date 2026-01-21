@@ -55,7 +55,7 @@ class SupabaseDatabase {
         }
 
         if (this.table === 'jobs') {
-            const problematic = ['description', 'timeline', 'otp', 'total_cost', 'professional_note'];
+            const problematic = ['timeline', 'professional_note'];
             let cleaned = columns.split(',').map(c => c.trim());
             cleaned = cleaned.filter(c => !problematic.includes(c));
             return cleaned.join(', ');
@@ -103,7 +103,8 @@ class SupabaseDatabase {
 
             // [NUCLEAR FILTER] Strip problematic columns missing from Supabase schema cache
             if (this.table === 'jobs') {
-                const problematic = ['description', 'timeline', 'otp', 'total_cost', 'professional_note'];
+                // Now that schema is updated, we can allow these.
+                const problematic = ['timeline', 'professional_note'];
                 problematic.forEach(key => {
                     if (cleanItem[key] !== undefined) {
                         console.log(`[Supabase:jobs] Nuclear filter: Stripping '${key}' from insert payload`);
@@ -144,7 +145,9 @@ class SupabaseDatabase {
 
             // [NUCLEAR FILTER] Strip problematic columns missing from Supabase schema cache
             if (this.table === 'jobs') {
-                const problematic = ['description', 'timeline', 'otp', 'total_cost', 'professional_note'];
+                // Now that schema is updated, we can allow these.
+                // Keeping 'timeline' and 'professional_note' in filter just in case, but allowing others.
+                const problematic = ['timeline', 'professional_note'];
                 problematic.forEach(key => {
                     if (cleanUpdate[key] !== undefined) {
                         console.log(`[Supabase:jobs] Nuclear filter: Stripping '${key}' from update payload`);

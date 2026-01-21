@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.PROD ? '/api' : 'http://localhost:3000/api'
+    baseURL: '/api' // Use relative path to leverage Vite proxy in Dev and same-origin in Prod
 });
 
 // Add a request interceptor to attach auth token if available
@@ -60,6 +60,8 @@ export const completeRide = (rideId) => api.put(`/rides/${rideId}/complete`);
 export const getRidesByTechnician = (techId) => api.get(`/rides/technician/${techId}`);
 
 export const getOffers = () => api.get('/offers');
+export const createOffer = (data) => api.post('/offers', data);
+export const getUserOffers = (userId) => api.get(`/offers/user/${userId}`);
 export const getTestimonials = () => api.get('/testimonials'); // [NEW] Public Testimonials
 export const getWalletBalance = (userId) => api.get(`/finance/wallet/${userId}`);
 export const addFunds = (userId, amount) => api.post('/finance/wallet/add', { userId, amount });

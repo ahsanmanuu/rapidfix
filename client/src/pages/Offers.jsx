@@ -2,20 +2,35 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useSocket } from '../context/SocketContext';
 
+import { useAuth } from '../context/AuthContext';
+import { getUserOffers } from '../services/api';
+
 const Offers = () => {
+    const { user } = useAuth();
     const [offers, setOffers] = useState([]);
+    const [myBids, setMyBids] = useState([]);
     const [loading, setLoading] = useState(true);
     const socket = useSocket();
 
     useEffect(() => {
-        fetchOffers();
+        if (user) {
+            fetchOffers();
+        }
 
         if (socket) {
             socket.on('new_offer_created', (newOffer) => {
-                setOffers(prev => [newOffer, ...prev]);
+                if (newOffer.type === 'job_bid' && newOffer.userId === user?.id) {
+                    setMyBids(prev => [newOffer, ...prev]);
+                } else if (!newOffer.type || newOffer.type === 'coupon') {
+                    setOffers(prev => [newOffer, ...prev]);
+                }
             });
             socket.on('offer_deleted', ({ id }) => {
                 setOffers(prev => prev.filter(o => o.id !== id));
+                setMyBids(prev => prev.filter(o => o.id !== id));
+            });
+            socket.on('offer_updated', (updatedOffer) => {
+                setMyBids(prev => prev.map(o => o.id === updatedOffer.id ? updatedOffer : o));
             });
         }
 
@@ -25,13 +40,20 @@ const Offers = () => {
                 socket.off('offer_deleted');
             }
         };
-    }, [socket]);
+    }, [socket, user]);
 
     const fetchOffers = async () => {
         try {
-            const res = await api.get('/offers');
-            if (res.data.success) {
-                setOffers(res.data.offers);
+            const [publicRes, userRes] = await Promise.all([
+                api.get('/offers'),
+                getUserOffers(user.id)
+            ]);
+
+            if (publicRes.data.success) {
+                setOffers(publicRes.data.offers);
+            }
+            if (userRes.data.success) {
+                setMyBids(userRes.data.offers);
             }
         } catch (err) {
             console.error('Failed to fetch offers', err);
@@ -43,7 +65,6 @@ const Offers = () => {
     // Helper to copy code
     const copyToClipboard = (code) => {
         navigator.clipboard.writeText(code);
-        // Could show toast here
     };
 
     return (
@@ -54,7 +75,7 @@ const Offers = () => {
                 {/* Left Column: Feed */}
                 <div className="flex-1 flex flex-col gap-8 min-w-0">
 
-                    {/* Hero Section (Static for now, can be dynamic later) */}
+                    {/* Hero Section */}
                     <section className="relative h-64 rounded-xl overflow-hidden shadow-md group">
                         <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCTg3C-3933lBIeuk6uWqw43TDE-mFL00QvELO9-Pk9-ixCZi2yYJj2LzUNcz-Oibhz6YepsniLpGwyO1isDmaX1MOPfgOU_pnSpfjhzvXyrWktAXim89Wm9nGj5rId42DyHS9JvW6jlCKe1nP9BEnKglN882YtDx0PAxsKBy1wUM3OP55MxyGAQ2zjK2_YZnDdkW75Nro89NqVNVPcrq5VFsnsR0bHr-CHsx_jDgDXHjRienVK16POJvEBAzmImkugwpjo1MN4rg')" }}></div>
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 via-blue-900/40 to-transparent"></div>
@@ -69,14 +90,37 @@ const Offers = () => {
                         </div>
                     </section>
 
-                    {/* Tabs Navigation */}
-                    <div className="border-b border-gray-200 dark:border-gray-800">
-                        <div className="flex gap-8">
-                            <button className="pb-3 text-sm font-bold text-[#3e74ea] border-b-2 border-[#3e74ea]">Seasonal Offers</button>
-                            <button className="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-[#3e74ea] transition-colors border-b-2 border-transparent">AMC Packages</button>
-                            <button className="pb-3 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-[#3e74ea] transition-colors border-b-2 border-transparent">Partner Deals</button>
+                    {/* My Job Bids Section [NEW] */}
+                    <section>
+                        <div className="flex items-center justify-between mb-5">
+                            <h3 className="font-bold text-lg text-gray-800 dark:text-white flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#3e74ea]">work_history</span>
+                                My Job Bids
+                            </h3>
+                            <button className="text-[#3e74ea] text-xs font-bold uppercase tracking-wider hover:underline">View All</button>
                         </div>
-                    </div>
+                        {myBids.length === 0 ? (
+                            <div className="text-center p-8 bg-gray-50 rounded-xl text-gray-400 text-sm border border-dashed border-gray-200">
+                                You haven't made any offers yet. Use the "Make an Offer" button in Dashboard.
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                {myBids.map((bid) => (
+                                    <div key={bid.id} className="bg-white dark:bg-gray-900 p-5 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm relative overflow-hidden">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">{bid.jobType}</span>
+                                            <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide ${bid.status === 'open' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                                                {bid.status}
+                                            </span>
+                                        </div>
+                                        <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-1 truncate">{bid.title}</h4>
+                                        <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">₹{bid.price}</div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 h-8 line-clamp-2">{bid.description}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
 
                     {/* Promo Codes Grid (Dynamic) */}
                     <section>
@@ -85,7 +129,6 @@ const Offers = () => {
                                 <span className="material-symbols-outlined text-[#3e74ea]">local_activity</span>
                                 Active Promo Codes
                             </h3>
-                            <button className="text-[#3e74ea] text-xs font-bold uppercase tracking-wider hover:underline">View All</button>
                         </div>
 
                         {loading ? (

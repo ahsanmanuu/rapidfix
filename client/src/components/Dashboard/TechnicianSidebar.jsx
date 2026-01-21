@@ -10,8 +10,10 @@ import {
     Star,
     Menu,
     X,
-    ChevronLeft
+    ChevronLeft,
+    Briefcase
 } from 'lucide-react';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TechnicianSidebar = ({
@@ -24,6 +26,7 @@ const TechnicianSidebar = ({
 }) => {
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'market', label: 'Job Market', icon: Briefcase },
         { id: 'history', label: 'Job History', icon: History },
         { id: 'chat', label: 'Messages', icon: MessageSquare },
         { id: 'feedback', label: 'Reviews', icon: Star },
