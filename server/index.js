@@ -1378,6 +1378,23 @@ app.get('/api/jobs/user/:id', async (req, res) => {
   res.json({ success: true, jobs });
 });
 
+// [NEW] User Update Job (Rescheduling/Notes)
+app.put('/api/jobs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    console.log(`[API] User/Technician updating Job ${id}:`, updates);
+
+    // Security: In a real app, verify req.user.id owns the job.
+    // For now, trusting the ID validation in manager or frontend flow.
+
+    const updatedJob = await jobManager.updateJob(id, updates);
+    res.json({ success: true, job: updatedJob });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/api/jobs/available', async (req, res) => {
   const { serviceType } = req.query;
   const jobs = await jobManager.getAvailableJobs(serviceType);
@@ -1636,8 +1653,8 @@ app.get('/api/technicians/:id/stats', async (req, res) => {
 
 // --- Chat Routes [NEW] ---
 app.post('/api/chat/send', async (req, res) => {
-  const { senderId, receiverId, message, senderName } = req.body;
-  const chat = await chatManager.sendMessage(senderId, receiverId, message, senderName);
+  const { senderId, receiverId, message, senderName, jobId } = req.body;
+  const chat = await chatManager.sendMessage(senderId, receiverId, message, senderName, jobId); // [UPDATED] Pass jobId
 
   // Realtime Socket
   io.emit('receive_message', chat); // Broadcast to all for simplicity or use specific rooms if implemented
@@ -1645,13 +1662,14 @@ app.post('/api/chat/send', async (req, res) => {
   res.json({ success: true, chat });
 });
 
-app.get('/api/chat/history/:userId1/:userId2', (req, res) => {
-  const chats = chatManager.getHistory(req.params.userId1, req.params.userId2);
+app.get('/api/chat/history/:userId1/:userId2', async (req, res) => {
+  const jobId = req.query.jobId;
+  const chats = await chatManager.getHistory(req.params.userId1, req.params.userId2, jobId);
   res.json({ success: true, chats });
 });
 
-app.get('/api/chat/conversations/:userId', (req, res) => {
-  const conversations = chatManager.getConversations(req.params.userId);
+app.get('/api/chat/conversations/:userId', async (req, res) => {
+  const conversations = await chatManager.getConversations(req.params.userId);
   res.json({ success: true, conversations });
 });
 

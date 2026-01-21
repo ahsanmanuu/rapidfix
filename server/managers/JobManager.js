@@ -395,7 +395,7 @@ class JobManager {
 
     async getJob(id) {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
             const job = await this.db.find('id', id, columns);
             return await this._enrichJob(this._mapFromDb(job));
         } catch (err) {
@@ -406,7 +406,7 @@ class JobManager {
 
     async getAllJobs() {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
             const jobs = await this.db.read(columns);
             return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
         } catch (err) {
@@ -419,8 +419,14 @@ class JobManager {
         try {
             // Read current job to append to timeline
             // Read current job to append to timeline (bypass timeline column if missing in cache)
-            const columns = 'id, user_id, technician_id, service_type, status';
+            const columns = 'id, user_id, technician_id, service_type, status, scheduled_date, scheduled_time';
             const currentJob = await this.db.find('id', id, columns);
+
+            // [NEW] 2-Hour Restriction for Cancellation
+            if (status === 'cancelled') {
+                this._checkModificationWindow(this._mapFromDb(currentJob));
+            }
+
             // Since timeline column is problematic in Supabase cache, we manage it in app memory or merge into metadata
             let currentTimeline = [];
             try {
@@ -458,7 +464,7 @@ class JobManager {
             };
             const dbUpdates = this._mapToDb(updates);
             // Add new columns to allowed update list
-            const updateCols = 'id, user_id, technician_id, status, updated_at, visiting_charges, spare_parts_cost, tax, total_cost';
+            const updateCols = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
             const updated = await this.db.update('id', id, dbUpdates, updateCols);
             const enriched = await this._enrichJob(this._mapFromDb(updated));
 
@@ -539,6 +545,14 @@ class JobManager {
             return this.updateStatus(id, data.status, data);
         }
 
+        // [NEW] 2-Hour Restriction for Rescheduling
+        if (data.scheduledDate || data.scheduledTime) {
+            const existingJob = await this.getJob(id); // Using public method to get full details
+            if (existingJob) {
+                this._checkModificationWindow(existingJob);
+            }
+        }
+
         try {
             const updates = {
                 ...this._mapToDb(data),
@@ -546,7 +560,7 @@ class JobManager {
             };
             delete updates.id; // Protect ID
 
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
             const result = await this.db.update('id', id, updates, columns);
             const enriched = await this._enrichJob(this._mapFromDb(result));
 
@@ -600,7 +614,7 @@ class JobManager {
 
     async getJobsByTechnician(technicianId) {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
             const jobs = await this.db.findAll('technician_id', technicianId, columns);
             return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
         } catch (err) {
@@ -611,7 +625,7 @@ class JobManager {
 
     async getJobsByUser(userId) {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
             const orderBy = { column: 'created_at', ascending: false }; // Newest first
             const jobs = await this.db.findAll('user_id', userId, columns, orderBy);
             return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));

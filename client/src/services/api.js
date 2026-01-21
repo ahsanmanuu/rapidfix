@@ -51,7 +51,15 @@ export const createJob = (data) => api.post('/jobs', data);
 export const searchTechnicians = (data) => api.post('/technicians/search', data);
 export const acceptJob = (jobId, technicianId) => api.put(`/jobs/${jobId}/status`, { status: 'accepted', technicianId });
 export const completeJob = (jobId) => api.put(`/jobs/${jobId}/status`, { status: 'completed' });
+export const cancelJob = (jobId, reason) => api.put(`/jobs/${jobId}/status`, { status: 'cancelled', reason }); // [NEW]
+export const updateUserJob = (jobId, data) => api.put(`/jobs/${jobId}`, data); // [NEW] Reschedule
 export const getAllJobs = () => api.get('/jobs');
+export const createSupportSession = (userId) => api.post('/support/session', { userId }); // [NEW]
+export const sendSupportMessage = (data) => api.post('/support/message', data); // [NEW]
+
+// Chat API
+export const sendChatMessage = (data) => api.post('/chat/send', data);
+export const getChatHistory = (userId1, userId2, jobId) => api.get(`/chat/history/${userId1}/${userId2}${jobId ? `?jobId=${jobId}` : ''}`);
 
 // Extended Features
 export const getFinanceData = (userId) => api.get(`/finance/user/${userId}`);
