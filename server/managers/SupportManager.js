@@ -10,6 +10,10 @@ class SupportManager {
         this.io = io;
     }
 
+    setNotificationManager(notificationManager) {
+        this.notificationManager = notificationManager;
+    }
+
     _mapFromDb(session) {
         if (!session) return null;
         try {
@@ -92,6 +96,32 @@ class SupportManager {
                     this.io.to(`user_${userId}`).emit('support_message_received', message);
                 }
             }
+
+            // [NEW] Auto-Notifications
+            if (this.notificationManager) {
+                if (sender === 'user') {
+                    // Notify Admin
+                    await this.notificationManager.createNotification(
+                        'admin',
+                        'admin',
+                        `Support Request: ${userId.substring(0, 8)}...`,
+                        `Session #${sessionId}: ${text.substring(0, 50)}`,
+                        'admin_support_alert',
+                        sessionId
+                    );
+                } else if (sender === 'agent' && userId) {
+                    // Notify User
+                    await this.notificationManager.createNotification(
+                        userId,
+                        'user',
+                        'Support Reply',
+                        `Agent: ${text.substring(0, 50)}`,
+                        'support_message',
+                        sessionId
+                    );
+                }
+            }
+
             return finalSession;
         } catch (err) {
             console.error("[SupportManager] Error adding message:", err);

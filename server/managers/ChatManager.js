@@ -10,6 +10,10 @@ class ChatManager {
         this.io = io;
     }
 
+    setNotificationManager(notificationManager) {
+        this.notificationManager = notificationManager;
+    }
+
     _mapFromDb(chat) {
         if (!chat) return null;
         try {
@@ -65,10 +69,32 @@ class ChatManager {
                 // Emit to specific users
                 this.io.to(`user_${receiverId}`).emit('new_message', result);
                 this.io.to(`user_${senderId}`).emit('message_sent', result);
-
-                // [NEW] Also emit to job room if we implement job-based rooms later
-                // For now, client filters heavily relies on jobId
             }
+
+            // [NEW] Auto-Notify Recipient & Admin
+            if (this.notificationManager) {
+                // 1. Notify Recipient
+                const role = receiverId.includes('-') ? 'user' : 'technician';
+                await this.notificationManager.createNotification(
+                    receiverId,
+                    'unknown', // Role is hard to guess explicitly but 'unknown' works
+                    `New Message from ${senderName}`,
+                    message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+                    'chat_message',
+                    jobId || saved.id
+                );
+
+                // 2. Notify Admin (as requested)
+                await this.notificationManager.createNotification(
+                    'admin',
+                    'admin',
+                    `Chat: ${senderName} -> Recipient`,
+                    `Job #${jobId}: ${message.substring(0, 50)}`,
+                    'admin_chat_alert',
+                    jobId || saved.id
+                );
+            }
+
             return result;
         } catch (err) {
             console.error("[ChatManager] Error sending message:", err);
@@ -112,8 +138,6 @@ class ChatManager {
 
     async markAsRead(senderId, receiverId) {
         try {
-            // Note: Efficient update would be updateWhere but simple DB might not support it 
-            // Standard approach: Get all -> filter -> update loop
             const history = await this.getHistory(senderId, receiverId);
             const unread = history.filter(c => c.senderId === senderId && !c.read);
 

@@ -79,6 +79,8 @@ offerManager.setJobManager(jobManager);
 offerManager.setUserManager(userManager);
 offerManager.setTechnicianManager(technicianManager);
 offerManager.setNotificationManager(notificationManager);
+chatManager.setNotificationManager(notificationManager);
+supportManager.setNotificationManager(notificationManager); // [NEW] Notification support for tickets
 
 // Link Managers to Socket.io for automatic broadcasts
 const allManagers = [
@@ -1702,6 +1704,19 @@ app.get('/api/chat/history/:userId1/:userId2', async (req, res) => {
 app.get('/api/chat/conversations/:userId', async (req, res) => {
   const conversations = await chatManager.getConversations(req.params.userId);
   res.json({ success: true, conversations });
+});
+
+// --- Support Routes [NEW] ---
+app.post('/api/support/session', async (req, res) => {
+  const { userId } = req.body;
+  const session = await supportManager.createSession(userId);
+  res.json({ success: true, session });
+});
+
+app.post('/api/support/message', async (req, res) => {
+  const { sessionId, sender, text, userId } = req.body;
+  const session = await supportManager.addMessage(sessionId, sender, text, userId);
+  res.json({ success: true, session });
 });
 
 // --- Offer Routes ---
