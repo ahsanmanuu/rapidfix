@@ -2244,6 +2244,33 @@ io.on('connection', (socket) => {
   });
 });
 
+// --- DIAGNOSTIC ENDPOINT (Temporary) ---
+app.get('/api/diagnostic/db', async (req, res) => {
+  try {
+    const isSupabase = process.env.USE_SUPABASE === 'true';
+    const dbType = isSupabase ? 'Supabase' : 'Local JSON';
+    const envCheck = {
+      USE_SUPABASE: process.env.USE_SUPABASE,
+      HAS_URL: !!process.env.SUPABASE_URL,
+      HAS_KEY: !!process.env.SUPABASE_SERVICE_KEY
+    };
+
+    // Check Users
+    const users = await userManager.getAllUsers();
+    const userSummary = users.map(u => ({ id: u.id, email: u.email }));
+
+    res.json({
+      success: true,
+      environment: envCheck,
+      databaseType: dbType,
+      userCount: users.length,
+      users: userSummary // CAREFUL: This exposes emails. Only for debug.
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, stack: err.stack });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Fixofy Server running on port ${PORT}`);
