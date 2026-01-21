@@ -623,12 +623,91 @@ class JobManager {
         }
     }
 
-    async getJobsByUser(userId) {
+    async getJobsByUser(userId, filters = {}) {
         try {
             const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
-            const orderBy = { column: 'created_at', ascending: false }; // Newest first
-            const jobs = await this.db.findAll('user_id', userId, columns, orderBy);
-            return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
+
+            if (this.db.client) {
+                let query = this.db.client
+                    .from('jobs')
+                    .select(columns)
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false });
+
+                console.log(`[JobManager] getJobsByUser Filters:`, filters);
+
+                // [FILTER] Status
+                if (filters.status && filters.status !== 'all') {
+                    query = query.eq('status', filters.status);
+                }
+
+                // [FILTER] Date Range (created_at)
+                // Ensure ranges cover the full day
+                if (filters.startDate) {
+                    let start = filters.startDate;
+                    if (start.length === 10) start += 'T00:00:00'; // Append start of day
+                    query = query.gte('created_at', start);
+                }
+                if (filters.endDate) {
+                    let end = filters.endDate;
+                    if (end.length === 10) end += 'T23:59:59'; // Append end of day
+                    query = query.lte('created_at', end);
+                }
+
+                // [FILTER] Search (Job ID or Service Type)
+                if (filters.search) {
+                    // UUID check for ID search to prevent invalid input syntax for UUID column if applicable
+                    // But 'id' is UUID. 'service_type' is text.
+                    // 'or' syntax: id.eq.val,service_type.ilike.%val%
+                    // Note: Supabase 'or' expects valid syntax. Searching UUID column with non-UUID string fails.
+                    // So we only search ID if it LOOKS like a UUID, otherwise just Service/Desc.
+                    const s = filters.search.trim();
+                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
+                    if (isUuid) {
+                        query = query.or(`id.eq.${s},service_type.ilike.%${s}%`);
+                    } else {
+                        // Just search text fields
+                        query = query.ilike('service_type', `%${s}%`);
+                    }
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+                return Promise.all(data.map(j => this._enrichJob(this._mapFromDb(j))));
+
+            } else {
+                // FALLBACK: Client-Side (Local JSON)
+                const jobs = await this.db.findAll('user_id', userId, columns);
+                let filtered = jobs;
+
+                if (filters.status && filters.status !== 'all') {
+                    filtered = filtered.filter(j => j.status === filters.status);
+                }
+                if (filters.startDate) {
+                    let start = filters.startDate;
+                    if (start.length === 10) start += 'T00:00:00';
+                    filtered = filtered.filter(j => (j.created_at || j.createdAt) >= start);
+                }
+                if (filters.endDate) {
+                    let end = filters.endDate;
+                    if (end.length === 10) end += 'T23:59:59';
+                    filtered = filtered.filter(j => (j.created_at || j.createdAt) <= end);
+                }
+                if (filters.search) {
+                    const s = filters.search.toLowerCase();
+                    filtered = filtered.filter(j =>
+                        (j.id && j.id.toLowerCase().includes(s)) ||
+                        (j.service_type && j.service_type.toLowerCase().includes(s))
+                    );
+                }
+
+                // Sort
+                filtered.sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
+
+                return Promise.all(filtered.map(j => this._enrichJob(this._mapFromDb(j))));
+            }
+
         } catch (err) {
             console.error(`[JobManager] Error getting jobs for user ${userId}:`, err);
             return [];

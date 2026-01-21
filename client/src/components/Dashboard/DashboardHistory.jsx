@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -60,14 +60,109 @@ const TEXT_DARK = '#111621';
 
 const DashboardHistory = ({ jobs = [] }) => {
     const [expandedId, setExpandedId] = useState(null);
-    const [filterText, setFilterText] = useState('');
 
-    const handleToggle = (id) => {
-        setExpandedId(expandedId === id ? null : id);
+    const handleToggle = (index) => {
+        setExpandedId(prev => (prev === index ? null : index));
+    };
+
+    // --- Filter State ---
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [localJobs, setLocalJobs] = useState(jobs);
+    const [loading, setLoading] = useState(false);
+    const [showFilters, setShowFilters] = useState(false); // Toggle for advanced filters on mobile/desktop
+
+    // Sync with props ONLY if no filters are active (to prevent overwriting filtered results on real-time updates)
+    useEffect(() => {
+        const hasFilters = search || (statusFilter && statusFilter !== 'all') || startDate || endDate;
+        if (!hasFilters) {
+            setLocalJobs(jobs);
+        }
+    }, [jobs, search, statusFilter, startDate, endDate]);
+
+    // Fetch jobs when filters change (Debounced search could be better, but explicit 'Apply' or effect is fine)
+    // For simplicity, let's auto-fetch on status/date change, and debounce search.
+
+    const { currentUser } = useAuth();
+
+    // Define fetch logic
+    const fetchFiltered = async (overrideParams = {}) => {
+        if (!currentUser) return;
+        setLoading(true);
+        try {
+            const params = {
+                q: search,
+                status: statusFilter === 'all' ? '' : statusFilter,
+                start: startDate,
+                end: endDate,
+                ...overrideParams
+            };
+            const res = await api.getMyJobs(currentUser.id, params);
+            if (res.data.success) {
+                setLocalJobs(res.data.jobs || []);
+                setPage(1);
+            }
+        } catch (err) {
+            console.error("Filter Fetch Error:", err);
+            setLocalJobs([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Auto-fetch for Search and Status ONLY
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            fetchFiltered();
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search, statusFilter, currentUser]); // Dates removed from dependency
+
+    // Manual Trigger for Date Filter
+    const handleApplyDateFilter = () => {
+        fetchFiltered();
+    };
+
+    // CSV Export
+    const handleExport = () => {
+        if (!localJobs || localJobs.length === 0) {
+            alert("No jobs to export. Please adjust your filters.");
+            return;
+        }
+
+        alert(`Generating CSV for ${localJobs.length} jobs...`);
+
+        const headers = ['Job ID', 'Service', 'Technician', 'Date', 'Time', 'Status', 'Cost', 'Total'];
+        const rows = localJobs.map(j => [
+            j.id,
+            j.serviceType,
+            j.technician?.name || 'Unassigned',
+            new Date(j.scheduledDate || j.createdAt).toLocaleDateString(),
+            j.scheduledTime || new Date(j.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            getStatusColor(j.status).label,
+            j.visitingCharges || 0,
+            j.totalCost || 0
+        ]);
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(item => `"${item || ''}"`).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `job_history_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     // --- Feedback Logic ---
-    const { currentUser } = useAuth();
     const [feedbackOpen, setFeedbackOpen] = useState(false);
     const [selectedJobForFeedback, setSelectedJobForFeedback] = useState(null);
     const [rating, setRating] = useState(0);
@@ -149,6 +244,7 @@ const DashboardHistory = ({ jobs = [] }) => {
             case 'rejected': return { bg: '#fef2f2', color: '#dc2626', label: 'Rejected' };
             case 'in_progress': return { bg: '#eff6ff', color: '#1d4ed8', label: 'In Progress' };
             case 'assigned': return { bg: '#fff7ed', color: '#c2410c', label: 'Assigned' };
+            case 'accepted': return { bg: '#fff7ed', color: '#c2410c', label: 'Accepted' };
             default: return { bg: '#f3f4f6', color: '#4b5563', label: 'Pending' };
         }
     };
@@ -157,25 +253,17 @@ const DashboardHistory = ({ jobs = [] }) => {
     const [page, setPage] = useState(1);
     const rowsPerPage = 5;
 
-    // Filter rows based on search
-    const filteredJobs = jobs.filter(job => {
-        if (!filterText) return true;
-        const search = filterText.toLowerCase();
-        return (
-            (job.serviceType || '').toLowerCase().includes(search) ||
-            (job.id || '').toLowerCase().includes(search) ||
-            (job.technician?.name || '').toLowerCase().includes(search)
-        );
-    });
+    // We filter 'localJobs', not 'jobs' prop
+    // Actually, localJobs IS already filtered by API.
+    // But we might still want client-side search if API fails? No, trust API.
 
-    // Calculate Pagination
-    const totalCount = filteredJobs.length;
+    const totalCount = localJobs.length;
     const totalPages = Math.ceil(totalCount / rowsPerPage);
     const startIndex = (page - 1) * rowsPerPage;
     const endIndex = Math.min(startIndex + rowsPerPage, totalCount);
 
     // Get current page rows
-    const currentRows = filteredJobs.slice(startIndex, startIndex + rowsPerPage).map(job => {
+    const currentRows = localJobs.slice(startIndex, startIndex + rowsPerPage).map(job => {
         const icon = getServiceIcon(job.serviceType);
         const statusMeta = getStatusColor(job.status);
         const cost = job.totalCost || job.visitingCharges || 0;
@@ -474,34 +562,104 @@ const DashboardHistory = ({ jobs = [] }) => {
 
             {/* Table Section */}
             <Paper sx={{ borderRadius: 3, overflow: 'hidden', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
-                {/* Toolbar */}
-                <Box sx={{ p: 2.5, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'space-between', alignItems: 'center' }}>
-                    <TextField
-                        placeholder="Search by Job ID, Service or Pro..."
-                        value={filterText}
-                        onChange={(e) => {
-                            setFilterText(e.target.value);
-                            setPage(1); // Reset to page 1 on search
-                        }}
-                        size="small"
-                        variant="outlined"
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <Search sx={{ color: 'text.disabled' }} />
-                                </InputAdornment>
-                            ),
-                            sx: { borderRadius: 2, bgcolor: '#f8fafc', '& fieldset': { borderColor: '#e2e8f0' } }
-                        }}
-                        sx={{ width: '100%', maxWidth: 380 }}
-                    />
-                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', flex: { md: 1 }, justifyContent: { xs: 'flex-start', md: 'flex-end' }, width: { xs: '100%', md: 'auto' } }}>
-                        <Button variant="outlined" startIcon={<DateRange />} sx={{ textTransform: 'none', color: 'text.primary', borderColor: '#e2e8f0', flex: { xs: '1 1 auto', sm: 'none' } }}>Date Range</Button>
-                        <Button variant="outlined" startIcon={<FilterList />} sx={{ textTransform: 'none', color: 'text.primary', borderColor: '#e2e8f0', flex: { xs: '1 1 auto', sm: 'none' } }}>Filter</Button>
-                        <Button variant="contained" startIcon={<Download />} sx={{ textTransform: 'none', bgcolor: 'rgba(36, 99, 235, 0.05)', color: PRIMARY_BLUE, boxShadow: 'none', '&:hover': { bgcolor: 'rgba(36, 99, 235, 0.1)' }, flex: { xs: '1 1 auto', sm: 'none' } }}>Export</Button>
+                {/* Advanced Toolbar */}
+                <Box sx={{ p: 2.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'space-between', alignItems: 'center' }}>
+                        <TextField
+                            placeholder="Search by ID, Service..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            size="small"
+                            InputProps={{
+                                startAdornment: (<InputAdornment position="start"><Search sx={{ color: 'text.disabled' }} /></InputAdornment>),
+                                sx: { borderRadius: 2, bgcolor: '#f8fafc' }
+                            }}
+                            sx={{ width: '100%', maxWidth: 300, flex: 1 }}
+                        />
+
+                        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', width: { xs: '100%', md: 'auto' } }}>
+                            {/* Status Select */}
+                            <TextField
+                                select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                size="small"
+                                SelectProps={{ native: true }}
+                                sx={{ minWidth: 140, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                            >
+                                <option value="all">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="assigned">Assigned</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="rejected">Rejected</option>
+                            </TextField>
+
+                            <Button
+                                variant="outlined"
+                                startIcon={<DateRange />}
+                                onClick={() => setShowFilters(!showFilters)}
+                                sx={{ borderRadius: 2, textTransform: 'none', color: 'text.primary', borderColor: '#e2e8f0' }}
+                            >
+                                {startDate ? `${startDate} - ${endDate || '...'}` : 'Date Range'}
+                            </Button>
+
+                            <Button
+                                variant="contained"
+                                startIcon={<Download />}
+                                onClick={handleExport}
+                                sx={{ borderRadius: 2, textTransform: 'none', bgcolor: 'rgba(36, 99, 235, 0.05)', color: PRIMARY_BLUE, boxShadow: 'none', '&:hover': { bgcolor: 'rgba(36, 99, 235, 0.1)' } }}
+                            >
+                                Export
+                            </Button>
+                        </Box>
                     </Box>
+
+                    {/* Collapsible Date Filters */}
+                    <Collapse in={showFilters}>
+                        <Box sx={{ mt: 2, p: 2, bgcolor: '#f8fafc', borderRadius: 2, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <TextField
+                                label="Start Date"
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                size="small"
+                                InputLabelProps={{ shrink: true }}
+                                sx={{ bgcolor: 'white' }}
+                            />
+                            <TextField
+                                label="End Date"
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                size="small"
+                                InputLabelProps={{ shrink: true }}
+                                sx={{ bgcolor: 'white' }}
+                            />
+                            <Button
+                                variant="contained"
+                                size="small"
+                                onClick={handleApplyDateFilter}
+                                sx={{ textTransform: 'none', bgcolor: PRIMARY_BLUE }}
+                            >
+                                Apply Filter
+                            </Button>
+                            <Button
+                                size="small"
+                                onClick={() => {
+                                    setStartDate('');
+                                    setEndDate('');
+                                    fetchFiltered({ start: '', end: '' }); // Clear and fetch
+                                }}
+                            >
+                                Clear Dates
+                            </Button>
+                        </Box>
+                    </Collapse>
                 </Box>
 
+                {loading && <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}><CircularProgress /></Box>}
                 {/* DESKTOP TABLE VIEW */}
                 <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
                     <Table>

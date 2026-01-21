@@ -1390,7 +1390,15 @@ app.get('/api/jobs', async (req, res) => {
 });
 
 app.get('/api/jobs/user/:id', async (req, res) => {
-  const jobs = await jobManager.getJobsByUser(req.params.id);
+  const { id } = req.params;
+  const { q, status, start, end } = req.query;
+  const filters = {
+    search: q,
+    status,
+    startDate: start,
+    endDate: end
+  };
+  const jobs = await jobManager.getJobsByUser(id, filters);
   res.json({ success: true, jobs });
 });
 
