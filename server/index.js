@@ -439,7 +439,16 @@ app.post('/api/users/login', async (req, res) => {
         sessionToken: session.token
       });
     } else {
-      res.status(401).json({ success: false, error: 'Invalid credentials' });
+      // [DIAGNOSTIC] Check if failure is due to DB connection
+      try {
+        // Attempt a lightweight read to see if DB is alive
+        await userManager.getAllUsers();
+      } catch (dbErr) {
+        console.error("Login failed due to DB Error:", dbErr);
+        return res.status(500).json({ success: false, error: 'Server Error: Database Connection Failed. Please check Render Environment Variables.' });
+      }
+
+      res.status(401).json({ success: false, error: 'Invalid credentials. (Database is connected)' });
     }
   } catch (err) {
     console.error("[Server] User Login Error:", err);
