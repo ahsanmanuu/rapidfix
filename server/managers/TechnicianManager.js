@@ -282,7 +282,7 @@ class TechnicianManager extends BaseManager {
             let tech = null;
             // Case-insensitive search
             if (this.db.client) {
-                const columns = 'id, name, email, phone, service_type, experience, rating, review_count, status, membership, joined_at, updated_at, location, documents';
+                const columns = 'id, name, email, phone, password, service_type, experience, rating, review_count, status, membership, joined_at, updated_at, location, documents';
                 const { data } = await this.db.client
                     .from(this.tableName)
                     .select(columns)

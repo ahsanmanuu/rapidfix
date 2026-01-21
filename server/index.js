@@ -2275,12 +2275,18 @@ app.get('/api/diagnostic/db', async (req, res) => {
     const users = await userManager.getAllUsers();
     const userSummary = users.map(u => ({ id: u.id, email: u.email }));
 
+    // Check Technicians
+    const technicians = await technicianManager.getAllTechnicians();
+    const techSummary = technicians.map(t => ({ id: t.id, email: t.email }));
+
     res.json({
       success: true,
       environment: envCheck,
       databaseType: dbType,
       userCount: users.length,
-      users: userSummary // CAREFUL: This exposes emails. Only for debug.
+      users: userSummary,
+      technicianCount: technicians.length,
+      technicians: techSummary
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message, stack: err.stack });
