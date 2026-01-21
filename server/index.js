@@ -1374,7 +1374,7 @@ setInterval(async () => {
   try {
     const unassignedJobs = await jobManager.getUnassignedJobs();
     if (unassignedJobs.length > 0) {
-      console.log(`[Worker] Found ${unassignedJobs.length} unassigned jobs. Running auto-assignment...`);
+      // console.log(`[Worker] Found ${unassignedJobs.length} unassigned jobs. Running auto-assignment...`);
       for (const job of unassignedJobs) {
         await jobManager.autoAssignJob(job.id);
       }
@@ -1390,16 +1390,23 @@ app.get('/api/jobs', async (req, res) => {
 });
 
 app.get('/api/jobs/user/:id', async (req, res) => {
-  const { id } = req.params;
-  const { q, status, start, end } = req.query;
-  const filters = {
-    search: q,
-    status,
-    startDate: start,
-    endDate: end
-  };
-  const jobs = await jobManager.getJobsByUser(id, filters);
-  res.json({ success: true, jobs });
+  try {
+    const { id } = req.params;
+    const { q, status, start, end } = req.query;
+    console.log(`[API] GET /jobs/user/${id} query:`, req.query); // DEBUG LOG
+
+    const filters = {
+      search: q,
+      status,
+      startDate: start,
+      endDate: end
+    };
+    const jobs = await jobManager.getJobsByUser(id, filters);
+    res.json({ success: true, jobs });
+  } catch (error) {
+    console.error("[API] Get User Jobs Error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // [NEW] User Update Job (Rescheduling/Notes)

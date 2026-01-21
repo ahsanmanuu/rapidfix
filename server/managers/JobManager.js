@@ -203,7 +203,7 @@ class JobManager {
     }
 
     async autoAssignJob(jobId) {
-        console.log(`[JobManager] Starting Advanced Real-Time AutoAssign for Job #${jobId}`);
+        // console.log(`[JobManager] Starting Advanced Real-Time AutoAssign for Job #${jobId}`);
         try {
             const job = await this.getJob(jobId);
             if (!job || job.technicianId || job.status !== 'pending') return job;
@@ -211,7 +211,7 @@ class JobManager {
             // [ALGO IMPROVEMENT] Handle Scheduling
             const isFutureBooking = job.scheduledDate && new Date(job.scheduledDate).toDateString() !== new Date().toDateString();
             if (isFutureBooking) {
-                console.log(`[JobManager] Job #${jobId} is for a future date (${job.scheduledDate}). Skipping immediate auto-assignment.`);
+                // console.log(`[JobManager] Job #${jobId} is for a future date (${job.scheduledDate}). Skipping immediate auto-assignment.`);
                 // Future jobs are left in 'pending' for manual admin assignment or a separate cron-style scheduler.
                 return job;
             }
@@ -237,7 +237,7 @@ class JobManager {
                 // Only consider 'available' techs for auto-assignment
                 // Busy techs are excluded from Flow 1 (Generic Search)
                 candidates = candidates.filter(t => t.status === 'available');
-                console.log(`[AutoAssign] Found ${candidates.length} candidates within ${radius}km for ${serviceType}`);
+                // console.log(`[AutoAssign] Found ${candidates.length} candidates within ${radius}km for ${serviceType}`);
 
                 const allJobsThisMonth = await this._getMonthlyJobCountGlobal();
                 const qualifiedTechs = [];
@@ -643,19 +643,24 @@ class JobManager {
 
                 // [FILTER] Date Range (created_at)
                 // Ensure ranges cover the full day
-                if (filters.startDate) {
+                // Robust Check: handle undefined, null, empty string, or "undefined" string
+                const isValidDate = (d) => d && typeof d === 'string' && d !== 'undefined' && d.trim() !== '';
+
+                if (isValidDate(filters.startDate)) {
                     let start = filters.startDate;
                     if (start.length === 10) start += 'T00:00:00'; // Append start of day
                     query = query.gte('created_at', start);
+                    console.log(`[JobManager] Applied Start Date: ${start}`);
                 }
-                if (filters.endDate) {
+                if (isValidDate(filters.endDate)) {
                     let end = filters.endDate;
                     if (end.length === 10) end += 'T23:59:59'; // Append end of day
                     query = query.lte('created_at', end);
+                    console.log(`[JobManager] Applied End Date: ${end}`);
                 }
 
                 // [FILTER] Search (Job ID or Service Type)
-                if (filters.search) {
+                if (filters.search && filters.search !== 'undefined') {
                     // UUID check for ID search to prevent invalid input syntax for UUID column if applicable
                     // But 'id' is UUID. 'service_type' is text.
                     // 'or' syntax: id.eq.val,service_type.ilike.%val%

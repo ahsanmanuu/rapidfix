@@ -30,7 +30,7 @@ import {
     CircularProgress
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
+import api, { getMyJobs } from '../../services/api';
 import {
     Search,
     DateRange,
@@ -85,23 +85,28 @@ const DashboardHistory = ({ jobs = [] }) => {
     // Fetch jobs when filters change (Debounced search could be better, but explicit 'Apply' or effect is fine)
     // For simplicity, let's auto-fetch on status/date change, and debounce search.
 
-    const { currentUser } = useAuth();
+    const { user: currentUser } = useAuth();
 
     // Define fetch logic
     const fetchFiltered = async (overrideParams = {}) => {
         if (!currentUser) return;
         setLoading(true);
         try {
+            // Robust param construction: default to current state, but allow overrides. 
+            // Crucial: defaulting to '' for undefined dates to prevent "undefined" string at server.
+            const getVal = (key, current) => overrideParams[key] !== undefined ? overrideParams[key] : current;
+
             const params = {
-                q: search,
-                status: statusFilter === 'all' ? '' : statusFilter,
-                start: startDate,
-                end: endDate,
-                ...overrideParams
+                q: getVal('q', search),
+                status: getVal('status', statusFilter) === 'all' ? '' : getVal('status', statusFilter),
+                start: getVal('start', startDate) || '',
+                end: getVal('end', endDate) || ''
             };
-            const res = await api.getMyJobs(currentUser.id, params);
+            const res = await getMyJobs(currentUser.id, params);
+            // console.log("FetchFiltered Response:", res.data);
             if (res.data.success) {
-                setLocalJobs(res.data.jobs || []);
+                const fetchedJobs = res.data.jobs || [];
+                setLocalJobs(fetchedJobs);
                 setPage(1);
             }
         } catch (err) {
@@ -126,40 +131,90 @@ const DashboardHistory = ({ jobs = [] }) => {
     };
 
     // CSV Export
-    const handleExport = () => {
-        if (!localJobs || localJobs.length === 0) {
-            alert("No jobs to export. Please adjust your filters.");
+    // CSV Export - Robust Server-Fetch Implementation
+    // CSV Export - Hybrid Robust Implementation (Server Fetch -> Local Fallback)
+    const handleExport = async () => {
+        let jobsToExport = [];
+        let usedFallback = false;
+
+        const generateCSV = (data, source) => {
+            if (!data || data.length === 0) {
+                alert(`No jobs found to export (${source}).`);
+                return;
+            }
+            alert(`Generating CSV with ${data.length} jobs (${source})...`);
+
+            const headers = ['Job ID', 'Service', 'Technician', 'Date', 'Time', 'Status', 'Cost', 'Total'];
+            const rows = data.map(j => [
+                j.id,
+                j.serviceType,
+                j.technician?.name || 'Unassigned',
+                new Date(j.scheduledDate || j.createdAt).toLocaleDateString(),
+                j.scheduledTime || new Date(j.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                getStatusColor(j.status).label,
+                j.visitingCharges || 0,
+                j.totalCost || 0
+            ]);
+
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(item => `"${item || ''}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `job_history_${startDate || 'all'}_to_${endDate || 'all'}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // 1. Try Server Fetch
+        if (currentUser) {
+            setLoading(true);
+            try {
+                const exportParams = {
+                    q: search || '',
+                    status: statusFilter === 'all' ? '' : (statusFilter || ''),
+                    start: startDate || '',
+                    end: endDate || ''
+                };
+                console.log("Attempting Server Export:", exportParams);
+                const res = await getMyJobs(currentUser.id, exportParams);
+                if (res.data.success && res.data.jobs) {
+                    jobsToExport = res.data.jobs;
+                    console.log(`Server Export Success: ${jobsToExport.length} jobs retrieved.`);
+                } else {
+                    throw new Error("Server returned success:false");
+                }
+            } catch (err) {
+                const errMsg = err.response?.data?.error || err.message;
+                console.warn(`Server Export Failed (${errMsg}), using local view fallback.`);
+                usedFallback = true;
+                jobsToExport = localJobs; // Fallback
+                generateCSV(jobsToExport, `Visible View - Server Error: ${errMsg}`);
+                return; // Exit here as we handled generation
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            console.warn("No user context, using local jobs.");
+            usedFallback = true;
+            jobsToExport = localJobs;
+            generateCSV(jobsToExport, "Visible View - Missing User Context");
             return;
         }
 
-        alert(`Generating CSV for ${localJobs.length} jobs...`);
+        // 2. Execute Export
+        if (usedFallback && jobsToExport.length > 0) {
+            // Optional: notify user they are getting local data
+            console.log("Exporting local view data.");
+        }
 
-        const headers = ['Job ID', 'Service', 'Technician', 'Date', 'Time', 'Status', 'Cost', 'Total'];
-        const rows = localJobs.map(j => [
-            j.id,
-            j.serviceType,
-            j.technician?.name || 'Unassigned',
-            new Date(j.scheduledDate || j.createdAt).toLocaleDateString(),
-            j.scheduledTime || new Date(j.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            getStatusColor(j.status).label,
-            j.visitingCharges || 0,
-            j.totalCost || 0
-        ]);
-
-        const csvContent = [
-            headers.join(','),
-            ...rows.map(row => row.map(item => `"${item || ''}"`).join(','))
-        ].join('\n');
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `job_history_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        generateCSV(jobsToExport, usedFallback ? 'Visible View' : 'Server Data');
     };
 
     // --- Feedback Logic ---
