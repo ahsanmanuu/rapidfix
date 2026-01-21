@@ -46,6 +46,59 @@ class StorageManager {
         }
     }
 
+    async uploadBuffer(buffer, folder, customName, mimeType = 'application/octet-stream') {
+        try {
+            if (!buffer) return null;
+            const filename = customName || `${Date.now()}.bin`;
+
+            let url;
+            if (this.useSupabase) {
+                // Inline Supabase Logic for Buffer
+                const bucket = folder === 'technicians' ? 'technician-documents' : (folder === 'invoices' ? 'documents' : 'user-avatars'); // Handle buckets better
+                // Actually, let's just use 'documents' bucket for invoices if exists, or fallback
+                // Assuming 'documents' bucket exists.
+                const targetBucket = folder === 'invoices' ? 'technician-documents' : 'user-avatars'; // Re-use existing?
+                // Fixofy usually uses generic buckets?
+                // Let's assume 'technician-documents' is safe or 'public'
+                // Revert to existing buckets logic from _uploadToSupabase
+                const bucketName = folder === 'technicians' || folder === 'invoices' || folder === 'documents' ? 'technician-documents' : 'user-avatars';
+
+                const { data, error } = await this.supabase.storage
+                    .from(bucketName)
+                    .upload(`${folder}/${filename}`, buffer, {
+                        contentType: mimeType,
+                        upsert: true
+                    });
+
+                if (error) throw error;
+
+                const { data: urlData } = this.supabase.storage
+                    .from(bucketName)
+                    .getPublicUrl(`${folder}/${filename}`);
+
+                url = urlData.publicUrl;
+            } else {
+                // Local Buffer Upload
+                const uploadDir = path.join(__dirname, '..', 'uploads', folder);
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                const newPath = path.join(uploadDir, filename);
+                fs.writeFileSync(newPath, buffer);
+                url = `/uploads/${folder}/${filename}`;
+            }
+
+            if (this.io) {
+                this.io.emit('file_uploaded', { folder, filename, url });
+            }
+            return url;
+        } catch (err) {
+            console.error("[StorageManager] Error uploading buffer:", err);
+            // Verify if we can return null to avoid crash? No, throw better
+            throw err;
+        }
+    }
+
     async _uploadToSupabase(file, folder, filename) {
         try {
             const bucket = folder === 'technicians' ? 'technician-documents' : 'user-avatars';

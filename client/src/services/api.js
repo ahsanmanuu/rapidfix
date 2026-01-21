@@ -55,7 +55,8 @@ export const cancelJob = (jobId, reason) => api.put(`/jobs/${jobId}/status`, { s
 export const updateUserJob = (jobId, data) => api.put(`/jobs/${jobId}`, data); // [NEW] Reschedule
 export const getAllJobs = () => api.get('/jobs');
 export const createSupportSession = (userId) => api.post('/support/session', { userId }); // [NEW]
-export const sendSupportMessage = (data) => api.post('/support/message', data); // [NEW]
+export const sendSupportMessage = (data) => api.post('/support/message', data);
+export const closeSupportSession = (sessionId) => api.post('/support/close', { sessionId }); // [NEW]
 
 // Chat API
 export const sendChatMessage = (data) => api.post('/chat/send', data);

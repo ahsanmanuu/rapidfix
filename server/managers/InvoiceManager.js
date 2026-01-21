@@ -3,15 +3,130 @@ const path = require('path');
 const PDFDocument = require('pdfkit');
 const nodemailer = require('nodemailer');
 
+const Database = require('./DatabaseLoader');
+
 class InvoiceManager {
-    constructor() {
+    constructor(settingsManager, adminManager, storageManager, jobManager) {
         this.transporter = null;
-        this.settingsManager = null; // Injected
+        this.settingsManager = settingsManager;
+        this.adminManager = adminManager;
+        this.storageManager = storageManager;
+        this.jobManager = jobManager;
+        this.db = new Database('invoices'); // specialized DB accessor for invoices
         this.initTransporter();
     }
 
-    setSettingsManager(settingsManager) {
-        this.settingsManager = settingsManager;
+    setJobManager(jobManager) {
+        this.jobManager = jobManager;
+    }
+
+    async getOrGenerateInvoice(jobId) {
+        try {
+            // 1. Fetch Job
+            const job = await this.jobManager.getJob(jobId);
+            if (!job) throw new Error('Job not found');
+
+            // 2. STRICT Status Check
+            if (job.status !== 'completed') {
+                throw new Error('Invoice cannot be generated for incomplete jobs.');
+            }
+
+            // 3. Generate PDF (Real-time)
+            // We always generate fresh to ensure data is up-to-date
+            const buffer = await this.generateInvoice(job);
+
+            // 4. Async: Sync to Storage & Database (Fire and Forget or Await based on need)
+            // We don't await this to speed up the download response, 
+            // BUT we catch errors to ensure NO unhandled rejections crash the server.
+            (async () => {
+                try {
+                    await this._syncInvoiceToStorageAndDb(job, buffer);
+                } catch (err) {
+                    console.error('[InvoiceManager] Background sync failed:', err);
+                }
+            })();
+
+            return { buffer };
+        } catch (e) {
+            console.error('[InvoiceManager] getOrGenerateInvoice failed:', e);
+            throw e;
+        }
+    }
+
+    async createAndSaveInvoice(job) {
+        try {
+            if (job.status !== 'completed') {
+                console.warn('[InvoiceManager] createAndSaveInvoice called for non-completed job:', job.id);
+                return null;
+            }
+
+            const buffer = await this.generateInvoice(job);
+
+            // Sync Storage & DB
+            const url = await this._syncInvoiceToStorageAndDb(job, buffer);
+
+            // Send Email
+            await this.sendInvoiceEmail(job, buffer);
+
+            return { buffer, url };
+        } catch (e) {
+            console.error('[InvoiceManager] Creation failed:', e);
+            // Don't throw if just email/storage fails, mainly we want the flow to continue
+            // But if generation fails, it's an issue.
+            return null;
+        }
+    }
+
+    // Helper to handle Storage Upload AND Database Record Upsert
+    async _syncInvoiceToStorageAndDb(job, buffer) {
+        if (!this.storageManager) return null;
+
+        try {
+            const fileName = `invoices/${job.id}-${Date.now()}.pdf`;
+            const publicUrl = await this.storageManager.uploadBuffer(buffer, 'invoices', fileName, 'application/pdf');
+
+            // Upsert into 'invoices' table
+            if (publicUrl) {
+                const amount = job.totalCost || job.offerPrice || 0;
+                const invoiceData = {
+                    job_id: job.id,
+                    invoice_number: `INV-${job.id.substring(0, 8).toUpperCase()}`,
+                    amount: amount,
+                    pdf_url: publicUrl,
+                    status: 'issued',
+                    created_at: new Date().toISOString()
+                };
+
+                // Use the 'invoices' DB accessor
+                // We want to upsert based on job_id if possible, or just insert new. 
+                // Since our 'invoices' table has ID PK, finding by job_id is better.
+
+                // Check existing
+                const existing = await this.db.find('job_id', job.id);
+                if (existing) {
+                    console.log(`[InvoiceManager] Updating existing invoice record for Job ${job.id}`);
+                    // Removing explicit updated_at to prevent schema cache errors if the column is problematic
+                    // Most PG setups use triggers for this anyway.
+                    const { updated_at, ...updateData } = invoiceData;
+                    await this.db.update('id', existing.id, updateData);
+                } else {
+                    console.log(`[InvoiceManager] Creating new invoice record for Job ${job.id}`);
+                    // Correct method is 'add', not 'create'
+                    await this.db.add(invoiceData);
+                }
+
+                console.log(`[InvoiceManager] Successfully synced invoice for Job ${job.id} to DB and Storage.`);
+
+                // Update 'jobs' table for redundancy/quick access
+                await this.jobManager.updateJob(job.id, {
+                    invoice_url: publicUrl
+                });
+            }
+            return publicUrl;
+        } catch (err) {
+            console.error('[InvoiceManager] _syncInvoiceToStorageAndDb error:', err);
+            return null;
+        }
     }
 
     initTransporter() {
@@ -32,6 +147,7 @@ class InvoiceManager {
     }
 
     async generateInvoice(job) {
+        console.log(`[InvoiceManager] Generating PDF for Job ${job.id}`);
         // Fetch Dynamic Settings
         const settings = this.settingsManager ? await this.settingsManager.getSettings() : {};
 
@@ -41,7 +157,28 @@ class InvoiceManager {
                 const buffers = [];
 
                 doc.on('data', buffers.push.bind(buffers));
-                doc.on('end', () => resolve(Buffer.concat(buffers)));
+                doc.on('end', () => {
+                    const finalBuffer = Buffer.concat(buffers);
+                    console.log(`[InvoiceManager] PDF Generation Completed for Job ${job.id}. Size: ${finalBuffer.length} bytes`);
+
+                    if (finalBuffer.length > 0) {
+                        const header = finalBuffer.slice(0, 20).toString('utf-8');
+                        const hex = finalBuffer.slice(0, 10).toString('hex');
+                        console.log(`[InvoiceManager] PDF Header Check: "${header}" (Hex: ${hex})`);
+                        // Verify content presence
+                        if (finalBuffer.length > 1000) {
+                            console.log(`[InvoiceManager] PDF Content Verification: File is large enough (${finalBuffer.length} bytes) to contain data.`);
+                        }
+                    } else {
+                        console.warn('[InvoiceManager] WARNING: PDF Buffer is EMPTY!');
+                    }
+
+                    resolve(finalBuffer);
+                });
+                doc.on('error', (err) => {
+                    console.error(`[InvoiceManager] PDF Stream Error:`, err);
+                    reject(err);
+                });
 
                 this._generateHeader(doc, settings);
                 this._generateCustomerInformation(doc, job);
@@ -50,6 +187,7 @@ class InvoiceManager {
 
                 doc.end();
             } catch (err) {
+                console.error(`[InvoiceManager] PDF Logic Error:`, err);
                 reject(err);
             }
         });

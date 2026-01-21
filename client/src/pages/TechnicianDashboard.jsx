@@ -874,7 +874,10 @@ const TechnicianDashboard = () => {
                     <h4 className="font-bold text-gray-800 text-base">{job.serviceType} Request</h4>
                     <p className="text-sm text-gray-700 font-bold">{job.contactName || job.customer?.name || "Customer"}</p>
                     <p className="text-xs text-blue-600 font-medium">Mobile: {job.customerMobile || job.contactPhone || job.customer?.phone || "No Phone"}</p>
-                    <p className="text-xs text-gray-500 line-clamp-1 mt-1">{job.description || "No description provided"}</p>
+                    <p className="text-xs text-gray-500 line-clamp-1 mt-1">{job.description || "Quick Tile Booking"}</p>
+                    {job.professionalNote && (
+                        <p className="text-[10px] text-indigo-600 font-medium line-clamp-1 mt-0.5">Your Note: {job.professionalNote}</p>
+                    )}
                     <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
                         <Clock size={12} /> {new Date(job.scheduledDate).toLocaleDateString()}
                         <MapPin size={12} className="ml-2" />
@@ -1112,6 +1115,38 @@ const TechnicianDashboard = () => {
                                             <span>Offer Price:</span>
                                             <span className="text-emerald-600">₹{viewJob.offerPrice || viewJob.visitingCharges || "TBD"}</span>
                                         </p>
+                                    </div>
+
+                                    {/* [NEW] Professional Note Editor */}
+                                    <div className="mt-4 pt-4 border-t border-gray-200">
+                                        <h4 className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                            <MessageSquare size={16} /> Professional Note
+                                        </h4>
+                                        <textarea
+                                            className="w-full p-3 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                            rows={3}
+                                            placeholder="Add a note for the customer..."
+                                            value={viewJob.professionalNote || ''}
+                                            onChange={(e) => setViewJob({ ...viewJob, professionalNote: e.target.value })}
+                                        />
+                                        <div className="mt-2 flex justify-end">
+                                            <button
+                                                onClick={async () => {
+                                                    try {
+                                                        await api.put(`/jobs/${viewJob.id}`, { professionalNote: viewJob.professionalNote });
+                                                        // Optimistic update local list
+                                                        setMyJobs(prev => prev.map(j => j.id === viewJob.id ? { ...j, professionalNote: viewJob.professionalNote } : j));
+                                                        alert('Professional Note saved successfully!');
+                                                    } catch (e) {
+                                                        console.error(e);
+                                                        alert('Failed to save note.');
+                                                    }
+                                                }}
+                                                className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition-colors shadow-sm"
+                                            >
+                                                Save Note
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

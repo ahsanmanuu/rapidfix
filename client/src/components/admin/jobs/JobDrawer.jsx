@@ -9,7 +9,13 @@ const JobDrawer = ({ job, onClose, onEdit }) => {
 
     const handleDownloadInvoice = async () => {
         try {
-            window.open(`${api.defaults.baseURL}/invoices/${job.id}/download`, '_blank');
+            const token = localStorage.getItem('sessionToken');
+            if (!token || token === 'null' || token === 'undefined') {
+                alert("Session expired. Please log in again.");
+                return;
+            }
+            const directUrl = `${window.location.origin}/api/invoices/${job.id}/download?token=${token}`;
+            window.open(directUrl, '_blank');
         } catch (err) {
             error('Failed to download invoice');
         }

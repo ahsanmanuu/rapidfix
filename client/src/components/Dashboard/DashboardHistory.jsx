@@ -30,7 +30,8 @@ import {
     CircularProgress
 } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
-import api, { getMyJobs } from '../../services/api';
+import { useSocket } from '../../context/SocketContext';
+import api, { getMyJobs, updateUserJob } from '../../services/api';
 import {
     Search,
     DateRange,
@@ -51,12 +52,483 @@ import {
     Check,
     ChevronLeft,
     ChevronRight,
-    HomeRepairService
+    HomeRepairService,
+    Edit,
+    Save
 } from '@mui/icons-material';
 
 const PRIMARY_BLUE = '#2463eb';
 const BG_LIGHT = '#f6f6f8';
 const TEXT_DARK = '#111621';
+
+// --- Helpers ---
+const getServiceIcon = (serviceName) => {
+    const lower = (serviceName || '').toLowerCase();
+    if (lower.includes('plumb')) return <Plumbing />;
+    if (lower.includes('electric') || lower.includes('wire')) return <Bolt />;
+    if (lower.includes('ac') || lower.includes('cool')) return <AcUnit />;
+    if (lower.includes('clean')) return <CleaningServices />;
+    if (lower.includes('paint')) return <FormatPaint />;
+    return <HomeRepairService />;
+};
+
+const getStatusColor = (status) => {
+    switch (status) {
+        case 'completed': return { bg: '#ecfdf5', color: '#047857', label: 'Completed' };
+        case 'cancelled': return { bg: '#fef2f2', color: '#dc2626', label: 'Cancelled' };
+        case 'rejected': return { bg: '#fef2f2', color: '#dc2626', label: 'Rejected' };
+        case 'in_progress': return { bg: '#eff6ff', color: '#1d4ed8', label: 'In Progress' };
+        case 'assigned': return { bg: '#fff7ed', color: '#c2410c', label: 'Assigned' };
+        case 'accepted': return { bg: '#fff7ed', color: '#c2410c', label: 'Accepted' };
+        default: return { bg: '#f3f4f6', color: '#4b5563', label: 'Pending' };
+    }
+};
+
+// --- Components ---
+const JobRow = ({ row, isExpanded, onToggle, handleRateClick, currentUser, onJobUpdate }) => {
+    const [isEditingNote, setIsEditingNote] = useState(false);
+    const [editedNote, setEditedNote] = useState(row.fullDescription || '');
+    const [savingNote, setSavingNote] = useState(false);
+
+    // Sync state when row updates (e.g. via socket)
+    useEffect(() => {
+        if (!isEditingNote) {
+            setEditedNote(row.fullDescription || '');
+        }
+    }, [row.fullDescription, isEditingNote]);
+
+    const handleSaveNote = async () => {
+        setSavingNote(true);
+        try {
+            await updateUserJob(row.realJobId, { description: editedNote });
+            // Optimistic Update
+            if (onJobUpdate) {
+                onJobUpdate({ id: row.realJobId, description: editedNote });
+            }
+            setIsEditingNote(false);
+            // Socket will update the UI eventually, but this ensures instant feedback
+        } catch (err) {
+            alert('Failed to save note: ' + err.message);
+        } finally {
+            setSavingNote(false);
+        }
+    };
+
+    const s = (row.status || '').toLowerCase();
+
+    return (
+        <>
+            <TableRow
+                sx={{
+                    '&:hover': { bgcolor: 'grey.50' },
+                    cursor: 'pointer',
+                    bgcolor: isExpanded ? 'rgba(36, 99, 235, 0.04)' : 'inherit',
+                    borderLeft: isExpanded ? `4px solid ${PRIMARY_BLUE}` : '4px solid transparent',
+                    transition: 'all 0.2s'
+                }}
+                onClick={onToggle}
+            >
+                <TableCell sx={{ py: { xs: 1.5, md: 2 } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 } }}>
+                        <Box sx={{
+                            width: { xs: 32, md: 40 }, height: { xs: 32, md: 40 }, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            bgcolor: row.iconBg, color: row.iconColor, flexShrink: 0
+                        }}>
+                            {React.cloneElement(row.icon, { sx: { fontSize: { xs: 18, md: 24 } } })}
+                        </Box>
+                        <Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', fontSize: { xs: '0.8rem', md: '0.875rem' } }}>{row.service}</Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>{row.subService}</Typography>
+                        </Box>
+                    </Box>
+                </TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    <Typography variant="body2" sx={{ color: PRIMARY_BLUE, fontWeight: 500 }}>{row.id}</Typography>
+                </TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Avatar src={row.proImg} sx={{ width: 32, height: 32 }} />
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>{row.proName}</Typography>
+                    </Box>
+                </TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="body2" sx={{ color: 'text.primary' }}>{row.date}</Typography>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>{row.time}</Typography>
+                    </Box>
+                </TableCell>
+                <TableCell>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>{row.cost}</Typography>
+                </TableCell>
+                <TableCell>
+                    <Chip
+                        label={row.status}
+                        size="small"
+                        sx={{
+                            bgcolor: row.statusBg,
+                            color: row.statusColor,
+                            fontWeight: 600,
+                            borderRadius: '999px',
+                            height: 24,
+                            fontSize: '0.7rem',
+                            '& .MuiChip-label': { px: 1 }
+                        }}
+                    />
+                </TableCell>
+                <TableCell align="right" sx={{ px: { xs: 1, md: 2 } }}>
+                    <IconButton size="small" sx={{ color: isExpanded ? PRIMARY_BLUE : 'text.secondary' }}>
+                        {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                    </IconButton>
+                </TableCell>
+            </TableRow>
+            <TableRow>
+                <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                        <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'divider' }}>
+
+                            {/* Timeline */}
+                            <Box sx={{ flex: 1, width: '100%', mb: 3 }}>
+                                <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>Service Timeline</Typography>
+                                <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'space-between', width: '100%', px: 0 }}>
+                                    <Box sx={{ position: 'absolute', top: { xs: '11px', md: '14px' }, left: 0, right: 0, height: 2, bgcolor: 'grey.300', zIndex: 0 }} />
+                                    {['Request Received', 'Pro Assigned', 'Work Started', 'Completed'].map((step, index) => {
+                                        let currentProgressIndex = 0;
+                                        if (s === 'completed') currentProgressIndex = 3;
+                                        else if (s === 'in progress' || s === 'in_progress') currentProgressIndex = 2;
+                                        else if (s === 'assigned' || s === 'accepted') currentProgressIndex = 1;
+                                        else currentProgressIndex = 0;
+
+                                        const isCompleted = index <= currentProgressIndex;
+                                        const isCurrent = index === currentProgressIndex;
+
+                                        return (
+                                            <Box key={step} sx={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'grey.50', px: 0.5, flex: 1 }}>
+                                                <Box sx={{
+                                                    width: { xs: 24, md: 30 }, height: { xs: 24, md: 30 }, borderRadius: '50%',
+                                                    bgcolor: isCompleted ? (index === 3 ? '#10b981' : PRIMARY_BLUE) : 'grey.300',
+                                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    boxShadow: isCurrent && index === 3 ? '0 0 0 4px #d1fae5' : 'none',
+                                                    mb: 0.5
+                                                }}>
+                                                    <Check sx={{ fontSize: { xs: 14, md: 16 } }} />
+                                                </Box>
+                                                <Typography variant="caption" sx={{
+                                                    fontWeight: 600,
+                                                    color: isCompleted ? (index === 3 ? '#10b981' : 'text.secondary') : 'text.disabled',
+                                                    fontSize: { xs: '0.55rem', md: '0.7rem' },
+                                                    textAlign: 'center',
+                                                    lineHeight: 1.1,
+                                                    mt: 0.5
+                                                }}>
+                                                    {step}
+                                                </Typography>
+                                            </Box>
+                                        );
+                                    })}
+                                </Box>
+                            </Box>
+
+                            {/* Actions */}
+                            <Box sx={{ display: 'flex', gap: 2, mb: 3, width: { xs: '100%', md: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<Description />}
+                                    disabled={s !== 'completed'}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const token = localStorage.getItem('sessionToken');
+                                        if (!token || token === 'null' || token === 'undefined') {
+                                            alert("Session expired. Please log in again.");
+                                            return;
+                                        }
+                                        const downloadUrl = `${window.location.origin}/api/invoices/${row.realJobId}/download?token=${token}`;
+                                        window.open(downloadUrl, '_blank');
+                                    }}
+                                    sx={{ textTransform: 'none', color: 'text.primary', borderColor: 'grey.300', width: { xs: '100%', sm: 'auto' } }}
+                                >
+                                    Download Invoice
+                                </Button>
+                                {row.feedbackGiven ? (
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<CheckCircle />}
+                                        disabled
+                                        sx={{ textTransform: 'none', color: '#16a34a', borderColor: '#16a34a', width: { xs: '100%', sm: 'auto' } }}
+                                    >
+                                        Rated ✓
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<Star />}
+                                        disabled={s !== 'completed'}
+                                        onClick={() => handleRateClick(row)}
+                                        sx={{ textTransform: 'none', bgcolor: PRIMARY_BLUE, '&:hover': { bgcolor: '#1d4ed8' }, width: { xs: '100%', sm: 'auto' } }}
+                                    >
+                                        Rate Professional
+                                    </Button>
+                                )}
+                            </Box>
+
+                            {/* Details - Dynamically rendered with Edit Mode */}
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} md={6}>
+                                    <Paper variant="outlined" sx={{ p: 2, bgcolor: 'white', height: '100%' }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                            <Typography variant="caption" sx={{ textTransform: 'uppercase', color: 'text.secondary', fontWeight: 600 }}>Customer Note</Typography>
+                                            {!isEditingNote && (
+                                                <IconButton size="small" onClick={() => setIsEditingNote(true)}>
+                                                    <Edit fontSize="small" color="primary" />
+                                                </IconButton>
+                                            )}
+                                        </Box>
+
+                                        {isEditingNote ? (
+                                            <Box>
+                                                <TextField
+                                                    fullWidth
+                                                    multiline
+                                                    rows={3}
+                                                    size="small"
+                                                    value={editedNote}
+                                                    onChange={(e) => setEditedNote(e.target.value)}
+                                                    sx={{ mb: 1 }}
+                                                />
+                                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                                    <Button size="small" onClick={() => { setIsEditingNote(false); setEditedNote(row.fullDescription || ''); }}>
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        size="small"
+                                                        variant="contained"
+                                                        startIcon={<Save />}
+                                                        onClick={handleSaveNote}
+                                                        disabled={savingNote}
+                                                    >
+                                                        Save
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+                                        ) : (
+                                            <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.primary' }}>
+                                                "{row.fullDescription}"
+                                            </Typography>
+                                        )}
+                                    </Paper>
+                                </Grid>
+                                <Grid item xs={12} md={6}>
+                                    <Paper variant="outlined" sx={{ p: 2, bgcolor: 'white', height: '100%' }}>
+                                        <Typography variant="caption" sx={{ textTransform: 'uppercase', color: 'text.secondary', fontWeight: 600 }}>Professional Note</Typography>
+                                        <Typography variant="body2" sx={{ mt: 1, color: 'text.primary' }}>
+                                            "{row.professionalNote}"
+                                        </Typography>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    </Collapse>
+                </TableCell>
+            </TableRow>
+        </>
+    );
+};
+
+const MobileJobCard = ({ row, isExpanded, onToggle, handleRateClick, onJobUpdate }) => {
+    const [isEditingNote, setIsEditingNote] = useState(false);
+    const [editedNote, setEditedNote] = useState(row.fullDescription || '');
+    const [savingNote, setSavingNote] = useState(false);
+
+    useEffect(() => {
+        if (!isEditingNote) {
+            setEditedNote(row.fullDescription || '');
+        }
+    }, [row.fullDescription, isEditingNote]);
+
+    const handleSaveNote = async () => {
+        setSavingNote(true);
+        try {
+            await updateUserJob(row.realJobId, { description: editedNote });
+            if (onJobUpdate) {
+                onJobUpdate({ id: row.realJobId, description: editedNote });
+            }
+            setIsEditingNote(false);
+        } catch (err) {
+            alert('Failed to save note: ' + err.message);
+        } finally {
+            setSavingNote(false);
+        }
+    };
+
+    return (
+        <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', bgcolor: isExpanded ? 'rgba(36, 99, 235, 0.04)' : 'white' }}>
+            {/* Mobile Row Header */}
+            <Box
+                onClick={onToggle}
+                sx={{ p: 2, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', cursor: 'pointer' }}
+            >
+                <Box sx={{ display: 'flex', gap: 2, flex: 1, minWidth: 0 }}>
+                    {/* Icon */}
+                    <Box sx={{
+                        width: 40, height: 40, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        bgcolor: row.iconBg, color: row.iconColor, flexShrink: 0
+                    }}>
+                        {React.cloneElement(row.icon, { sx: { fontSize: 20 } })}
+                    </Box>
+
+                    {/* Main Info */}
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', lineHeight: 1.2, mb: 0.5, wordBreak: 'break-word' }}>
+                            {row.service}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                            <Typography variant="caption" sx={{ color: PRIMARY_BLUE, fontWeight: 500 }}>{row.id}</Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>• {row.date}</Typography>
+                        </Box>
+                        <Typography variant="body2" sx={{ fontWeight: 700, mt: 0.5 }}>{row.cost}</Typography>
+                    </Box>
+                </Box>
+
+                {/* Status & Toggle */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                    <Chip
+                        label={row.status}
+                        size="small"
+                        sx={{
+                            bgcolor: row.statusBg,
+                            color: row.statusColor,
+                            fontWeight: 600,
+                            borderRadius: '6px',
+                            height: 24,
+                            fontSize: '0.7rem',
+                        }}
+                    />
+                    <IconButton size="small" sx={{ color: isExpanded ? PRIMARY_BLUE : 'text.secondary', p: 0.5 }}>
+                        {isExpanded ? <ExpandLess /> : <ExpandMore />}
+                    </IconButton>
+                </Box>
+            </Box>
+
+            {/* Mobile Expanded Content */}
+            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                <Box sx={{ px: 2, pb: 2 }}>
+                    <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+
+                        {/* Pro Details */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                            <Avatar src={row.proImg} sx={{ width: 32, height: 32 }} />
+                            <Box>
+                                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', lineHeight: 1 }}>Professional</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 600 }}>{row.proName}</Typography>
+                            </Box>
+                        </Box>
+
+                        <Divider sx={{ mb: 2 }} />
+
+                        {/* Mobile Note Edit */}
+                        <Box sx={{ mb: 2 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                <Typography variant="caption" sx={{ fontWeight: 600 }}>Customer Note</Typography>
+                                {!isEditingNote && (
+                                    <IconButton size="small" onClick={() => setIsEditingNote(true)} sx={{ p: 0.5 }}>
+                                        <Edit sx={{ fontSize: 16 }} color="primary" />
+                                    </IconButton>
+                                )}
+                            </Box>
+                            {isEditingNote ? (
+                                <Box>
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={2}
+                                        size="small"
+                                        value={editedNote}
+                                        onChange={(e) => setEditedNote(e.target.value)}
+                                        sx={{ mb: 1 }}
+                                    />
+                                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                        <Button size="small" onClick={() => { setIsEditingNote(false); setEditedNote(row.fullDescription || ''); }}>
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            size="small"
+                                            variant="contained"
+                                            onClick={handleSaveNote}
+                                            disabled={savingNote}
+                                        >
+                                            Save
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            ) : (
+                                <Typography variant="body2" sx={{ fontStyle: 'italic', mb: 2, fontSize: '0.85rem' }}>"{row.fullDescription}"</Typography>
+                            )}
+                        </Box>
+
+                        {/* Timeline Short - Compact Version */}
+                        <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>Service Timeline</Typography>
+                        <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'space-between', width: '100%', mb: 2.5 }}>
+                            <Box sx={{ position: 'absolute', top: '11px', left: 0, right: 0, height: 2, bgcolor: 'grey.300', zIndex: 0 }} />
+                            {['Request Received', 'Pro Assigned', 'Work Started', 'Completed'].map((step, i) => (
+                                <Box key={step} sx={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'white', px: 0.5, flex: 1 }}>
+                                    <Box sx={{
+                                        width: 24, height: 24, borderRadius: '50%',
+                                        bgcolor: i === 3 ? '#10b981' : PRIMARY_BLUE,
+                                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        boxShadow: i === 3 ? '0 0 0 4px #d1fae5' : 'none',
+                                        mb: 0.5
+                                    }}>
+                                        <Check sx={{ fontSize: 12 }} />
+                                    </Box>
+                                    <Typography variant="caption" sx={{
+                                        fontWeight: 600,
+                                        color: i === 3 ? '#10b981' : 'text.secondary',
+                                        fontSize: '0.55rem',
+                                        textAlign: 'center',
+                                        lineHeight: 1.1,
+                                        mt: 0.5
+                                    }}>
+                                        {step}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Box>
+
+                        {/* Actions */}
+                        <Stack spacing={1}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<Description />}
+                                fullWidth
+                                onClick={() => {
+                                    const token = localStorage.getItem('sessionToken');
+                                    if (!token || token === 'null' || token === 'undefined') {
+                                        alert("Session expired. Please log in again.");
+                                        return;
+                                    }
+                                    const directUrl = `${window.location.origin}/api/invoices/${row.realJobId}/download?token=${token}`;
+                                    window.open(directUrl, '_blank');
+                                }}
+                            >
+                                Invoice
+                            </Button>
+                            <Button
+                                size="small"
+                                variant="contained"
+                                startIcon={<Star />}
+                                fullWidth
+                                onClick={() => handleRateClick(row)}
+                                sx={{ bgcolor: PRIMARY_BLUE }}
+                            >
+                                Rate Pro
+                            </Button>
+                        </Stack>
+                    </Box>
+                </Box>
+            </Collapse>
+        </Box>
+    );
+};
 
 const DashboardHistory = ({ jobs = [] }) => {
     const [expandedId, setExpandedId] = useState(null);
@@ -129,6 +601,45 @@ const DashboardHistory = ({ jobs = [] }) => {
     const handleApplyDateFilter = () => {
         fetchFiltered();
     };
+
+    // --- Real-time Updates (Socket) ---
+    const { socket } = useSocket();
+
+    // [NEW] Manual Job Update Handler for Optimistic UI
+    const handleManualJobUpdate = (updatedFields) => {
+        setLocalJobs(prevJobs => prevJobs.map(j => j.id === updatedFields.id ? { ...j, ...updatedFields } : j));
+    };
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleJobUpdate = (updatedJob) => {
+            if (!updatedJob || !updatedJob.id) return;
+            // console.log("Real-time Job Update Received:", updatedJob);
+
+            setLocalJobs(prevJobs => {
+                // Check if job exists in current list
+                const exists = prevJobs.some(j => j.id === updatedJob.id);
+                if (exists) {
+                    return prevJobs.map(j => j.id === updatedJob.id ? { ...j, ...updatedJob } : j);
+                } else {
+                    // Optionally prepend if it's a new job and matches filters?
+                    // For now, let's just update existing ones to minimize jumps
+                    return prevJobs;
+                }
+            });
+        };
+
+
+
+        socket.on('job_status_updated', handleJobUpdate);
+        socket.on('job_updated', handleJobUpdate); // Listen to both just in case
+
+        return () => {
+            socket.off('job_status_updated', handleJobUpdate);
+            socket.off('job_updated', handleJobUpdate);
+        };
+    }, [socket]);
 
     // CSV Export
     // CSV Export - Robust Server-Fetch Implementation
@@ -237,27 +748,62 @@ const DashboardHistory = ({ jobs = [] }) => {
     };
 
     const handleSubmitFeedback = async () => {
-        if (!rating) return;
+        if (!rating) {
+            alert("Please select a rating first.");
+            return;
+        }
+        if (!selectedJobForFeedback?.technicianId) {
+            alert("Cannot submit feedback: Technician information is missing for this job.");
+            console.error("[Feedback] Missing technicianId:", selectedJobForFeedback);
+            return;
+        }
+
         setSubmittingFeedback(true);
         try {
-            // Need technician ID. The job object should have it.
-            // row.originalJob or similar if we mapped it, but here 'currentRows' are mapped objects.
-            // We need to pass the full job object or ensure the mapped 'row' has the technicianId.
-            // Let's check the mapping... row.technicianId needs to be added to mapping.
+            // Build the ratings object expected by the backend
+            // The backend requires: timeliness, expertise, professionalism, honesty, behavior, knowledge, respect, overall
+            const ratings = {
+                timeliness: rating,
+                expertise: rating,
+                professionalism: rating,
+                honesty: rating,
+                behavior: rating,
+                knowledge: rating,
+                respect: rating,
+                overall: rating
+            };
 
-            await api.post('/api/feedback', {
-                jobId: selectedJobForFeedback.realJobId, // We'll add this to the row map
+            console.log("[Feedback] Submitting:", {
+                jobId: selectedJobForFeedback.realJobId,
                 technicianId: selectedJobForFeedback.technicianId,
                 userId: currentUser.id,
-                rating,
+                ratings,
+                comment
+            });
+
+            await api.post('/feedback', {
+                jobId: selectedJobForFeedback.realJobId,
+                technicianId: selectedJobForFeedback.technicianId,
+                userId: currentUser.id,
+                ratings,
                 comment,
                 serviceType: selectedJobForFeedback.service
             });
 
-            // Optional: Refresh jobs or show success
+            alert("Thank you! Your feedback has been submitted successfully.");
+
+            // Update local state to immediately reflect the rating
+            setLocalJobs(prevJobs => prevJobs.map(job =>
+                job.id === selectedJobForFeedback.realJobId
+                    ? { ...job, feedbackGiven: true }
+                    : job
+            ));
+
             handleCloseFeedback();
         } catch (error) {
-            console.error("Failed to submit feedback:", error);
+            console.error("[Feedback] Submission Error:", error);
+            const errorMsg = error.response?.data?.error || error.message || "Unknown error";
+            alert(`Failed to submit feedback: ${errorMsg}`);
         } finally {
             setSubmittingFeedback(false);
         }
@@ -282,27 +828,7 @@ const DashboardHistory = ({ jobs = [] }) => {
     ];
 
     // --- Map Jobs to Rows ---
-    const getServiceIcon = (serviceName) => {
-        const lower = (serviceName || '').toLowerCase();
-        if (lower.includes('plumb')) return <Plumbing />;
-        if (lower.includes('electric') || lower.includes('wire')) return <Bolt />;
-        if (lower.includes('ac') || lower.includes('cool')) return <AcUnit />;
-        if (lower.includes('clean')) return <CleaningServices />;
-        if (lower.includes('paint')) return <FormatPaint />;
-        return <HomeRepairService />;
-    };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'completed': return { bg: '#ecfdf5', color: '#047857', label: 'Completed' };
-            case 'cancelled': return { bg: '#fef2f2', color: '#dc2626', label: 'Cancelled' };
-            case 'rejected': return { bg: '#fef2f2', color: '#dc2626', label: 'Rejected' };
-            case 'in_progress': return { bg: '#eff6ff', color: '#1d4ed8', label: 'In Progress' };
-            case 'assigned': return { bg: '#fff7ed', color: '#c2410c', label: 'Assigned' };
-            case 'accepted': return { bg: '#fff7ed', color: '#c2410c', label: 'Accepted' };
-            default: return { bg: '#f3f4f6', color: '#4b5563', label: 'Pending' };
-        }
-    };
+    // Helpers moved to module scope
 
     // --- Pagination Properties ---
     const [page, setPage] = useState(1);
@@ -339,12 +865,13 @@ const DashboardHistory = ({ jobs = [] }) => {
             iconBg: '#f3f4f6', // Default simple bg
             iconColor: '#4b5563',
             // Detailed Data for Expanded View
-            fullDescription: job.description || "No description provided.",
+            fullDescription: job.description || "Quick Tile Booking",
             professionalNote: job.professionalNote || "No notes from professional.",
             timeline: job.timeline || [],
             // Hidden fields for logic
             realJobId: job.id,
-            technicianId: job.technician?.id
+            technicianId: job.technician?.id,
+            feedbackGiven: job.feedbackGiven || false
         };
     });
 
@@ -392,197 +919,11 @@ const DashboardHistory = ({ jobs = [] }) => {
         </Card>
     );
 
-    const Row = ({ row, isExpanded, onToggle }) => {
-        return (
-            <>
-                <TableRow
-                    sx={{
-                        '&:hover': { bgcolor: 'grey.50' },
-                        cursor: 'pointer',
-                        bgcolor: isExpanded ? 'rgba(36, 99, 235, 0.04)' : 'inherit',
-                        borderLeft: isExpanded ? `4px solid ${PRIMARY_BLUE}` : '4px solid transparent',
-                        transition: 'all 0.2s'
-                    }}
-                    onClick={onToggle}
-                >
-                    <TableCell sx={{ py: { xs: 1.5, md: 2 } }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 } }}>
-                            <Box sx={{
-                                width: { xs: 32, md: 40 }, height: { xs: 32, md: 40 }, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                bgcolor: row.iconBg, color: row.iconColor, flexShrink: 0
-                            }}>
-                                {React.cloneElement(row.icon, { sx: { fontSize: { xs: 18, md: 24 } } })}
-                            </Box>
-                            <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', fontSize: { xs: '0.8rem', md: '0.875rem' } }}>{row.service}</Typography>
-                                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>{row.subService}</Typography>
-                            </Box>
-                        </Box>
-                    </TableCell>
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                        <Typography variant="body2" sx={{ color: PRIMARY_BLUE, fontWeight: 500 }}>{row.id}</Typography>
-                    </TableCell>
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Avatar src={row.proImg} sx={{ width: 32, height: 32 }} />
-                            <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>{row.proName}</Typography>
-                        </Box>
-                    </TableCell>
-                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                            <Typography variant="body2" sx={{ color: 'text.primary' }}>{row.date}</Typography>
-                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>{row.time}</Typography>
-                        </Box>
-                    </TableCell>
-                    <TableCell>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>{row.cost}</Typography>
-                    </TableCell>
-                    <TableCell>
-                        <Chip
-                            label={row.status}
-                            size="small"
-                            sx={{
-                                bgcolor: row.statusBg,
-                                color: row.statusColor,
-                                fontWeight: 600,
-                                borderRadius: '999px',
-                                height: 24,
-                                fontSize: '0.7rem',
-                                '& .MuiChip-label': { px: 1 }
-                            }}
-                        />
-                    </TableCell>
-                    <TableCell align="right" sx={{ px: { xs: 1, md: 2 } }}>
-                        <IconButton size="small" sx={{ color: isExpanded ? PRIMARY_BLUE : 'text.secondary' }}>
-                            {isExpanded ? <ExpandLess /> : <ExpandMore />}
-                        </IconButton>
-                    </TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
-                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                            <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: 'grey.50', borderBottom: '1px solid', borderColor: 'divider' }}>
-
-                                {/* Mobile Only Details (Hidden columns appear here) */}
-                                <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 2, mb: 3 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <Box>
-                                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Job ID</Typography>
-                                            <Typography variant="body2" sx={{ fontWeight: 600, color: PRIMARY_BLUE }}>{row.id}</Typography>
-                                        </Box>
-                                        <Box sx={{ textAlign: 'right' }}>
-                                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Date & Time</Typography>
-                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>{row.date}, {row.time}</Typography>
-                                        </Box>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, bgcolor: 'white', p: 1.5, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-                                        <Avatar src={row.proImg} sx={{ width: 40, height: 40 }} />
-                                        <Box>
-                                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Professional</Typography>
-                                            <Typography variant="body2" sx={{ fontWeight: 600 }}>{row.proName}</Typography>
-                                        </Box>
-                                    </Box>
-                                    <Divider />
-                                </Box>
-
-                                {/* Timeline */}
-                                <Box sx={{ flex: 1, width: '100%' }}>
-                                    <Typography variant="subtitle2" sx={{ mb: 3, fontWeight: 600 }}>Service Timeline</Typography>
-                                    <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'space-between', width: '100%', px: 0 }}>
-                                        <Box sx={{ position: 'absolute', top: { xs: '11px', md: '14px' }, left: 0, right: 0, height: 2, bgcolor: 'grey.300', zIndex: 0 }} />
-                                        {/* Render Dynamic Timeline Steps */}
-                                        {/* We map a standard set of steps, but check against row.timeline to see which are completed */}
-                                        {['Request Received', 'Pro Assigned', 'Work Started', 'Completed'].map((step, index) => {
-                                            // Determine active state based on row.timeline or status
-                                            // Simple heuristic: if status map index >= step index
-                                            const statusOrder = ['pending', 'assigned', 'in_progress', 'completed'];
-                                            // Map nice label to status key if needed, or just use index
-                                            // Let's use the row's status to determine progress
-                                            let currentProgressIndex = 0;
-                                            const s = (row.status || '').toLowerCase();
-                                            if (s === 'completed') currentProgressIndex = 3;
-                                            else if (s === 'in progress' || s === 'in_progress') currentProgressIndex = 2;
-                                            else if (s === 'assigned' || s === 'accepted') currentProgressIndex = 1;
-                                            else currentProgressIndex = 0;
-
-                                            const isCompleted = index <= currentProgressIndex;
-                                            const isCurrent = index === currentProgressIndex;
-
-                                            return (
-                                                <Box key={step} sx={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'grey.50', px: 0.5, flex: 1 }}>
-                                                    <Box sx={{
-                                                        width: { xs: 24, md: 30 }, height: { xs: 24, md: 30 }, borderRadius: '50%',
-                                                        bgcolor: isCompleted ? (index === 3 ? '#10b981' : PRIMARY_BLUE) : 'grey.300',
-                                                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        boxShadow: isCurrent && index === 3 ? '0 0 0 4px #d1fae5' : 'none',
-                                                        mb: 0.5
-                                                    }}>
-                                                        <Check sx={{ fontSize: { xs: 14, md: 16 } }} />
-                                                    </Box>
-                                                    <Typography variant="caption" sx={{
-                                                        fontWeight: 600,
-                                                        color: isCompleted ? (index === 3 ? '#10b981' : 'text.secondary') : 'text.disabled',
-                                                        fontSize: { xs: '0.55rem', md: '0.7rem' },
-                                                        textAlign: 'center',
-                                                        lineHeight: 1.1,
-                                                        mt: 0.5
-                                                    }}>
-                                                        {step}
-                                                    </Typography>
-                                                </Box>
-                                            );
-                                        })}
-                                    </Box>
-                                </Box>
-
-                                {/* Actions */}
-                                <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', md: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
-                                    <Button
-                                        variant="outlined"
-                                        startIcon={<Description />}
-                                        sx={{ textTransform: 'none', color: 'text.primary', borderColor: 'grey.300', width: { xs: '100%', sm: 'auto' } }}
-                                    >
-                                        Download Invoice
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        startIcon={<Star />}
-                                        onClick={() => handleRateClick(row)}
-                                        sx={{ textTransform: 'none', bgcolor: PRIMARY_BLUE, '&:hover': { bgcolor: '#1d4ed8' }, width: { xs: '100%', sm: 'auto' } }}
-                                    >
-                                        Rate Professional
-                                    </Button>
-                                </Box>
-
-                                {/* Details - Dynamically rendered */}
-                                <Grid container spacing={2} sx={{ mt: 2 }}>
-                                    <Grid item xs={12} md={6}>
-                                        <Paper variant="outlined" sx={{ p: 2, bgcolor: 'white' }}>
-                                            <Typography variant="caption" sx={{ textTransform: 'uppercase', color: 'text.secondary', fontWeight: 600 }}>Customer Note</Typography>
-                                            <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic', color: 'text.primary' }}>
-                                                "{row.fullDescription}"
-                                            </Typography>
-                                        </Paper>
-                                    </Grid>
-                                    <Grid item xs={12} md={6}>
-                                        <Paper variant="outlined" sx={{ p: 2, bgcolor: 'white' }}>
-                                            <Typography variant="caption" sx={{ textTransform: 'uppercase', color: 'text.secondary', fontWeight: 600 }}>Professional Note</Typography>
-                                            <Typography variant="body2" sx={{ mt: 1, color: 'text.primary' }}>
-                                                "{row.professionalNote}"
-                                            </Typography>
-                                        </Paper>
-                                    </Grid>
-                                </Grid>
-                            </Box>
-                        </Collapse>
-                    </TableCell>
-                </TableRow>
-            </>
-        );
-    };
+    // Row and MobileJobCard are now defined outside Component to preserve state during re-renders.
 
     return (
         <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', p: { xs: 2, md: 4 }, fontFamily: 'Inter, sans-serif' }}>
+
             {/* Header */}
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" sx={{ fontWeight: 900, mb: 1, color: TEXT_DARK }}>Job History</Typography>
@@ -732,11 +1073,14 @@ const DashboardHistory = ({ jobs = [] }) => {
                         <TableBody>
                             {currentRows.length > 0 ? (
                                 currentRows.map((row, index) => (
-                                    <Row
+                                    <JobRow
                                         key={row.id}
                                         row={row}
                                         isExpanded={expandedId === index}
                                         onToggle={() => handleToggle(index)}
+                                        handleRateClick={handleRateClick}
+                                        currentUser={currentUser}
+                                        onJobUpdate={handleManualJobUpdate}
                                     />
                                 ))
                             ) : (
@@ -753,124 +1097,16 @@ const DashboardHistory = ({ jobs = [] }) => {
                 {/* MOBILE CARD VIEW */}
                 <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column' }}>
                     {currentRows.length > 0 ? (
-                        currentRows.map((row, index) => {
-                            const isExpanded = expandedId === index;
-                            return (
-                                <Box key={row.id} sx={{ borderBottom: '1px solid', borderColor: 'divider', bgcolor: isExpanded ? 'rgba(36, 99, 235, 0.04)' : 'white' }}>
-                                    {/* Mobile Row Header */}
-                                    <Box
-                                        onClick={() => handleToggle(index)}
-                                        sx={{ p: 2, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', cursor: 'pointer' }}
-                                    >
-                                        <Box sx={{ display: 'flex', gap: 2, flex: 1, minWidth: 0 }}>
-                                            {/* Icon */}
-                                            <Box sx={{
-                                                width: 40, height: 40, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                bgcolor: row.iconBg, color: row.iconColor, flexShrink: 0
-                                            }}>
-                                                {React.cloneElement(row.icon, { sx: { fontSize: 20 } })}
-                                            </Box>
-
-                                            {/* Main Info */}
-                                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                                                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary', lineHeight: 1.2, mb: 0.5, wordBreak: 'break-word' }}>
-                                                    {row.service}
-                                                </Typography>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                                                    <Typography variant="caption" sx={{ color: PRIMARY_BLUE, fontWeight: 500 }}>{row.id}</Typography>
-                                                    <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>• {row.date}</Typography>
-                                                </Box>
-                                                <Typography variant="body2" sx={{ fontWeight: 700, mt: 0.5 }}>{row.cost}</Typography>
-                                            </Box>
-                                        </Box>
-
-                                        {/* Status & Toggle */}
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                                            <Chip
-                                                label={row.status}
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: row.statusBg,
-                                                    color: row.statusColor,
-                                                    fontWeight: 600,
-                                                    borderRadius: '6px',
-                                                    height: 24,
-                                                    fontSize: '0.7rem',
-                                                }}
-                                            />
-                                            <IconButton size="small" sx={{ color: isExpanded ? PRIMARY_BLUE : 'text.secondary', p: 0.5 }}>
-                                                {isExpanded ? <ExpandLess /> : <ExpandMore />}
-                                            </IconButton>
-                                        </Box>
-                                    </Box>
-
-                                    {/* Mobile Expanded Content */}
-                                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                                        <Box sx={{ px: 2, pb: 2 }}>
-                                            <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-
-                                                {/* Pro Details */}
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-                                                    <Avatar src={row.proImg} sx={{ width: 32, height: 32 }} />
-                                                    <Box>
-                                                        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', lineHeight: 1 }}>Professional</Typography>
-                                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{row.proName}</Typography>
-                                                    </Box>
-                                                </Box>
-
-                                                <Divider sx={{ mb: 2 }} />
-
-                                                {/* Timeline Short - Compact Version */}
-                                                <Typography variant="caption" sx={{ fontWeight: 600, mb: 1.5, display: 'block' }}>Service Timeline</Typography>
-                                                <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'space-between', width: '100%', mb: 2.5 }}>
-                                                    <Box sx={{ position: 'absolute', top: '11px', left: 0, right: 0, height: 2, bgcolor: 'grey.300', zIndex: 0 }} />
-                                                    {['Request Received', 'Pro Assigned', 'Work Started', 'Completed'].map((step, i) => (
-                                                        <Box key={step} sx={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: 'white', px: 0.5, flex: 1 }}>
-                                                            <Box sx={{
-                                                                width: 24, height: 24, borderRadius: '50%',
-                                                                bgcolor: i === 3 ? '#10b981' : PRIMARY_BLUE,
-                                                                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                boxShadow: i === 3 ? '0 0 0 4px #d1fae5' : 'none',
-                                                                mb: 0.5
-                                                            }}>
-                                                                <Check sx={{ fontSize: 12 }} />
-                                                            </Box>
-                                                            <Typography variant="caption" sx={{
-                                                                fontWeight: 600,
-                                                                color: i === 3 ? '#10b981' : 'text.secondary',
-                                                                fontSize: '0.55rem',
-                                                                textAlign: 'center',
-                                                                lineHeight: 1.1,
-                                                                mt: 0.5
-                                                            }}>
-                                                                {step}
-                                                            </Typography>
-                                                        </Box>
-                                                    ))}
-                                                </Box>
-
-                                                {/* Actions */}
-                                                <Stack spacing={1}>
-                                                    <Button size="small" variant="outlined" startIcon={<Description />} fullWidth>
-                                                        Invoice
-                                                    </Button>
-                                                    <Button
-                                                        size="small"
-                                                        variant="contained"
-                                                        startIcon={<Star />}
-                                                        fullWidth
-                                                        onClick={() => handleRateClick(row)}
-                                                        sx={{ bgcolor: PRIMARY_BLUE }}
-                                                    >
-                                                        Rate Pro
-                                                    </Button>
-                                                </Stack>
-                                            </Box>
-                                        </Box>
-                                    </Collapse>
-                                </Box>
-                            );
-                        })
+                        currentRows.map((row, index) => (
+                            <MobileJobCard
+                                key={row.id}
+                                row={row}
+                                isExpanded={expandedId === index}
+                                onToggle={() => handleToggle(index)}
+                                handleRateClick={handleRateClick}
+                                onJobUpdate={handleManualJobUpdate}
+                            />
+                        ))
                     ) : (
                         <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>No jobs found matching your search.</Box>
                     )}

@@ -21,7 +21,7 @@ const SuperAdminLogin = () => {
             const res = await api.post('/superadmin/login', { email, password });
             if (res.data.success) {
                 const adminUser = { ...res.data.superadmin, role: 'superadmin' };
-                setUser(adminUser, 'dummy-super-token');
+                setUser(adminUser, res.data.sessionToken);
 
                 // Redirect to super dashboard (using admin dashboard for now, or new one)
                 navigate('/admin-dashboard');

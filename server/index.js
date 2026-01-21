@@ -34,10 +34,22 @@ const Database = require('./managers/Database'); // Explicitly needed for settin
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(bodyParser.json({ limit: '10mb' })); // Increased limit for logo uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// GLOBAL DEBUG LOGGING
+app.use((req, res, next) => {
+  console.log(`[GLOBAL-DEBUG] ${new Date().toISOString()} ${req.method} ${req.url}`);
+  next();
+});
+
 
 const upload = multer({ dest: 'uploads/temp/' });
 
@@ -72,9 +84,12 @@ const performerManager = new PerformerManager();
 // Invoice System
 const invoiceSettingsDb = new Database('invoice_settings.json');
 const invoiceSettingsManager = new InvoiceSettingsManager(invoiceSettingsDb);
-const invoiceManager = new InvoiceManager(invoiceSettingsManager, adminManager);
+const invoiceManager = new InvoiceManager(invoiceSettingsManager, adminManager, storageManager);
 
-const jobManager = new JobManager(); // Will link invoiceManager below
+const jobManager = new JobManager();
+// Resolve Circular Dependencies
+invoiceManager.setJobManager(jobManager);
+jobManager.setInvoiceManager(invoiceManager); // Ensure JobManager has InvoiceManager linkage
 offerManager.setJobManager(jobManager);
 offerManager.setUserManager(userManager);
 offerManager.setTechnicianManager(technicianManager);
@@ -121,19 +136,39 @@ feedbackManager.setTechnicianManager(technicianManager);
 // Start Authentication Middleware
 const authenticateSession = async (req, res, next) => {
   try {
+    let token;
     const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      // Optional: Allow non-authenticated for some paths if needed, but for now strict
-      return res.status(401).json({ success: false, error: 'No session token provided' });
+
+    // Log the full received URL for debugging
+    console.log(`[AUTH] Request: ${req.method} ${req.url}`);
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+      console.log(`[AUTH] Token Source: Header`);
+    } else if (req.query.token) {
+      token = req.query.token;
+      console.log(`[AUTH] Token Source: Query`);
+    } else {
+      // LAST RESORT: Try to manually parse from req.url (useful if proxy strips req.query)
+      const urlMatch = req.url.match(/[?&]token=([^&]+)/);
+      if (urlMatch) {
+        token = urlMatch[1];
+        console.log(`[AUTH] Token Source: Manual URL Match`);
+      }
     }
 
-    const token = authHeader.split(' ')[1];
     if (!token) {
-      return res.status(401).json({ success: false, error: 'Invalid token format' });
+      console.log(`[AUTH-FAILURE] No token provided at ${new Date().toISOString()}. Request URL: ${req.url}`);
+      return res.status(401).json({
+        success: false,
+        error: `No session token provided [V4-DIAGNOSTIC-22JAN-01AM]`,
+        debug: { serverTime: new Date().toISOString(), url: req.url }
+      });
     }
 
     const session = await sessionManager.validateSession(token);
-    if (!session) {
+    if (!session || token === 'null' || token === 'undefined') {
+      console.log(`[AUTH] Session Validation Failed for token: ${token ? token.substring(0, 5) + '...' : 'null'}`);
       return res.status(401).json({ success: false, error: 'Session expired or invalid' });
     }
 
@@ -213,6 +248,16 @@ app.get('/api/version', async (req, res) => {
   });
 });
 
+// PUBLIC DIAGNOSTIC ROUTE
+app.get('/api/test-server-version', authenticateSession, (req, res) => {
+  res.json({
+    status: 'ACTIVE',
+    version: 'V3-DIAGNOSTIC-FIX',
+    timestamp: new Date().toISOString(),
+    queryReceived: req.query
+  });
+});
+
 // --- Technician Routes ---
 const techUploads = upload.fields([
   { name: 'photo', maxCount: 1 },
@@ -265,6 +310,52 @@ app.post('/api/technicians/register', techUploads, async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 });
+// --- Invoice Routes ---
+app.get('/api/invoices/:jobId/download', authenticateSession, async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    console.log(`[INVOICE-DEBUG] Download request received for Job: ${jobId}, User: ${req.user.id}, Role: ${req.user.role}`);
+
+    // Check Job Ownership
+    const job = await jobManager.getJob(jobId);
+    if (!job) {
+      console.log(`[INVOICE-DEBUG] Job ${jobId} not found.`);
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    // Auth Check
+    const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+    const isOwner = job.userId === req.user.id;
+    const isTech = job.technicianId === req.user.id;
+
+    console.log(`[INVOICE-DEBUG] Auth Check: isAdmin=${isAdmin}, isOwner=${isOwner}, isTech=${isTech}`);
+
+    if (!isAdmin && !isOwner && !isTech) {
+      console.log(`[INVOICE-DEBUG] Unauthorized access attempt by User ${req.user.id} for Job ${jobId}`);
+      return res.status(403).json({ error: 'Unauthorized access to this invoice.' });
+    }
+
+    console.log(`[INVOICE-DEBUG] Generation phase starting for Job ${jobId}`);
+    const { buffer, url } = await invoiceManager.getOrGenerateInvoice(jobId);
+
+    if (buffer) {
+      console.log(`[INVOICE-DEBUG] Serving invoice buffer for Job ${jobId}`);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="Invoice-${jobId}.pdf"`);
+      return res.send(buffer);
+    } else if (url) {
+      console.log(`[INVOICE-DEBUG] Redirecting to invoice URL for Job ${jobId}: ${url}`);
+      return res.redirect(url);
+    } else {
+      console.error(`[INVOICE-DEBUG] Generation failed or returned empty for Job ${jobId}`);
+      return res.status(500).json({ error: 'Failed to generate invoice.' });
+    }
+  } catch (error) {
+    console.error('[INVOICE-DEBUG] Critical error in download route:', error);
+    res.status(500).json({ success: false, error: 'Internal server error while processing invoice.' });
+  }
+});
+
 // --- Socket.io Events ---
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -325,34 +416,40 @@ io.on('connection', (socket) => {
 });
 
 // --- Ride Routes [NEW] ---
-app.post('/api/rides/start', (req, res) => {
+app.post('/api/rides/start', async (req, res) => {
   try {
     const { technicianId, jobId, startLocation } = req.body;
     // Verify job exists
-    const job = jobManager.getJob(jobId);
+    const job = await jobManager.getJob(jobId);
     if (!job) return res.status(404).json({ success: false, error: "Job not found" });
 
-    const ride = rideManager.startRide(technicianId, jobId, startLocation);
+    const ride = await rideManager.startRide(technicianId, jobId, startLocation);
 
     // Notify User
     io.to(`user_${job.userId}`).emit('ride_started', ride);
 
     res.json({ success: true, ride });
   } catch (error) {
+    console.error("Ride Start Error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-app.post('/api/rides/:id/end', (req, res) => {
-  const ride = rideManager.completeRide(req.params.id);
-  if (ride) {
-    // Notify User
-    // We need userId, unfortunately update doesn't return joined job. 
-    // Real app would fetch job. Simplified:
-    // io.to(...).emit('ride_ended');
-    res.json({ success: true, ride });
-  } else {
-    res.status(404).json({ success: false, error: "Ride not found" });
+app.post('/api/rides/:id/end', async (req, res) => {
+  try {
+    const ride = await rideManager.completeRide(req.params.id);
+    if (ride) {
+      // Notify User
+      // We need userId, unfortunately update doesn't return joined job. 
+      // Real app would fetch job. Simplified:
+      // io.to(...).emit('ride_ended');
+      res.json({ success: true, ride });
+    } else {
+      res.status(404).json({ success: false, error: "Ride not found" });
+    }
+  } catch (err) {
+    console.error("Ride End Error:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -637,10 +734,11 @@ app.put('/api/notifications/:id/read', async (req, res) => {
 
 // --- Super Admin Routes ---
 app.post('/api/superadmin/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, deviceId } = req.body;
   const admin = await superAdminManager.login(email, password);
   if (admin) {
-    res.json({ success: true, superadmin: admin });
+    const session = await sessionManager.createSession(admin.id, 'superadmin', deviceId);
+    res.json({ success: true, superadmin: admin, sessionToken: session.token });
   } else {
     res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
@@ -1494,22 +1592,8 @@ app.get('/api/feedback', async (req, res) => {
 });
 
 // --- Invoice Routes [NEW] ---
-app.get('/api/invoices/:jobId/download', async (req, res) => {
-  try {
-    const { jobId } = req.params;
-    const job = await jobManager.getJob(jobId);
-    if (!job) return res.status(404).json({ success: false, error: 'Job not found' });
+// Route moved up to line 285 to ensure correct middleware and order.
 
-    const pdfBuffer = await jobManager.invoiceManager.generateInvoice(job);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=Invoice-${jobId}.pdf`);
-    res.send(pdfBuffer);
-  } catch (err) {
-    console.error("Invoice Download Error:", err);
-    res.status(500).json({ success: false, error: 'Failed to generate invoice' });
-  }
-});
 
 app.post('/api/invoices/:jobId/share', async (req, res) => {
   try {
@@ -1708,15 +1792,36 @@ app.get('/api/chat/conversations/:userId', async (req, res) => {
 
 // --- Support Routes [NEW] ---
 app.post('/api/support/session', async (req, res) => {
-  const { userId } = req.body;
-  const session = await supportManager.createSession(userId);
-  res.json({ success: true, session });
+  try {
+    const { userId } = req.body;
+    const session = await supportManager.createSession(userId);
+    res.json({ success: true, session });
+  } catch (err) {
+    console.error("Support Session Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.post('/api/support/message', async (req, res) => {
-  const { sessionId, sender, text, userId } = req.body;
-  const session = await supportManager.addMessage(sessionId, sender, text, userId);
-  res.json({ success: true, session });
+  try {
+    const { sessionId, sender, text, userId } = req.body;
+    const session = await supportManager.addMessage(sessionId, sender, text, userId);
+    res.json({ success: true, session });
+  } catch (err) {
+    console.error("Support Message Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/support/close', async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    const session = await supportManager.closeSession(sessionId);
+    res.json({ success: true, session });
+  } catch (err) {
+    console.error("Support Close Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // --- Offer Routes ---
@@ -2145,10 +2250,10 @@ app.post('/api/admin/invoice-settings', verifyAdmin, upload.single('logo'), asyn
   }
 });
 
-// Explicitly link settings manager since constructor injection was refactored
-if (invoiceManager && invoiceSettingsManager) {
-  invoiceManager.setSettingsManager(invoiceSettingsManager);
-}
+// Explicitly link settings manager... (Removed as handled in constructor)
+// if (invoiceManager && invoiceSettingsManager) {
+//   invoiceManager.setSettingsManager(invoiceSettingsManager);
+// }
 
 // [Moved Catch-all to end]
 // --- Support Routes ---
@@ -2322,6 +2427,10 @@ app.get('/api/diagnostic/db', async (req, res) => {
     res.status(500).json({ success: false, error: err.message, stack: err.stack });
   }
 });
+
+// Start Background Processors
+// jobManager.startAutoAssignment();
+supportManager.startInactivityMonitor(); // [NEW] 5-minute timeout for support sessions
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {

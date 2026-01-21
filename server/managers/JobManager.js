@@ -161,8 +161,10 @@ class JobManager {
                 description,
                 location,
                 address,
-                scheduledDate,
-                scheduledTime,
+                address,
+                // Default to NOW for immediate bookings (Quick Tile)
+                scheduledDate: scheduledDate || new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD (Local)
+                scheduledTime: scheduledTime || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }), // 10:30 AM
                 contactName: contactName || (user ? user.name : "Customer"),
                 contactPhone: contactPhone || (user ? user.phone : ""),
                 technicianId,
@@ -395,7 +397,7 @@ class JobManager {
 
     async getJob(id) {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note';
             const job = await this.db.find('id', id, columns);
             return await this._enrichJob(this._mapFromDb(job));
         } catch (err) {
@@ -406,7 +408,7 @@ class JobManager {
 
     async getAllJobs() {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note';
             const jobs = await this.db.read(columns);
             return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
         } catch (err) {
@@ -464,7 +466,7 @@ class JobManager {
             };
             const dbUpdates = this._mapToDb(updates);
             // Add new columns to allowed update list
-            const updateCols = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
+            const updateCols = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note';
             const updated = await this.db.update('id', id, dbUpdates, updateCols);
             const enriched = await this._enrichJob(this._mapFromDb(updated));
 
@@ -492,10 +494,9 @@ class JobManager {
                             // Don't await in critical path to keep response fast, but handle errors
                             (async () => {
                                 try {
-                                    console.log(`[JobManager] Generating invoice for Job ${id}...`);
-                                    const pdfBuffer = await this.invoiceManager.generateInvoice(enriched);
-                                    const result = await this.invoiceManager.sendInvoiceEmail(enriched, pdfBuffer);
-                                    console.log(`[JobManager] Invoice processing for Job ${id}:`, result);
+                                    console.log(`[JobManager] Generating and saving invoice for Job ${id}...`);
+                                    const result = await this.invoiceManager.createAndSaveInvoice(enriched);
+                                    console.log(`[JobManager] Invoice processing for Job ${id} completed. URL:`, result.url);
                                 } catch (invErr) {
                                     console.error(`[JobManager] Invoice generation failed for Job ${id}:`, invErr);
                                 }
@@ -560,7 +561,7 @@ class JobManager {
             };
             delete updates.id; // Protect ID
 
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note';
             const result = await this.db.update('id', id, updates, columns);
             const enriched = await this._enrichJob(this._mapFromDb(result));
 
@@ -614,7 +615,7 @@ class JobManager {
 
     async getJobsByTechnician(technicianId) {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note';
             const jobs = await this.db.findAll('technician_id', technicianId, columns);
             return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
         } catch (err) {
@@ -625,12 +626,12 @@ class JobManager {
 
     async getJobsByUser(userId, filters = {}) {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, feedback_given';
 
             if (this.db.client) {
                 let query = this.db.client
                     .from('jobs')
-                    .select(columns)
+                    .select('id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note, feedback_given')
                     .eq('user_id', userId)
                     .order('created_at', { ascending: false });
 

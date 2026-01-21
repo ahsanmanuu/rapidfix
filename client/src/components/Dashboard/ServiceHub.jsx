@@ -51,8 +51,8 @@ const ServiceHub = () => {
             setBookingParams({
                 serviceType: serviceName,
                 location: loc,
-                scheduledDate: new Date().toISOString().split('T')[0],
-                scheduledTime: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+                // NOTE: For immediate bookings, do NOT set scheduledDate/scheduledTime
+                // This prevents "past date" validation errors if user takes time to confirm
                 contactName: user ? user.name : '',
                 contactPhone: '',
                 description: 'Quick Tile Booking'
@@ -438,7 +438,12 @@ const ServiceHub = () => {
                 isOpen={isConfirmOpen}
                 onClose={() => setIsConfirmOpen(false)}
                 technician={selectedTechnician}
-                jobDetails={bookingParams}
+                jobDetails={{
+                    ...bookingParams,
+                    // For immediate bookings, explicitly set undefined to skip backend date validation
+                    scheduledDate: undefined,
+                    scheduledTime: undefined
+                }}
                 onConfirm={handleConfirmBooking}
             />
 

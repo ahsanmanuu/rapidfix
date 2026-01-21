@@ -34,6 +34,8 @@ import {
     Security,
     Info,
     ChevronRight,
+    Edit,
+    Save,
 } from '@mui/icons-material';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { useSocket } from '../../context/SocketContext';
@@ -137,10 +139,16 @@ const ActiveBooking = ({ job }) => {
     const [techChatHistory, setTechChatHistory] = useState([]);
     const [techMessage, setTechMessage] = useState('');
 
+    // Customer Note Editing State
+    const [isEditingNote, setIsEditingNote] = useState(false);
+    const [editedNote, setEditedNote] = useState(job?.description || '');
+    const [savingNote, setSavingNote] = useState(false);
+
     // Sync prop changes
     useEffect(() => {
         if (job) {
             setCurrentJob(job);
+            setEditedNote(job.description || '');
             // Pre-fill reschedule data
             setRescheduleData({
                 date: job.scheduledDate ? job.scheduledDate.split('T')[0] : '',
@@ -256,6 +264,22 @@ const ActiveBooking = ({ job }) => {
         }
     };
 
+    const handleEndSession = async () => {
+        if (!sessionId) {
+            setOpenSupport(false);
+            return;
+        }
+        try {
+            await closeSupportSession(sessionId);
+            setSessionId(null);
+            setChatHistory([]);
+            setOpenSupport(false);
+        } catch (err) {
+            console.error("Error closing session", err);
+            setOpenSupport(false);
+        }
+    };
+
     const handleSendSupport = async () => {
         if (!supportMessage.trim() || !sessionId) return;
         try {
@@ -270,7 +294,7 @@ const ActiveBooking = ({ job }) => {
                 setSupportMessage('');
             }
         } catch (err) {
-            alert("Failed to send message");
+            console.error("Failed to send message", err);
         }
     };
 
@@ -450,7 +474,77 @@ const ActiveBooking = ({ job }) => {
                                             <Box><Typography variant="caption" sx={{ textTransform: 'uppercase', color: TEXT_LIGHT, fontWeight: 700, fontSize: '0.7rem' }}>Job ID</Typography><Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>#{currentJob?.id || '---'}</Typography></Box>
                                             <Box><Typography variant="caption" sx={{ textTransform: 'uppercase', color: TEXT_LIGHT, fontWeight: 700, fontSize: '0.7rem' }}>Date & Time</Typography><Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}><CalendarToday sx={{ color: TEXT_LIGHT, fontSize: 18 }} /><Typography variant="body2" sx={{ fontWeight: 600 }}>{currentJob?.scheduledDate ? new Date(currentJob.scheduledDate).toLocaleDateString() : 'TBD'} • {currentJob?.scheduledTime || '--:--'}</Typography></Box></Box>
                                             <Box><Typography variant="caption" sx={{ textTransform: 'uppercase', color: TEXT_LIGHT, fontWeight: 700, fontSize: '0.7rem' }}>Service Address</Typography><Box sx={{ display: 'flex', alignItems: 'start', gap: 1, mt: 0.5 }}><LocationOn sx={{ color: TEXT_LIGHT, fontSize: 18 }} /><Typography variant="body2" sx={{ fontWeight: 600, wordBreak: 'break-word' }}>{currentJob?.location?.address || currentJob?.address || 'Location provided'}</Typography></Box></Box>
-                                            {currentJob?.description && (<Box sx={{ bgcolor: '#f8fafc', p: 2, borderRadius: 2, border: '1px dashed #cbd5e1' }}><Typography variant="caption" sx={{ textTransform: 'uppercase', color: TEXT_LIGHT, fontWeight: 700, fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 1 }}><Chat sx={{ fontSize: 14 }} /> Customer Note</Typography><Typography variant="body2" sx={{ fontStyle: 'italic', color: '#334155', mt: 1 }}>"{currentJob.description}"</Typography></Box>)}
+                                            <Box sx={{ bgcolor: '#f8fafc', p: 1.5, borderRadius: 2, border: '1px dashed #cbd5e1' }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                                    <Typography variant="caption" sx={{ textTransform: 'uppercase', color: TEXT_LIGHT, fontWeight: 700, fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Chat sx={{ fontSize: 14 }} /> Customer Note
+                                                    </Typography>
+                                                    {!isEditingNote ? (
+                                                        <IconButton size="small" onClick={() => setIsEditingNote(true)} sx={{ p: 0.5 }}>
+                                                            <Edit sx={{ fontSize: 14, color: PRIMARY_BLUE }} />
+                                                        </IconButton>
+                                                    ) : null}
+                                                </Box>
+                                                {isEditingNote ? (
+                                                    <Box>
+                                                        <TextField
+                                                            fullWidth
+                                                            multiline
+                                                            rows={2}
+                                                            size="small"
+                                                            value={editedNote}
+                                                            onChange={(e) => setEditedNote(e.target.value)}
+                                                            placeholder="Describe your issue or add notes..."
+                                                            sx={{ mb: 1, '& .MuiInputBase-input': { fontSize: '0.875rem' } }}
+                                                        />
+                                                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                                            <Button
+                                                                size="small"
+                                                                onClick={() => {
+                                                                    setIsEditingNote(false);
+                                                                    setEditedNote(currentJob?.description || '');
+                                                                }}
+                                                                sx={{ fontSize: '0.7rem', py: 0.5 }}
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                            <Button
+                                                                size="small"
+                                                                variant="contained"
+                                                                disabled={savingNote}
+                                                                startIcon={<Save sx={{ fontSize: 14 }} />}
+                                                                onClick={async () => {
+                                                                    setSavingNote(true);
+                                                                    try {
+                                                                        await updateUserJob(currentJob.id, { description: editedNote });
+                                                                        setCurrentJob(prev => ({ ...prev, description: editedNote }));
+                                                                        setIsEditingNote(false);
+                                                                    } catch (err) {
+                                                                        alert('Failed to save note: ' + err.message);
+                                                                    } finally {
+                                                                        setSavingNote(false);
+                                                                    }
+                                                                }}
+                                                                sx={{ fontSize: '0.7rem', py: 0.5, bgcolor: PRIMARY_BLUE }}
+                                                            >
+                                                                {savingNote ? 'Saving...' : 'Save'}
+                                                            </Button>
+                                                        </Box>
+                                                    </Box>
+                                                ) : (
+                                                    <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#334155', mt: 0.5 }}>
+                                                        "{currentJob?.description || 'Quick Tile Booking'}"
+                                                    </Typography>
+                                                )}
+                                            </Box>
+                                            <Box sx={{ bgcolor: '#eff6ff', p: 1.5, borderRadius: 2, border: '1px dashed #bfdbfe' }}>
+                                                <Typography variant="caption" sx={{ textTransform: 'uppercase', color: '#1e40af', fontWeight: 700, fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <FormatQuote sx={{ fontSize: 14 }} /> Professional Note
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ fontStyle: 'italic', color: '#1e3a8a', mt: 0.5 }}>
+                                                    "{currentJob?.professionalNote || 'No notes from professional.'}"
+                                                </Typography>
+                                            </Box>
                                         </Stack>
                                     </Grid>
                                     <Grid item xs={12} md={7} sx={{ width: '100%', minWidth: 0 }}>
@@ -576,11 +670,11 @@ const ActiveBooking = ({ job }) => {
                     </Box>
                     <Stack direction="row" spacing={1}>
                         <TextField fullWidth placeholder="Type a message..." size="small" value={supportMessage} onChange={(e) => setSupportMessage(e.target.value)} />
+                        <Button variant="outlined" color="error" onClick={handleEndSession} sx={{ whiteSpace: 'nowrap' }}>End Chat</Button>
                         <Button variant="contained" onClick={handleSendSupport}>Send</Button>
                     </Stack>
                 </DialogContent>
             </Dialog>
-
             {/* Tech Chat Dialog */}
             <Dialog open={openTechChat} onClose={() => setOpenTechChat(false)} fullWidth maxWidth="sm">
                 <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -628,7 +722,7 @@ const ActiveBooking = ({ job }) => {
                 </DialogContent>
             </Dialog>
 
-        </Box>
+        </Box >
     );
 };
 

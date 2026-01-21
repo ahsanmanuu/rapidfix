@@ -41,7 +41,7 @@ class RideManager {
             if (startLocation !== undefined) mapped.start_location = startLocation;
             if (endLocation !== undefined) mapped.end_location = endLocation;
             if (startTime !== undefined) mapped.start_time = startTime;
-            if (endTime !== undefined) mapped.end_time = endTime;
+            if (endTime) mapped.end_time = endTime; // [FIX] Only send if truthy (not null) to avoid Schema Error on Insert
             if (routeHistory !== undefined) mapped.route_history = routeHistory;
             if (currentLocation !== undefined) mapped.current_location = currentLocation;
             if (id !== undefined) mapped.id = id;

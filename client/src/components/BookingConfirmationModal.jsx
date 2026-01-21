@@ -214,13 +214,20 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                                         alert("Please agree to the terms to continue.");
                                         return;
                                     }
-                                    onConfirm({
-                                        ...jobDetails,
-                                        description, // [NEW] Pass user edited description
+                                    // Build payload, excluding scheduledDate/Time if not set (immediate booking)
+                                    const { scheduledDate, scheduledTime, ...restJobDetails } = jobDetails || {};
+                                    const payload = {
+                                        ...restJobDetails,
+                                        description, // User edited description
                                         visitingCharges,
                                         agreementAccepted: true,
                                         technicianId: technician?.id || null
-                                    });
+                                    };
+                                    // Only include date/time if they are defined (scheduled booking)
+                                    if (scheduledDate) payload.scheduledDate = scheduledDate;
+                                    if (scheduledTime) payload.scheduledTime = scheduledTime;
+
+                                    onConfirm(payload);
                                 }}
                                 className={`w-full py-3 md:py-4 rounded-xl text-white font-bold shadow-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${agreement ? (['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase()) ? 'bg-amber-600 shadow-amber-600/20' : 'bg-slate-900 shadow-slate-900/20') : 'bg-slate-300 shadow-none cursor-not-allowed'}`}
                             >

@@ -84,7 +84,10 @@ class SupportManager {
 
             const updatedMessages = [...(session.messages || []), message];
 
-            const result = await this.db.update('id', sessionId, { messages: updatedMessages });
+            const result = await this.db.update('id', sessionId, {
+                messages: updatedMessages,
+                updated_at: new Date().toISOString() // Force update timestamp for timeout logic
+            });
             const finalSession = this._mapFromDb(result);
 
             if (this.io) {
@@ -126,6 +129,46 @@ class SupportManager {
         } catch (err) {
             console.error("[SupportManager] Error adding message:", err);
             throw err;
+        }
+    }
+
+    async closeSession(sessionId) {
+        try {
+            const result = await this.db.update('id', sessionId, { status: 'closed' });
+            if (this.io) {
+                this.io.emit(`support_session_closed_${sessionId}`, { sessionId });
+            }
+            return this._mapFromDb(result);
+        } catch (err) {
+            console.error("[SupportManager] Error closing session:", err);
+            throw err;
+        }
+    }
+
+    startInactivityMonitor(intervalMs = 60000) {
+        if (this.monitorInterval) clearInterval(this.monitorInterval);
+
+        console.log("[SupportManager] Starting Inactivity Monitor...");
+        this.monitorInterval = setInterval(async () => {
+            await this._checkTimeouts();
+        }, intervalMs);
+    }
+
+    async _checkTimeouts() {
+        try {
+            const activeSessions = await this.getActiveSessions();
+            const now = new Date();
+            const FIVE_MINUTES = 5 * 60 * 1000;
+
+            for (const session of activeSessions) {
+                const lastActivity = new Date(session.updatedAt || session.createdAt);
+                if (now - lastActivity > FIVE_MINUTES) {
+                    console.log(`[SupportManager] Auto-closing idle session: ${session.id}`);
+                    await this.closeSession(session.id);
+                }
+            }
+        } catch (err) {
+            console.error("[SupportManager] Error checking timeouts:", err);
         }
     }
 

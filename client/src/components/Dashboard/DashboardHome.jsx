@@ -351,7 +351,23 @@ const DashboardHome = ({ jobs = [], setActiveTab }) => {
                                             </TableCell>
                                             <TableCell>
                                                 {job.status === 'completed' ? (
-                                                    <Typography variant="caption" sx={{ color: '#2563eb', fontWeight: 'bold', cursor: 'pointer' }}>Download</Typography>
+                                                    <Typography
+                                                        variant="caption"
+                                                        sx={{ color: '#2563eb', fontWeight: 'bold', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const token = localStorage.getItem('sessionToken');
+                                                            if (!token || token === 'null' || token === 'undefined') {
+                                                                alert("Session expired. Please log in again.");
+                                                                return;
+                                                            }
+                                                            const downloadUrl = `${window.location.origin}/api/invoices/${job.id}/download?token=${token}`;
+                                                            console.log('[DashboardHome] Invoice Download URL:', downloadUrl);
+                                                            window.open(downloadUrl, '_blank');
+                                                        }}
+                                                    >
+                                                        Download
+                                                    </Typography>
                                                 ) : (
                                                     <Typography variant="caption" color="textSecondary" sx={{ fontStyle: 'italic' }}>--</Typography>
                                                 )}
@@ -680,12 +696,15 @@ const DashboardHome = ({ jobs = [], setActiveTab }) => {
 
             {selectedTechnician && bookingParams && (
                 <BookingConfirmationModal
-                    open={isConfirmOpen}
+                    isOpen={isConfirmOpen}
                     onClose={() => setIsConfirmOpen(false)}
                     technician={selectedTechnician}
-                    serviceType={bookingParams.serviceType}
-                    location={bookingParams.location}
-                    scheduledDate={new Date().toISOString().split('T')[0]} // Default to today
+                    jobDetails={{
+                        ...bookingParams,
+                        // For immediate bookings, don't send date/time to skip backend validation
+                        scheduledDate: undefined,
+                        scheduledTime: undefined
+                    }}
                     onConfirm={handleConfirmBooking}
                 />
             )}
