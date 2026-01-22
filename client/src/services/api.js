@@ -73,7 +73,13 @@ export const createOffer = (data) => api.post('/offers', data);
 export const getUserOffers = (userId) => api.get(`/offers/user/${userId}`);
 export const getTestimonials = () => api.get('/testimonials'); // [NEW] Public Testimonials
 export const getWalletBalance = (userId) => api.get(`/finance/wallet/${userId}`);
-export const addFunds = (userId, amount) => api.post('/finance/wallet/add', { userId, amount });
+export const topUpWallet = (data) => api.post('/finance/wallet/top-up', data);
+export const getPaymentMethods = (userId) => api.get(`/finance/methods/${userId}`);
+export const addPaymentMethod = (data) => api.post('/finance/methods', data);
+export const deletePaymentMethod = (id) => api.delete(`/finance/methods/${id}`);
+export const verifyCoupon = (data) => api.post('/finance/verify-coupon', data);
+export const initiatePhonePePayment = (data) => api.post('/finance/phonepe/pay', data);
+export const downloadStatement = (userId) => api.get(`/finance/statement/${userId}`, { responseType: 'blob' });
 
 // Admin User Management
 export const getAdminUsers = () => api.get('/admin/users');
@@ -86,5 +92,6 @@ export const updateUser = (id, data) => api.put(`/admin/users/${id}`, data);
 export const updateJob = (id, data) => api.put(`/admin/jobs/${id}`, data);
 
 export const getTopRatedTechnicians = () => api.get('/technicians/top-rated');
+export const estimateJobCost = (data) => api.post('/jobs/estimate', data);
 
 export default api;

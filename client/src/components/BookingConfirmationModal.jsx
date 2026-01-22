@@ -1,15 +1,40 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Clock, MapPin, ShieldCheck, CheckCircle, Star, Zap, User } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, ShieldCheck, CheckCircle, Star, Zap, User, Wallet, CreditCard, PlusCircle } from 'lucide-react';
+import { estimateJobCost, getWalletBalance } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import AddFundsModal from './AddFundsModal';
 
 const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onConfirm }) => {
+    const { user } = useAuth();
     const [agreement, setAgreement] = useState(false);
     const [readableAddress, setReadableAddress] = useState(jobDetails?.location?.address || "Current Location");
     const [description, setDescription] = useState(jobDetails?.description || '');
 
+    // Pricing & Payment State
+    const [pricing, setPricing] = useState({ total: 0, base: 0, distance: 0 });
+    const [loadingPricing, setLoadingPricing] = useState(false);
+    const [walletBalance, setWalletBalance] = useState(0);
+    const [paymentMethod, setPaymentMethod] = useState('wallet'); // 'wallet' | 'cash' | 'online'
+    const [insufficientFunds, setInsufficientFunds] = useState(false);
+
+    // Add Funds Modal
+    const [showAddFunds, setShowAddFunds] = useState(false);
+
+    const fetchWalletBalance = () => {
+        if (user?.id) {
+            getWalletBalance(user.id).then(res => {
+                if (res.data.success) {
+                    setWalletBalance(res.data.balance);
+                }
+            }).catch(console.error);
+        }
+    };
+
     useEffect(() => {
         if (isOpen && jobDetails?.location?.latitude && jobDetails?.location?.longitude) {
+            // 1. Fetch Address
             const fetchAddress = async () => {
                 try {
                     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -30,8 +55,46 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                 }
             };
             fetchAddress();
+
+            // 2. Fetch Pricing Estimate
+            const fetchPricing = async () => {
+                setLoadingPricing(true);
+                try {
+                    // If we have a technician, we get exact distance charge. If not, just base.
+                    const payload = {
+                        serviceType: jobDetails.serviceType,
+                        userLocation: jobDetails.location,
+                        technicianId: technician?.id
+                    };
+                    const res = await estimateJobCost(payload);
+                    if (res.data.success) {
+                        setPricing(res.data.estimate);
+                    }
+                } catch (err) {
+                    console.error("Pricing Fetch Failed", err);
+                    setPricing({ total: 99, baseCharge: 99, distance: 0 }); // Fallback
+                } finally {
+                    setLoadingPricing(false);
+                }
+            };
+            fetchPricing();
         }
-    }, [isOpen, jobDetails]);
+
+        // 3. Fetch Wallet Balance
+        if (isOpen && user?.id) {
+            fetchWalletBalance();
+        }
+
+    }, [isOpen, jobDetails, technician, user]);
+
+    // Check Funds when method or pricing changes
+    useEffect(() => {
+        if (paymentMethod === 'wallet' && walletBalance < pricing.total) {
+            setInsufficientFunds(true);
+        } else {
+            setInsufficientFunds(false);
+        }
+    }, [paymentMethod, walletBalance, pricing]);
 
     if (!isOpen) return null;
 
@@ -176,16 +239,81 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                                     />
                                 </div>
 
-                                {/* Financials (Clean) */}
+                                {/* Financials (Detailed) */}
                                 <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-dashed border-slate-200">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wide">Visiting Charge</p>
-                                            <p className="text-[10px] md:text-xs text-slate-400 font-medium">To be paid after service inspection</p>
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex justify-between items-center text-sm text-slate-500">
+                                            <span>Base Charge</span>
+                                            <span>₹{pricing.baseCharge}</span>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">₹{visitingCharges}</p>
+                                        {pricing.distance > 0 && (
+                                            <div className="flex justify-between items-center text-sm text-slate-500">
+                                                <span>Distance ({pricing.distance} km x ₹{pricing.perKmCharge})</span>
+                                                <span>₹{pricing.distanceCharge}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                                            <div>
+                                                <p className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wide">Total Estimate</p>
+                                                <p className="text-[10px] md:text-xs text-slate-400 font-medium">To be paid to confirm</p>
+                                            </div>
+                                            <div className="text-right">
+                                                {loadingPricing ? (
+                                                    <div className="h-8 w-24 bg-slate-100 animate-pulse rounded"></div>
+                                                ) : (
+                                                    <p className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">₹{pricing.total}</p>
+                                                )}
+                                            </div>
                                         </div>
+                                    </div>
+
+                                    {/* Payment Method Selector */}
+                                    <div className="mt-6 flex flex-col gap-3">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Payment Method</label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button
+                                                onClick={() => setPaymentMethod('wallet')}
+                                                className={`p-3 rounded-xl border flex flex-col items-start gap-2 transition-all ${paymentMethod === 'wallet' ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200 hover:border-slate-300'}`}
+                                            >
+                                                <div className="flex items-center justify-between w-full">
+                                                    <div className="flex items-center gap-2 text-slate-700 font-bold text-sm">
+                                                        <Wallet size={16} className="text-blue-500" />
+                                                        Wallet
+                                                    </div>
+                                                    {paymentMethod === 'wallet' && <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>}
+                                                </div>
+                                                <p className={`text-xs ${walletBalance < pricing.total ? 'text-red-500 font-bold' : 'text-slate-500'}`}>
+                                                    Balance: ₹{walletBalance}
+                                                </p>
+                                            </button>
+
+                                            <button
+                                                onClick={() => setPaymentMethod('cash')}
+                                                className={`p-3 rounded-xl border flex flex-col items-start gap-2 transition-all ${paymentMethod === 'cash' ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200 hover:border-slate-300'}`}
+                                            >
+                                                <div className="flex items-center justify-between w-full">
+                                                    <div className="flex items-center gap-2 text-slate-700 font-bold text-sm">
+                                                        <CreditCard size={16} className="text-emerald-500" />
+                                                        Pay later
+                                                    </div>
+                                                    {paymentMethod === 'cash' && <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>}
+                                                </div>
+                                                <p className="text-xs text-slate-500">Cash/Online after job</p>
+                                            </button>
+                                        </div>
+                                        {insufficientFunds && paymentMethod === 'wallet' && (
+                                            <div className="mt-2 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center justify-between">
+                                                <p className="text-xs text-red-600 font-bold flex items-center gap-1">
+                                                    <X size={14} /> Low Balance (Need ₹{pricing.total})
+                                                </p>
+                                                <button
+                                                    onClick={() => setShowAddFunds(true)}
+                                                    className="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
+                                                >
+                                                    <PlusCircle size={12} /> Add Funds
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -219,9 +347,11 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                                     const payload = {
                                         ...restJobDetails,
                                         description, // User edited description
-                                        visitingCharges,
+                                        visitingCharges: pricing.total,
                                         agreementAccepted: true,
-                                        technicianId: technician?.id || null
+                                        technicianId: technician?.id || null,
+                                        paymentStatus: paymentMethod === 'wallet' ? 'paid' : 'pending',
+                                        paymentMethod: paymentMethod
                                     };
                                     // Only include date/time if they are defined (scheduled booking)
                                     if (scheduledDate) payload.scheduledDate = scheduledDate;
@@ -229,7 +359,8 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
 
                                     onConfirm(payload);
                                 }}
-                                className={`w-full py-3 md:py-4 rounded-xl text-white font-bold shadow-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${agreement ? (['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase()) ? 'bg-amber-600 shadow-amber-600/20' : 'bg-slate-900 shadow-slate-900/20') : 'bg-slate-300 shadow-none cursor-not-allowed'}`}
+                                disabled={agreement && insufficientFunds && paymentMethod === 'wallet'}
+                                className={`w-full py-3 md:py-4 rounded-xl text-white font-bold shadow-xl transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${agreement && (!insufficientFunds || paymentMethod !== 'wallet') ? (['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase()) ? 'bg-amber-600 shadow-amber-600/20' : 'bg-slate-900 shadow-slate-900/20') : 'bg-slate-300 shadow-none cursor-not-allowed'}`}
                             >
                                 {agreement && <div className={`absolute inset-0 bg-gradient-to-r ${['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase()) ? 'from-amber-500 to-orange-600' : 'from-blue-600 to-indigo-600'} opacity-0 group-hover:opacity-100 transition-opacity`} />}
                                 <div className="relative z-10 flex items-center gap-2">
@@ -241,6 +372,16 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                     </div>
                 </motion.div>
             </div>
+
+            {/* Add Funds Modal Overlay */}
+            <AddFundsModal
+                isOpen={showAddFunds}
+                onClose={() => setShowAddFunds(false)}
+                onSuccess={() => {
+                    fetchWalletBalance();
+                    // Alert handled inside modal
+                }}
+            />
         </AnimatePresence>
         , document.body);
 };

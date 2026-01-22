@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Grid,
@@ -15,18 +15,22 @@ import {
     TableHead,
     TableRow,
     Chip,
-    Avatar,
-    Divider,
     Paper,
     FormControl,
     Select,
-    MenuItem
+    MenuItem,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    CircularProgress,
+    Stack
 } from '@mui/material';
 import {
     AccountBalanceWallet,
     AddCircle,
     Download,
-    CreditCard,
     CheckCircle,
     Add,
     CalendarToday,
@@ -34,48 +38,202 @@ import {
     Plumbing,
     ElectricalServices,
     CleaningServices,
-    MoreVert
+    History,
+    CreditCard
 } from '@mui/icons-material';
+import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
+import { getWalletBalance, getPaymentMethods, addPaymentMethod, verifyCoupon, topUpWallet, deletePaymentMethod, initiatePhonePePayment, downloadStatement } from '../../services/api';
 
 const PRIMARY_GOLD = '#D0BB95';
+const PRIMARY_BLUE = '#2563eb';
 
 const DashboardFinance = () => {
-    const transactions = [
-        {
-            id: 1,
-            date: 'Oct 24, 2023', time: '10:42 AM', service: 'Plumbing Repair',
-            icon: <Plumbing fontSize="small" />,
-            txnId: '#TXN-8839-AB', amount: '-$120.00', status: 'Paid',
-            statusColor: '#d1fae5', statusText: '#065f46',
-            iconColor: '#2563eb', iconBg: '#eff6ff'
-        },
-        {
-            id: 2,
-            date: 'Oct 22, 2023', time: '02:15 PM', service: 'Electrical Install',
-            icon: <ElectricalServices fontSize="small" />,
-            txnId: '#TXN-8812-XC', amount: '-$350.00', status: 'Pending',
-            statusColor: '#fef3c7', statusText: '#92400e',
-            iconColor: '#9333ea', iconBg: '#faf5ff'
-        },
-        {
-            id: 3,
-            date: 'Oct 15, 2023', time: '09:00 AM', service: 'Wallet Top-up',
-            icon: <AccountBalanceWallet fontSize="small" />,
-            txnId: '#WLT-1002-PP', amount: '+$500.00', status: 'Success',
-            statusColor: '#d1fae5', statusText: '#065f46',
-            iconColor: '#475569', iconBg: '#f1f5f9',
-            isPositive: true
-        },
-        {
-            id: 4,
-            date: 'Oct 02, 2023', time: '11:30 AM', service: 'Cleaning Service',
-            icon: <CleaningServices fontSize="small" />,
-            txnId: '#TXN-7662-ZZ', amount: '-$85.00', status: 'Refunded',
-            statusColor: '#fee2e2', statusText: '#991b1b',
-            iconColor: '#dc2626', iconBg: '#fef2f2',
-            isStruck: true
+    const { user } = useAuth();
+    const { socket } = useSocket();
+
+    // State
+    const [balance, setBalance] = useState(0);
+    const [transactions, setTransactions] = useState([]);
+    const [paymentMethods, setPaymentMethods] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // Modals
+    const [openTopUp, setOpenTopUp] = useState(false);
+    const [openAddMethod, setOpenAddMethod] = useState(false);
+
+    // Top Up Form
+    const [topUpAmount, setTopUpAmount] = useState('');
+    const [promoCode, setPromoCode] = useState('');
+    const [promoStatus, setPromoStatus] = useState(null); // { valid: bool, msg: string, amount: num }
+    const [processing, setProcessing] = useState(false);
+
+    // Payment Method Form
+    const [newMethod, setNewMethod] = useState({ type: 'card', provider: 'visa', last4: '', expiry: '' });
+
+    // Fetch Data
+    const fetchData = async () => {
+        if (!user) return;
+        try {
+            setLoading(true);
+            const [walletRes, methodsRes] = await Promise.all([
+                getWalletBalance(user.id),
+                getPaymentMethods(user.id)
+            ]);
+
+            if (walletRes.data.success) {
+                setBalance(walletRes.data.balance || 0);
+                setTransactions(walletRes.data.transactions || []);
+            }
+            if (methodsRes.data.success) {
+                setPaymentMethods(methodsRes.data.methods || []);
+            }
+        } catch (error) {
+            console.error("Finance Fetch Error:", error);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
+
+    useEffect(() => {
+        fetchData();
+
+        // Socket Listeners
+        if (socket) {
+            socket.on('wallet_balance_update', (data) => {
+                if (data.balance !== undefined) setBalance(data.balance);
+            });
+            socket.on('new_transaction', (txn) => {
+                setTransactions(prev => [txn, ...prev]);
+                // Refresh balance just in case
+                fetchData();
+            });
+        }
+
+        return () => {
+            if (socket) {
+                socket.off('wallet_balance_update');
+                socket.off('new_transaction');
+            }
+        };
+    }, [user, socket]);
+
+    // Handlers
+    const handleVerifyPromo = async () => {
+        if (!promoCode) return;
+        try {
+            const res = await verifyCoupon({ code: promoCode, cartAmount: parseFloat(topUpAmount || 0) });
+            if (res.data.valid) {
+                setPromoStatus({ valid: true, msg: `Code applied! ${res.data.discountType === 'fixed' ? '₹' + res.data.discountAmount : res.data.discountAmount + '%'} discount/bonus`, code: res.data.code });
+            } else {
+                setPromoStatus({ valid: false, msg: res.data.message });
+            }
+        } catch (err) {
+            setPromoStatus({ valid: false, msg: 'Error validating code' });
+        }
+    };
+
+    const handleTopUp = async () => {
+        try {
+            setProcessing(true);
+            // Simulate using first payment method or just raw topup
+            await topUpWallet({
+                userId: user.id,
+                amount: parseFloat(topUpAmount),
+                couponCode: promoStatus?.valid ? promoStatus.code : null
+            });
+            setOpenTopUp(false);
+            setTopUpAmount('');
+            setPromoCode('');
+            setPromoStatus(null);
+            // Balance update will come via Socket or refetch
+            fetchData();
+            alert("Top Up Successful via Wallet/Card simulation!");
+        } catch (err) {
+            console.error("Top Up Error:", err);
+            alert("Top Up Failed");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handlePhonePePayment = async () => {
+        try {
+            setProcessing(true);
+            const { data } = await initiatePhonePePayment({
+                userId: user.id,
+                amount: parseFloat(topUpAmount)
+            });
+
+            if (data.success && data.url) {
+                // Redirect to PhonePe
+                window.location.href = data.url;
+            } else {
+                alert("Failed to initiate PhonePe payment");
+            }
+        } catch (err) {
+            console.error("PhonePe Error:", err);
+            alert("PhonePe Error: " + (err.response?.data?.error || err.message));
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleAddMethod = async () => {
+        try {
+            // Basic validation
+            if (!newMethod.last4 || !newMethod.expiry) return;
+
+            await addPaymentMethod({
+                userId: user.id,
+                ...newMethod,
+                provider: 'visa', // mocking
+                isPrimary: paymentMethods.length === 0
+            });
+            setOpenAddMethod(false);
+            fetchData();
+        } catch (err) {
+            alert("Failed to add method");
+        }
+    };
+
+    const handleDeleteMethod = async (id) => {
+        if (!window.confirm("Remove this payment method?")) return;
+        try {
+            await deletePaymentMethod(id);
+            fetchData();
+        } catch (err) {
+            alert("Failed to delete");
+        }
+    };
+
+    const handleDownloadStatement = async () => {
+        try {
+            // Need to handle blob response
+            const response = await downloadStatement(user.id);
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'Fixofy_Statement.pdf');
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to download statement");
+        }
+    };
+
+    // Helper to format date
+    const formatDate = (iso) => {
+        const d = new Date(iso);
+        return {
+            date: d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+            time: d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        };
+    };
+
+    if (loading && transactions.length === 0) return <Box p={4} display="flex" justifyContent="center"><CircularProgress /></Box>;
 
     return (
         <Box sx={{ width: '100%', pb: 4, fontFamily: 'Inter, sans-serif' }}>
@@ -94,6 +252,7 @@ const DashboardFinance = () => {
                     <Button
                         variant="outlined"
                         startIcon={<Download />}
+                        onClick={handleDownloadStatement}
                         sx={{
                             borderColor: '#e2e8f0', color: '#0f172a', textTransform: 'none', fontWeight: 'bold', borderRadius: '8px', bgcolor: '#fff',
                             '&:hover': { bgcolor: '#f8fafc', borderColor: '#cbd5e1' }
@@ -104,6 +263,7 @@ const DashboardFinance = () => {
                     <Button
                         variant="contained"
                         startIcon={<AddCircle />}
+                        onClick={() => setOpenTopUp(true)}
                         sx={{
                             bgcolor: PRIMARY_GOLD, color: '#fff', textTransform: 'none', fontWeight: 'bold', borderRadius: '8px', boxShadow: `0 4px 14px 0 rgba(208, 187, 149, 0.4)`,
                             '&:hover': { bgcolor: '#c4af8a' }
@@ -123,7 +283,6 @@ const DashboardFinance = () => {
                         borderRadius: '16px', height: '100%', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
                         border: '1px solid #f1f5f9', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column'
                     }}>
-                        {/* Background Decoration */}
                         <Box sx={{ position: 'absolute', top: -60, right: -60, width: 240, height: 240, bgcolor: 'rgba(208, 187, 149, 0.1)', borderRadius: '50%', filter: 'blur(40px)', zIndex: 0 }} />
 
                         <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', zIndex: 1 }}>
@@ -133,28 +292,11 @@ const DashboardFinance = () => {
                                         Total Balance
                                     </Typography>
                                     <Typography variant="h3" fontWeight="900" sx={{ color: '#0f172a' }}>
-                                        $450.00
+                                        ₹{balance.toFixed(2)}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ width: 48, height: 48, borderRadius: '50%', bgcolor: 'rgba(208, 187, 149, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: PRIMARY_GOLD }}>
                                     <AccountBalanceWallet />
-                                </Box>
-                            </Box>
-
-                            <Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                                    <Box sx={{ flex: 1, height: 6, bgcolor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
-                                        <Box sx={{ width: '75%', height: '100%', bgcolor: PRIMARY_GOLD, borderRadius: '4px' }} />
-                                    </Box>
-                                    <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600 }}>Monthly Limit</Typography>
-                                </Box>
-
-                                <Box sx={{ mt: 3, p: 2, bgcolor: '#f8fafc', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
-                                    <Typography variant="caption" fontWeight="600" sx={{ color: '#64748b', mb: 1, display: 'block' }}>HAVE A PROMO CODE?</Typography>
-                                    <Box sx={{ display: 'flex', gap: 1 }}>
-                                        <InputBase placeholder="ENTERCODE" sx={{ flex: 1, fontSize: '0.9rem', fontFamily: 'monospace', textTransform: 'uppercase' }} />
-                                        <Button size="small" sx={{ color: PRIMARY_GOLD, fontWeight: 'bold' }}>Apply</Button>
-                                    </Box>
                                 </Box>
                             </Box>
                         </CardContent>
@@ -167,55 +309,36 @@ const DashboardFinance = () => {
                         <CardContent sx={{ p: 3 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                                 <Typography variant="h6" fontWeight="bold" sx={{ color: '#0f172a' }}>Payment Methods</Typography>
-                                <Button size="small" sx={{ color: PRIMARY_GOLD, fontWeight: 'bold', textTransform: 'none' }}>Manage</Button>
                             </Box>
 
                             <Grid container spacing={2}>
-                                {/* Visa Card */}
-                                <Grid item xs={12} md={6}>
-                                    <Box sx={{
-                                        p: 2.5, borderRadius: '16px', border: '1px solid #e2e8f0', cursor: 'pointer',
-                                        background: 'linear-gradient(135deg, #f8fafc 0%, #fff 100%)',
-                                        transition: 'all 0.2s', '&:hover': { borderColor: PRIMARY_GOLD, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' },
-                                        position: 'relative', overflow: 'hidden'
-                                    }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-                                            <Paper elevation={0} sx={{ p: 0.5, borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-                                                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuArMIGS8xajZbyr8Jk4NJoq54SMifbjOFoHxsH3Q4QTJTOk8nm0Fw8LxKr8Ec3FW6ZWOQ8DbJz87TGMBRtajXJDVhgffwAB0YC4GWNb_T_KwwyRH1VnmASJh6tqWWqF30igX_dlWwbGJfi_h7Is5XyC9kfpzo2sAdho-XKKJ4q0HFAufpsyeMHjTZSN2G51aDZvfzmEP5lQSskqTEyj0ZtoWr6cs7yI37036VY-qqxZcm3gHxmgHeYvl9I5IPirs_T578FbfhXj5Q" alt="Visa" style={{ height: 24, display: 'block' }} />
-                                            </Paper>
-                                            <Chip label="PRIMARY" size="small" sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 'bold', height: 20, fontSize: '0.65rem' }} />
+                                {paymentMethods.map(method => (
+                                    <Grid item xs={12} md={6} key={method.id}>
+                                        <Box sx={{
+                                            p: 2.5, borderRadius: '16px', border: '1px solid #e2e8f0', cursor: 'pointer',
+                                            background: 'linear-gradient(135deg, #f8fafc 0%, #fff 100%)',
+                                            transition: 'all 0.2s', '&:hover': { borderColor: PRIMARY_GOLD },
+                                            position: 'relative', overflow: 'hidden'
+                                        }} onClick={() => handleDeleteMethod(method.id)}>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+                                                <Paper elevation={0} sx={{ p: 0.5, borderRadius: '8px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <CreditCard fontSize="small" />
+                                                    <Typography variant="caption" fontWeight="bold">{method.provider?.toUpperCase()}</Typography>
+                                                </Paper>
+                                                {method.isPrimary && <Chip label="PRIMARY" size="small" sx={{ bgcolor: '#dcfce7', color: '#15803d', fontWeight: 'bold', height: 20, fontSize: '0.65rem' }} />}
+                                            </Box>
+                                            <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#64748b' }}>**** **** **** {method.last4}</Typography>
+                                            <Typography variant="body2" fontWeight="bold" sx={{ color: '#0f172a' }}>Ending in {method.last4}</Typography>
+                                            <Typography variant="caption" sx={{ color: '#94a3b8' }}>Expires {method.expiry}</Typography>
                                         </Box>
-                                        <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#64748b' }}>**** **** **** 4242</Typography>
-                                        <Typography variant="body2" fontWeight="bold" sx={{ color: '#0f172a' }}>Visa Ending in 4242</Typography>
-                                        <Typography variant="caption" sx={{ color: '#94a3b8' }}>Expires 12/24</Typography>
-
-                                        <CheckCircle sx={{ position: 'absolute', top: 16, right: 16, color: PRIMARY_GOLD }} />
-                                    </Box>
-                                </Grid>
-
-                                {/* PayPal Card */}
-                                <Grid item xs={12} md={6}>
-                                    <Box sx={{
-                                        p: 2.5, borderRadius: '16px', border: '1px solid #e2e8f0', cursor: 'pointer',
-                                        background: 'linear-gradient(135deg, #f8fafc 0%, #fff 100%)',
-                                        transition: 'all 0.2s', '&:hover': { borderColor: PRIMARY_GOLD, boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }
-                                    }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-                                            <Paper elevation={0} sx={{ p: 0.5, borderRadius: '8px', border: '1px solid #f1f5f9' }}>
-                                                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6eFnmG0lFrtRY_PSUR-TDyNb5MyD-qTURfayyr6ZrikRHtfdUijal7cn5EdfDVKeJD8HA1gEfan7qT1tjgC3zqWi1dK34LJDEFqxIvzjLrRW5lzm-TwWfL7LRVoIVmqNHl8aeuz0pgxszOWvDn6KmjXybKrGY5wboWnDSO5yFCZq-C2FPwl9iUA-dLaGACLf74B-gJTNU3_RS84r9XCyAz7ZoMaKYkHd7qdgfKYRuTXj0XXkU6mrsOPZydpyC7Zg_FmARZqwjJA" alt="PayPal" style={{ height: 24, display: 'block' }} />
-                                            </Paper>
-                                        </Box>
-                                        <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#64748b' }}>user@example.com</Typography>
-                                        <Typography variant="body2" fontWeight="bold" sx={{ color: '#0f172a' }}>PayPal Account</Typography>
-                                        <Typography variant="caption" sx={{ color: '#94a3b8' }}>Connected</Typography>
-                                    </Box>
-                                </Grid>
+                                    </Grid>
+                                ))}
 
                                 {/* Add New Method */}
-                                <Grid item xs={12}>
-                                    <Box sx={{
+                                <Grid item xs={12} md={6}>
+                                    <Box onClick={() => setOpenAddMethod(true)} sx={{
                                         p: 2, borderRadius: '12px', border: '2px dashed #e2e8f0',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, height: '100%', minHeight: 140,
                                         cursor: 'pointer', color: '#64748b',
                                         '&:hover': { borderColor: PRIMARY_GOLD, color: PRIMARY_GOLD, bgcolor: '#fffbf2' }
                                     }}>
@@ -233,136 +356,121 @@ const DashboardFinance = () => {
             <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9', overflow: 'hidden' }}>
                 <Box sx={{ p: 3, borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
                     <Typography variant="h6" fontWeight="bold" sx={{ color: '#0f172a' }}>Transaction History</Typography>
-
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        {/* Status Filter Dummy */}
-                        <Box sx={{ position: 'relative' }}>
-                            <Select
-                                value="All Status"
-                                size="small"
-                                sx={{ borderRadius: '8px', bgcolor: '#f8fafc', '& .MuiSelect-select': { py: 1, fontSize: '0.875rem' } }}
-                            >
-                                <MenuItem value="All Status">All Status</MenuItem>
-                                <MenuItem value="Paid">Paid</MenuItem>
-                            </Select>
-                        </Box>
-                        {/* Date Filter Dummy */}
-                        <Box sx={{ position: 'relative' }}>
-                            <CalendarToday sx={{ position: 'absolute', left: 10, top: 8, fontSize: 18, color: '#94a3b8', zIndex: 1 }} />
-                            <InputBase placeholder="Filter by date" sx={{ bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', pl: 4.5, pr: 2, py: 0.5, fontSize: '0.875rem', width: 140 }} />
-                        </Box>
-                        <IconButton sx={{ border: '1px solid #e2e8f0', borderRadius: '8px' }} size="small">
-                            <FilterList fontSize="small" />
-                        </IconButton>
-                    </Box>
                 </Box>
 
-                {/* DESKTOP TABLE VIEW */}
-                <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
+                <TableContainer>
                     <Table>
                         <TableHead>
                             <TableRow sx={{ bgcolor: '#f8fafc' }}>
                                 <TableCell sx={{ color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Date</TableCell>
-                                <TableCell sx={{ color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Service</TableCell>
-                                <TableCell sx={{ color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Transaction ID</TableCell>
+                                <TableCell sx={{ color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Description</TableCell>
                                 <TableCell align="right" sx={{ color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Amount</TableCell>
                                 <TableCell align="center" sx={{ color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Status</TableCell>
-                                <TableCell align="center" sx={{ color: '#64748b', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>Action</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {transactions.map((txn) => (
-                                <TableRow key={txn.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                    <TableCell>
-                                        <Typography variant="body2" fontWeight="500" color="#0f172a">{txn.date}</Typography>
-                                        <Typography variant="caption" color="#94a3b8">{txn.time}</Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                            <Box sx={{ width: 32, height: 32, borderRadius: '6px', bgcolor: txn.iconBg, color: txn.iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                {txn.icon}
-                                            </Box>
-                                            <Typography variant="body2" fontWeight="500" color="#0f172a">{txn.service}</Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="caption" sx={{ fontFamily: 'monospace', bgcolor: '#f8fafc', px: 1, py: 0.5, borderRadius: '4px', color: '#475569' }}>
-                                            {txn.txnId}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Typography variant="body2" fontWeight="bold" sx={{ color: txn.amountColor ? txn.amountColor : (txn.isPositive ? '#059669' : (txn.isStruck ? '#94a3b8' : '#0f172a')), textDecoration: txn.isStruck ? 'line-through' : 'none' }}>
-                                            {txn.amount}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        <Chip
-                                            label={txn.status}
-                                            size="small"
-                                            sx={{
-                                                bgcolor: txn.statusColor, color: txn.statusText,
-                                                fontWeight: 'bold', fontSize: '0.75rem', height: 24
-                                            }}
-                                        />
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        <IconButton size="small" sx={{ color: '#94a3b8', '&:hover': { color: PRIMARY_GOLD } }}>
-                                            <Download fontSize="small" />
-                                        </IconButton>
+                            {transactions.length > 0 ? transactions.map((txn, index) => {
+                                const { date, time } = formatDate(txn.createdAt);
+                                const isCredit = txn.type === 'credit';
+                                return (
+                                    <TableRow key={txn.id || index} hover>
+                                        <TableCell>
+                                            <Typography variant="body2" fontWeight="500" color="#0f172a">{date}</Typography>
+                                            <Typography variant="caption" color="#94a3b8">{time}</Typography>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Typography variant="body2" fontWeight="500" color="#0f172a">{txn.description}</Typography>
+                                            <Typography variant="caption" color="#64748b">ID: {txn.id?.slice(0, 8)}</Typography>
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            <Typography variant="body2" fontWeight="bold" sx={{ color: isCredit ? '#059669' : '#0f172a' }}>
+                                                {isCredit ? '+' : '-'}₹{txn.amount}
+                                            </Typography>
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <Chip label={txn.status} size="small" sx={{ bgcolor: '#dcfce7', color: '#166534', fontWeight: 'bold', fontSize: '0.7rem' }} />
+                                        </TableCell>
+                                    </TableRow>
+                                )
+                            }) : (
+                                <TableRow>
+                                    <TableCell colSpan={4} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                                        No transactions yet.
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )}
                         </TableBody>
                     </Table>
                 </TableContainer>
-
-                {/* MOBILE CARD VIEW */}
-                <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column' }}>
-                    {transactions.map((txn, index) => (
-                        <Box key={txn.id} sx={{
-                            p: 2,
-                            borderBottom: index !== transactions.length - 1 ? '1px solid #f1f5f9' : 'none',
-                            bgcolor: 'white'
-                        }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                                <Box sx={{ display: 'flex', gap: 1.5 }}>
-                                    <Box sx={{
-                                        width: 40, height: 40, borderRadius: '8px',
-                                        bgcolor: txn.iconBg, color: txn.iconColor,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                    }}>
-                                        {React.cloneElement(txn.icon, { fontSize: 'medium' })}
-                                    </Box>
-                                    <Box>
-                                        <Typography variant="subtitle2" fontWeight="600" color="#0f172a">{txn.service}</Typography>
-                                        <Typography variant="caption" sx={{ fontFamily: 'monospace', color: '#64748b' }}>{txn.txnId}</Typography>
-                                    </Box>
-                                </Box>
-                                <Box sx={{ textAlign: 'right' }}>
-                                    <Typography variant="body2" fontWeight="800" sx={{ color: txn.amountColor ? txn.amountColor : (txn.isPositive ? '#059669' : (txn.isStruck ? '#94a3b8' : '#0f172a')), textDecoration: txn.isStruck ? 'line-through' : 'none' }}>
-                                        {txn.amount}
-                                    </Typography>
-                                    <Typography variant="caption" color="#94a3b8" display="block">{txn.date}</Typography>
-                                </Box>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Chip
-                                    label={txn.status}
-                                    size="small"
-                                    sx={{
-                                        bgcolor: txn.statusColor, color: txn.statusText,
-                                        fontWeight: 'bold', fontSize: '0.7rem', height: 24
-                                    }}
-                                />
-                                <IconButton size="small" sx={{ color: '#94a3b8', border: '1px solid #e2e8f0', borderRadius: '6px', p: 0.5 }}>
-                                    <Download fontSize="small" />
-                                </IconButton>
-                            </Box>
-                        </Box>
-                    ))}
-                </Box>
             </Card>
+
+            {/* Modals */}
+            <Dialog open={openTopUp} onClose={() => setOpenTopUp(false)}>
+                <DialogTitle>Add Funds (Sandbox)</DialogTitle>
+                <DialogContent sx={{ minWidth: 300, pt: 2 }}>
+                    <TextField
+                        label="Amount (₹)"
+                        type="number"
+                        fullWidth
+                        margin="dense"
+                        value={topUpAmount}
+                        onChange={(e) => setTopUpAmount(e.target.value)}
+                    />
+                    <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                        <TextField
+                            label="Promo Code"
+                            fullWidth
+                            size="small"
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value)}
+                        />
+                        <Button variant="outlined" onClick={handleVerifyPromo}>Apply</Button>
+                    </Box>
+                    {promoStatus && (
+                        <Typography variant="caption" color={promoStatus.valid ? 'success.main' : 'error.main'}>
+                            {promoStatus.msg}
+                        </Typography>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ flexDirection: 'column', gap: 1, p: 2, alignItems: 'stretch' }}>
+                    <Button variant="contained" onClick={handleTopUp} disabled={!topUpAmount || processing} sx={{ bgcolor: PRIMARY_GOLD }}>
+                        {processing ? 'Processing...' : 'Direct Top Up (Test)'}
+                    </Button>
+                    <Button variant="outlined" onClick={handlePhonePePayment} disabled={!topUpAmount || processing} sx={{ borderColor: '#5f259f', color: '#5f259f' }}>
+                        Pay with PhonePe
+                    </Button>
+                    <Button onClick={() => setOpenTopUp(false)} sx={{ color: '#64748b' }}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={openAddMethod} onClose={() => setOpenAddMethod(false)}>
+                <DialogTitle>Add Payment Method</DialogTitle>
+                <DialogContent sx={{ minWidth: 300, pt: 2 }}>
+                    <TextField
+                        label="Card Last 4 Digits"
+                        fullWidth
+                        margin="dense"
+                        inputProps={{ maxLength: 4 }}
+                        value={newMethod.last4}
+                        onChange={(e) => setNewMethod({ ...newMethod, last4: e.target.value })}
+                    />
+                    <TextField
+                        label="Expiry (MM/YY)"
+                        fullWidth
+                        margin="dense"
+                        placeholder="12/25"
+                        value={newMethod.expiry}
+                        onChange={(e) => setNewMethod({ ...newMethod, expiry: e.target.value })}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenAddMethod(false)}>Cancel</Button>
+                    <Button variant="contained" onClick={handleAddMethod} disabled={!newMethod.last4 || !newMethod.expiry}>
+                        Save Method
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
         </Box>
     );
 };

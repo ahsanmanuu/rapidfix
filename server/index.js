@@ -1445,13 +1445,35 @@ app.get('/api/complaints/user/:userId', async (req, res) => {
 
 // --- Job Routes ---
 // --- Job Routes ---
+app.post('/api/jobs/estimate', async (req, res) => {
+  try {
+    const { serviceType, userLocation, technicianId } = req.body;
+    const { latitude, longitude } = userLocation || {};
+
+    // Calculate
+    const charges = await jobManager.calculateVisitingCharges(
+      serviceType,
+      latitude,
+      longitude,
+      null, // Tech Location handled by ID lookup
+      null,
+      technicianId
+    );
+
+    res.json({ success: true, estimate: charges });
+  } catch (error) {
+    console.error('[API] Estimate Error:', error);
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
 app.post('/api/jobs', authenticateSession, async (req, res) => {
   try {
     console.log('[API] POST /jobs payload:', JSON.stringify(req.body, null, 2));
-    const { userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted } = req.body;
+    const { userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted, paymentStatus, paymentMethod } = req.body;
 
     // 1. Create the Job (JobManager now handles assignment automatically)
-    const job = await jobManager.createJob(userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted);
+    const job = await jobManager.createJob(userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted, paymentStatus, paymentMethod);
 
     // [NOTIFICATION] Job Created (Generic)
     notificationManager.createNotification('admin', 'admin', 'New Job Request', `Job #${job.id} created by User`, 'job_created', job.id);
@@ -1712,6 +1734,106 @@ app.get('/api/finance/user/:userId', async (req, res) => {
     console.error("Fetch User Bills Error:", err);
     res.status(500).json({ success: false, error: 'Failed to fetch billing history' });
   }
+});
+
+app.post('/api/finance/wallet/top-up', async (req, res) => {
+  try {
+    const { userId, amount, methodId, couponCode } = req.body;
+    // In real world, we'd verify payment with Stripe/PayPal using methodId
+    // Here we just simulate success
+
+    // If coupon, apply discount logic? Usually top-up is raw cash, but maybe "Extra credit" coupon?
+    // Let's keep it simple: Raw Amount Top-up
+
+    const txn = await financeManager.createTransaction(userId, 'SELF', 'credit', amount, 'Wallet Top-up');
+    res.json({ success: true, transaction: txn });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/finance/wallet/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const balance = await financeManager.getBalance(userId);
+    const transactions = await financeManager.getTransactionsByUser(userId);
+    res.json({ success: true, balance, transactions });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/finance/statement/:userId', async (req, res) => {
+  try {
+    await financeManager.generateStatementPdf(req.params.userId, res);
+  } catch (err) {
+    console.error("PDF Route Error:", err);
+    res.status(500).send("Error");
+  }
+});
+
+app.get('/api/finance/methods/:userId', async (req, res) => {
+  try {
+    const methods = await financeManager.getPaymentMethods(req.params.userId);
+    res.json({ success: true, methods });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/finance/methods', async (req, res) => {
+  try {
+    const { userId, ...methodData } = req.body;
+    const method = await financeManager.addPaymentMethod(userId, methodData);
+    res.json({ success: true, method });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/finance/methods/:id', async (req, res) => {
+  try {
+    await financeManager.deletePaymentMethod(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/finance/verify-coupon', async (req, res) => {
+  try {
+    const { code, cartAmount } = req.body;
+    const result = await financeManager.validateCoupon(code, cartAmount);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// [NEW] PhonePe Routes
+app.post('/api/finance/phonepe/pay', async (req, res) => {
+  try {
+    const { amount, userId } = req.body;
+    // Construct standard redirect/callback URLs
+    // In local dev, standard might be localhost:5173/finance/success
+    // But for redirect, we need the frontend to handle it.
+    const origin = req.get('origin') || 'http://localhost:5173';
+    const redirectUrl = `${origin}/payment/success`;
+    const callbackUrl = `${req.protocol}://${req.get('host')}/api/finance/phonepe/callback`;
+
+    const result = await financeManager.initiatePhonePePayment(userId, amount, redirectUrl, callbackUrl);
+    res.json({ success: true, url: result.instrumentResponse.redirectInfo.url, txnId: result.merchantTransactionId });
+  } catch (error) {
+    console.error("PhonePe Pay Error:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/finance/phonepe/callback', (req, res) => {
+  console.log("PhonePe S2S Callback Recieved:", req.body);
+  // Ideally verify checksum here and update DB status 'completed'
+  // For Sandbox, we just acknowledge
+  res.json({ success: true });
 });
 
 // [NEW] Basic Stats Endpoint for Technician Dashboard

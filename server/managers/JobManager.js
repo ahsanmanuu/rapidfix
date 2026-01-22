@@ -10,11 +10,11 @@ const InvoiceManager = require('./InvoiceManager');
 class JobManager {
     constructor() {
         this.db = new Database('jobs');
+        this.pricingDb = new Database('service_pricing');
         this.userManager = new UserManager();
         this.techManager = new TechnicianManager();
         this.notificationManager = new NotificationManager();
         this.financeManager = new FinanceManager();
-        this.complaintManager = new ComplaintManager();
         this.complaintManager = new ComplaintManager();
         this.invoiceManager = null; // Injected via setInvoiceManager
         this.io = null; // Will be set via server/index.js
@@ -68,6 +68,8 @@ class JobManager {
                 sparePartsCost: spareCost,
                 tax: jobTax,
                 totalCost: total,
+                paymentStatus: job.payment_status || 'pending',
+                paymentMethod: job.payment_method,
                 otp: otp,
                 feedbackGiven: job.feedback_given || false
             };
@@ -99,6 +101,9 @@ class JobManager {
             if (job.sparePartsCost !== undefined) mapped.spare_parts_cost = job.sparePartsCost;
             if (job.tax !== undefined) mapped.tax = job.tax;
             if (job.totalCost !== undefined) mapped.total_cost = job.totalCost;
+
+            if (job.paymentStatus !== undefined) mapped.payment_status = job.paymentStatus;
+            if (job.paymentMethod !== undefined) mapped.payment_method = job.paymentMethod;
 
             // Address Handling
             if (job.location) {
@@ -136,7 +141,55 @@ class JobManager {
         }
     }
 
-    async createJob(userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted) {
+    async calculateVisitingCharges(serviceType, userLat, userLng, techLat, techLng, technicianId) {
+        try {
+            // 1. Get Pricing Config
+            const defaultPricing = await this.pricingDb.find('service_type', 'default') || { base_visiting_charge: 99, per_km_charge: 10 };
+            const specificPricing = serviceType ? (await this.pricingDb.find('service_type', serviceType)) : null;
+
+            const pricing = specificPricing || defaultPricing;
+            const baseCharge = parseFloat(pricing.base_visiting_charge || 99);
+            const perKmCharge = parseFloat(pricing.per_km_charge || 10);
+
+            // Resolve Tech Location if ID provided
+            let tLat = techLat;
+            let tLng = techLng;
+            if (technicianId && (!tLat || !tLng)) {
+                const tech = await this.techManager.getTechnician(technicianId);
+                if (tech) {
+                    tLat = tech.latitude || tech.fixedLatitude;
+                    tLng = tech.longitude || tech.fixedLongitude;
+                }
+            }
+
+            // 2. Calculate Distance
+            let distance = 0;
+            if (tLat && tLng && userLat && userLng) {
+                distance = this.techManager.calculateDistance(
+                    parseFloat(userLat), parseFloat(userLng),
+                    parseFloat(tLat), parseFloat(tLng)
+                );
+            }
+
+            // 3. Total
+            const distanceCharge = distance * perKmCharge;
+            const total = baseCharge + distanceCharge;
+
+            return {
+                baseCharge,
+                distance: parseFloat(distance.toFixed(2)),
+                perKmCharge,
+                distanceCharge: parseFloat(distanceCharge.toFixed(2)),
+                total: parseFloat(total.toFixed(2))
+            };
+        } catch (err) {
+            console.error("[JobManager] Error calculating charges:", err);
+            // Fallback
+            return { baseCharge: 99, distance: 0, perKmCharge: 10, distanceCharge: 0, total: 99 };
+        }
+    }
+
+    async createJob(userId, serviceType, description, location, address, scheduledDate, scheduledTime, contactName, contactPhone, offerPrice, technicianId, visitingCharges, agreementAccepted, paymentStatus = 'pending', paymentMethod = 'cash') {
         console.log(`[JobManager] createJob starting.`);
         try {
             console.log(`[JobManager] creating job for user ${userId}, service: ${serviceType}, schedule: ${scheduledDate} ${scheduledTime}`);
@@ -150,10 +203,25 @@ class JobManager {
             const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
             // Visiting Charges default
-            const vCharges = visitingCharges || offerPrice || 0;
+            // If visitingCharges passed (e.g. from offer or pre-calc in Quick Booking), use it.
+            // Otherwise, we can calc base charge now (techId might be null so 0 distance).
+            let vCharges = visitingCharges || offerPrice || 0;
+            if (!vCharges) {
+                const pricing = await this.calculateVisitingCharges(serviceType); // Base only
+                vCharges = pricing.baseCharge;
+            }
+
             // Tax & Total (Initial)
-            const tax = vCharges * 0.0; // 0% initially or 10%? User prompt said 10% in UI, let's store 0 and calc in UI or consistenly here. 
-            // Actually, let's keep it simple: Store what we know.
+            const tax = vCharges * 0.0;
+            const total = parseFloat(vCharges) + tax;
+
+            // 1. Pre-Check Wallet Balance
+            if (paymentMethod === 'wallet') {
+                const balance = await this.financeManager.getBalance(userId);
+                if (balance < total) {
+                    throw new Error("Insufficient wallet balance.");
+                }
+            }
 
             const newJob = {
                 userId,
@@ -161,29 +229,48 @@ class JobManager {
                 description,
                 location,
                 address,
-                address,
                 // Default to NOW for immediate bookings (Quick Tile)
-                scheduledDate: scheduledDate || new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD (Local)
-                scheduledTime: scheduledTime || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }), // 10:30 AM
+                scheduledDate: scheduledDate || new Date().toLocaleDateString('en-CA'),
+                scheduledTime: scheduledTime || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
                 contactName: contactName || (user ? user.name : "Customer"),
                 contactPhone: contactPhone || (user ? user.phone : ""),
                 technicianId,
                 status: 'pending',
-                otp, // New Field
+                otp,
                 visitingCharges: vCharges,
                 sparePartsCost: 0,
                 tax: 0,
-                totalCost: vCharges, // Initial Total
+                totalCost: total,
+
+                // Payment Fields
+                paymentStatus: paymentMethod === 'wallet' ? 'pending' : (paymentStatus || 'pending'), // Set to pending until deducted
+                paymentMethod,
+
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
 
             const dbJob = this._mapToDb(newJob);
             // Include new columns in insert
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, otp, visiting_charges, spare_parts_cost, tax, total_cost, description';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, payment_status, payment_method';
 
             console.log(`[JobManager] Inserting Job with OTP: ${otp}`);
             const saved = await this.db.add(dbJob, columns);
+
+            // 2. Process Payment Deduction
+            if (paymentMethod === 'wallet') {
+                const result = await this.financeManager.processJobPayment(userId, total, saved.id);
+                if (result.success) {
+                    // Update Job Status to Paid
+                    await this.db.update('id', saved.id, { payment_status: 'paid' });
+                    saved.payment_status = 'paid'; // Local update for return
+                } else {
+                    console.error(`[JobManager] Payment failed for ${saved.id}: ${result.reason}`);
+                    // Optionally cancel job or keep as pending payment
+                }
+            } else if (paymentStatus === 'paid') {
+                // Trust external payment status if passed
+            }
             const job = await this._enrichJob(this._mapFromDb(saved));
 
             // Real-time broadcast for new job
