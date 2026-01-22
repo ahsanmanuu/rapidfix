@@ -1,5 +1,6 @@
 const BaseManager = require('./BaseManager');
 const { geocodeAddress } = require('../utils/geocoder');
+const crypto = require('crypto');
 
 class UserManager extends BaseManager {
     constructor() {
@@ -28,13 +29,29 @@ class UserManager extends BaseManager {
     _mapToDb(user) {
         if (!user) return null;
         try {
-            const { membershipExpiry, createdAt, updatedAt, fixedAddress, id, ...rest } = user;
-            const mapped = { ...rest };
-            if (membershipExpiry !== undefined) mapped.membership_expiry = membershipExpiry;
-            if (createdAt !== undefined) mapped.created_at = createdAt;
-            if (updatedAt !== undefined) mapped.updated_at = updatedAt;
-            if (fixedAddress !== undefined) mapped.fixed_address = fixedAddress;
-            if (id !== undefined) mapped.id = id;
+            const mapped = {};
+
+            // Primary
+            if (user.id) mapped.id = user.id;
+            if (user.legacyId || user.legacy_id) mapped.legacy_id = user.legacyId || user.legacy_id;
+
+            if (user.name) mapped.name = user.name;
+            if (user.email) mapped.email = user.email;
+            if (user.phone) mapped.phone = user.phone;
+            if (user.password) mapped.password = user.password;
+            if (user.role) mapped.role = user.role;
+            if (user.photo) mapped.photo = user.photo;
+            if (user.status) mapped.status = user.status;
+            if (user.location) mapped.location = user.location;
+
+            // Membership
+            if (user.membership) mapped.membership = user.membership;
+            if (user.membershipExpiry || user.membership_expiry) mapped.membership_expiry = user.membershipExpiry || user.membership_expiry;
+
+            // Timestamps
+            if (user.createdAt || user.created_at) mapped.created_at = user.createdAt || user.created_at;
+            if (user.updatedAt || user.updated_at) mapped.updated_at = user.updatedAt || user.updated_at;
+
             return mapped;
         } catch (err) {
             console.error("[UserManager] Error mapping to DB:", err);
@@ -42,7 +59,7 @@ class UserManager extends BaseManager {
         }
     }
 
-    async createUser(name, email, phone, locationInput, password) {
+    async createUser(name, email, phone, locationInput, password, photoUrl = null) {
         try {
             const existing = await this.findOne('email', email);
             if (existing) {
@@ -69,7 +86,7 @@ class UserManager extends BaseManager {
             }
 
             const newUser = {
-                id: Date.now().toString(), // Or crypto.randomUUID() if migrating
+                id: crypto.randomUUID(), // Use valid UUID for Supabase compatibility
                 name,
                 email,
                 phone,
@@ -80,7 +97,8 @@ class UserManager extends BaseManager {
                 walletBalance: 0.00,
                 latitude: lat,
                 longitude: lng,
-                fixedAddress: fixedAddress
+                fixedAddress: fixedAddress,
+                photo: photoUrl
             };
 
             // Use BaseManager's automated create

@@ -114,42 +114,42 @@ class TechnicianManager extends BaseManager {
     _mapToDb(tech) {
         if (!tech) return null;
         try {
-            // Destructure known app properties
-            const {
-                serviceType, addressDetails, reviewCount, membershipSince, membershipExpiry,
-                joinedAt, updatedAt, totalJobs, completedJobs, rejectedJobs, pendingJobs, acceptedJobs,
-                baseAddress, serviceRadius, registeredLatitude, registeredLongitude,
-                fixedLatitude, fixedLongitude,
-                createdAt, createdBy, id,
-                ...rest
-            } = tech;
+            // Start with only the fields that are allowed/mapped
+            const mapped = {};
 
-            const mapped = { ...rest };
-            if (serviceType) mapped.service_type = serviceType;
-            if (addressDetails) mapped.address_details = addressDetails;
-            if (reviewCount !== undefined) mapped.review_count = reviewCount;
-            if (membershipSince) mapped.membership_since = membershipSince;
-            if (membershipExpiry) mapped.membership_expiry = membershipExpiry;
-            if (joinedAt) mapped.joined_at = joinedAt;
-            if (updatedAt) mapped.updated_at = updatedAt;
-            if (createdAt) mapped.created_at = createdAt; // IMPORTANT
-            if (createdBy) mapped.created_by = createdBy; // IMPORTANT
-            if (typeof totalJobs === 'number') mapped.total_jobs = totalJobs;
-            if (typeof completedJobs === 'number') mapped.completed_jobs = completedJobs;
-            if (typeof rejectedJobs === 'number') mapped.rejected_jobs = rejectedJobs;
-            if (typeof pendingJobs === 'number') mapped.pending_jobs = pendingJobs;
-            if (typeof acceptedJobs === 'number') mapped.accepted_jobs = acceptedJobs;
+            // Primary Fields
+            if (tech.id) mapped.id = tech.id;
+            if (tech.name) mapped.name = tech.name;
+            if (tech.email) mapped.email = tech.email;
+            if (tech.phone) mapped.phone = tech.phone;
+            if (tech.password) mapped.password = tech.password;
+            if (tech.legacyId || tech.legacy_id) mapped.legacy_id = tech.legacyId || tech.legacy_id;
 
-            // Direct Columns
-            if (baseAddress) mapped.base_address = baseAddress;
-            if (serviceRadius) mapped.service_radius = serviceRadius;
+            // Specific fields
+            if (tech.serviceType || tech.service_type) mapped.service_type = tech.serviceType || tech.service_type;
+            if (tech.experience) mapped.experience = tech.experience;
+            if (tech.addressDetails || tech.address_details) mapped.address_details = tech.addressDetails || tech.address_details;
+            if (tech.documents) mapped.documents = tech.documents;
+            if (tech.location) mapped.location = tech.location;
 
-            if (registeredLatitude) mapped.registered_latitude = registeredLatitude;
-            if (registeredLongitude) mapped.registered_longitude = registeredLongitude;
-            if (fixedLatitude) mapped.fixed_latitude = fixedLatitude; // New
-            if (fixedLongitude) mapped.fixed_longitude = fixedLongitude; // New
+            // Stats & Status
+            if (tech.rating !== undefined) mapped.rating = tech.rating;
+            if (tech.reviewCount !== undefined || tech.review_count !== undefined) mapped.review_count = tech.reviewCount !== undefined ? tech.reviewCount : tech.review_count;
+            if (tech.status) mapped.status = tech.status;
 
-            if (id) mapped.id = id;
+            // Membership
+            if (tech.membership) mapped.membership = tech.membership;
+            if (tech.membershipSince || tech.membership_since) mapped.membership_since = tech.membershipSince || tech.membership_since;
+
+            // Timestamps
+            if (tech.joinedAt || tech.joined_at) mapped.joined_at = tech.joinedAt || tech.joined_at;
+            if (tech.updatedAt || tech.updated_at) mapped.updated_at = tech.updatedAt || tech.updated_at;
+
+            // Ignored/Missing Columns in Schema:
+            // created_at, created_by, membership_expiry
+            // total_jobs, completed_jobs, rejected_jobs, pending_jobs, accepted_jobs
+            // base_address, service_radius
+            // registered_latitude, registered_longitude, fixed_latitude, fixed_longitude
 
             return mapped;
         } catch (err) {
@@ -231,8 +231,17 @@ class TechnicianManager extends BaseManager {
                 createdBy: this._toUuid(createdBy)
             };
 
-            // Use BaseManager's automated create
-            const created = await this.create(newTechnician);
+            // Use manual create to avoid BaseManager adding 'created_at' which doesn't exist
+            const dbData = this._mapToDb(newTechnician);
+
+            // Ensure joined_at/updated_at are set (since we bypass BaseManager)
+            if (!dbData.joined_at) dbData.joined_at = new Date().toISOString();
+            if (!dbData.updated_at) dbData.updated_at = new Date().toISOString();
+
+            const createdRaw = await this.db.add(dbData);
+            const created = this._mapFromDb(createdRaw);
+
+            this.broadcast('created', created);
 
             // Special Event: Notify Admins explicitly (BaseManager already emits 'technician_created')
             if (this.io) {

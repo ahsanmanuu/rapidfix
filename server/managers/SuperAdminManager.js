@@ -152,27 +152,15 @@ class SuperAdminManager {
             if (existing) throw new Error('Admin already exists');
 
             // Find Super Admin ID to link as creator
-            let superAdminId = null;
-            // Optimistic approach: Get the first Super Admin. If multiple, just pick one.
-            const allAdmins = await this.db.read();
-            const superAdmin = allAdmins.find(a => a.role === 'superadmin');
-            if (superAdmin) {
-                superAdminId = superAdmin.id;
-            }
+            // const allAdmins = await this.db.read(); ... (This logic isn't useful if we can't store created_by)
 
             const newAdmin = {
-                name,
                 email,
                 password,
                 role: 'admin',
-                created_at: new Date().toISOString(),
-                // Fixed location logic
-                fixed_latitude: location?.latitude,
-                fixed_longitude: location?.longitude,
-                latitude: location?.latitude,
-                longitude: location?.longitude,
-                office_address: location?.address,
-                created_by: superAdminId // Now passing a valid UUID (or null if not found, which is allowed as nullable FK)
+                created_at: new Date().toISOString()
+                // Name, Location, CreatedBy are NOT supported by current 'admins' schema
+                // fixed_latitude: location?.latitude,
             };
 
             // Using db.add from SuperAdminManager (which points to 'admins' table)

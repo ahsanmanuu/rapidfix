@@ -279,7 +279,15 @@ app.post('/api/technicians/register', techUploads, async (req, res) => {
     const addressDetails = { country, state, city, pincode };
 
     // 1. Create Technician (Get ID)
-    const tech = await technicianManager.createTechnician(name, email, phone, serviceType, parsedLocation, password, experience, addressDetails);
+    const tech = await technicianManager.createTechnician({
+      name,
+      email,
+      phone,
+      serviceType,
+      addressDetails,
+      experience,
+      password
+    }, null, parsedLocation);
 
     // 2. Handle Files and Upload via StorageManager
     const docPaths = {};
@@ -489,7 +497,7 @@ app.post('/api/users/register', upload.single('photo'), async (req, res) => {
     }
 
     // Save User with Location
-    const user = await userManager.createUser(name, email, phone, password, location, photoUrl);
+    const user = await userManager.createUser(name, email, phone, location, password, photoUrl);
     console.log('[REGISTER] User created successfully:', user.id);
 
     // Also save to Location Manager specifically
