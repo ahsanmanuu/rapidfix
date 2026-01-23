@@ -505,15 +505,15 @@ const Home = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {technicianProfiles && technicianProfiles.map((tech) => (
                                 <div key={tech.id} className="bg-white rounded-xl border border-[#e5e7eb] p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-start gap-3">
+                                    <div className="flex items-start justify-between md:justify-between justify-center">
+                                        <div className="flex items-start gap-3 md:items-start items-center md:flex-row flex-col md:text-left text-center">
                                             <div
-                                                className="w-12 h-12 rounded-full bg-center bg-cover border border-gray-100 mt-1"
+                                                className="w-12 h-12 rounded-full bg-center bg-cover border border-gray-100 md:mt-1 mt-0"
                                                 style={{ backgroundImage: `url(${tech.image})` }}
                                             ></div>
                                             <div>
                                                 <h3 className="text-[#111418] text-base font-bold">{tech.name}</h3>
-                                                <div className="flex items-center gap-1 text-[#f59e0b] text-xs font-bold">
+                                                <div className="flex items-center gap-1 text-[#f59e0b] text-xs font-bold md:justify-start justify-center">
                                                     <Star size={14} className="fill-current" />
                                                     <span>{tech.rating}</span>
                                                     <span className="text-[#617589] font-normal text-[10px]">({tech.reviewCount} reviews)</span>
@@ -521,7 +521,7 @@ const Home = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-wrap gap-2 md:justify-start justify-center">
                                         <span className="px-2 py-1 bg-orange-50 text-[#FF6B00] text-xs font-medium rounded-full">{tech.serviceType}</span>
                                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Expert</span>
                                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Pro</span>
