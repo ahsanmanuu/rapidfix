@@ -506,9 +506,9 @@ const Home = () => {
                             {technicianProfiles && technicianProfiles.map((tech) => (
                                 <div key={tech.id} className="bg-white rounded-xl border border-[#e5e7eb] p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
                                     <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-start gap-3">
                                             <div
-                                                className="w-12 h-12 rounded-full bg-center bg-cover border border-gray-100"
+                                                className="w-12 h-12 rounded-full bg-center bg-cover border border-gray-100 mt-1"
                                                 style={{ backgroundImage: `url(${tech.image})` }}
                                             ></div>
                                             <div>
