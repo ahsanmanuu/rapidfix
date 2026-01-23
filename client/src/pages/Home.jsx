@@ -523,26 +523,28 @@ const Home = () => {
 
                                 return (
                                     <div key={tech.id} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 group">
-                                        {/* Profile Section */}
+                                        {/* Profile Section with Description on Right */}
                                         <div className="flex items-start gap-3">
                                             <div
                                                 className="w-14 h-14 rounded-full bg-center bg-cover border-2 border-slate-100 shrink-0 group-hover:border-orange-200 transition-colors"
                                                 style={{ backgroundImage: `url(${tech.image})` }}
                                             ></div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="text-slate-900 text-base font-bold truncate">{tech.name}</h3>
-                                                <div className="flex items-center gap-1 mt-1">
-                                                    <Star size={13} className="text-amber-400 fill-amber-400 shrink-0" />
-                                                    <span className="text-amber-600 text-sm font-bold">{tech.rating}</span>
-                                                    <span className="text-slate-400 text-xs">({tech.reviewCount})</span>
+                                            <div className="flex-1 min-w-0 flex flex-col gap-2">
+                                                <div>
+                                                    <h3 className="text-slate-900 text-base font-bold truncate">{tech.name}</h3>
+                                                    <div className="flex items-center gap-1 mt-1">
+                                                        <Star size={13} className="text-amber-400 fill-amber-400 shrink-0" />
+                                                        <span className="text-amber-600 text-sm font-bold">{tech.rating}</span>
+                                                        <span className="text-slate-400 text-xs">({tech.reviewCount})</span>
+                                                    </div>
                                                 </div>
+
+                                                {/* Description on Right Side */}
+                                                <p className="text-slate-500 text-xs leading-relaxed text-justify">
+                                                    {getServiceDescription(tech.serviceType)}
+                                                </p>
                                             </div>
                                         </div>
-
-                                        {/* Description */}
-                                        <p className="text-slate-500 text-xs leading-relaxed text-justify">
-                                            {getServiceDescription(tech.serviceType)}
-                                        </p>
 
                                         {/* Badges */}
                                         <div className="flex flex-wrap gap-1.5">
