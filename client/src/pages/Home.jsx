@@ -410,10 +410,8 @@ const Home = () => {
             </div>
 
             {/* --- Booking Form Overlay --- */}
-            <div className="relative z-30 -mt-24 px-6 md:px-16 lg:px-24 mb-24 w-full flex justify-center">
-                <div className="w-full">
-                    <ServiceBookingForm onSearch={handleFormSearch} />
-                </div>
+            <div className="relative z-30 -mt-24 px-4 sm:px-6 md:px-8 lg:px-12 mb-24 w-full flex justify-center">
+                <ServiceBookingForm onSearch={handleFormSearch} />
             </div>
 
             {/* --- Promo Banner --- */}
