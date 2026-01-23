@@ -340,8 +340,8 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                         {loading ? 'Processing...' : 'Book Now'}
                         {!loading && <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />}
                     </button>
-                    <div className="flex items-center justify-center gap-2 text-slate-400 text-xs mt-4">
-                        <ShieldCheck size={14} />
+                    <div className="flex items-center justify-center gap-2 text-slate-600 text-xs mt-4 font-medium">
+                        <ShieldCheck size={14} className="text-[#137fec]" />
                         Your request is secure and verified
                     </div>
                 </div>
