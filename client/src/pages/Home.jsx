@@ -115,6 +115,7 @@ const Home = () => {
     const [technicianProfiles, setTechnicianProfiles] = useState(fallbackProfiles);
     const [searchTerm, setSearchTerm] = useState('');
     const [loadingProfiles, setLoadingProfiles] = useState(true);
+    const [loadingTestimonials, setLoadingTestimonials] = useState(true);
 
     // Fetch Realtime Top Technicians //
     useEffect(() => {
@@ -149,6 +150,9 @@ const Home = () => {
             }
         };
         fetchTopTechs();
+
+        // Simulate testimonials loading
+        setTimeout(() => setLoadingTestimonials(false), 1500);
     }, []);
 
     // Flow State
@@ -613,24 +617,46 @@ const Home = () => {
                             <p className="text-[#617589] text-sm">Real stories from satisfied customers.</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {[
-                                { name: "James Peterson", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCoTTqZzMJ9rmZtWCa81emQ91tAcWmwjr4NvvNSTRDa1GtDDMh2SoDq1VM91H_9Sx7Lnsa84i686veJJhEeMQHNoh67zjQj3dsAooits95DioLKqwxY_DGQ4kgLP4zZDepsYhmNvlH38PL8cyWCVrwf5FvSWgh0r8nuFvSPj9CX2nMtT5d6pUvoWU4LjLvFaYqDxGHE28QMWq_sy6LAHmsAf6Uk0Tc_n4s5-UkckxryyhZLaLoOvJh-rB5vqjx7LCuOSb3ZZmQ0-rQ", review: "Fixofy is a lifesaver! The electrician arrived in 30 minutes and fixed the issue immediately. Highly recommended service." },
-                                { name: "Linda Meyer", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBrf83VP8EswMsGimgtKZyhmLBJG8JIKcwwUTgu9tn0Ax7iFQZ_qVblzjERi2kzc1nuRlIr07wuKMsSUj6Ydf51ifVYkym8tiJy-1n1X2wbQDmSyMi5u7-BtmzFQOzh-n3-48aphmR91as57WoqV8QZfDFFdADmKI9e59CB8e_esiedpC1Iuk9YshsJtkxZUJ2nq5mEWKK5QhVfHlzFE_TP0AhESFnhEAUhoUHfTZXkdc8Mpu9Yos9HQvqqrVsZrVcTd6ENlLQpJkI", review: "Excellent service. The cleaner did a fantastic deep clean of my apartment. It feels like a brand new home." },
-                                { name: "Robert Fox", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCA3fL692G4L0CTOfmVaZFOrg_0yalWWjtvjiG-yCtlHST9lD0_RlTs10DgcmbsrvHframlczzuFePvT4yLoANBEoTb1LanUv3_JFsWvhJ_dtl05eN98XP6vs7uX5ltVEvoa9Qzy_I5B6-cE5NJ-jtJfBlZqovHnvv4giF7ZUfm5SBad6iuv_hKtuZkqh5Gn24HqOPfMFVEBa80-5wTC5sN1V1gCSu907d6bbv1P5Gwu2V3yj7yTWFikpCdF9rfn-Xi11qmyqMBPbM", review: "Fair pricing and very professional workers. The booking process was seamless and the painter did a great job." }
-                            ].map((review, idx) => (
-                                <div key={idx} className="flex flex-col gap-3 p-4 bg-white rounded-xl border border-[#e5e7eb] shadow-sm hover:shadow-md transition-all">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 bg-cover border border-gray-100" style={{ backgroundImage: `url(${review.img})` }}></div>
-                                        <div>
-                                            <h3 className="font-bold text-[#111418] text-base">{review.name}</h3>
-                                            <div className="flex text-[#FF6B00] gap-0.5">
-                                                {[...Array(5)].map((_, i) => <Star key={i} size={14} className="fill-current" />)}
+                            {loadingTestimonials ? (
+                                // Skeleton Loaders for Testimonials
+                                [1, 2, 3].map(i => (
+                                    <div key={i} className="flex flex-col gap-3 p-4 bg-white rounded-xl border-2 border-slate-900 shadow-lg animate-pulse">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-slate-200"></div>
+                                            <div className="flex-1">
+                                                <div className="h-4 bg-slate-200 rounded w-2/3 mb-2"></div>
+                                                <div className="flex gap-0.5">
+                                                    {[...Array(5)].map((_, j) => <div key={j} className="w-3 h-3 bg-slate-100 rounded-full"></div>)}
+                                                </div>
                                             </div>
                                         </div>
+                                        <div className="space-y-2">
+                                            <div className="h-2 bg-slate-100 rounded w-full"></div>
+                                            <div className="h-2 bg-slate-100 rounded w-full"></div>
+                                            <div className="h-2 bg-slate-100 rounded w-3/4"></div>
+                                        </div>
                                     </div>
-                                    <p className="text-[#4b5563] italic text-xs leading-relaxed">"{review.review}"</p>
-                                </div>
-                            ))}
+                                ))
+                            ) : (
+                                [
+                                    { name: "James Peterson", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCoTTqZzMJ9rmZtWCa81emQ91tAcWmwjr4NvvNSTRDa1GtDDMh2SoDq1VM91H_9Sx7Lnsa84i686veJJhEeMQHNoh67zjQj3dsAooits95DioLKqwxY_DGQ4kgLP4zZDepsYhmNvlH38PL8cyWCVrwf5FvSWgh0r8nuFvSPj9CX2nMtT5d6pUvoWU4LjLvFaYqDxGHE28QMWq_sy6LAHmsAf6Uk0Tc_n4s5-UkckxryyhZLaLoOvJh-rB5vqjx7LCuOSb3ZZmQ0-rQ", review: "Fixofy is a lifesaver! The electrician arrived in 30 minutes and fixed the issue immediately. Highly recommended service." },
+                                    { name: "Linda Meyer", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBrf83VP8EswMsGimgtKZyhmLBJG8JIKcwwUTgu9tn0Ax7iFQZ_qVblzjERi2kzc1nuRlIr07wuKMsSUj6Ydf51ifVYkym8tiJy-1n1X2wbQDmSyMi5u7-BtmzFQOzh-n3-48aphmR91as57WoqV8QZfDFFdADmKI9e59CB8e_esiedpC1Iuk9YshsJtkxZUJ2nq5mEWKK5QhVfHlzFE_TP0AhESFnhEAUhoUHfTZXkdc8Mpu9Yos9HQvqqrVsZrVcTd6ENlLQpJkI", review: "Excellent service. The cleaner did a fantastic deep clean of my apartment. It feels like a brand new home." },
+                                    { name: "Robert Fox", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCA3fL692G4L0CTOfmVaZFOrg_0yalWWjtvjiG-yCtlHST9lD0_RlTs10DgcmbsrvHframlczzuFePvT4yLoANBEoTb1LanUv3_JFsWvhJ_dtl05eN98XP6vs7uX5ltVEvoa9Qzy_I5B6-cE5NJ-jtJfBlZqovHnvv4giF7ZUfm5SBad6iuv_hKtuZkqh5Gn24HqOPfMFVEBa80-5wTC5sN1V1gCSu907d6bbv1P5Gwu2V3yj7yTWFikpCdF9rfn-Xi11qmyqMBPbM", review: "Fair pricing and very professional workers. The booking process was seamless and the painter did a great job." }
+                                ].map((review, idx) => (
+                                    <div key={idx} className="flex flex-col gap-3 p-4 bg-white rounded-xl border-2 border-slate-900 shadow-lg hover:shadow-xl transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 bg-cover border border-gray-100" style={{ backgroundImage: `url(${review.img})` }}></div>
+                                            <div>
+                                                <h3 className="font-bold text-[#111418] text-base">{review.name}</h3>
+                                                <div className="flex text-[#FF6B00] gap-0.5">
+                                                    {[...Array(5)].map((_, i) => <Star key={i} size={14} className="fill-current" />)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p className="text-[#4b5563] italic text-xs leading-relaxed">"{review.review}"</p>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </section>
 
