@@ -110,13 +110,15 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Amount (₹)</label>
                             <div className="relative group">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">₹</span>
+                                <div className="absolute left-4 top-1/2 -translate-y-[45%] pointer-events-none">
+                                    <span className="text-slate-500 font-black text-xl">₹</span>
+                                </div>
                                 <input
                                     type="number"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    placeholder="0.00"
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-100 bg-slate-50/50 text-xl font-black text-slate-800 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all placeholder:text-slate-300 placeholder:font-medium"
+                                    placeholder="0"
+                                    className="w-full pl-11 pr-4 py-4 rounded-xl border-2 border-slate-100 bg-slate-50/50 text-2xl font-black text-slate-800 focus:ring-0 focus:border-teal-500 outline-none transition-all placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                             </div>
                             {/* Presets Grid */}
@@ -144,13 +146,13 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
                                     type="text"
                                     value={promoCode}
                                     onChange={(e) => setPromoCode(e.target.value)}
-                                    placeholder="ENTER CODE"
-                                    className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none uppercase placeholder:text-slate-300 placeholder:font-medium"
+                                    placeholder="Coupon Code"
+                                    className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-100 bg-white text-sm font-bold focus:ring-0 focus:border-teal-500 outline-none uppercase placeholder:text-slate-300"
                                 />
                                 <button
                                     onClick={handleApplyPromo}
                                     disabled={!promoCode || loading}
-                                    className="px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-[10px] hover:bg-slate-900 transition-colors disabled:opacity-50"
+                                    className="px-5 py-3 bg-[#111418] text-white rounded-xl font-bold text-xs hover:bg-black transition-all active:scale-95 disabled:opacity-50"
                                 >
                                     Apply
                                 </button>
