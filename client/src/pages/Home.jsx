@@ -473,7 +473,7 @@ const Home = () => {
                         <h2 className="text-[#111418] text-xl md:text-2xl font-bold">Instant Book: Professional Now</h2>
                         <p className="text-[#617589] text-sm">Book verified experts instantly.</p>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+                    <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 gap-2 md:gap-3">
                         {[
                             { id: 'Electrician', title: "Electrician", icon: <Zap size={20} /> },
                             { id: 'Plumber', title: "Plumber", icon: <Droplet size={20} /> },
@@ -487,13 +487,13 @@ const Home = () => {
                             <div
                                 key={service.id}
                                 onClick={() => handleBookNow(service.id)}
-                                className="group bg-white rounded-xl p-4 border border-gray-100 hover:border-[#FF6B00]/30 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col items-center text-center gap-2 cursor-pointer"
+                                className="group bg-white rounded-xl p-2.5 md:p-3 border border-gray-100 hover:border-[#FF6B00]/30 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col items-center text-center gap-1.5 cursor-pointer"
                             >
-                                <div className="w-10 h-10 rounded-full bg-orange-50 group-hover:bg-[#FF6B00] group-hover:text-white text-[#FF6B00] flex items-center justify-center transition-colors">
+                                <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-orange-50 group-hover:bg-[#FF6B00] group-hover:text-white text-[#FF6B00] flex items-center justify-center transition-colors">
                                     {service.icon}
                                 </div>
-                                <h3 className="text-[#111418] font-semibold text-sm">{service.title}</h3>
-                                <button className="w-full py-1.5 rounded-lg text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white font-semibold text-xs border border-[#FF6B00]/30 transition-all">
+                                <h3 className="text-[#111418] font-semibold text-[10px] md:text-xs leading-tight">{service.title}</h3>
+                                <button className="w-full py-1 rounded-lg text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white font-semibold text-[9px] md:text-[10px] border border-[#FF6B00]/30 transition-all">
                                     Book
                                 </button>
                             </div>
