@@ -116,7 +116,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                     </div>
 
                     {/* Content - Scrollable with fixed height */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" style={{ maxHeight: 'calc(85vh - 180px)' }}>
+                    <div className="flex-1 overflow-y-auto p-4 space-y-5 bg-gray-50" style={{ maxHeight: 'calc(85vh - 180px)' }}>
 
                         {isTechBusy && (
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 flex items-start gap-2">
@@ -126,7 +126,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                         )}
 
                         {/* Schedule Info */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-3">
+                        <div className="bg-white rounded-xl border border-gray-200 p-5">
                             <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Schedule</p>
                             <div className="flex gap-4">
                                 <div className="flex items-center gap-2">
@@ -141,7 +141,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                         </div>
 
                         {/* Location */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-3">
+                        <div className="bg-white rounded-xl border border-gray-200 p-5">
                             <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Location</p>
                             <div className="flex items-center gap-2">
                                 <MapPin size={14} className="text-teal-600 shrink-0" />
@@ -150,7 +150,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                         </div>
 
                         {/* Description */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-3">
+                        <div className="bg-white rounded-xl border border-gray-200 p-5">
                             <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Problem (Optional)</p>
                             <textarea
                                 value={description}
@@ -161,7 +161,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                         </div>
 
                         {/* Pricing */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-3">
+                        <div className="bg-white rounded-xl border border-gray-200 p-5">
                             <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Charges</p>
                             <div className="space-y-1 text-xs">
                                 <div className="flex justify-between text-gray-600">
@@ -182,7 +182,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                         </div>
 
                         {/* Payment */}
-                        <div className="bg-white rounded-lg border border-gray-200 p-3">
+                        <div className="bg-white rounded-xl border border-gray-200 p-5">
                             <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Payment</p>
                             <div className="flex gap-2">
                                 <button
@@ -203,8 +203,8 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                             {insufficientFunds && paymentMethod === 'wallet' && (
                                 <div className="mt-2 flex items-center justify-between bg-red-50 border border-red-200 rounded p-2">
                                     <span className="text-[10px] text-red-600 font-medium">Low balance</span>
-                                    <button onClick={() => setShowAddFunds(true)} className="text-[10px] bg-red-600 text-white px-2 py-1 rounded font-medium flex items-center gap-1">
-                                        <PlusCircle size={10} /> Add
+                                    <button onClick={() => setShowAddFunds(true)} className="text-[10px] bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all active:scale-95">
+                                        <PlusCircle size={10} /> Add Funds
                                     </button>
                                 </div>
                             )}
@@ -212,18 +212,18 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                     </div>
 
                     {/* Footer */}
-                    <div className="p-4 bg-white border-t border-gray-100 shrink-0">
-                        <label onClick={() => setAgreement(!agreement)} className="flex items-start gap-2 cursor-pointer mb-3 select-none">
-                            <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${agreement ? 'bg-teal-600 border-teal-600' : 'border-gray-300'}`}>
-                                {agreement && <CheckCircle size={10} className="text-white" strokeWidth={3} />}
+                    <div className="p-6 bg-white border-t border-gray-100 shrink-0">
+                        <label onClick={() => setAgreement(!agreement)} className="flex items-start gap-4 cursor-pointer mb-6 select-none">
+                            <div className={`mt-0.5 w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${agreement ? 'bg-teal-600 border-teal-600 shadow-sm shadow-teal-600/20' : 'border-gray-300'}`}>
+                                {agreement && <CheckCircle size={14} className="text-white" strokeWidth={3} />}
                             </div>
-                            <p className="text-xs text-gray-600">I accept the visiting charges and terms of service.</p>
+                            <p className="text-sm text-gray-700 leading-tight font-medium">I accept the visiting charges and terms of service.</p>
                         </label>
 
                         <button
                             onClick={handleConfirm}
                             disabled={!agreement || (insufficientFunds && paymentMethod === 'wallet')}
-                            className={`w-full py-2.5 rounded-lg text-white text-sm font-semibold flex items-center justify-center gap-2 transition ${agreement && (!insufficientFunds || paymentMethod !== 'wallet') ? 'bg-teal-600 hover:bg-teal-700' : 'bg-gray-300 cursor-not-allowed'}`}
+                            className={`w-full py-4 rounded-xl text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] ${agreement && (!insufficientFunds || paymentMethod !== 'wallet') ? 'bg-teal-600 hover:bg-teal-700 shadow-teal-600/20' : 'bg-gray-300 cursor-not-allowed'}`}
                         >
                             <ShieldCheck size={16} />
                             {!agreement ? 'Accept Terms' : (isTechBusy ? 'Queue Booking' : 'Confirm Booking')}

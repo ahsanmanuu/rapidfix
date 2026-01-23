@@ -86,7 +86,7 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh] relative border border-white/20"
+                    className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] relative border border-white/20 sm:w-[95%]"
                 >
                     {/* Header: Clean Teal Gradient */}
                     <div className="bg-gradient-to-r from-[#0d9488] to-[#0f766e] p-4 text-white relative shrink-0">
@@ -122,12 +122,12 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
                                 />
                             </div>
                             {/* Presets Grid */}
-                            <div className="grid grid-cols-4 gap-2 mt-2">
+                            <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 mt-2">
                                 {[100, 500, 1000, 2000].map(val => (
                                     <button
                                         key={val}
                                         onClick={() => setAmount(val.toString())}
-                                        className={`py-1.5 rounded-lg text-xs font-bold transition-all border ${amount === val.toString() ? 'bg-teal-600 border-teal-600 text-white shadow-sm' : 'bg-white border-slate-100 text-slate-600 hover:border-teal-200 hover:text-teal-600'}`}
+                                        className={`py-2 px-1 rounded-lg text-xs font-bold transition-all border ${amount === val.toString() ? 'bg-teal-600 border-teal-600 text-white shadow-sm' : 'bg-white border-slate-100 text-slate-600 hover:border-teal-200 hover:text-teal-600'}`}
                                     >
                                         ₹{val}
                                     </button>
@@ -141,18 +141,18 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
                                 <Ticket size={14} className="text-teal-600" />
                                 <span className="text-[10px] font-bold text-slate-500 uppercase">Promo Code</span>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col xs:flex-row gap-2">
                                 <input
                                     type="text"
                                     value={promoCode}
                                     onChange={(e) => setPromoCode(e.target.value)}
                                     placeholder="Coupon Code"
-                                    className="flex-1 px-4 py-3 rounded-xl border-2 border-slate-100 bg-white text-sm font-bold focus:ring-0 focus:border-teal-500 outline-none uppercase placeholder:text-slate-300"
+                                    className="flex-1 px-4 py-3.5 rounded-xl border-2 border-slate-100 bg-white text-sm font-bold focus:ring-0 focus:border-teal-500 outline-none uppercase placeholder:text-slate-300 min-w-0"
                                 />
                                 <button
                                     onClick={handleApplyPromo}
                                     disabled={!promoCode || loading}
-                                    className="px-5 py-3 bg-[#111418] text-white rounded-xl font-bold text-xs hover:bg-black transition-all active:scale-95 disabled:opacity-50"
+                                    className="px-6 py-3.5 bg-[#111418] text-white rounded-xl font-black text-xs uppercase tracking-wider hover:bg-black transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap"
                                 >
                                     Apply
                                 </button>
@@ -188,28 +188,30 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
                         </div>
 
                         {/* Summary Card */}
-                        <div className="bg-teal-600 rounded-xl p-3 text-white flex justify-between items-center shadow-md shadow-teal-600/20 shrink-0 mt-2">
-                            <div className="flex flex-col">
-                                <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">Total Payable</span>
-                                <span className="text-lg font-black tracking-tight">₹{amount || '0'}</span>
+                        <div className="bg-teal-600 rounded-2xl p-4 text-white flex justify-between items-center shadow-lg shadow-teal-600/30 shrink-0 mt-4 border border-teal-500/50">
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[10px] font-black uppercase tracking-[0.1em] opacity-80">Total Payable</span>
+                                <span className="text-2xl font-black tracking-tight leading-none">₹{amount || '0'}</span>
                             </div>
-                            <ShieldCheck size={24} className="opacity-40" />
+                            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                <ShieldCheck size={28} className="text-teal-200" />
+                            </div>
                         </div>
                     </div>
 
                     {/* Bottom Action Section */}
-                    <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 shrink-0">
+                    <div className="px-6 py-6 sm:py-8 bg-slate-50 border-t border-slate-100 shrink-0">
                         <button
                             onClick={handlePayment}
                             disabled={loading || !amount}
-                            className="w-full py-3 sm:py-3.5 rounded-xl bg-[#111418] text-white font-bold text-sm shadow-xl hover:bg-black transition-all active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100 flex items-center justify-center gap-2 group"
+                            className="w-full py-4.5 sm:py-5 rounded-2xl bg-[#111418] text-white font-black text-base uppercase tracking-widest shadow-2xl shadow-black/20 hover:bg-black transition-all active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100 flex items-center justify-center gap-3 group"
                         >
                             {loading ? (
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
                                 <>
                                     <span>Proceed to Pay</span>
-                                    <ShieldCheck size={16} className="group-hover:scale-110 transition-transform text-white/70" />
+                                    <ShieldCheck size={18} className="group-hover:scale-110 transition-transform text-white/50" />
                                 </>
                             )}
                         </button>

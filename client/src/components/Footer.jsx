@@ -7,7 +7,7 @@ const Footer = () => {
         <footer className="bg-[#101922] text-white pt-12 pb-6">
             <div className="container mx-auto px-4 lg:px-8 max-w-6xl">
                 {/* Main Content - Brand on top (mobile) or left (desktop) */}
-                <div className="flex flex-col md:flex-row gap-10 md:gap-8 mb-10">
+                <div className="flex flex-col md:flex-row gap-6 md:gap-12 mb-10">
                     {/* Brand Section */}
                     <div className="md:w-1/4">
                         <Link to="/" className="flex items-center gap-2 mb-3">

@@ -374,7 +374,7 @@ const Home = () => {
             {/* --- Hero Section --- */}
             <div className="w-full bg-white relative">
                 <div className="flex flex-col">
-                    <div className="relative flex min-h-[600px] md:min-h-[700px] w-full flex-col items-center justify-start pt-32 p-4 overflow-hidden bg-gray-900 pb-32">
+                    <div className="relative flex min-h-[600px] md:min-h-[700px] w-full flex-col items-center justify-start pt-32 px-8 md:px-12 overflow-hidden bg-gray-900 pb-32">
                         {/* Animated Background Slideshow */}
                         <div className="absolute inset-0 z-0">
                             <AnimatePresence mode="wait">
@@ -426,13 +426,13 @@ const Home = () => {
             </div>
 
             {/* --- Booking Form Overlay --- */}
-            <div className="relative z-30 -mt-24 px-4 sm:px-6 md:px-8 lg:px-12 mb-24 w-full flex justify-center">
+            <div className="relative z-30 -mt-24 px-8 sm:px-10 md:px-12 mb-24 w-full flex justify-center mx-auto">
                 <ServiceBookingForm onSearch={handleFormSearch} />
             </div>
 
             {/* --- Promo Banner --- */}
             <div className="w-full bg-gradient-to-r from-[#FF6B00]/10 via-orange-100 to-[#FF6B00]/10 border-b border-orange-100">
-                <div className="flex justify-center py-4 px-4">
+                <div className="flex justify-center py-4 px-8">
                     <div className="flex items-center gap-2 text-[#FF6B00] text-sm font-bold animate-pulse">
                         <ShieldCheck size={20} />
                         <p>First Service 10% Off - Limited Time Offer! Use code: FIXOFY10</p>
@@ -442,10 +442,10 @@ const Home = () => {
 
             {/* --- Browse by Category --- */}
             <div className="flex flex-col items-center w-full bg-white pb-12 pt-12">
-                <div className="flex flex-col max-w-6xl w-full px-6 md:px-12 py-0">
+                <div className="flex flex-col max-w-6xl w-[95%] px-4 md:px-12 mx-auto">
                     <section className="flex flex-col gap-10">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-[#111418] text-[22px] md:text-[28px] font-bold leading-tight tracking-[-0.015em]">Browse by Category</h2>
+                            <h2 className="text-[#111418] text-[22px] md:text-[28px] font-bold leading-tight tracking-[-0.015em] text-center md:text-left flex-1">Browse by Category</h2>
                             <a href="#" className="text-[#FF6B00] text-sm font-bold hover:underline flex items-center gap-1">
                                 View All <ArrowRight size={14} />
                             </a>
@@ -475,9 +475,9 @@ const Home = () => {
             </div>
 
             {/* --- Instant Book Section (Compact Tiles) --- */}
-            <section className="w-full bg-[#fffbf7] border-y border-[#fceee0] py-12 md:py-16 mt-0 mb-6 font-sans">
-                <div className="container mx-auto px-4 lg:px-8 max-w-5xl">
-                    <div className="flex flex-col gap-2 items-center text-center mb-8">
+            <section className="w-full bg-[#fffbf7] border-y border-[#fceee0] py-12 md:py-16 mt-0 mb-12 font-sans flex justify-center">
+                <div className="w-[95%] lg:w-full max-w-5xl px-4 lg:px-12 mx-auto">
+                    <div className="flex flex-col gap-2 items-center text-center mb-10">
                         <h2 className="text-[#111418] text-xl md:text-2xl font-bold">Instant Book: Professional Now</h2>
                         <p className="text-[#617589] text-sm">Book verified experts instantly.</p>
                     </div>
@@ -501,8 +501,8 @@ const Home = () => {
                                     {service.icon}
                                 </div>
                                 <h3 className="text-[#111418] font-semibold text-[10px] md:text-xs leading-tight">{service.title}</h3>
-                                <button className="w-full py-1 rounded-lg text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white font-semibold text-[9px] md:text-[10px] border border-[#FF6B00]/30 transition-all disabled:opacity-50">
-                                    {loadingServiceId === service.id ? 'Loading...' : 'Book'}
+                                <button className="w-full py-2 rounded-lg bg-orange-500/5 text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white font-bold text-xs border border-[#FF6B00]/30 transition-all disabled:opacity-50">
+                                    {loadingServiceId === service.id ? 'Loading...' : 'Book Now'}
                                 </button>
                             </div>
                         ))}
@@ -512,11 +512,11 @@ const Home = () => {
 
             {/* --- Top Rated Pros Section --- */}
             <div className="flex flex-col items-center w-full">
-                <div className="flex flex-col max-w-6xl w-full px-6 md:px-12 py-12 gap-12">
+                <div className="flex flex-col max-w-6xl w-[95%] px-4 md:px-12 py-12 gap-12 mx-auto">
                     <section className="flex flex-col gap-8">
-                        <div className="flex flex-col gap-2 items-center text-center">
+                        <div className="flex flex-col gap-2 items-center text-center mb-4">
                             <h2 className="text-[#111418] text-[24px] md:text-[30px] font-bold leading-tight tracking-[-0.015em]">Meet Our Top-Rated Pros</h2>
-                            <p className="text-[#617589] text-base">Vetted experts ready to tackle your next project.</p>
+                            <p className="text-[#617589] text-sm md:text-base">Vetted experts ready to tackle your next project.</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {loadingProfiles ? (
@@ -607,7 +607,7 @@ const Home = () => {
                                             {/* Book Button */}
                                             <button
                                                 onClick={() => handleBookNow(tech.serviceType, tech)}
-                                                className="mt-auto w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-sm shadow-sm shadow-orange-500/20 hover:shadow-md hover:shadow-orange-500/30 transition-all active:scale-[0.98]"
+                                                className="mt-auto w-full py-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black uppercase tracking-widest text-sm shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/40 transition-all active:scale-[0.98]"
                                             >
                                                 Book Now
                                             </button>
@@ -620,9 +620,9 @@ const Home = () => {
 
                     {/* --- Testimonials --- */}
                     <section className="flex flex-col gap-8">
-                        <div className="flex flex-col gap-2 items-center text-center">
+                        <div className="flex flex-col gap-2 items-center text-center mb-4">
                             <h2 className="text-[#111418] text-[20px] md:text-[24px] font-bold leading-tight tracking-[-0.015em]">What Our Customers Say</h2>
-                            <p className="text-[#617589] text-sm">Real stories from satisfied customers.</p>
+                            <p className="text-[#617589] text-sm md:text-base">Real stories from satisfied customers.</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {loadingTestimonials ? (
@@ -669,7 +669,7 @@ const Home = () => {
                     </section>
 
                     {/* --- Download App Section --- */}
-                    <section className="relative w-full overflow-hidden rounded-2xl bg-[#101922] shadow-2xl max-w-[1280px] mx-auto mb-16">
+                    <section className="relative w-full overflow-hidden rounded-3xl md:rounded-[3rem] bg-[#101922] shadow-2xl max-w-6xl mx-auto mb-16 px-0 md:px-0">
                         <div className="flex flex-col-reverse md:flex-row items-center">
                             <div className="flex-1 p-8 md:p-12 lg:p-16 flex flex-col gap-6 z-10 text-center md:text-left">
                                 <div className="flex flex-col gap-3">

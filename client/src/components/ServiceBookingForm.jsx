@@ -144,48 +144,50 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
     };
 
     const services = [
-        { name: "Electrician", icon: <Zap size={18} className="text-[#137fec]" /> },
-        { name: "Plumber", icon: <Droplet size={18} className="text-[#137fec]" /> },
-        { name: "Painter", icon: <Paintbrush size={18} className="text-[#137fec]" /> },
-        { name: "A.C. Technician", icon: <Fan size={18} className="text-[#137fec]" /> },
-        { name: "CCTV Technician", icon: <Video size={18} className="text-[#137fec]" /> },
-        { name: "Inverter Technician", icon: <BatteryCharging size={18} className="text-[#137fec]" /> },
-        { name: "Biometrics Technician", icon: <Fingerprint size={18} className="text-[#137fec]" /> },
-        { name: "Printer Technician", icon: <Printer size={18} className="text-[#137fec]" /> }
+        { name: "Electrician", icon: <Zap size={18} className="text-orange-600" /> },
+        { name: "Plumber", icon: <Droplet size={18} className="text-orange-600" /> },
+        { name: "Painter", icon: <Paintbrush size={18} className="text-orange-600" /> },
+        { name: "A.C. Technician", icon: <Fan size={18} className="text-orange-600" /> },
+        { name: "CCTV Technician", icon: <Video size={18} className="text-orange-600" /> },
+        { name: "Inverter Technician", icon: <BatteryCharging size={18} className="text-orange-600" /> },
+        { name: "Biometrics Technician", icon: <Fingerprint size={18} className="text-orange-600" /> },
+        { name: "Printer Technician", icon: <Printer size={18} className="text-orange-600" /> }
     ];
 
     return (
         <div className="w-full max-w-[95%] sm:max-w-4xl mx-auto bg-white rounded-3xl sm:rounded-[2.5rem] shadow-2xl shadow-black/5 border border-slate-100 overflow-hidden relative z-30">
             {/* Expert Banner */}
             {preselectedTechnician && (
-                <div className="bg-blue-600 p-3 flex items-center justify-center gap-2 text-white">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-3 flex items-center justify-center gap-2 text-white shadow-lg">
                     <CheckCircle size={16} className="fill-white/20" />
-                    <span className="font-bold text-[10px] sm:text-xs tracking-wide uppercase">Booking Expert: {preselectedTechnician.name}</span>
+                    <span className="font-extrabold text-[10px] sm:text-xs tracking-widest uppercase">Booking Expert: {preselectedTechnician.name}</span>
                 </div>
             )}
 
             <form onSubmit={handleSubmit} className="p-4 sm:p-8 md:p-10 space-y-4 sm:space-y-6">
-                <div className="text-center">
+                <div className="text-center pb-2">
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Schedule Booking</h2>
-                    <p className="text-slate-400 text-[10px] sm:text-sm mt-0.5">Find the best local experts in seconds.</p>
+                    <p className="text-slate-500 text-[10px] sm:text-sm mt-1">Find the best local experts in seconds.</p>
                 </div>
 
                 {/* Service Selection */}
-                <div className="space-y-1.5 relative z-50">
-                    <label className="text-slate-400 text-[10px] font-bold uppercase tracking-widest pl-1">Service Required</label>
+                <div className="space-y-2 relative z-50">
+                    <label className="text-slate-600 text-[11px] font-extrabold uppercase tracking-widest pl-1 block">Service Required</label>
                     <div className="relative" ref={dropdownRef}>
                         <div
                             onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
-                            className="flex items-center w-full rounded-xl border-2 border-slate-50 bg-slate-50/50 hover:bg-slate-50 transition-all cursor-pointer py-3 px-4 focus-within:border-blue-500/50"
+                            className="relative flex items-center w-full rounded-xl border-2 border-slate-100 bg-white hover:border-orange-200 transition-all cursor-pointer py-2.5 px-4 focus-within:border-orange-500 focus-within:ring-4 focus-within:ring-orange-500/10 shadow-sm"
                         >
-                            <Search size={18} className="mr-3 text-slate-400 shrink-0" />
                             <input
-                                className="flex-1 w-full bg-transparent border-none text-slate-900 placeholder:text-slate-300 focus:ring-0 text-sm sm:text-base cursor-pointer font-bold truncate overflow-hidden"
+                                className="flex-1 w-full bg-transparent border-none text-slate-900 placeholder:text-slate-300 focus:ring-0 text-sm sm:text-base cursor-pointer font-bold truncate overflow-hidden pr-10"
                                 placeholder="Select Service"
                                 value={formData.serviceType}
                                 readOnly
                             />
-                            <ChevronDown size={18} className={`ml-2 text-slate-400 transition-transform ${isServiceDropdownOpen ? 'rotate-180' : ''}`} />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                <Search size={18} className="text-orange-500 shrink-0" />
+                                <ChevronDown size={16} className={`text-slate-400 transition-transform shrink-0 ${isServiceDropdownOpen ? 'rotate-180' : ''}`} />
+                            </div>
                         </div>
 
                         <AnimatePresence>
@@ -201,12 +203,12 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                                             <div
                                                 key={service.name}
                                                 onClick={() => handleServiceSelect(service.name)}
-                                                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 text-slate-700 cursor-pointer transition-colors group"
+                                                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-orange-50 text-slate-700 cursor-pointer transition-colors group"
                                             >
-                                                <div className="p-1 bg-slate-50 rounded group-hover:bg-white transition-colors">
+                                                <div className="p-1.5 bg-slate-50 rounded group-hover:bg-white border border-transparent group-hover:border-orange-100 transition-all">
                                                     {service.icon}
                                                 </div>
-                                                <span className="text-xs sm:text-sm font-bold group-hover:text-blue-600">{service.name}</span>
+                                                <span className="text-xs sm:text-sm font-bold group-hover:text-orange-700">{service.name}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -217,28 +219,29 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                 </div>
 
                 {/* Date & Time Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-slate-400 text-[10px] font-bold uppercase tracking-widest pl-1">Preferred Date</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="space-y-2">
+                        <label className="text-slate-600 text-[11px] font-extrabold uppercase tracking-widest pl-1 block">Preferred Date</label>
                         <div className="relative">
                             <input
                                 type="date"
                                 name="scheduledDate"
                                 value={formData.scheduledDate}
                                 onChange={handleChange}
-                                className="w-full rounded-xl border-2 border-slate-50 bg-slate-50/50 text-slate-900 py-3 px-4 focus:border-blue-500/50 transition-all outline-none font-bold text-sm"
+                                className="w-full rounded-xl border-2 border-slate-100 bg-white text-slate-900 py-2.5 px-4 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none font-bold text-sm shadow-sm pr-10"
                                 required
                             />
+                            <Calendar size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500 pointer-events-none" />
                         </div>
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-slate-400 text-[10px] font-bold uppercase tracking-widest pl-1">Time Slot</label>
+                    <div className="space-y-2">
+                        <label className="text-slate-600 text-[11px] font-extrabold uppercase tracking-widest pl-1 block">Time Slot</label>
                         <div className="relative">
                             <select
                                 name="scheduledTime"
                                 value={formData.scheduledTime}
                                 onChange={handleChange}
-                                className="w-full rounded-xl border-2 border-slate-50 bg-slate-50/50 text-slate-900 py-3 px-4 focus:border-blue-500/50 transition-all outline-none font-bold text-sm appearance-none cursor-pointer"
+                                className="w-full rounded-xl border-2 border-slate-100 bg-white text-slate-900 py-2.5 px-4 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none font-bold text-sm appearance-none cursor-pointer shadow-sm pr-10"
                                 required
                             >
                                 <option value="">Select Slot</option>
@@ -247,43 +250,49 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                                 <option value="02:00 PM - 04:00 PM">02:00 PM - 04:00 PM</option>
                                 <option value="04:00 PM - 06:00 PM">04:00 PM - 06:00 PM</option>
                             </select>
-                            <Clock size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                            <Clock size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500 pointer-events-none" />
                         </div>
                     </div>
                 </div>
 
                 {/* Contact Info Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-slate-400 text-[10px] font-bold uppercase tracking-widest pl-1">Your Name</label>
-                        <input
-                            type="text"
-                            name="contactName"
-                            placeholder="Full Name"
-                            value={formData.contactName}
-                            onChange={handleChange}
-                            className="w-full rounded-xl border-2 border-slate-50 bg-slate-50/50 text-slate-900 py-3 px-4 focus:border-blue-500/50 transition-all outline-none font-bold text-sm placeholder:text-slate-300"
-                            required
-                        />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="space-y-2">
+                        <label className="text-slate-600 text-[11px] font-extrabold uppercase tracking-widest pl-1 block">Your Name</label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                name="contactName"
+                                placeholder="Full Name"
+                                value={formData.contactName}
+                                onChange={handleChange}
+                                className="w-full rounded-xl border-2 border-slate-100 bg-white text-slate-900 py-2.5 px-4 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none font-bold text-sm placeholder:text-slate-300 shadow-sm pr-10"
+                                required
+                            />
+                            <User size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500 pointer-events-none" />
+                        </div>
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-slate-400 text-[10px] font-bold uppercase tracking-widest pl-1">Mobile Number</label>
-                        <input
-                            type="tel"
-                            name="contactPhone"
-                            placeholder="+91"
-                            value={formData.contactPhone}
-                            onChange={handleChange}
-                            className="w-full rounded-xl border-2 border-slate-50 bg-slate-50/50 text-slate-900 py-3 px-4 focus:border-blue-500/50 transition-all outline-none font-bold text-sm placeholder:text-slate-300"
-                            required
-                        />
+                    <div className="space-y-2">
+                        <label className="text-slate-600 text-[11px] font-extrabold uppercase tracking-widest pl-1 block">Mobile Number</label>
+                        <div className="relative">
+                            <input
+                                type="tel"
+                                name="contactPhone"
+                                placeholder="+91"
+                                value={formData.contactPhone}
+                                onChange={handleChange}
+                                className="w-full rounded-xl border-2 border-slate-100 bg-white text-slate-900 py-2.5 px-4 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none font-bold text-sm placeholder:text-slate-300 shadow-sm pr-10"
+                                required
+                            />
+                            <Phone size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500 pointer-events-none" />
+                        </div>
                     </div>
                 </div>
 
                 {/* Location Input */}
-                <div className="space-y-1.5">
-                    <label className="text-slate-400 text-[10px] font-bold uppercase tracking-widest pl-1">Service Address</label>
-                    <div className="flex flex-col sm:flex-row gap-2">
+                <div className="space-y-2">
+                    <label className="text-slate-600 text-[11px] font-extrabold uppercase tracking-widest pl-1 block">Service Address</label>
+                    <div className="flex flex-col sm:flex-row gap-3">
                         <div className="relative flex-1">
                             <input
                                 type="text"
@@ -291,15 +300,15 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                                 placeholder="Full Address"
                                 value={formData.address}
                                 onChange={handleChange}
-                                className="w-full rounded-xl border-2 border-slate-50 bg-slate-50/50 text-slate-900 py-3 pr-10 pl-4 focus:border-blue-500/50 transition-all outline-none font-bold text-sm placeholder:text-slate-300"
+                                className="w-full rounded-xl border-2 border-slate-100 bg-white text-slate-900 py-2.5 px-4 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none font-bold text-sm placeholder:text-slate-300 shadow-sm pr-10 truncate"
                                 required={!formData.location}
                             />
-                            <MapPin size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                            <MapPin size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-500 pointer-events-none" />
                         </div>
                         <button
                             type="button"
                             onClick={handleDetectLocation}
-                            className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-xs transition-all active:scale-95 border-2 ${locationStatus === 'success' ? 'bg-green-50 border-green-100 text-green-600' : 'bg-slate-100 border-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 border-2 ${locationStatus === 'success' ? 'bg-green-50 border-green-100 text-green-600' : 'bg-slate-100 border-slate-100 text-slate-700 hover:bg-slate-200'}`}
                         >
                             <Crosshair size={16} className={`${locationStatus === 'loading' ? 'animate-spin' : ''}`} />
                             {locationStatus === 'success' ? 'Detected' : 'Detect'}
@@ -308,17 +317,28 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                 </div>
 
                 {/* Submit Action */}
-                <div className="pt-4">
+                <div className="pt-2">
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl text-sm sm:text-base shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-2 group active:scale-[0.98]"
+                        className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 p-4 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-orange-500/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-orange-500/40 active:scale-[0.98] disabled:opacity-70"
                     >
-                        {loading ? 'Processing...' : 'Book Now'}
-                        {!loading && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform opacity-70" />}
+                        <div className="relative z-10 flex items-center justify-center gap-3">
+                            {loading ? (
+                                <>
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                                    <span>Processing...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span>Book Now</span>
+                                    <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1.5" />
+                                </>
+                            )}
+                        </div>
                     </button>
-                    <div className="flex items-center justify-center gap-1.5 text-slate-400 text-[9px] sm:text-[10px] uppercase tracking-widest mt-4 font-bold">
-                        <ShieldCheck size={12} className="text-blue-500" />
+                    <div className="flex items-center justify-center gap-1.5 text-slate-400 text-[9px] sm:text-[10px] uppercase tracking-widest mt-6 font-bold">
+                        <ShieldCheck size={12} className="text-orange-500" />
                         Secure Verified Encryption
                     </div>
                 </div>
