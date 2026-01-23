@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wallet, ShieldCheck, Ticket, Calendar, DollarSign, CheckCircle, Smartphone } from 'lucide-react'; // Smartphone for PhonePe
+import { X, Wallet, ShieldCheck, Ticket, Calendar, DollarSign, CheckCircle, Smartphone } from 'lucide-react';
 import { topUpWallet, verifyCoupon, initiatePhonePePayment } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,9 +8,9 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
     const { user } = useAuth();
     const [amount, setAmount] = useState('');
     const [promoCode, setPromoCode] = useState('');
-    const [promoStatus, setPromoStatus] = useState(null); // { valid: bool, msg: string, amount: num }
+    const [promoStatus, setPromoStatus] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [method, setMethod] = useState('phonepe'); // phonepe, card
+    const [method, setMethod] = useState('phonepe');
 
     if (!isOpen) return null;
 
@@ -20,7 +20,7 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
         try {
             const res = await verifyCoupon({ code: promoCode, userId: user.id });
             if (res.data.success) {
-                setPromoStatus({ valid: true, msg: `Coupon Applied! Extra ₹${res.data.amount}`, amount: res.data.amount });
+                setPromoStatus({ valid: true, msg: `Applied! +₹${res.data.amount}`, amount: res.data.amount });
             } else {
                 setPromoStatus({ valid: false, msg: 'Invalid Code' });
             }
@@ -47,7 +47,7 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
                     amount: numericAmount
                 });
                 if (data.success && data.url) {
-                    window.location.href = data.url; // Redirect
+                    window.location.href = data.url;
                 } else {
                     alert("Failed to initiate PhonePe payment");
                     setLoading(false);
@@ -60,7 +60,6 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
             return;
         }
 
-        // Simulation (Card/Wallet Mock)
         try {
             const res = await topUpWallet({
                 userId: user.id,
@@ -82,45 +81,51 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm font-sans">
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 font-sans">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative"
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col max-h-[90vh] relative border border-white/20"
                 >
-                    {/* Header */}
-                    <div className="bg-[#111418] p-6 text-white flex justify-between items-start">
-                        <div>
-                            <h2 className="text-2xl font-bold">Add Funds</h2>
-                            <p className="text-gray-400 text-sm mt-1">Top up your Fixofy Wallet instantly.</p>
+                    {/* Header: Clean Teal Gradient */}
+                    <div className="bg-gradient-to-r from-[#0d9488] to-[#0f766e] p-4 text-white relative shrink-0">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h2 className="text-lg font-bold">Add Funds</h2>
+                                <p className="text-teal-50/80 text-[10px] sm:text-xs">Top up your Fixofy Wallet instantly</p>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                className="p-1.5 bg-white/10 hover:bg-white/20 rounded-full transition-all active:scale-95"
+                            >
+                                <X size={18} />
+                            </button>
                         </div>
-                        <button onClick={onClose} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
-                            <X size={20} />
-                        </button>
                     </div>
 
-                    <div className="p-6 space-y-6">
-                        {/* Amount Input */}
-                        <div className="space-y-3">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Amount (₹)</label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">₹</span>
+                    {/* Scrollable Content Area */}
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+                        {/* Amount Section */}
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Amount (₹)</label>
+                            <div className="relative group">
+                                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">₹</span>
                                 <input
                                     type="number"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    placeholder="Enter amount (e.g. 500)"
-                                    className="w-full pl-10 pr-4 py-4 rounded-xl border border-slate-200 bg-slate-50 text-2xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    placeholder="0.00"
+                                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-100 bg-slate-50/50 text-xl font-black text-slate-800 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all placeholder:text-slate-300"
                                 />
                             </div>
-                            {/* Presets */}
-                            <div className="flex gap-2">
+                            {/* Presets Grid */}
+                            <div className="grid grid-cols-4 gap-2 mt-2">
                                 {[100, 500, 1000, 2000].map(val => (
                                     <button
                                         key={val}
                                         onClick={() => setAmount(val.toString())}
-                                        className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${amount === val.toString() ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                        className={`py-1.5 rounded-lg text-xs font-bold transition-all border ${amount === val.toString() ? 'bg-teal-600 border-teal-600 text-white shadow-sm' : 'bg-white border-slate-100 text-slate-600 hover:border-teal-200 hover:text-teal-600'}`}
                                     >
                                         ₹{val}
                                     </button>
@@ -128,74 +133,81 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
                             </div>
                         </div>
 
-                        {/* Coupon Code */}
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Promo Code</label>
+                        {/* Promo Code Section */}
+                        <div className="bg-slate-50/50 border border-slate-100 p-3 rounded-xl space-y-2">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Ticket size={14} className="text-teal-600" />
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">Promo Code</span>
+                            </div>
                             <div className="flex gap-2">
-                                <div className="relative flex-1">
-                                    <Ticket size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        value={promoCode}
-                                        onChange={(e) => setPromoCode(e.target.value)}
-                                        placeholder="Coupon Code"
-                                        className="w-full pl-10 pr-3 py-3 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none uppercase"
-                                    />
-                                </div>
+                                <input
+                                    type="text"
+                                    value={promoCode}
+                                    onChange={(e) => setPromoCode(e.target.value)}
+                                    placeholder="ENTER CODE"
+                                    className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none uppercase placeholder:text-slate-300"
+                                />
                                 <button
                                     onClick={handleApplyPromo}
                                     disabled={!promoCode || loading}
-                                    className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-colors disabled:opacity-50"
+                                    className="px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-[10px] hover:bg-slate-900 transition-colors disabled:opacity-50"
                                 >
                                     Apply
                                 </button>
                             </div>
                             {promoStatus && (
-                                <p className={`text-xs mt-2 font-bold ${promoStatus.valid ? 'text-green-600' : 'text-red-500'}`}>
+                                <p className={`text-[10px] font-bold ${promoStatus.valid ? 'text-teal-600' : 'text-rose-500'}`}>
                                     {promoStatus.msg}
                                 </p>
                             )}
                         </div>
 
-                        {/* Payment Method Toggle (PhonePe vs Card) */}
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Payment Method</label>
-                            <div className="grid grid-cols-2 gap-3">
+                        {/* Payment Method Section */}
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Payment Method</label>
+                            <div className="grid grid-cols-2 gap-2">
                                 <button
                                     onClick={() => setMethod('phonepe')}
-                                    className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${method === 'phonepe' ? 'border-[#5f259f] bg-purple-50 text-[#5f259f]' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                                    className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all relative overflow-hidden ${method === 'phonepe' ? 'border-teal-500 bg-teal-50/30 text-teal-700' : 'border-slate-100 text-slate-400 hover:border-slate-200'}`}
                                 >
-                                    <Smartphone size={24} />
-                                    <span className="font-bold text-sm">PhonePe / UPI</span>
+                                    <Smartphone size={20} className={method === 'phonepe' ? 'text-teal-600' : 'text-slate-300'} />
+                                    <span className="font-bold text-[10px]">PhonePe / UPI</span>
+                                    {method === 'phonepe' && <div className="absolute top-0 right-0 w-4 h-4 bg-teal-500 text-white flex items-center justify-center rounded-bl-lg"><CheckCircle size={10} /></div>}
                                 </button>
                                 <button
                                     onClick={() => setMethod('card')}
-                                    className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${method === 'card' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                                    className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all relative overflow-hidden ${method === 'card' ? 'border-teal-500 bg-teal-50/30 text-teal-700' : 'border-slate-100 text-slate-400 hover:border-slate-200'}`}
                                 >
-                                    <Wallet size={24} />
-                                    <span className="font-bold text-sm">Test Wallet</span>
+                                    <Wallet size={20} className={method === 'card' ? 'text-teal-600' : 'text-slate-300'} />
+                                    <span className="font-bold text-[10px]">Test Wallet</span>
+                                    {method === 'card' && <div className="absolute top-0 right-0 w-4 h-4 bg-teal-500 text-white flex items-center justify-center rounded-bl-lg"><CheckCircle size={10} /></div>}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Summary */}
-                        <div className="bg-slate-50 p-4 rounded-xl flex justify-between items-center">
-                            <span className="text-slate-500 font-medium text-sm">You Pay:</span>
-                            <span className="text-xl font-black text-slate-800">₹{amount || 0}</span>
+                        {/* Summary Card */}
+                        <div className="bg-teal-600 rounded-xl p-3 text-white flex justify-between items-center shadow-md shadow-teal-600/20 shrink-0 mt-2">
+                            <div className="flex flex-col">
+                                <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">Total Payable</span>
+                                <span className="text-lg font-black tracking-tight">₹{amount || '0'}</span>
+                            </div>
+                            <ShieldCheck size={24} className="opacity-40" />
                         </div>
+                    </div>
 
-                        {/* Action */}
+                    {/* Bottom Action Section */}
+                    <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 shrink-0">
                         <button
                             onClick={handlePayment}
                             disabled={loading || !amount}
-                            className="w-full py-4 rounded-xl bg-[#111418] text-white font-bold text-lg shadow-xl hover:bg-black transition-transform active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+                            className="w-full py-3 sm:py-3.5 rounded-xl bg-[#111418] text-white font-bold text-sm shadow-xl hover:bg-black transition-all active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100 flex items-center justify-center gap-2 group"
                         >
                             {loading ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
                                 <>
-                                    <ShieldCheck size={20} />
-                                    Proceed to Pay
+                                    <span>Proceed to Pay</span>
+                                    <ShieldCheck size={16} className="group-hover:scale-110 transition-transform text-white/70" />
                                 </>
                             )}
                         </button>
