@@ -558,7 +558,7 @@ const Home = () => {
                                     };
 
                                     return (
-                                        <div key={tech.id} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 group h-full">
+                                        <div key={tech.id} className="bg-white rounded-2xl border-2 border-orange-200 p-5 flex flex-col gap-4 shadow-sm hover:shadow-lg hover:border-orange-400 transition-all duration-300 group h-full overflow-hidden">
                                             {/* Profile Picture - Centered at Top */}
                                             <div className="flex justify-center">
                                                 <div
@@ -568,9 +568,9 @@ const Home = () => {
                                             </div>
 
                                             {/* Text Content Below Picture */}
-                                            <div className="flex flex-col gap-3 text-center">
+                                            <div className="flex flex-col gap-2 text-center overflow-hidden">
                                                 {/* Name */}
-                                                <h3 className="text-slate-900 text-base font-bold">{tech.name}</h3>
+                                                <h3 className="text-slate-900 text-base font-bold truncate">{tech.name}</h3>
 
                                                 {/* Rating */}
                                                 <div className="flex items-center gap-1 justify-center">
@@ -579,14 +579,14 @@ const Home = () => {
                                                     <span className="text-slate-400 text-xs">({tech.reviewCount})</span>
                                                 </div>
 
-                                                {/* Description - Fully Justified */}
-                                                <p className="text-slate-500 text-xs leading-relaxed text-justify">
+                                                {/* Description - Fully Justified, Clamped to 3 lines */}
+                                                <p className="text-slate-500 text-xs leading-relaxed text-justify line-clamp-3">
                                                     {getServiceDescription(tech.serviceType)}
                                                 </p>
                                             </div>
 
                                             {/* Badges */}
-                                            <div className="flex flex-wrap gap-1.5">
+                                            <div className="flex flex-wrap gap-1.5 justify-center">
                                                 <span className="px-2.5 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full border border-orange-100">{tech.serviceType}</span>
                                                 <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full border border-blue-100">Verified</span>
                                                 <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-100">Pro</span>
