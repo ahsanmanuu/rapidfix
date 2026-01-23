@@ -172,7 +172,11 @@ const ServiceBookingForm = ({ preselectedService = '', preselectedTechnician = n
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="p-4 md:p-10 space-y-5 md:space-y-8 pt-4 md:pt-8 bg-white/50 backdrop-blur-sm"> {/* Refined padding */}
+            <form onSubmit={handleSubmit} className="p-4 md:p-10 space-y-5 md:space-y-8 pt-4 md:pt-8 bg-white/50 backdrop-blur-sm">
+                <div className="text-center mb-2">
+                    <h2 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Schedule Booking</h2>
+                    <p className="text-slate-500 text-sm mt-1">Fill the details below to find your expert</p>
+                </div>
 
                 {/* Service Type (Custom Dropdown) */}
                 <div className="flex flex-col gap-2.5 relative z-50">

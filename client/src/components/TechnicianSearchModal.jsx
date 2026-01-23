@@ -102,14 +102,15 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] sm:h-[85vh] overflow-hidden flex flex-col md:flex-row"
+                    className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] sm:h-[85vh] overflow-hidden flex flex-col md:flex-row relative"
                 >
                     {/* Close Button */}
                     <button
                         onClick={onClose}
-                        className="absolute top-3 right-3 z-50 p-2 rounded-full bg-white shadow-lg text-gray-400 hover:text-red-500 hover:bg-gray-50"
+                        className="absolute top-4 right-4 z-[9999] p-2 rounded-full bg-white shadow-xl text-gray-500 hover:text-red-500 hover:bg-gray-50 transition-all border border-gray-100"
+                        title="Close"
                     >
-                        <X size={18} />
+                        <X size={20} />
                     </button>
 
                     {/* MAP SECTION */}
