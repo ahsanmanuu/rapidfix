@@ -427,16 +427,16 @@ const Home = () => {
             </div>
 
             {/* --- Browse by Category --- */}
-            <div className="flex flex-col items-center w-full bg-white pb-16 pt-16">
-                <div className="flex flex-col max-w-[1600px] w-full px-6 md:px-16 lg:px-24 py-0">
+            <div className="flex flex-col items-center w-full bg-white pb-12 pt-12">
+                <div className="flex flex-col max-w-6xl w-full px-6 md:px-12 py-0">
                     <section className="flex flex-col gap-10">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-[#111418] text-[24px] md:text-[32px] font-bold leading-tight tracking-[-0.015em]">Browse by Category</h2>
+                            <h2 className="text-[#111418] text-[22px] md:text-[28px] font-bold leading-tight tracking-[-0.015em]">Browse by Category</h2>
                             <a href="#" className="text-[#FF6B00] text-sm font-bold hover:underline flex items-center gap-1">
-                                View All <ArrowRight size={16} />
+                                View All <ArrowRight size={14} />
                             </a>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             {[
                                 { title: "Plumbing", count: "120+ Pros", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBLBUT2icHHXQZkYUc9V_3YYe7S443u8_BiZny09aEAPhJ9gBQavsO8RWPYF8Vvds02pwLox6pGisoGXIFxxa6ssBReSLR_0atjG72hTddzI9g5cV6EqtZvqHxpiHGM1a2fotjARMT_ehh5mO8iTdWJvNUNAhWc53pJ6KyVz76xcmScE7PoF4Jio-DRhIM3alKj8jkihHj_yxHkoMUtpEFwRh0yUFvi2Uu1mAHrrx6ynm3_l-Hrv9BYM4RhZ5TCJ8UYl4uM5cMaHbQ" },
                                 { title: "Cleaning", count: "85+ Pros", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuB-j9VB93sldOMD_tOMci0XUjsOcTTe41_-2kBwB7RixXTAKkgf6VvMIQqYJRjOl1D-r9q-pgVszCVjabprzbMyfcbpaFuTqm8xqvd86JTXiFm08J2iMrJeubWfIWFjNlURL9ci034W2I5CeP0fgZkMegNs_XHucIOkqYom-F5V-OSmAA3k8Hp2dwgQ7MP5oXIgsVh11BBhDqOpAXYEK86eAhZagO3K2qNBp0C92tVDSlrUa8VAOjWNxLoclNfeMYOeJuWlWlSHRek" },
@@ -445,13 +445,13 @@ const Home = () => {
                                 { title: "Painting", count: "60+ Pros", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAbdc7b6PsdagI9Bc3SH-dN48HpjWQSsjmXq9x6UaLaLTra3j9XE_46U7IF7ncZSzXIPl6ZYVRRdXQMkndUSep5bWj0lhcj237j9cBX9N-br4YniETNe8E1dL7MUOOfTF26wIWpCSqLfaQpcu9Vi3KXKGzYyFYbc1e7jejAQTugHqORDwRTPjUBS8IUn_xG36Fz504H3ZbMwqXjptUgXhAkY1oljvYDXB0-pVhF2V24_KKcLRYfFtJx9B_s6beCX3YQaTcFhPpP-f0" },
                                 { title: "Repair", count: "55+ Pros", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCeSuAgkcsLCo35A_qybTBUKn6GN8x8ZAa-21PufWp43hpF6JEYXBOYkz34Vn50AJBHYefwWH-bF8irFKSaJFPwpUhn4Aol8_pETg7RwhC7IA-Y0IgXx4vVjGwUskJGu8mYEv9-s7g1Tg3iPWH2agIZgEhoK-7VnWLD9L9GmOUIVSaZAKC6dAYnPWzRPCGmh_bBbXhpMV8kbkBo5eOQI9Qb_Z5W_K-fBiTOtym17NccjbJsqyYeViNfaregBet8Z3BSvXu67s9h_bc" }
                             ].map((cat, idx) => (
-                                <div key={idx} className="group flex flex-col gap-3 cursor-pointer p-4 rounded-xl hover:bg-white hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+                                <div key={idx} className="group flex flex-col gap-2 cursor-pointer p-2 rounded-xl hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
                                     <div className="w-full aspect-square bg-cover bg-center rounded-lg overflow-hidden relative" style={{ backgroundImage: `url(${cat.img})` }}>
-                                        <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+                                        <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
                                     </div>
                                     <div>
-                                        <p className="text-[#111418] text-lg font-bold leading-normal group-hover:text-[#FF6B00] transition-colors">{cat.title}</p>
-                                        <p className="text-[#617589] text-base font-normal leading-normal">{cat.count}</p>
+                                        <p className="text-[#111418] text-base font-bold leading-normal group-hover:text-[#FF6B00] transition-colors">{cat.title}</p>
+                                        <p className="text-[#617589] text-xs font-normal leading-normal">{cat.count}</p>
                                     </div>
                                 </div>
                             ))}
@@ -498,27 +498,27 @@ const Home = () => {
 
             {/* --- Top Rated Pros Section --- */}
             <div className="flex flex-col items-center w-full">
-                <div className="flex flex-col max-w-[1600px] w-full px-6 md:px-16 lg:px-24 py-16 gap-20">
-                    <section className="flex flex-col gap-12">
-                        <div className="flex flex-col gap-3 items-center text-center">
-                            <h2 className="text-[#111418] text-[28px] md:text-[36px] font-bold leading-tight tracking-[-0.015em]">Meet Our Top-Rated Pros</h2>
-                            <p className="text-[#617589] text-lg">Vetted experts ready to tackle your next project.</p>
+                <div className="flex flex-col max-w-6xl w-full px-6 md:px-12 py-12 gap-12">
+                    <section className="flex flex-col gap-8">
+                        <div className="flex flex-col gap-2 items-center text-center">
+                            <h2 className="text-[#111418] text-[24px] md:text-[30px] font-bold leading-tight tracking-[-0.015em]">Meet Our Top-Rated Pros</h2>
+                            <p className="text-[#617589] text-base">Vetted experts ready to tackle your next project.</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                             {technicianProfiles && technicianProfiles.map((tech) => (
-                                <div key={tech.id} className="bg-white rounded-xl border border-[#e5e7eb] p-5 flex flex-col gap-4 shadow-sm hover:shadow-md transition-shadow">
+                                <div key={tech.id} className="bg-white rounded-xl border border-[#e5e7eb] p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
                                             <div
-                                                className="w-14 h-14 rounded-full bg-center bg-cover border border-gray-100"
+                                                className="w-12 h-12 rounded-full bg-center bg-cover border border-gray-100"
                                                 style={{ backgroundImage: `url(${tech.image})` }}
                                             ></div>
                                             <div>
-                                                <h3 className="text-[#111418] text-lg font-bold">{tech.name}</h3>
-                                                <div className="flex items-center gap-1 text-[#f59e0b] text-sm font-bold">
-                                                    <Star size={16} className="fill-current" />
+                                                <h3 className="text-[#111418] text-base font-bold">{tech.name}</h3>
+                                                <div className="flex items-center gap-1 text-[#f59e0b] text-xs font-bold">
+                                                    <Star size={14} className="fill-current" />
                                                     <span>{tech.rating}</span>
-                                                    <span className="text-[#617589] font-normal text-xs">({tech.reviewCount} reviews)</span>
+                                                    <span className="text-[#617589] font-normal text-[10px]">({tech.reviewCount} reviews)</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -542,8 +542,8 @@ const Home = () => {
                     {/* --- Testimonials --- */}
                     <section className="flex flex-col gap-8">
                         <div className="flex flex-col gap-2 items-center text-center">
-                            <h2 className="text-[#111418] text-[22px] md:text-[28px] font-bold leading-tight tracking-[-0.015em]">What Our Customers Say</h2>
-                            <p className="text-[#617589] text-base">Real stories from satisfied customers.</p>
+                            <h2 className="text-[#111418] text-[20px] md:text-[24px] font-bold leading-tight tracking-[-0.015em]">What Our Customers Say</h2>
+                            <p className="text-[#617589] text-sm">Real stories from satisfied customers.</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {[
@@ -551,17 +551,17 @@ const Home = () => {
                                 { name: "Linda Meyer", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBrf83VP8EswMsGimgtKZyhmLBJG8JIKcwwUTgu9tn0Ax7iFQZ_qVblzjERi2kzc1nuRlIr07wuKMsSUj6Ydf51ifVYkym8tiJy-1n1X2wbQDmSyMi5u7-BtmzFQOzh-n3-48aphmR91as57WoqV8QZfDFFdADmKI9e59CB8e_esiedpC1Iuk9YshsJtkxZUJ2nq5mEWKK5QhVfHlzFE_TP0AhESFnhEAUhoUHfTZXkdc8Mpu9Yos9HQvqqrVsZrVcTd6ENlLQpJkI", review: "Excellent service. The cleaner did a fantastic deep clean of my apartment. It feels like a brand new home." },
                                 { name: "Robert Fox", img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCA3fL692G4L0CTOfmVaZFOrg_0yalWWjtvjiG-yCtlHST9lD0_RlTs10DgcmbsrvHframlczzuFePvT4yLoANBEoTb1LanUv3_JFsWvhJ_dtl05eN98XP6vs7uX5ltVEvoa9Qzy_I5B6-cE5NJ-jtJfBlZqovHnvv4giF7ZUfm5SBad6iuv_hKtuZkqh5Gn24HqOPfMFVEBa80-5wTC5sN1V1gCSu907d6bbv1P5Gwu2V3yj7yTWFikpCdF9rfn-Xi11qmyqMBPbM", review: "Fair pricing and very professional workers. The booking process was seamless and the painter did a great job." }
                             ].map((review, idx) => (
-                                <div key={idx} className="flex flex-col gap-4 p-6 bg-white rounded-xl border border-[#e5e7eb] shadow-sm hover:shadow-md transition-all">
+                                <div key={idx} className="flex flex-col gap-3 p-4 bg-white rounded-xl border border-[#e5e7eb] shadow-sm hover:shadow-md transition-all">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-full bg-gray-200 bg-cover border border-gray-100" style={{ backgroundImage: `url(${review.img})` }}></div>
+                                        <div className="w-10 h-10 rounded-full bg-gray-200 bg-cover border border-gray-100" style={{ backgroundImage: `url(${review.img})` }}></div>
                                         <div>
-                                            <h3 className="font-bold text-[#111418] text-lg">{review.name}</h3>
+                                            <h3 className="font-bold text-[#111418] text-base">{review.name}</h3>
                                             <div className="flex text-[#FF6B00] gap-0.5">
-                                                {[...Array(5)].map((_, i) => <Star key={i} size={18} className="fill-current" />)}
+                                                {[...Array(5)].map((_, i) => <Star key={i} size={14} className="fill-current" />)}
                                             </div>
                                         </div>
                                     </div>
-                                    <p className="text-[#4b5563] italic leading-relaxed">"{review.review}"</p>
+                                    <p className="text-[#4b5563] italic text-xs leading-relaxed">"{review.review}"</p>
                                 </div>
                             ))}
                         </div>
