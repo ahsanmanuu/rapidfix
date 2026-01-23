@@ -503,40 +503,64 @@ const Home = () => {
                             <p className="text-[#617589] text-base">Vetted experts ready to tackle your next project.</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {technicianProfiles && technicianProfiles.map((tech) => (
-                                <div key={tech.id} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 group">
-                                    {/* Profile Section */}
-                                    <div className="flex items-start gap-3">
-                                        <div
-                                            className="w-14 h-14 rounded-full bg-center bg-cover border-2 border-slate-100 shrink-0 group-hover:border-orange-200 transition-colors"
-                                            style={{ backgroundImage: `url(${tech.image})` }}
-                                        ></div>
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="text-slate-900 text-base font-bold truncate">{tech.name}</h3>
-                                            <div className="flex items-center gap-1 mt-1">
-                                                <Star size={13} className="text-amber-400 fill-amber-400 shrink-0" />
-                                                <span className="text-amber-600 text-sm font-bold">{tech.rating}</span>
-                                                <span className="text-slate-400 text-xs">({tech.reviewCount})</span>
+                            {technicianProfiles && technicianProfiles.map((tech) => {
+                                // Generate dynamic description based on service type
+                                const getServiceDescription = (serviceType) => {
+                                    const descriptions = {
+                                        'Electrician': 'Expert in electrical installations, repairs, and maintenance. Handles wiring, circuit breakers, and lighting systems with certified expertise.',
+                                        'Plumber': 'Specialized in pipe repairs, leak fixes, and water system installations. Professional solutions for all plumbing needs.',
+                                        'Painter': 'Professional painting services for interior and exterior. Expert in color consultation and premium finishes.',
+                                        'AC Technician': 'Certified AC repair and maintenance specialist. Expert in installation, servicing, and troubleshooting cooling systems.',
+                                        'A.C. Technician': 'Certified AC repair and maintenance specialist. Expert in installation, servicing, and troubleshooting cooling systems.',
+                                        'CCTV Technician': 'Professional security camera installation and maintenance. Expert in surveillance systems and monitoring solutions.',
+                                        'Inverter Technician': 'Specialized in power backup systems and inverter installations. Expert in battery maintenance and power solutions.',
+                                        'Biometrics Technician': 'Advanced biometric system installation and support. Expert in fingerprint and facial recognition security.',
+                                        'Printer Technician': 'Professional printer repair and maintenance specialist. Expert in all printer models and troubleshooting.',
+                                        'Cleaner': 'Professional cleaning services for homes and offices. Expert in deep cleaning and sanitization.'
+                                    };
+                                    return descriptions[serviceType] || tech.description || 'Professional service provider with verified expertise and excellent customer ratings.';
+                                };
+
+                                return (
+                                    <div key={tech.id} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 group">
+                                        {/* Profile Section */}
+                                        <div className="flex items-start gap-3">
+                                            <div
+                                                className="w-14 h-14 rounded-full bg-center bg-cover border-2 border-slate-100 shrink-0 group-hover:border-orange-200 transition-colors"
+                                                style={{ backgroundImage: `url(${tech.image})` }}
+                                            ></div>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="text-slate-900 text-base font-bold truncate">{tech.name}</h3>
+                                                <div className="flex items-center gap-1 mt-1">
+                                                    <Star size={13} className="text-amber-400 fill-amber-400 shrink-0" />
+                                                    <span className="text-amber-600 text-sm font-bold">{tech.rating}</span>
+                                                    <span className="text-slate-400 text-xs">({tech.reviewCount})</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Badges */}
-                                    <div className="flex flex-wrap gap-1.5">
-                                        <span className="px-2.5 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full border border-orange-100">{tech.serviceType}</span>
-                                        <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full border border-blue-100">Verified</span>
-                                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-100">Pro</span>
-                                    </div>
+                                        {/* Description */}
+                                        <p className="text-slate-500 text-xs leading-relaxed text-justify">
+                                            {getServiceDescription(tech.serviceType)}
+                                        </p>
 
-                                    {/* Book Button */}
-                                    <button
-                                        onClick={() => handleBookNow(tech.serviceType, tech)}
-                                        className="mt-auto w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-sm shadow-sm shadow-orange-500/20 hover:shadow-md hover:shadow-orange-500/30 transition-all active:scale-[0.98]"
-                                    >
-                                        Book Now
-                                    </button>
-                                </div>
-                            ))}
+                                        {/* Badges */}
+                                        <div className="flex flex-wrap gap-1.5">
+                                            <span className="px-2.5 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full border border-orange-100">{tech.serviceType}</span>
+                                            <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full border border-blue-100">Verified</span>
+                                            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-100">Pro</span>
+                                        </div>
+
+                                        {/* Book Button */}
+                                        <button
+                                            onClick={() => handleBookNow(tech.serviceType, tech)}
+                                            className="mt-auto w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-sm shadow-sm shadow-orange-500/20 hover:shadow-md hover:shadow-orange-500/30 transition-all active:scale-[0.98]"
+                                        >
+                                            Book Now
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </section>
 
