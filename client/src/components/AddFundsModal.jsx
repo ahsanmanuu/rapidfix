@@ -110,13 +110,13 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
                         <div className="space-y-2">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Amount (₹)</label>
                             <div className="relative group">
-                                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">₹</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">₹</span>
                                 <input
                                     type="number"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     placeholder="0.00"
-                                    className="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-100 bg-slate-50/50 text-xl font-black text-slate-800 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all placeholder:text-slate-300"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-100 bg-slate-50/50 text-xl font-black text-slate-800 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none transition-all placeholder:text-slate-300 placeholder:font-medium"
                                 />
                             </div>
                             {/* Presets Grid */}
@@ -145,7 +145,7 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
                                     value={promoCode}
                                     onChange={(e) => setPromoCode(e.target.value)}
                                     placeholder="ENTER CODE"
-                                    className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none uppercase placeholder:text-slate-300"
+                                    className="flex-1 px-3 py-2 rounded-lg border border-slate-200 text-xs font-bold focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 outline-none uppercase placeholder:text-slate-300 placeholder:font-medium"
                                 />
                                 <button
                                     onClick={handleApplyPromo}
