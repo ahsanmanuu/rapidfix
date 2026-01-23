@@ -532,7 +532,7 @@ const Home = () => {
                                         onClick={() => handleBookNow(tech.serviceType, tech)}
                                         className="mt-auto w-full py-2 rounded-lg border border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white font-bold text-sm transition-colors"
                                     >
-                                        View Profile
+                                        Book Now
                                     </button>
                                 </div>
                             ))}
