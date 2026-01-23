@@ -558,7 +558,7 @@ const Home = () => {
                                     };
 
                                     return (
-                                        <div key={tech.id} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 group">
+                                        <div key={tech.id} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 group h-full">
                                             {/* Profile Section with Description on Right */}
                                             <div className="flex items-start gap-3">
                                                 <div
