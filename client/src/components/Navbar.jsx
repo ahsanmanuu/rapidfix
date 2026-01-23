@@ -18,37 +18,29 @@ const Navbar = () => {
             <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-gray-100">
                 <div className="container mx-auto px-4 lg:px-8">
                     <div className="flex items-center justify-between h-14 md:h-16">
-                        {/* Mobile: Menu button left */}
-                        <button
-                            className="md:hidden p-2 -ml-2 text-gray-700"
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        >
-                            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                        </button>
 
-                        {/* Desktop: Logo left */}
-                        <Link to="/" className="hidden md:flex items-center gap-2 select-none">
-                            <img src="/logo.png" alt="Fixofy" className="h-8 w-auto" />
-                            <span className="text-[#FF6B00] text-xl font-black lowercase">fixofy</span>
-                        </Link>
+                        {/* LEFT: Mobile menu button OR Desktop nav links */}
+                        <div className="flex items-center gap-6">
+                            {/* Mobile Menu Button */}
+                            <button
+                                className="md:hidden p-2 -ml-2 text-gray-700"
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            >
+                                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                            </button>
 
-                        {/* Mobile: Logo center-right (pushed to end) */}
-                        <Link to="/" className="md:hidden flex items-center gap-2 select-none ml-auto">
-                            <img src="/logo.png" alt="Fixofy" className="h-7 w-auto" />
-                            <span className="text-[#FF6B00] text-lg font-black lowercase">fixofy</span>
-                        </Link>
-
-                        {/* Desktop Navigation */}
-                        <div className="hidden md:flex items-center gap-6">
-                            <a href="#" className="flex items-center gap-1 text-gray-700 text-sm font-medium hover:text-[#FF6B00]">
-                                Categories <ChevronDown size={16} />
-                            </a>
-                            <Link to="/join-partner" className="text-gray-700 text-sm font-medium hover:text-[#FF6B00]">
-                                Become a Pro
-                            </Link>
+                            {/* Desktop Navigation Links */}
+                            <div className="hidden md:flex items-center gap-6">
+                                <a href="#" className="flex items-center gap-1 text-gray-700 text-sm font-medium hover:text-[#FF6B00]">
+                                    Categories <ChevronDown size={16} />
+                                </a>
+                                <Link to="/join-partner" className="text-gray-700 text-sm font-medium hover:text-[#FF6B00]">
+                                    Become a Pro
+                                </Link>
+                            </div>
                         </div>
 
-                        {/* Desktop Buttons */}
+                        {/* CENTER: Desktop Buttons */}
                         <div className="hidden md:flex items-center gap-2">
                             {user ? (
                                 <>
@@ -77,6 +69,12 @@ const Navbar = () => {
                                 </>
                             )}
                         </div>
+
+                        {/* RIGHT: Logo (both mobile and desktop) */}
+                        <Link to="/" className="flex items-center gap-2 select-none">
+                            <img src="/logo.png" alt="Fixofy" className="h-7 md:h-8 w-auto" />
+                            <span className="text-[#FF6B00] text-lg md:text-xl font-black lowercase">fixofy</span>
+                        </Link>
                     </div>
                 </div>
             </nav>
