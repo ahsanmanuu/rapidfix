@@ -502,33 +502,36 @@ const Home = () => {
                             <h2 className="text-[#111418] text-[24px] md:text-[30px] font-bold leading-tight tracking-[-0.015em]">Meet Our Top-Rated Pros</h2>
                             <p className="text-[#617589] text-base">Vetted experts ready to tackle your next project.</p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {technicianProfiles && technicianProfiles.map((tech) => (
-                                <div key={tech.id} className="bg-white rounded-xl border border-[#e5e7eb] p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
-                                    <div className="flex items-start justify-between md:justify-between justify-center">
-                                        <div className="flex items-start gap-3 md:items-start items-center md:flex-row flex-col md:text-left text-center">
-                                            <div
-                                                className="w-12 h-12 rounded-full bg-center bg-cover border border-gray-100 md:mt-1 mt-0"
-                                                style={{ backgroundImage: `url(${tech.image})` }}
-                                            ></div>
-                                            <div>
-                                                <h3 className="text-[#111418] text-base font-bold">{tech.name}</h3>
-                                                <div className="flex items-center gap-1 text-[#f59e0b] text-xs font-bold md:justify-start justify-center">
-                                                    <Star size={14} className="fill-current" />
-                                                    <span>{tech.rating}</span>
-                                                    <span className="text-[#617589] font-normal text-[10px]">({tech.reviewCount} reviews)</span>
-                                                </div>
+                                <div key={tech.id} className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-4 shadow-sm hover:shadow-lg hover:border-slate-200 transition-all duration-300 group">
+                                    {/* Profile Section */}
+                                    <div className="flex items-start gap-3">
+                                        <div
+                                            className="w-14 h-14 rounded-full bg-center bg-cover border-2 border-slate-100 shrink-0 group-hover:border-orange-200 transition-colors"
+                                            style={{ backgroundImage: `url(${tech.image})` }}
+                                        ></div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-slate-900 text-base font-bold truncate">{tech.name}</h3>
+                                            <div className="flex items-center gap-1 mt-1">
+                                                <Star size={13} className="text-amber-400 fill-amber-400 shrink-0" />
+                                                <span className="text-amber-600 text-sm font-bold">{tech.rating}</span>
+                                                <span className="text-slate-400 text-xs">({tech.reviewCount})</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex flex-wrap gap-2 md:justify-start justify-center">
-                                        <span className="px-2 py-1 bg-orange-50 text-[#FF6B00] text-xs font-medium rounded-full">{tech.serviceType}</span>
-                                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Expert</span>
-                                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Pro</span>
+
+                                    {/* Badges */}
+                                    <div className="flex flex-wrap gap-1.5">
+                                        <span className="px-2.5 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-full border border-orange-100">{tech.serviceType}</span>
+                                        <span className="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full border border-blue-100">Verified</span>
+                                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full border border-emerald-100">Pro</span>
                                     </div>
+
+                                    {/* Book Button */}
                                     <button
                                         onClick={() => handleBookNow(tech.serviceType, tech)}
-                                        className="mt-auto w-full py-2 rounded-lg border border-[#FF6B00] text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white font-bold text-sm transition-colors"
+                                        className="mt-auto w-full py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold text-sm shadow-sm shadow-orange-500/20 hover:shadow-md hover:shadow-orange-500/30 transition-all active:scale-[0.98]"
                                     >
                                         Book Now
                                     </button>
