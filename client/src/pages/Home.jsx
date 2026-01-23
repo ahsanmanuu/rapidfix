@@ -460,39 +460,38 @@ const Home = () => {
                 </div>
             </div>
 
-            {/* --- Instant Book Section (Refined Tiles) --- */}
-            <section className="w-full bg-[#fffbf7] border-y border-[#fceee0] py-24 md:py-32 mt-0 mb-8 font-sans">
-                <div className="flex justify-center w-full">
-                    <div className="flex flex-col max-w-[1600px] w-full px-6 md:px-16 lg:px-24 gap-16">
-                        <div className="flex flex-col gap-3 items-center text-center">
-                            <h2 className="text-[#111418] text-[28px] md:text-[36px] font-bold leading-tight tracking-[-0.015em]">Instant Book: Professional Now</h2>
-                            <p className="text-[#617589] text-lg">Book verified experts instantly for your specific needs. Fast and reliable.</p>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-                            {[
-                                { id: 'Electrician', title: "Electrician", tag: "Expert & Certified", icon: <Zap size={28} /> },
-                                { id: 'Plumber', title: "Plumber", tag: "Leak & Fix Expert", icon: <Droplet size={28} /> },
-                                { id: 'Painter', title: "Painter", tag: "Home Refresh", icon: <Paintbrush size={28} /> },
-                                { id: 'AC Technician', title: "A.C. Tech", tag: "Cooling Specialist", icon: <Fan size={28} /> },
-                                { id: 'Inverter Technician', title: "Inverter", tag: "Power Backup", icon: <BatteryCharging size={28} /> },
-                                { id: 'CCTV Technician', title: "CCTV Tech", tag: "Security Expert", icon: <Camera size={28} /> },
-                                { id: 'Biometrics Technician', title: "Biometrics", tag: "Access Control", icon: <Fingerprint size={28} /> },
-                                { id: 'Printer Technician', title: "Printer", tag: "Quick Repair", icon: <Printer size={28} /> },
-                            ].map((service) => (
-                                <div key={service.id} onClick={() => handleBookNow(service.id)} className="group bg-white rounded-2xl p-6 border border-transparent hover:border-[#FF6B00]/20 shadow-sm hover:shadow-lg hover:-translate-y-2 transition-all duration-300 flex flex-col items-center text-center justify-center gap-4 cursor-pointer">
-                                    <div className="w-16 h-16 rounded-full bg-orange-50 group-hover:bg-[#FF6B00] group-hover:text-white text-[#FF6B00] flex items-center justify-center transition-colors duration-300">
-                                        {service.icon}
-                                    </div>
-                                    <div className="flex flex-col gap-1 w-full items-center text-center">
-                                        <h3 className="text-[#111418] font-bold text-lg md:text-xl">{service.title}</h3>
-                                        <p className="text-[#617589] text-sm font-medium uppercase tracking-wide bg-gray-100 px-3 py-1.5 rounded-full w-fit">{service.tag}</p>
-                                    </div>
-                                    <button className="w-full mt-2 py-2.5 rounded-lg bg-transparent text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white font-bold text-base transition-all duration-300">
-                                        Book Now
-                                    </button>
+            {/* --- Instant Book Section (Compact Tiles) --- */}
+            <section className="w-full bg-[#fffbf7] border-y border-[#fceee0] py-12 md:py-16 mt-0 mb-6 font-sans">
+                <div className="container mx-auto px-4 lg:px-8 max-w-5xl">
+                    <div className="flex flex-col gap-2 items-center text-center mb-8">
+                        <h2 className="text-[#111418] text-xl md:text-2xl font-bold">Instant Book: Professional Now</h2>
+                        <p className="text-[#617589] text-sm">Book verified experts instantly.</p>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+                        {[
+                            { id: 'Electrician', title: "Electrician", icon: <Zap size={20} /> },
+                            { id: 'Plumber', title: "Plumber", icon: <Droplet size={20} /> },
+                            { id: 'Painter', title: "Painter", icon: <Paintbrush size={20} /> },
+                            { id: 'AC Technician', title: "A.C. Tech", icon: <Fan size={20} /> },
+                            { id: 'Inverter Technician', title: "Inverter", icon: <BatteryCharging size={20} /> },
+                            { id: 'CCTV Technician', title: "CCTV", icon: <Camera size={20} /> },
+                            { id: 'Biometrics Technician', title: "Biometrics", icon: <Fingerprint size={20} /> },
+                            { id: 'Printer Technician', title: "Printer", icon: <Printer size={20} /> },
+                        ].map((service) => (
+                            <div
+                                key={service.id}
+                                onClick={() => handleBookNow(service.id)}
+                                className="group bg-white rounded-xl p-4 border border-gray-100 hover:border-[#FF6B00]/30 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col items-center text-center gap-2 cursor-pointer"
+                            >
+                                <div className="w-10 h-10 rounded-full bg-orange-50 group-hover:bg-[#FF6B00] group-hover:text-white text-[#FF6B00] flex items-center justify-center transition-colors">
+                                    {service.icon}
                                 </div>
-                            ))}
-                        </div>
+                                <h3 className="text-[#111418] font-semibold text-sm">{service.title}</h3>
+                                <button className="w-full py-1.5 rounded-lg text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white font-semibold text-xs border border-[#FF6B00]/30 transition-all">
+                                    Book
+                                </button>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
