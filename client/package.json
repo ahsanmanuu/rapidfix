@@ -19,7 +19,6 @@
     "axios": "^1.13.2",
     "date-fns": "^3.6.0",
     "framer-motion": "^12.23.26",
-    "google-map-react": "^2.2.5",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

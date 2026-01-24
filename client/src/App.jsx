@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import TechnicianDashboard from './pages/TechnicianDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import JobHistoryLog from './pages/JobHistoryLog';
 import Wallet from './pages/Wallet';
 import TechnicianAuth from './pages/TechnicianAuth';
 import NotFound from './pages/NotFound';
@@ -56,6 +57,10 @@ function App() {
               <Route
                 path="/technician-dashboard"
                 element={user ? <UnifiedDashboard /> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/job-history"
+                element={user ? <JobHistoryLog /> : <Navigate to="/login" />}
               />
               <Route
                 path="/admin-dashboard"

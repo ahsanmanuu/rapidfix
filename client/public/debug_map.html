@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Map Debugger</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+        #error-box {
+            padding: 15px;
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #b91c1c;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        #success-box {
+            padding: 15px;
+            background: #dcfce7;
+            border: 1px solid #22c55e;
+            color: #15803d;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+            background: #eee;
+            border-radius: 8px;
+        }
+    </style>
+    <script>
+        // Catch Authentication Errors
+        window.gm_authFailure = function () {
+            const box = document.getElementById('error-box');
+            box.style.display = 'block';
+            box.innerHTML = `
+                <strong>❌ Auth Failure:</strong><br>
+                Possible causes:<br>
+                1. <strong>Billing Not Enabled:</strong> You must have a credit card linked in Google Cloud Console (even for free tier).<br>
+                2. <strong>Referrer Restriction:</strong> Your key might block 'localhost'.<br>
+                3. <strong>API Not Enabled:</strong> Ensure "Maps JavaScript API" is ON.<br>
+                <br>
+                <em>Check the browser console (F12) for the exact error code (e.g. BillingNotEnabledMapError).</em>
+            `;
+        }
+    </script>
+</head>
+
+<body>
+    <h1>Google Maps Debugger</h1>
+    <div id="error-box"></div>
+    <div id="success-box"></div>
+    <div id="status">Loading...</div>
+    <div id="map"></div>
+
+    <script>
+        function initMap() {
+            document.getElementById('status').innerText = "Script loaded. Initializing map...";
+            try {
+                const map = new google.maps.Map(document.getElementById("map"), {
+                    center: { lat: -34.397, lng: 150.644 },
+                    zoom: 8,
+                });
+
+                document.getElementById('success-box').style.display = 'block';
+                document.getElementById('success-box').innerHTML = '<strong>✅ Success:</strong> Map loaded correctly!';
+                document.getElementById('status').innerText = "Map Initialized.";
+            } catch (e) {
+                document.getElementById('error-box').style.display = 'block';
+                document.getElementById('error-box').innerText = 'JS Error: ' + e.message;
+            }
+        }
+    </script>
+
+    <!-- Load Maps API with the user's key -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBN-6NUc8fWY4FsOLvOXj7gvX4pWYVDRUU4&callback=initMap"
+        async defer></script>
+</body>
+
+</html>
