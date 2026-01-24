@@ -194,26 +194,14 @@ const verifyAdmin = async (req, res, next) => {
 
     const session = await sessionManager.validateSession(token);
 
+    if (!session) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid session' });
+    }
+
     // Fallback: If session has no role (DB column missing), check AdminManager
     if (session && !session.role) {
       const admin = await adminManager.db.find('id', session.userId);
       if (admin) {
-        session.role = admin.role || 'admin'; // Infer role
-      }
-    }
-
-    if (!session || (session.role !== 'admin' && session.role !== 'superadmin')) {
-      return res.status(403).json({ error: 'Unauthorized: Invalid admin session' });
-    }
-
-    req.admin = { role: session.role, id: session.userId };
-
-    // If Admin, load full details to get Location
-    if (session.role === 'admin') {
-      // We might have already fetched it above, but fine to fetch again or optimize
-      const adminDetails = await adminManager.db.find('id', session.userId);
-      if (adminDetails) {
-        req.admin = { ...req.admin, ...adminManager._mapFromDb(adminDetails) };
       }
     }
 
@@ -883,27 +871,46 @@ app.get('/api/admin/top-performers', async (req, res) => {
 // --- Admin Routes ---
 // --- Admin Routes ---
 app.get('/api/admin/users', verifyAdmin, async (req, res) => {
-  const { lat, lng } = req.query;
+  // Enforce Server-Side Geo-Fencing
+  const lat = req.user.fixed_latitude || req.query.lat;
+  const lng = req.user.fixed_longitude || req.query.lng;
+  console.log(`[AdminAPI] Fetching Users. Filter: ${lat}, ${lng} (Source: ${req.user.fixed_latitude ? 'Profile' : 'Query'})`);
+
   const users = await adminManager.getUsers(lat, lng);
   res.json({ success: true, users });
 });
 
 app.get('/api/admin/technicians', verifyAdmin, async (req, res) => {
-  const { lat, lng } = req.query;
+  const lat = req.user.fixed_latitude || req.query.lat;
+  const lng = req.user.fixed_longitude || req.query.lng;
+  console.log(`[AdminAPI] Fetching Technicians. Filter: ${lat}, ${lng}`);
+
   const technicians = await adminManager.getTechnicians(lat, lng);
   res.json({ success: true, technicians });
 });
 
 app.get('/api/admin/jobs', verifyAdmin, async (req, res) => {
-  const { lat, lng } = req.query;
+  const lat = req.user.fixed_latitude || req.query.lat;
+  const lng = req.user.fixed_longitude || req.query.lng;
+  console.log(`[AdminAPI] Fetching Jobs. Filter: ${lat}, ${lng}`);
+
   const jobs = await adminManager.getJobs(lat, lng);
   res.json({ success: true, jobs });
 });
 
 app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
   try {
-    const { lat, lng } = req.query; // Capture location from query params
-    const stats = await adminManager.getStats(lat, lng); // Pass to manager
+    const lat = req.user.fixed_latitude || req.query.lat;
+    const lng = req.user.fixed_longitude || req.query.lng;
+
+    // Debug Log for Geo-Fencing
+    if (lat && lng) {
+      console.log(`[AdminStats] Calculating Geo-Fenced stats for: ${lat}, ${lng}`);
+    } else {
+      console.log(`[AdminStats] Calculating Global stats (No fixed location found)`);
+    }
+
+    const stats = await adminManager.getStats(lat, lng);
     res.json({ success: true, stats });
   } catch (error) {
     console.error('Stats Error:', error);
