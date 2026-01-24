@@ -1,309 +1,501 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-    LayoutDashboard, Wallet, History, Settings, MessageSquare,
-    LogOut, Bell, Search, MapPin, Clock, Calendar,
-    CheckCircle2, XCircle, TrendingUp, Star,
-    Coffee, Briefcase, Zap, Menu, X,
-    MoreVertical, User, ChevronDown, RefreshCw, Send, Image as ImageIcon, Lock, Shield,
-    ArrowUpRight, ArrowDownRight, PieChart, Signal, Wifi
+    LayoutDashboard, ClipboardList, MessageSquare, Wallet, BarChart2,
+    Headphones, Tag, Settings, Globe, LogOut, MapPin, Signal, Calendar,
+    Bell, ChevronDown, MoreVertical, Car, X, Check, Star, Clock,
+    CheckCircle2, AlertCircle, Shield, CreditCard, User
 } from 'lucide-react';
 import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-    AreaChart, Area, PieChart as RePieChart, Pie, Cell
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
-import { useSocket } from '../context/SocketContext';
-import Navbar from '../components/Navbar'; // Use main Navbar if preferred, or custom sidebar
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import useSupabaseRealtime from '../hooks/useSupabaseRealtime';
+import './TechnicianDashboard.css'; // Ensure this exists or is created
 
-import GoogleMapReact from 'google-map-react';
-import LiveRideModal from '../components/Dashboard/LiveRideModal';
-import TechnicianSidebar from '../components/Dashboard/TechnicianSidebar';
-import TechnicianJobMarket from '../components/Dashboard/TechnicianJobMarket';
+// --- Components ---
 
-// --- AdminLTE Style Components ---
-
-// --- Modern Stat Card Component ---
-// --- Modern Stat Card Component (Premium Glass + Gradients) ---
-const StatCard = ({ title, value, icon: Icon, color, trend, onClick, subtext, gradient }) => (
-    <motion.div
-        whileHover={{ y: -8, scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+const SidebarItem = ({ icon: Icon, label, active, badge, onClick }) => (
+    <button
         onClick={onClick}
-        className={`
-            relative overflow-hidden rounded-3xl p-8 cursor-pointer group transition-all duration-500
-            ${gradient ? gradient : 'bg-white'}
-            ${gradient ? 'text-white border-0 shadow-2xl' : 'bg-white border border-slate-100 shadow-xl'}
-        `}
+        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all text-sm mb-0.5
+        ${active ? 'bg-blue-500/10 text-blue-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}
     >
-        {/* Background Decorative Elements */}
-        <div className={`absolute -right-10 -top-10 w-40 h-40 rounded-full opacity-20 blur-3xl ${gradient ? 'bg-white' : color.replace('bg-', 'bg-')}`} />
-        <div className={`absolute -left-10 -bottom-10 w-32 h-32 rounded-full opacity-20 blur-2xl ${gradient ? 'bg-black' : color.replace('bg-', 'bg-')}`} />
-
-        <div className="relative z-10 flex justify-between items-start">
-            <div className="overflow-hidden">
-                <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 truncate ${gradient ? 'text-white/80' : 'text-slate-400'}`}>{title}</p>
-                <h3 className={`text-lg font-black tracking-tight mb-1 truncate ${gradient ? 'text-white' : 'text-slate-800'}`}>{value}</h3>
-                {subtext && <p className={`text-[9px] font-semibold truncate ${gradient ? 'text-white/60' : 'text-slate-400'}`}>{subtext}</p>}
-            </div>
-            <div className={`
-                p-4 rounded-2xl backdrop-blur-md shadow-sm
-                ${gradient ? 'bg-white/20 text-white' : `${color.replace('bg-', 'bg-').replace('500', '50')} ${color.replace('bg-', 'text-')}`}
-            `}>
-                <Icon size={28} />
-            </div>
-        </div>
-
-        {trend && (
-            <div className={`mt-6 flex items-center text-sm font-bold ${gradient ? 'text-white/90' : ''}`}>
-                <span className={`flex items-center gap-1 ${!gradient ? (trend.positive ? 'text-emerald-500' : 'text-rose-500') : ''}`}>
-                    {trend.positive ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                    {trend.value}%
-                </span>
-                <span className={`ml-2 ${gradient ? 'text-white/60' : 'text-slate-400'}`}>vs last month</span>
-            </div>
+        <Icon size={20} className={active ? 'text-blue-600' : 'text-slate-400'} />
+        <span className="flex-1 text-left">{label}</span>
+        {badge && (
+            <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                {badge}
+            </span>
         )}
-    </motion.div>
+    </button>
 );
 
-// --- Stats Detail Modal ---
-const DashboardStatsModal = ({ isOpen, onClose, stats, type }) => {
-    if (!isOpen) return null;
-
-    const totalBalance = typeof stats.earnings === 'object' ? (stats.earnings.balance || 0) : (stats.earnings || 0);
-    const monthlyTotal = typeof stats.monthlyEarnings === 'object' ? (stats.monthlyEarnings.amount || 0) : (stats.monthlyEarnings || 0);
-
-    const data = [
-        { name: 'Week 1', value: monthlyTotal * 0.2 || (monthlyTotal > 0 ? 0 : 4000) },
-        { name: 'Week 2', value: monthlyTotal * 0.25 || (monthlyTotal > 0 ? 0 : 3000) },
-        { name: 'Week 3', value: monthlyTotal * 0.3 || (monthlyTotal > 0 ? 0 : 5000) },
-        { name: 'Week 4', value: monthlyTotal * 0.25 || (monthlyTotal > 0 ? 0 : 4500) },
-    ];
-
-    const pieData = [
-        { name: 'Completed', value: stats.completedJobs, color: '#10B981' }, // Emerald
-        { name: 'Rejected', value: stats.rejectedJobs || 0, color: '#F43F5E' },  // Rose
-    ];
-
-    return (
-        <AnimatePresence>
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-                >
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white dark:bg-slate-900">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-800">Detailed Analytics</h2>
-                            <p className="text-sm text-gray-500">Monthly Performance Report</p>
-                        </div>
-                        <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-                            <X size={24} className="text-gray-500" />
-                        </button>
-                    </div>
-
-                    <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Area Chart: Earnings Trend */}
-                        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                                <TrendingUp size={20} className="text-blue-500" /> Earnings Curve
-                            </h3>
-                            <div className="h-64">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart key={isOpen} data={data}>
-                                        <defs>
-                                            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
-                                        <RechartsTooltip
-                                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                        />
-                                        <Area type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* Pie Chart: Job Distribution */}
-                        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                            <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                                <PieChart size={20} className="text-emerald-500" /> Job Distribution
-                            </h3>
-                            <div className="h-64 relative">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <RePieChart key={isOpen}>
-                                        <Pie
-                                            data={pieData}
-                                            innerRadius={60}
-                                            outerRadius={80}
-                                            paddingAngle={5}
-                                            dataKey="value"
-                                        >
-                                            {pieData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
-                                        </Pie>
-                                        <RechartsTooltip />
-                                    </RePieChart>
-                                </ResponsiveContainer>
-                                <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
-                                    <span className="text-3xl font-bold text-gray-800">{stats.completedJobs + stats.rejectedJobs}</span>
-                                    <span className="text-xs text-gray-400 font-medium uppercase">Total</span>
-                                </div>
-                            </div>
-                            <div className="flex justify-center gap-6 mt-4">
-                                {pieData.map((item, i) => (
-                                    <div key={i} className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                                        <span className="text-sm text-gray-600 font-medium">{item.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="p-6 bg-gray-50 border-t border-gray-100">
-                        <h4 className="font-bold text-gray-800 mb-4">Quick Insights</h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div className="p-4 bg-white rounded-lg border border-gray-200">
-                                <div className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Completion Rate</div>
-                                <div className="text-2xl font-bold text-emerald-600">
-                                    {Math.round((stats.completedJobs / (stats.completedJobs + stats.rejectedJobs || 1)) * 100)}%
-                                </div>
-                            </div>
-                            <div className="p-4 bg-white rounded-lg border border-gray-200">
-                                <div className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Avg. Earnings / Job</div>
-                                <div className="text-2xl font-bold text-blue-600">
-                                    ₹{stats.completedJobs ? Math.round(totalBalance / stats.completedJobs) : 0}
-                                </div>
-                            </div>
-                            <div className="p-4 bg-white rounded-lg border border-gray-200">
-                                <div className="text-xs text-gray-500 uppercase tracking-wider font-bold mb-1">Customer Rating</div>
-                                <div className="text-2xl font-bold text-amber-500 flex items-center gap-1">
-                                    {stats.rating} <Star size={18} fill="currentColor" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
-        </AnimatePresence>
-    );
-};
-
-const ContentHeader = ({ title, breadcrumb }) => (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 px-6 bg-transparent">
-        <h1 className="text-lg sm:text-2xl font-normal text-gray-800 m-0">{title}</h1>
-        <nav className="flex text-sm text-gray-500 mt-2 sm:mt-0">
-            <span className="hover:text-blue-500 cursor-pointer">Home</span>
-            <span className="mx-2">/</span>
-            <span className="text-gray-700">{breadcrumb}</span>
-        </nav>
+const StatCard = ({ icon: Icon, label, value, colorClass, iconBgClass }) => (
+    <div className={`bg-white border-l-4 ${colorClass} shadow-sm rounded-xl p-3 flex items-center gap-3 transition-all hover:shadow-md border border-slate-200`}>
+        <div className={`size-9 rounded-lg flex items-center justify-center ${iconBgClass}`}>
+            <Icon size={18} />
+        </div>
+        <div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{label}</p>
+            <h3 className="text-lg font-black leading-tight text-slate-900">{value}</h3>
+        </div>
     </div>
 );
 
-// --- Success Animation Modal (Professional & Modern) ---
-const SuccessAnimationModal = ({ isOpen, onClose, title = "Success!", message = "Your update was saved successfully." }) => {
-    useEffect(() => {
-        if (isOpen) {
-            const timer = setTimeout(() => onClose(), 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [isOpen, onClose]);
+const JobCard = ({ job, onAccept, onReject, onView }) => {
+    const isNew = job.status === 'pending';
+    const colorClass = isNew ? 'border-l-blue-500' : 'border-l-indigo-500';
+    const badgeClass = isNew ? 'bg-blue-50 text-blue-600' : 'bg-indigo-50 text-indigo-600';
+    const statusLabel = isNew ? 'NEW REQUEST' : 'IN PROGRESS';
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <style>
-                        {`
-                            @keyframes slide-infinite {
-                                0% { transform: translateX(-100%); }
-                                100% { transform: translateX(100%); }
-                            }
-                            .animate-slide-infinite {
-                                animation: slide-infinite 2s linear infinite;
-                            }
-                        `}
-                    </style>
-                    {/* Backdrop Blur Layer */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[-1]"
-                    />
+        <div className={`bg-white border border-slate-200 shadow-sm rounded-xl p-5 border-l-4 ${colorClass} flex flex-col justify-between h-full`}>
+            <div>
+                <div className="flex justify-between items-start mb-3">
+                    <div className="flex flex-col">
+                        <span className={`text-[10px] font-black ${badgeClass} px-2 py-0.5 rounded w-fit mb-1 uppercase`}>
+                            {statusLabel}
+                        </span>
+                        <h3 className="text-base font-bold text-slate-800 line-clamp-1">{job.title || job.serviceType}</h3>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-sm font-black text-slate-900">₹{job.offerPrice || job.amount || 0}</p>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase">Estimated</p>
+                    </div>
+                </div>
+                <div className="space-y-2 mb-6">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                        <MapPin size={14} className="text-slate-400" />
+                        <span className="truncate">{job.location?.address || 'Location Hidden'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                        <Clock size={14} className="text-slate-400" />
+                        <span>Today, {new Date(job.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                </div>
+            </div>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 50, scale: 0.9, rotateX: -15 }}
-                        animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: -20, transition: { duration: 0.2 } }}
-                        className="bg-white rounded-[2.5rem] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.3)] p-10 max-w-sm w-full text-center relative overflow-hidden"
+            {isNew ? (
+                <div className="flex items-center gap-2 mt-auto">
+                    <button
+                        onClick={() => onAccept(job.id)}
+                        className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors"
                     >
-                        {/* Decorative Gradient Line */}
-                        <div className="absolute top-0 left-0 w-full h-1.5 bg-gray-100 overflow-hidden">
-                            <div className="h-full w-1/2 bg-gradient-to-r from-emerald-400 via-teal-500 to-emerald-400 animate-slide-infinite" />
-                        </div>
-
-                        <div className="mb-8 relative">
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.1 }}
-                                className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center mx-auto shadow-2xl shadow-emerald-200 border-4 border-white"
-                            >
-                                <motion.div
-                                    initial={{ pathLength: 0, opacity: 0 }}
-                                    animate={{ pathLength: 1, opacity: 1 }}
-                                    transition={{ duration: 0.5, delay: 0.3 }}
-                                >
-                                    <CheckCircle2 size={48} className="text-white" />
-                                </motion.div>
-                            </motion.div>
-                        </div>
-
-                        <motion.h3
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 }}
-                            className="text-3xl font-black text-slate-900 mb-3 tracking-tighter"
-                        >
-                            {title}
-                        </motion.h3>
-
-                        <motion.p
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                            className="text-slate-500 text-sm font-semibold leading-relaxed px-2"
-                        >
-                            {message}
-                        </motion.p>
-
-                        <motion.button
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.6 }}
-                            onClick={onClose}
-                            className="mt-10 w-full py-4 bg-slate-950 text-white font-black rounded-2xl hover:bg-slate-800 transition-all shadow-2xl shadow-slate-200 active:scale-95 text-sm uppercase tracking-widest"
-                        >
-                            Confirm
-                        </motion.button>
-                    </motion.div>
+                        Accept
+                    </button>
+                    <button
+                        onClick={() => onReject(job.id)}
+                        className="flex-1 px-3 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors"
+                    >
+                        Reject
+                    </button>
+                    <button onClick={() => onView(job)} className="px-3 py-2 border border-slate-200 text-slate-400 rounded-lg hover:bg-slate-50 transition-colors">
+                        <LayoutDashboard size={14} />
+                    </button>
+                </div>
+            ) : (
+                <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-auto">
+                    <div className="flex items-center gap-2 text-emerald-600 font-bold text-[10px] uppercase">
+                        <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                        Job Active
+                    </div>
+                    <button onClick={() => onView(job)} className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase">
+                        View Details
+                    </button>
                 </div>
             )}
-        </AnimatePresence>
+        </div>
+    );
+};
+
+const TechnicianDashboard = () => {
+    const { user, logout, updateUser } = useAuth(); // Assuming updateUser logic exists or needs shim
+    const navigate = useNavigate();
+    const socket = useSocket();
+
+    // State
+    const [stats, setStats] = useState({
+        earnings: 0,
+        monthlyRevenue: 0,
+        completedJobs: 0,
+        rating: 4.8
+    });
+    const [activeJobs, setActiveJobs] = useState([]);
+    const [technicianStatus, setTechnicianStatus] = useState(user?.status || 'Available');
+    const [loading, setLoading] = useState(false);
+
+    // Mock Data for Charts
+    const earningsData = [
+        { name: 'Mon', value: 2400 },
+        { name: 'Tue', value: 1398 },
+        { name: 'Wed', value: 9800 },
+        { name: 'Thu', value: 3908 },
+        { name: 'Fri', value: 4800 },
+        { name: 'Sat', value: 3800 },
+        { name: 'Sun', value: 4300 },
+    ];
+
+    // --- Effects ---
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    // Listen to real-time job updates
+    useSupabaseRealtime('jobs', (payload) => {
+        // Simple handler to refresh on job changes related to this tech
+        // In prod, optimize to specific ID checks
+        fetchDashboardData();
+    });
+
+    const fetchDashboardData = async () => {
+        setLoading(true);
+        try {
+            // Parallel Fetch
+            const [jobsRes, statsRes] = await Promise.all([
+                api.getJobsByTechnician(user.id).catch(() => ({ data: { jobs: [] } })),
+                // Mock stats or real endpoint if available
+                Promise.resolve({ data: { earnings: 12500, monthly: 45000, completed: 12, rating: 4.8 } })
+            ]);
+
+            const allJobs = jobsRes.data.jobs || [];
+            // Filter for Pending/Active
+            const active = allJobs.filter(j => ['pending', 'accepted', 'in_progress', 'started'].includes(j.status));
+            setActiveJobs(active);
+
+            // Set stats (mix of real and mock for now)
+            setStats({
+                earnings: statsRes.data.earnings,
+                monthlyRevenue: statsRes.data.monthly,
+                completedJobs: allJobs.filter(j => j.status === 'completed').length,
+                rating: user.rating || 4.8
+            });
+
+        } catch (err) {
+            console.error("Dashboard Fetch Error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleStatusChange = async (e) => {
+        const newStatus = e.target.value;
+        setTechnicianStatus(newStatus);
+        try {
+            await api.put(`/technicians/${user.id}/status`, { status: newStatus });
+            // Optimistic update already done
+            // updateUser({ status: newStatus }); // If this method exists
+        } catch (err) {
+            console.error("Status Update Failed", err);
+            setTechnicianStatus(user.status); // Revert
+        }
+    };
+
+    const handleAcceptJob = async (jobId) => {
+        try {
+            await api.acceptJob(jobId, user.id);
+            // Refresh logic will catch this from socket or manual re-fetch
+            fetchDashboardData();
+        } catch (err) {
+            alert("Failed to accept job: " + err.message);
+        }
+    };
+
+    const handleRejectJob = async (jobId) => {
+        // Implement reject API if exists, or just hide
+        alert("Reject logic needs implementation in API");
+    };
+
+    return (
+        <div className="flex h-screen overflow-hidden bg-background-light font-sans text-slate-900">
+            {/* --- SIDEBAR --- */}
+            <aside className="w-64 flex flex-col border-r border-slate-200 bg-white hidden lg:flex">
+                <div className="p-6 flex items-center gap-3">
+                    <div className="size-9 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
+                        <Shield size={20} fill="currentColor" />
+                    </div>
+                    <h2 className="text-xl font-black tracking-tight text-slate-800">TechPro</h2>
+                </div>
+
+                <nav className="flex-1 px-4 space-y-0.5 overflow-y-auto hide-scrollbar pb-6">
+                    <SidebarItem icon={LayoutDashboard} label="Dashboard" active onClick={() => { }} />
+                    <SidebarItem icon={ClipboardList} label="My Jobs" onClick={() => navigate('/technician/jobs')} />
+                    <SidebarItem icon={MessageSquare} label="Live Chat" badge="3" onClick={() => navigate('/technician/chat')} />
+                    <SidebarItem icon={Wallet} label="Wallet & Payments" onClick={() => navigate('/technician/wallet')} />
+                    <SidebarItem icon={BarChart2} label="Performance" onClick={() => { }} />
+                    <SidebarItem icon={Headphones} label="Complaints Hub" onClick={() => { }} />
+                    <SidebarItem icon={Tag} label="Admin Offers" onClick={() => { }} />
+
+                    <div className="pt-4 mt-2 border-t border-slate-50">
+                        <SidebarItem icon={Settings} label="Settings" onClick={() => { }} />
+                        <div className="pl-9 mt-1">
+                            <button className="flex items-center gap-3 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors">
+                                <Globe size={14} /> Language
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+
+                <div className="p-4 mt-auto border-t border-slate-100">
+                    <div className="bg-slate-50 rounded-xl p-3 flex items-center gap-3 hover:bg-slate-100 transition-colors cursor-pointer">
+                        <div className="size-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
+                            <img
+                                src={user?.photo || `https://ui-avatars.com/api/?name=${user?.name || 'User'}`}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div className="flex flex-col flex-1 overflow-hidden">
+                            <h1 className="text-xs font-bold text-slate-900 truncate">{user?.name || 'Technician'}</h1>
+                            <p className="text-[10px] text-slate-500 uppercase font-black truncate">{user?.serviceType || 'General'}</p>
+                        </div>
+                        <button onClick={logout} className="text-slate-400 hover:text-red-500">
+                            <LogOut size={16} />
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            {/* --- MAIN CONTENT --- */}
+            <main className="flex-1 flex flex-col overflow-hidden relative">
+                {/* Header */}
+                <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 lg:px-8 z-20 sticky top-0">
+                    <div className="flex items-center gap-4">
+                        <button className="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-50 rounded-lg">
+                            <ChevronDown size={20} className="rotate-90" /> {/* Placeholder for Menu */}
+                        </button>
+                        <h1 className="text-lg font-bold text-slate-800">Technician Dashboard</h1>
+                        <div className="hidden md:block h-4 w-px bg-slate-200"></div>
+                        <div className="hidden md:flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <MapPin size={16} className="text-slate-400" />
+                                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-tight">
+                                    {user?.fixed_address || user?.city || 'Location Active'}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <Signal size={16} className="text-slate-400" />
+                                <span className="text-[11px] font-bold text-slate-500">5G</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 lg:gap-6">
+                        <div className="hidden sm:flex items-center gap-2">
+                            <Calendar size={16} className="text-slate-400" />
+                            <span className="text-xs font-bold text-slate-600 uppercase">
+                                {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <select
+                                    value={technicianStatus}
+                                    onChange={handleStatusChange}
+                                    className="appearance-none bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider pl-3 pr-8 py-2 rounded-lg border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer min-w-[120px]"
+                                >
+                                    <option className="text-emerald-700" value="Available">Available</option>
+                                    <option className="text-rose-700" value="Unavailable">Not Available</option>
+                                    <option className="text-orange-700" value="Engaged">Engaged</option>
+                                </select>
+                                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-700 pointer-events-none" />
+                            </div>
+
+                            <button className="p-2 rounded-full hover:bg-slate-100 relative text-slate-500 transition-colors">
+                                <Bell size={20} />
+                                <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white"></span>
+                            </button>
+
+                            <button className="hidden sm:block px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-all shadow-sm">
+                                Export Report
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Dashboard Body */}
+                <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 bg-slate-50/50">
+
+                    {/* Active Jobs Section */}
+                    <section className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                <span className="size-2 bg-blue-600 rounded-full"></span>
+                                Active Jobs
+                            </h2>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">{activeJobs.length} assignments</span>
+                        </div>
+
+                        {/* Jobs Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {activeJobs.length === 0 ? (
+                                <div className="col-span-full p-8 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400">
+                                    <ClipboardList size={32} className="mb-2 opacity-50" />
+                                    <p className="text-sm font-bold">No active jobs right now</p>
+                                </div>
+                            ) : (
+                                activeJobs.map(job => (
+                                    <JobCard
+                                        key={job.id}
+                                        job={job}
+                                        onAccept={handleAcceptJob}
+                                        onReject={handleRejectJob}
+                                        onView={(j) => navigate(`/technician/jobs/${j.id}`)}
+                                    />
+                                ))
+                            )}
+                        </div>
+                    </section>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <StatCard
+                            icon={Wallet}
+                            label="Total Earnings"
+                            value={`₹${stats.earnings.toLocaleString()}`}
+                            colorClass="border-l-blue-600"
+                            iconBgClass="bg-blue-600/10 text-blue-600"
+                        />
+                        <StatCard
+                            icon={BarChart2}
+                            label="Monthly Revenue"
+                            value={`₹${stats.monthlyRevenue.toLocaleString()}`}
+                            colorClass="border-l-emerald-500"
+                            iconBgClass="bg-emerald-50 text-emerald-500"
+                        />
+                        <StatCard
+                            icon={CheckCircle2}
+                            label="Jobs Completed"
+                            value={stats.completedJobs}
+                            colorClass="border-l-indigo-600"
+                            iconBgClass="bg-indigo-50 text-indigo-600"
+                        />
+                        <StatCard
+                            icon={Star}
+                            label="Customer Rating"
+                            value={<span className="flex items-center gap-1">{stats.rating}/5 <Star size={14} className="fill-current text-amber-400" /></span>}
+                            colorClass="border-l-amber-400"
+                            iconBgClass="bg-amber-50 text-amber-500"
+                        />
+                    </div>
+
+                    {/* Bottom Section: Chart + Info */}
+                    <div className="grid grid-cols-12 gap-6">
+                        {/* Chart Area */}
+                        <div className="col-span-12 lg:col-span-8 flex flex-col">
+                            <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 h-full min-h-[300px]">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div>
+                                        <h3 className="text-base font-bold text-slate-800">Earnings Dynamics</h3>
+                                        <p className="text-xs text-slate-500">Weekly performance visualization</p>
+                                    </div>
+                                    <select className="text-xs font-bold border border-slate-200 rounded-lg bg-slate-50 px-2 py-1 outline-none">
+                                        <option>Last 7 Days</option>
+                                        <option>Last 30 Days</option>
+                                    </select>
+                                </div>
+                                <div className="flex-1 w-full h-[200px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={earningsData}>
+                                            <defs>
+                                                <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1} />
+                                                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} prefix="₹" />
+                                            <RechartsTooltip
+                                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                cursor={{ stroke: '#3b82f6', strokeDasharray: '4 4' }}
+                                            />
+                                            <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Column */}
+                        <div className="col-span-12 lg:col-span-4 space-y-6">
+                            {/* Membership Card */}
+                            <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-xl text-white relative overflow-hidden shadow-lg border border-slate-700">
+                                <div className="absolute -right-4 -top-4 size-32 bg-white/5 rounded-full blur-2xl"></div>
+                                <div className="relative z-10">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Membership Status</p>
+                                            <h4 className="text-2xl font-black">{user.membership || 'Free Plan'}</h4>
+                                        </div>
+                                        <div className="size-10 bg-white/10 rounded-lg flex items-center justify-center">
+                                            <Shield size={20} className="text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-xs font-medium">
+                                            <span className="text-slate-400">Validity</span>
+                                            <span className="text-emerald-400">Lifetime</span>
+                                        </div>
+                                        <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                            <div className="bg-blue-500 h-full w-[100%]"></div>
+                                        </div>
+                                    </div>
+                                    <button className="mt-6 w-full py-2 bg-white text-slate-900 rounded-lg text-xs font-black hover:bg-slate-100 transition-colors uppercase tracking-wider">
+                                        Upgrade to Pro
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Live Activity */}
+                            <div className="bg-white border border-slate-200 shadow-sm rounded-xl flex flex-col h-[300px]">
+                                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Live Activity Feed</h3>
+                                    <div className="size-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
+                                    {/* Mock Feed Items - Sync with DB later */}
+                                    <div className="flex gap-3">
+                                        <div className="size-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
+                                            <Clock size={16} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold">New service request received</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5">Kitchen sink repair, Springfield Area</p>
+                                            <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">2 mins ago</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <div className="size-8 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center flex-shrink-0">
+                                            <CheckCircle2 size={16} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold">Job #JB-2908 Completed</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5">Payment of ₹450 pending verification</p>
+                                            <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">15 mins ago</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    );
+};
+
+export default TechnicianDashboard; Confirm
+                        </motion.button >
+                    </motion.div >
+                </div >
+            )}
+        </AnimatePresence >
     );
 };
 
