@@ -34,6 +34,7 @@ import FinanceView from '../components/admin/finance/FinanceView';
 import SupportView from '../components/admin/support/SupportView';
 import FeedbackTable from '../components/admin/feedbacks/FeedbackTable';
 import InvoiceSettings from '../components/admin/finance/InvoiceSettings';
+import FeedbackView from '../components/admin/feedback/FeedbackView';
 
 // Mock Data & Constants
 const ACTIVITY_LOG = [
