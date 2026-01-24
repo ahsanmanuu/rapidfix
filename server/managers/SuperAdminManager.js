@@ -155,12 +155,18 @@ class SuperAdminManager {
             // const allAdmins = await this.db.read(); ... (This logic isn't useful if we can't store created_by)
 
             const newAdmin = {
+                id: require('crypto').randomUUID(),
+                name,
                 email,
                 password,
                 role: 'admin',
-                created_at: new Date().toISOString()
-                // Name, Location, CreatedBy are NOT supported by current 'admins' schema
-                // fixed_latitude: location?.latitude,
+                created_at: new Date().toISOString(),
+                // [FIXED] Include location data
+                latitude: location?.latitude,
+                longitude: location?.longitude,
+                fixed_latitude: location?.latitude,
+                fixed_longitude: location?.longitude,
+                office_address: location?.address
             };
 
             // Using db.add from SuperAdminManager (which points to 'admins' table)
