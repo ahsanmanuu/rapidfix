@@ -40,9 +40,12 @@ const NearbyMap = ({ user }) => {
         setMap(null);
     }, []);
 
-    const fetchNearby = async () => {
-        // Silent loading for auto-refresh
-        if (!entities.users.length) setLoading(true);
+    const fetchNearby = async (manual = false) => {
+        // Show specialized loading state for manual refresh
+        if (manual) setLoading(true);
+        // Only show full map loading if we have NO data yet (initial load)
+        else if (!entities.users.length) setLoading(true);
+
         try {
             // Send known location as hint, but backend enforces truth
             const lat = user.fixed_latitude || user.location?.latitude || user.latitude;
@@ -80,14 +83,14 @@ const NearbyMap = ({ user }) => {
         fetchNearby();
 
         // [NEW] Auto-Refresh every 30 seconds for Realtime Updates
-        const interval = setInterval(fetchNearby, 30000);
+        const interval = setInterval(() => fetchNearby(false), 30000);
         return () => clearInterval(interval);
     }, [user]);
 
-    if (!isLoaded) return <div className="h-full flex items-center justify-center text-slate-400">Loading Map Engine...</div>;
+    if (!isLoaded) return <div className="h-full flex items-center justify-center text-slate-400 font-medium animate-pulse">Initializing Geospatial Engine...</div>;
 
     return (
-        <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800">
+        <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={mapCenter}
@@ -101,11 +104,11 @@ const NearbyMap = ({ user }) => {
                     position={mapCenter}
                     icon={{
                         path: window.google.maps.SymbolPath.CIRCLE,
-                        scale: 10,
+                        scale: 12,
                         fillColor: "#EF4444",
                         fillOpacity: 1,
                         strokeColor: "#FFFFFF",
-                        strokeWeight: 3,
+                        strokeWeight: 4,
                     }}
                 />
 
@@ -115,10 +118,10 @@ const NearbyMap = ({ user }) => {
                     radius={30000} // 30 KM
                     options={{
                         fillColor: '#3B82F6',
-                        fillOpacity: 0.05,
+                        fillOpacity: 0.04,
                         strokeColor: '#3B82F6',
-                        strokeOpacity: 0.3,
-                        strokeWeight: 1,
+                        strokeOpacity: 0.4,
+                        strokeWeight: 1.5,
                         clickable: false
                     }}
                 />
@@ -134,17 +137,14 @@ const NearbyMap = ({ user }) => {
                             position={{ lat, lng }}
                             mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                         >
-                            <div className="relative group cursor-pointer transform hover:scale-110 transition-transform">
-                                <div className="w-8 h-8 rounded-full border-2 border-white shadow-md overflow-hidden ring-2 ring-purple-500">
+                            <div className="relative group cursor-pointer transform hover:scale-125 transition-all duration-300">
+                                <div className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 shadow-lg overflow-hidden ring-2 ring-purple-500 bg-white">
                                     <img
-                                        src={u.photo || u.avatar || `https://ui-avatars.com/api/?name=${u.name}`}
+                                        src={u.photo || u.avatar || `https://ui-avatars.com/api/?name=${u.name}&background=random`}
                                         className="w-full h-full object-cover"
+                                        alt={u.name}
                                         onError={e => e.target.src = `https://ui-avatars.com/api/?name=${u.name}`}
                                     />
-                                </div>
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
-                                    User: {u.name}
                                 </div>
                             </div>
                         </OverlayView>
@@ -162,17 +162,14 @@ const NearbyMap = ({ user }) => {
                             position={{ lat, lng }}
                             mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                         >
-                            <div className="relative group cursor-pointer transform hover:scale-110 transition-transform">
-                                <div className={`w-8 h-8 rounded-full border-2 border-white shadow-md overflow-hidden ${t.status === 'Available' ? 'ring-2 ring-emerald-500' : 'ring-2 ring-slate-400'}`}>
+                            <div className="relative group cursor-pointer transform hover:scale-125 transition-all duration-300">
+                                <div className={`w-9 h-9 rounded-full border-2 border-white dark:border-slate-800 shadow-lg overflow-hidden ${t.status === 'Available' ? 'ring-2 ring-emerald-500' : 'ring-2 ring-slate-400'} bg-white`}>
                                     <img
-                                        src={t.photo || t.avatar || t.documents?.photo || t.documents?.profile_photo || `https://ui-avatars.com/api/?name=${t.name}`}
+                                        src={t.photo || t.avatar || t.documents?.photo || `https://ui-avatars.com/api/?name=${t.name}&background=random`}
                                         className="w-full h-full object-cover"
+                                        alt={t.name}
                                         onError={e => e.target.src = `https://ui-avatars.com/api/?name=${t.name}`}
                                     />
-                                </div>
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
-                                    {t.name} ({t.serviceType})
                                 </div>
                             </div>
                         </OverlayView>
@@ -180,31 +177,53 @@ const NearbyMap = ({ user }) => {
                 })}
             </GoogleMap>
 
-            {/* Overlay Controls */}
-            <div className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur p-4 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800">
-                <h3 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    <MapPin className="text-red-500" size={18} />
-                    Admin Territory
-                </h3>
-                <p className="text-xs text-slate-500 mt-1 mb-3">Monitoring 30km Radius</p>
-
-                <div className="flex flex-col gap-2 text-xs font-medium">
-                    <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-purple-500"></span>
-                        <span className="text-slate-600 dark:text-slate-300">Users ({entities.users.length})</span>
+            {/* Premium Glass Control Panel */}
+            <div className="absolute top-4 left-4 z-10 w-64 bg-white/80 dark:bg-black/60 backdrop-blur-xl p-5 rounded-3xl shadow-2xl border border-white/20 dark:border-white/10 ring-1 ring-black/5">
+                <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                            <MapPin className="text-red-500 drop-shadow-sm" size={16} fill="currentColor" />
+                            Territory Monitor
+                        </h3>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase mt-1">
+                            Radius: 30 KM
+                        </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
-                        <span className="text-slate-600 dark:text-slate-300">Technicians ({entities.technicians.length})</span>
+                    <div className="relative flex h-2 w-2 mt-1.5 mr-1">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-white/50 dark:bg-white/5 rounded-xl p-3 flex flex-col items-center justify-center border border-slate-100 dark:border-white/5 shadow-sm">
+                        <span className="text-2xl font-black text-slate-800 dark:text-white leading-none mb-1">
+                            {entities.users.length}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Users
+                        </span>
+                    </div>
+                    <div className="bg-white/50 dark:bg-white/5 rounded-xl p-3 flex flex-col items-center justify-center border border-slate-100 dark:border-white/5 shadow-sm">
+                        <span className="text-2xl font-black text-slate-800 dark:text-white leading-none mb-1">
+                            {entities.technicians.length}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Techs
+                        </span>
                     </div>
                 </div>
 
                 <button
-                    onClick={fetchNearby}
-                    className="mt-4 w-full py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2"
+                    onClick={() => fetchNearby(true)}
+                    disabled={loading}
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                    <Navigation size={14} className={loading ? 'animate-spin' : ''} />
-                    Refresh Scan
+                    <Navigation
+                        size={14}
+                        className={`transition-transform duration-700 ${loading ? 'animate-spin' : 'group-hover:rotate-45'}`}
+                    />
+                    {loading ? 'Scanning...' : 'Refresh Scan'}
                 </button>
             </div>
         </div>
