@@ -198,14 +198,37 @@ const verifyAdmin = async (req, res, next) => {
       return res.status(401).json({ error: 'Unauthorized: Invalid session' });
     }
 
-    // Fallback: If session has no role (DB column missing), check AdminManager
-    if (session && !session.role) {
-      const admin = await adminManager.db.find('id', session.userId);
-      if (admin) {
+    // [FIX] Always load fresh Admin Profile to get latest Location/Role
+    // This allows role upgrades (User -> Admin) or Location changes to take effect immediately
+    const admin = await adminManager.db.find('id', session.userId);
+
+    if (admin) {
+      // Normalize Role
+      const role = (admin.role || session.role || '').toLowerCase();
+
+      if (role !== 'admin' && role !== 'superadmin') {
+        return res.status(403).json({ error: 'Forbidden: Admin access only' });
       }
+
+      // Attach enriched user context
+      req.user = {
+        id: admin.id,
+        role: role, // 'admin' or 'superadmin'
+        email: admin.email,
+        fixed_latitude: admin.fixed_latitude,
+        fixed_longitude: admin.fixed_longitude
+      };
+
+      // Legacy support
+      req.admin = req.user;
+
+      next();
+    } else {
+      // Session exists but Admin record missing? 
+      // Could happen if deleted but session persists.
+      return res.status(401).json({ error: 'Unauthorized: Admin profile not found' });
     }
 
-    next();
   } catch (err) {
     console.error("[Middleware] Verify Admin Error:", err);
     res.status(500).json({ error: 'Internal Server Error' });
