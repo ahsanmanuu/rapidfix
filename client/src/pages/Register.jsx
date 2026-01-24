@@ -384,7 +384,7 @@ const Register = () => {
                         </div>
 
                         <button type="submit" className={`neu-button login-btn ${loading ? 'loading' : ''}`} disabled={loading}>
-                            <span className="btn-text">Register Account</span>
+                            <span className="btn-text">{loading ? "Signing up..." : "Register Account"}</span>
                             <div className="btn-loader">
                                 <div className="neu-spinner"></div>
                             </div>

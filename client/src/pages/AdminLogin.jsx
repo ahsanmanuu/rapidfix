@@ -81,7 +81,7 @@ const AdminLogin = () => {
                         disabled={loading}
                         className="w-full py-4 rounded-xl bg-[#e0e5ec] shadow-[8px_8px_16px_#bec3cf,-8px_-8px_16px_#ffffff] text-[#3d4468] font-bold text-lg hover:shadow-[deleted] active:shadow-[inset_4px_4px_8px_#bec3cf,inset_-4px_-4px_8px_#ffffff] active:scale-[0.98] transition-all disabled:opacity-50"
                     >
-                        {loading ? 'Authenticating...' : 'Login as Admin'}
+                        {loading ? 'Logging in...' : 'Login as Admin'}
                     </button>
 
                     <div className="text-center mt-4">

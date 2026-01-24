@@ -542,7 +542,7 @@ const TechnicianAuth = () => {
                                     </div>
 
                                     <div className="CTA">
-                                        <input type="submit" value={loading ? "Registering..." : "Signup Now"} id="submit" disabled={loading} />
+                                        <input type="submit" value={loading ? "Signing up..." : "Signup Now"} id="submit" disabled={loading} />
                                         <a href="#" className="switch" onClick={(e) => handleSwitch(e, false)}>I have an account</a>
                                     </div>
                                 </form>

@@ -256,7 +256,7 @@ const Login = () => {
                         </div>
 
                         <button type="submit" className={`neu-button login-btn ${loading ? 'loading' : ''}`} disabled={loading}>
-                            <span className="btn-text">Sign In</span>
+                            <span className="btn-text">{loading ? "Logging in..." : "Sign In"}</span>
                             <div className="btn-loader">
                                 <div className="neu-spinner"></div>
                             </div>
