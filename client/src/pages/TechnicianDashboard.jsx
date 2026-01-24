@@ -7,7 +7,8 @@ import {
     CheckCircle2, AlertCircle, Shield, CreditCard, User, Wifi
 } from 'lucide-react';
 import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
@@ -46,13 +47,15 @@ const useNetworkStatus = () => {
 const SidebarItem = ({ icon: Icon, label, active, badge, onClick }) => (
     <button
         onClick={onClick}
-        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-all text-sm mb-0.5
-        ${active ? 'bg-blue-500/10 text-blue-600 font-bold' : 'text-slate-500 hover:bg-slate-50'}`}
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-all text-sm mb-1
+        ${active
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
     >
-        <Icon size={20} className={active ? 'text-blue-600' : 'text-slate-400'} />
-        <span className="flex-1 text-left">{label}</span>
+        <Icon size={18} className={active ? 'text-white' : 'text-slate-400'} />
+        <span className="flex-1 text-left tracking-tight">{label}</span>
         {badge && (
-            <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${active ? 'bg-white/20 text-white' : 'bg-red-500 text-white'}`}>
                 {badge}
             </span>
         )}
@@ -60,13 +63,13 @@ const SidebarItem = ({ icon: Icon, label, active, badge, onClick }) => (
 );
 
 const StatCard = ({ icon: Icon, label, value, colorClass, iconBgClass }) => (
-    <div className={`bg-white border-l-4 ${colorClass} shadow-sm rounded-xl p-3 flex items-center gap-3 transition-all hover:shadow-md border border-slate-200`}>
-        <div className={`size-9 rounded-lg flex items-center justify-center ${iconBgClass}`}>
-            <Icon size={18} />
+    <div className={`bg-white border-l-4 ${colorClass} shadow-sm rounded-xl p-5 flex items-center gap-4 transition-all hover:-translate-y-1 hover:shadow-md border border-slate-100 group`}>
+        <div className={`size-12 rounded-xl flex items-center justify-center ${iconBgClass} transition-transform group-hover:scale-110`}>
+            <Icon size={22} />
         </div>
         <div>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">{label}</p>
-            <h3 className="text-lg font-black leading-tight text-slate-900">{value}</h3>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{label}</p>
+            <h3 className="text-xl font-black leading-tight text-slate-800">{value}</h3>
         </div>
     </div>
 );
@@ -138,10 +141,10 @@ const JobCard = ({ job, onAccept, onReject, onView }) => {
 };
 
 const TechnicianDashboard = () => {
-    const { user, logout, updateUser } = useAuth(); // Assuming updateUser logic exists or needs shim
+    const { user, logout, updateUser } = useAuth();
     const navigate = useNavigate();
     const socket = useSocket();
-    const network = useNetworkStatus(); // [NEW]
+    const network = useNetworkStatus();
 
     // State
     const [stats, setStats] = useState({
@@ -154,11 +157,14 @@ const TechnicianDashboard = () => {
     const [technicianStatus, setTechnicianStatus] = useState(user?.status || 'Available');
     const [loading, setLoading] = useState(false);
 
-    // [NEW] Location State
+    // Charts Data
+    const [jobStatsData, setJobStatsData] = useState([]);
+
+    // Location State
     const [currentLocationName, setCurrentLocationName] = useState("Locating...");
     const [registeredAddress, setRegisteredAddress] = useState(user?.address || "Loading...");
 
-    // Mock Data for Charts
+    // Mock Data for Earnings
     const earningsData = [
         { name: 'Mon', value: 2400 },
         { name: 'Tue', value: 1398 },
@@ -169,17 +175,17 @@ const TechnicianDashboard = () => {
         { name: 'Sun', value: 4300 },
     ];
 
+    // Pie Chart Colors
+    const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444']; // Emerald, Blue, Amber, Red
+
     // --- Effects ---
 
-    // [NEW] Reverse Geocoding Effect
+    // Reverse Geocoding Effect
     useEffect(() => {
         if (!user) return;
 
         const resolveDetails = async () => {
-            // 1. Registered Address from User Profile
             setRegisteredAddress(user.fixed_address || user.address || user.baseAddress || "No Registered Address");
-
-            // 2. Live Location Reverse Geocoding
             const lat = user.latitude || user.location?.latitude;
             const lng = user.longitude || user.location?.longitude;
 
@@ -190,17 +196,13 @@ const TechnicianDashboard = () => {
 
                     const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`);
                     const data = await res.json();
-
                     if (data.results?.[0]) {
-                        // Extract neighborhood/city for cleaner display (e.g., "Marylebone, London")
                         const comps = data.results[0].address_components;
                         const neighborhood = comps.find(c => c.types.includes('sublocality') || c.types.includes('neighborhood'))?.short_name;
                         const locality = comps.find(c => c.types.includes('locality'))?.short_name;
-
                         setCurrentLocationName(neighborhood && locality ? `${neighborhood}, ${locality}` : (locality || "Unknown City"));
                     }
                 } catch (e) {
-                    console.error("Geocoding failed", e);
                     setCurrentLocationName(user.city || "Unknown Location");
                 }
             } else {
@@ -214,35 +216,39 @@ const TechnicianDashboard = () => {
         fetchDashboardData();
     }, []);
 
-    // Listen to real-time job updates
     useSupabaseRealtime('jobs', (payload) => {
-        // Simple handler to refresh on job changes related to this tech
-        // In prod, optimize to specific ID checks
         fetchDashboardData();
     });
 
     const fetchDashboardData = async () => {
         setLoading(true);
         try {
-            // Parallel Fetch
             const [jobsRes, statsRes] = await Promise.all([
                 api.getJobsByTechnician(user.id).catch(() => ({ data: { jobs: [] } })),
-                // Mock stats or real endpoint if available
                 Promise.resolve({ data: { earnings: 12500, monthly: 45000, completed: 12, rating: 4.8 } })
             ]);
 
             const allJobs = jobsRes.data.jobs || [];
-            // Filter for Pending/Active
             const active = allJobs.filter(j => ['pending', 'accepted', 'in_progress', 'started'].includes(j.status));
             setActiveJobs(active);
 
-            // Set stats (mix of real and mock for now)
+            const completedCount = allJobs.filter(j => j.status === 'completed').length;
+            const cancelledCount = allJobs.filter(j => j.status === 'cancelled').length;
+
             setStats({
                 earnings: statsRes.data.earnings,
                 monthlyRevenue: statsRes.data.monthly,
-                completedJobs: allJobs.filter(j => j.status === 'completed').length,
+                completedJobs: completedCount,
                 rating: user.rating || 4.8
             });
+
+            // Set Chart Data
+            setJobStatsData([
+                { name: 'Completed', value: completedCount },
+                { name: 'Active', value: active.length },
+                { name: 'Pending', value: allJobs.filter(j => j.status === 'pending').length },
+                { name: 'Cancelled', value: cancelledCount }
+            ]);
 
         } catch (err) {
             console.error("Dashboard Fetch Error:", err);
@@ -256,61 +262,59 @@ const TechnicianDashboard = () => {
         setTechnicianStatus(newStatus);
         try {
             await api.put(`/technicians/${user.id}/status`, { status: newStatus });
-            // Optimistic update already done
-            // updateUser({ status: newStatus }); // If this method exists
         } catch (err) {
-            console.error("Status Update Failed", err);
-            setTechnicianStatus(user.status); // Revert
+            setTechnicianStatus(user.status);
         }
     };
 
     const handleAcceptJob = async (jobId) => {
         try {
             await api.acceptJob(jobId, user.id);
-            // Refresh logic will catch this from socket or manual re-fetch
             fetchDashboardData();
         } catch (err) {
-            alert("Failed to accept job: " + err.message);
+            console.error(err);
         }
     };
 
     const handleRejectJob = async (jobId) => {
-        // Implement reject API if exists, or just hide
-        alert("Reject logic needs implementation in API");
+        alert("Reject logic needs implementation");
     };
 
     return (
-        <div className="flex h-screen overflow-hidden bg-background-light font-sans text-slate-900">
+        <div className="flex h-screen overflow-hidden bg-slate-50 font-sans text-slate-900">
             {/* --- SIDEBAR --- */}
-            <aside className="w-64 flex flex-col border-r border-slate-200 bg-white hidden lg:flex shrink-0 z-30">
+            <aside className="w-64 flex flex-col border-r border-slate-200 bg-white hidden lg:flex shrink-0 z-30 shadow-sm">
                 <div className="p-6 flex items-center gap-3">
-                    <div className="size-9 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
-                        <Shield size={20} fill="currentColor" />
+                    <div className="size-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
+                        <Shield size={22} fill="currentColor" />
                     </div>
                     <h2 className="text-xl font-black tracking-tight text-slate-800">TechPro</h2>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-0.5 overflow-y-auto hide-scrollbar pb-6">
+                <nav className="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar pb-6">
                     <SidebarItem icon={LayoutDashboard} label="Dashboard" active onClick={() => { }} />
                     <SidebarItem icon={ClipboardList} label="My Jobs" onClick={() => navigate('/technician/jobs')} />
                     <SidebarItem icon={MessageSquare} label="Live Chat" badge="3" onClick={() => navigate('/technician/chat')} />
                     <SidebarItem icon={Wallet} label="Wallet & Payments" onClick={() => navigate('/technician/wallet')} />
+
+                    <div className="my-4 h-px bg-slate-100 mx-2"></div>
+
                     <SidebarItem icon={BarChart2} label="Performance" onClick={() => { }} />
                     <SidebarItem icon={Headphones} label="Complaints Hub" onClick={() => { }} />
                     <SidebarItem icon={Tag} label="Admin Offers" onClick={() => { }} />
 
-                    <div className="pt-4 mt-2 border-t border-slate-50">
+                    <div className="pt-4 mt-auto">
                         <SidebarItem icon={Settings} label="Settings" onClick={() => { }} />
-                        <div className="pl-9 mt-1">
-                            <button className="flex items-center gap-3 text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors">
-                                <Globe size={14} /> Language
+                        <div className="pl-9 mt-2">
+                            <button className="flex items-center gap-2 text-xs text-slate-400 hover:text-slate-600 font-bold transition-colors uppercase tracking-wider">
+                                <Globe size={12} /> Language
                             </button>
                         </div>
                     </div>
                 </nav>
 
-                <div className="p-4 mt-auto border-t border-slate-100">
-                    <div className="bg-slate-50 rounded-xl p-3 flex items-center gap-3 hover:bg-slate-100 transition-colors cursor-pointer">
+                <div className="p-4 border-t border-slate-100">
+                    <div className="bg-slate-50 rounded-xl p-3 flex items-center gap-3 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-100">
                         <div className="size-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm shrink-0">
                             <img
                                 src={user?.photo || `https://ui-avatars.com/api/?name=${user?.name || 'User'}`}
@@ -320,60 +324,65 @@ const TechnicianDashboard = () => {
                         </div>
                         <div className="flex flex-col flex-1 overflow-hidden min-w-0">
                             <h1 className="text-xs font-bold text-slate-900 truncate">{user?.name || 'Technician'}</h1>
-                            <p className="text-[10px] text-slate-500 uppercase font-black truncate">{user?.serviceType || 'General'}</p>
+                            <p className="text-[10px] text-slate-500 uppercase font-black truncate text-blue-600">{user?.serviceType || 'General'}</p>
                         </div>
-                        <button onClick={logout} className="text-slate-400 hover:text-red-500 shrink-0">
-                            <LogOut size={16} />
+                        <button onClick={logout} className="text-slate-400 hover:text-red-500 shrink-0 transition-colors">
+                            <LogOut size={18} />
                         </button>
                     </div>
                 </div>
             </aside>
 
             {/* --- MAIN CONTENT --- */}
-            <main className="flex-1 flex flex-col overflow-hidden relative bg-slate-50/50">
+            <main className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Header */}
-                <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 lg:px-8 z-20 sticky top-0 shrink-0">
-                    <div className="flex items-center gap-4 min-w-0">
+                <header className="h-20 border-b border-slate-200 bg-white flex items-center justify-between px-6 lg:px-8 z-20 sticky top-0 shrink-0 shadow-sm/50">
+                    <div className="flex items-center gap-6 min-w-0">
                         <button className="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-50 rounded-lg">
-                            <ChevronDown size={20} className="rotate-90" /> {/* Placeholder for Menu */}
+                            <ChevronDown size={24} className="rotate-90" />
                         </button>
-                        <h1 className="text-lg font-bold text-slate-800 truncate mr-4">Technician Dashboard</h1>
-                        <div className="hidden md:block h-4 w-px bg-slate-200 shrink-0"></div>
+                        <div>
+                            <h1 className="text-xl font-black text-slate-800 truncate tracking-tight">Dashboard</h1>
+                            <p className="text-xs text-slate-500 font-medium hidden sm:block">Welcome back, get ready for your tasks</p>
+                        </div>
 
-                        {/* Dynamic Location & Network Badge */}
-                        <div className="hidden md:flex items-center gap-4 min-w-0">
-                            <div className="flex items-center gap-2 min-w-0">
-                                <MapPin size={16} className="text-slate-400 shrink-0" />
-                                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-tight truncate max-w-[150px]" title={currentLocationName}>
-                                    {currentLocationName}
-                                </span>
+                        <div className="hidden lg:block h-8 w-px bg-slate-100 mx-2 shrink-0"></div>
+
+                        <div className="hidden lg:flex items-center gap-6 min-w-0">
+                            <div className="flex items-center gap-3 min-w-0 group cursor-default">
+                                <div className="size-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors">
+                                    <MapPin size={16} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Location</p>
+                                    <p className="text-xs font-bold text-slate-700 truncate max-w-[180px]" title={currentLocationName}>{currentLocationName}</p>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                                {network.type === 'wifi' ? <Wifi size={16} className="text-slate-400" /> : <Signal size={16} className="text-slate-400" />}
-                                <span className="text-[11px] font-bold text-slate-500">{network.signal}</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                                {network.type === 'wifi' ? <Wifi size={18} className="text-emerald-500" /> : <Signal size={18} className="text-emerald-500" />}
+                                <span className="text-xs font-bold text-slate-600">{network.signal}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4 lg:gap-6 shrink-0">
-                        <div className="hidden sm:flex items-center gap-2">
-                            <Calendar size={16} className="text-slate-400" />
-                            <span className="text-xs font-bold text-slate-600 uppercase">
-                                {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </span>
+                    <div className="flex items-center gap-4">
+                        <div className="hidden sm:flex flex-col items-end mr-2">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Today</p>
+                            <p className="text-xs font-bold text-slate-700">
+                                {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </p>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                             <div className="relative">
-                                {/* [NEW] "Finishing Job" added + Colors */}
                                 <select
                                     value={technicianStatus}
                                     onChange={handleStatusChange}
-                                    className={`appearance-none text-[10px] font-black uppercase tracking-wider pl-3 pr-8 py-2 rounded-lg border focus:outline-none focus:ring-2 cursor-pointer min-w-[140px] transition-colors
-                                        ${technicianStatus === 'Available' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-500/20' :
-                                            technicianStatus === 'Finishing Job' ? 'bg-blue-50 text-blue-700 border-blue-200 focus:ring-blue-500/20' :
-                                                technicianStatus === 'Engaged' ? 'bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-500/20' :
-                                                    'bg-rose-50 text-rose-700 border-rose-200 focus:ring-rose-500/20'}
+                                    className={`appearance-none text-[11px] font-bold uppercase tracking-wider pl-4 pr-10 py-2.5 rounded-xl border focus:outline-none focus:ring-2 cursor-pointer shadow-sm transition-all
+                                        ${technicianStatus === 'Available' ? 'bg-emerald-50 text-emerald-700 border-emerald-100 hover:border-emerald-200' :
+                                            technicianStatus === 'Finishing Job' ? 'bg-blue-50 text-blue-700 border-blue-100 hover:border-blue-200' :
+                                                technicianStatus === 'Engaged' ? 'bg-amber-50 text-amber-700 border-amber-100 hover:border-amber-200' :
+                                                    'bg-rose-50 text-rose-700 border-rose-100 hover:border-rose-200'}
                                     `}
                                 >
                                     <option className="text-emerald-700" value="Available">Available</option>
@@ -381,40 +390,37 @@ const TechnicianDashboard = () => {
                                     <option className="text-amber-700" value="Engaged">Engaged</option>
                                     <option className="text-rose-700" value="Not Available">Not Available</option>
                                 </select>
-                                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none" />
+                                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none" />
                             </div>
 
-                            <button className="p-2 rounded-full hover:bg-slate-100 relative text-slate-500 transition-colors">
+                            <button className="p-2.5 rounded-full hover:bg-slate-100 relative text-slate-400 hover:text-slate-600 transition-colors">
                                 <Bell size={20} />
-                                <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white"></span>
-                            </button>
-
-                            <button className="hidden sm:block px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-all shadow-sm">
-                                Export Report
+                                <span className="absolute top-2.5 right-2.5 size-2 bg-red-500 rounded-full border-2 border-white ring-1 ring-white"></span>
                             </button>
                         </div>
                     </div>
                 </header>
 
                 {/* Dashboard Body */}
-                <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-8 bg-slate-50">
 
                     {/* Active Jobs Section */}
-                    <section className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                <span className="size-2 bg-blue-600 rounded-full"></span>
-                                Active Jobs
+                    <section className="space-y-5">
+                        <div className="flex items-center justify-between px-1">
+                            <h2 className="text-base font-black uppercase tracking-widest text-slate-500 flex items-center gap-3">
+                                <span className="size-2.5 bg-blue-600 rounded-sm"></span>
+                                Priority Assignments
                             </h2>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">{activeJobs.length} assignments</span>
+                            <span className="bg-white px-3 py-1 rounded-full border border-slate-200 text-[10px] font-bold text-slate-500 uppercase shadow-sm">
+                                {activeJobs.length} active
+                            </span>
                         </div>
 
-                        {/* Jobs Grid: Gaps fixed, proper responsiveness */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {activeJobs.length === 0 ? (
-                                <div className="col-span-full p-8 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400">
-                                    <ClipboardList size={32} className="mb-2 opacity-50" />
-                                    <p className="text-sm font-bold">No active jobs right now</p>
+                                <div className="col-span-full p-12 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400 bg-slate-50/50">
+                                    <ClipboardList size={40} className="mb-3 opacity-30" />
+                                    <p className="text-sm font-bold opacity-70">No active jobs right now</p>
                                 </div>
                             ) : (
                                 activeJobs.map(job => (
@@ -431,146 +437,152 @@ const TechnicianDashboard = () => {
                     </section>
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <StatCard
                             icon={Wallet}
                             label="Total Earnings"
                             value={`₹${stats.earnings.toLocaleString()}`}
                             colorClass="border-l-blue-600"
-                            iconBgClass="bg-blue-600/10 text-blue-600"
+                            iconBgClass="bg-blue-600 text-white shadow-blue-600/30 shadow-lg"
                         />
                         <StatCard
                             icon={BarChart2}
                             label="Monthly Revenue"
                             value={`₹${stats.monthlyRevenue.toLocaleString()}`}
                             colorClass="border-l-emerald-500"
-                            iconBgClass="bg-emerald-50 text-emerald-500"
+                            iconBgClass="bg-emerald-500 text-white shadow-emerald-500/30 shadow-lg"
                         />
                         <StatCard
                             icon={CheckCircle2}
                             label="Jobs Completed"
                             value={stats.completedJobs}
                             colorClass="border-l-indigo-600"
-                            iconBgClass="bg-indigo-50 text-indigo-600"
+                            iconBgClass="bg-indigo-600 text-white shadow-indigo-600/30 shadow-lg"
                         />
                         <StatCard
                             icon={Star}
                             label="Customer Rating"
-                            value={<span className="flex items-center gap-1">{stats.rating}/5 <Star size={14} className="fill-current text-amber-400" /></span>}
+                            value={<span className="flex items-center gap-1">{stats.rating}<span className="text-slate-400 text-base font-medium">/5</span></span>}
                             colorClass="border-l-amber-400"
-                            iconBgClass="bg-amber-50 text-amber-500"
+                            iconBgClass="bg-amber-400 text-white shadow-amber-400/30 shadow-lg"
                         />
                     </div>
 
-                    {/* Bottom Section: Chart + Info */}
-                    <div className="grid grid-cols-12 gap-6">
-                        {/* Chart Area */}
-                        <div className="col-span-12 lg:col-span-8 flex flex-col h-full">
-                            <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 h-full min-h-[350px] flex flex-col">
-                                <div className="flex items-center justify-between mb-6 shrink-0">
-                                    <div>
-                                        <h3 className="text-base font-bold text-slate-800">Earnings Dynamics</h3>
-                                        <p className="text-xs text-slate-500">Weekly performance visualization</p>
-                                    </div>
-                                    <select className="text-xs font-bold border border-slate-200 rounded-lg bg-slate-50 px-2 py-1 outline-none">
-                                        <option>Last 7 Days</option>
-                                        <option>Last 30 Days</option>
-                                    </select>
+                    {/* Bottom Section: Charts + Info */}
+                    <div className="grid grid-cols-12 gap-8">
+                        {/* Area Chart */}
+                        <div className="col-span-12 xl:col-span-6 flex flex-col bg-white border border-slate-100 shadow-sm rounded-2xl p-6 min-h-[350px]">
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wide">Revenue Trend</h3>
+                                    <p className="text-xs text-slate-400 mt-1 font-medium">Last 7 Days performance</p>
                                 </div>
-                                <div className="flex-1 w-full min-h-0">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={earningsData}>
-                                            <defs>
-                                                <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1} />
-                                                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
-                                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} prefix="₹" />
-                                            <RechartsTooltip
-                                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                                cursor={{ stroke: '#3b82f6', strokeDasharray: '4 4' }}
-                                            />
-                                            <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
+                                <div className="flex gap-2">
+                                    <button className="px-3 py-1 bg-slate-50 rounded-lg text-[10px] font-bold text-slate-500 hover:bg-slate-100 transition-colors">Week</button>
+                                    <button className="px-3 py-1 bg-transparent rounded-lg text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors">Month</button>
+                                </div>
+                            </div>
+                            <div className="flex-1 w-full min-h-0">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={earningsData}>
+                                        <defs>
+                                            <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1} />
+                                                <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} tickFormatter={(val) => `₹${val}`} />
+                                        <RechartsTooltip
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                                            cursor={{ stroke: '#3b82f6', strokeWidth: 2, strokeDasharray: '4 4' }}
+                                        />
+                                        <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* Pie Chart [NEW] */}
+                        <div className="col-span-12 md:col-span-6 xl:col-span-3 flex flex-col bg-white border border-slate-100 shadow-sm rounded-2xl p-6 min-h-[350px]">
+                            <div className="mb-6">
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wide">Job Distribution</h3>
+                                <p className="text-xs text-slate-400 mt-1 font-medium">Assignments breakdown</p>
+                            </div>
+                            <div className="flex-1 relative">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={jobStatsData}
+                                            innerRadius={60}
+                                            outerRadius={80}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {jobStatsData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="transparent" />
+                                            ))}
+                                        </Pie>
+                                        <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }} />
+                                        <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
+                                    <div className="text-center">
+                                        <p className="text-2xl font-black text-slate-800">{stats.completedJobs + activeJobs.length}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Right Column */}
-                        <div className="col-span-12 lg:col-span-4 space-y-6">
+                        {/* Right Column (Membership + Location) */}
+                        <div className="col-span-12 md:col-span-6 xl:col-span-3 space-y-6">
                             {/* Membership Card */}
-                            <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-xl text-white relative overflow-hidden shadow-lg border border-slate-700">
-                                <div className="absolute -right-4 -top-4 size-32 bg-white/5 rounded-full blur-2xl"></div>
+                            <div className="bg-slate-900 p-6 rounded-2xl text-white relative overflow-hidden shadow-xl shadow-slate-900/20 group">
+                                <div className="absolute -right-10 -top-10 size-40 bg-blue-600/20 rounded-full blur-3xl group-hover:bg-blue-600/30 transition-colors"></div>
                                 <div className="relative z-10">
                                     <div className="flex justify-between items-start mb-6">
                                         <div>
-                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Membership Status</p>
-                                            <h4 className="text-2xl font-black">{user.membership || 'Free Plan'}</h4>
+                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Current Plan</p>
+                                            <h4 className="text-2xl font-black tracking-tight">{user.membership || 'Free Plan'}</h4>
                                         </div>
-                                        <div className="size-10 bg-white/10 rounded-lg flex items-center justify-center">
-                                            <Shield size={20} className="text-white" />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between text-xs font-medium">
-                                            <span className="text-slate-400">Validity</span>
-                                            <span className="text-emerald-400">Lifetime</span>
-                                        </div>
-                                        <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                                            <div className="bg-blue-500 h-full w-[100%]"></div>
+                                        <div className="size-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                            <Shield size={20} className="text-blue-400" />
                                         </div>
                                     </div>
-                                    <button className="mt-6 w-full py-2 bg-white text-slate-900 rounded-lg text-xs font-black hover:bg-slate-100 transition-colors uppercase tracking-wider">
-                                        Upgrade to Pro
+                                    <div className="space-y-3 mb-6">
+                                        <div className="flex justify-between text-xs font-bold">
+                                            <span className="text-slate-400">Status</span>
+                                            <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 size={12} /> Active</span>
+                                        </div>
+                                        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                            <div className="bg-blue-500 h-full w-[85%] shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                                        </div>
+                                    </div>
+                                    <button className="w-full py-2.5 bg-white text-slate-900 rounded-lg text-xs font-black hover:bg-blue-50 transition-colors uppercase tracking-wider">
+                                        Upgrade Plan
                                     </button>
                                 </div>
                             </div>
 
-                            {/* [NEW] Registered Location Card */}
-                            <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-5 relative overflow-hidden">
-                                <MapPin className="absolute -right-4 -bottom-4 text-slate-100 size-24" />
+                            {/* Registered Location Card */}
+                            <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-6 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <MapPin size={80} className="text-blue-600" />
+                                </div>
                                 <div className="relative z-10">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Registered Base</h3>
-                                    <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-3">
-                                        {registeredAddress}
-                                    </p>
-                                    <div className="mt-3 inline-flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-600">
-                                        <CheckCircle2 size={12} className="text-emerald-500" />
-                                        Verified Location
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Live Activity */}
-                            <div className="bg-white border border-slate-200 shadow-sm rounded-xl flex flex-col h-[300px]">
-                                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Live Activity Feed</h3>
-                                    <div className="size-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
-                                    {/* Mock Feed Items - Sync with DB later */}
-                                    <div className="flex gap-3">
-                                        <div className="size-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
-                                            <Clock size={16} />
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Registered Base</h3>
+                                    <div className="flex items-start gap-3">
+                                        <div className="size-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                            <Check size={16} strokeWidth={3} />
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-bold truncate">New service request received</p>
-                                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">Kitchen sink repair, Springfield Area</p>
-                                            <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">2 mins ago</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <div className="size-8 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center flex-shrink-0">
-                                            <CheckCircle2 size={16} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-bold truncate">Job #JB-2908 Completed</p>
-                                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">Payment of ₹450 pending verification</p>
-                                            <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">15 mins ago</p>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-2">
+                                                {registeredAddress}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">Verified Location</p>
                                         </div>
                                     </div>
                                 </div>
