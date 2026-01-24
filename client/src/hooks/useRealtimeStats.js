@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSocket } from '../context/SocketContext';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export const useRealtimeStats = () => {
     const [stats, setStats] = useState({
@@ -19,10 +20,20 @@ export const useRealtimeStats = () => {
     const [error, setError] = useState(null);
     const socket = useSocket();
 
+    const { user } = useAuth && useAuth() || {}; // Safe access if used outside auth context
+
     const fetchStats = useCallback(async (silent = false) => {
         if (!silent) setLoading(true);
         try {
-            const response = await api.get('/admin/stats');
+            // [GEO-FENCING] Pass Admin Fixed Location if available
+            let query = '';
+            if (user && (user.fixed_latitude || user.latitude) && (user.fixed_longitude || user.longitude)) {
+                const lat = user.fixed_latitude || user.latitude;
+                const lng = user.fixed_longitude || user.longitude;
+                query = `?lat=${lat}&lng=${lng}`;
+            }
+
+            const response = await api.get(`/admin/stats${query}`);
             if (response.data && response.data.success && response.data.stats) {
                 setStats(response.data.stats);
                 setError(null);

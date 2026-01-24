@@ -881,6 +881,31 @@ app.get('/api/admin/top-performers', async (req, res) => {
 });
 
 // --- Admin Routes ---
+app.get('/api/admin/users', verifyAdmin, async (req, res) => {
+  const users = await userManager.getAllUsers();
+  res.json({ success: true, users });
+});
+
+app.get('/api/admin/technicians', verifyAdmin, async (req, res) => {
+  const technicians = await technicianManager.getAllTechnicians();
+  res.json({ success: true, technicians });
+});
+
+app.get('/api/admin/jobs', verifyAdmin, async (req, res) => {
+  const jobs = await jobManager.getAllJobs();
+  res.json({ success: true, jobs });
+});
+
+app.get('/api/admin/stats', verifyAdmin, async (req, res) => {
+  try {
+    const { lat, lng } = req.query; // Capture location from query params
+    const stats = await adminManager.getStats(lat, lng); // Pass to manager
+    res.json({ success: true, stats });
+  } catch (error) {
+    console.error('Stats Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 // --- Admin User Management Routes [DEPRECATED - Moved to consolidated block below] ---
 
 // --- Admin User Management Routes [NEW] ---

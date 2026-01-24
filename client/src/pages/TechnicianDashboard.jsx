@@ -97,7 +97,7 @@ const DashboardStatsModal = ({ isOpen, onClose, stats, type }) => {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
                 >
-                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                    <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white dark:bg-slate-900">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-800">Detailed Analytics</h2>
                             <p className="text-sm text-gray-500">Monthly Performance Report</p>
