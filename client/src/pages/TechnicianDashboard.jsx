@@ -416,7 +416,7 @@ const TechnicianDashboard = () => {
                             </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {activeJobs.length === 0 ? (
                                 <div className="col-span-full p-12 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400 bg-slate-50/50">
                                     <ClipboardList size={40} className="mb-3 opacity-30" />
@@ -437,7 +437,7 @@ const TechnicianDashboard = () => {
                     </section>
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         <StatCard
                             icon={Wallet}
                             label="Total Earnings"
@@ -583,6 +583,40 @@ const TechnicianDashboard = () => {
                                                 {registeredAddress}
                                             </p>
                                             <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">Verified Location</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Live Activity Feed - RESTORED */}
+                            <div className="bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col h-[280px]">
+                                <div className="p-5 border-b border-slate-50 flex items-center justify-between">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Live Feed</h3>
+                                    <div className="flex items-center gap-2">
+                                        <span className="relative flex size-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full size-2 bg-emerald-500"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-5 space-y-5 hide-scrollbar">
+                                    <div className="flex gap-4 group">
+                                        <div className="size-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                                            <Clock size={16} strokeWidth={2.5} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold text-slate-800 truncate">New service request</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">Kitchen sink repair • Springfield</p>
+                                            <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wide">2m ago</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-4 group">
+                                        <div className="size-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                                            <CheckCircle2 size={16} strokeWidth={2.5} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold text-slate-800 truncate">Job #JB-2908 Done</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">Payment pending • ₹450</p>
+                                            <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wide">15m ago</p>
                                         </div>
                                     </div>
                                 </div>
