@@ -36,9 +36,10 @@ const NearbyMap = ({ user }) => {
     }, []);
 
     const fetchNearby = async () => {
-        setLoading(true);
+        // Silent loading for auto-refresh
+        if (!entities.users.length) setLoading(true);
         try {
-            // Use fixed location if available, else current location (fallback)
+            // Send current props, but backend will override if fixed location exists
             const lat = user.fixed_latitude || user.location?.latitude || user.latitude;
             const lng = user.fixed_longitude || user.location?.longitude || user.longitude;
 
@@ -64,6 +65,10 @@ const NearbyMap = ({ user }) => {
 
     useEffect(() => {
         fetchNearby();
+
+        // [NEW] Auto-Refresh every 30 seconds for Realtime Updates
+        const interval = setInterval(fetchNearby, 30000);
+        return () => clearInterval(interval);
     }, [user]);
 
     // Helper to get coords

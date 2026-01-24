@@ -99,6 +99,23 @@ const AdminDashboard = () => {
     };
     const [insights, setInsights] = useState('Loading real-time platform insights...');
 
+    // [NEW] Refresh Admin Profile on Mount to ensure Location is fresh
+    const { updateUser } = useAuth();
+    useEffect(() => {
+        const refreshProfile = async () => {
+            try {
+                const res = await api.get('/admin/me');
+                if (res.data.success && res.data.admin) {
+                    console.log("Admin Profile Refreshed:", res.data.admin);
+                    updateUser(res.data.admin);
+                }
+            } catch (err) {
+                console.error("Failed to refresh admin profile:", err);
+            }
+        };
+        refreshProfile();
+    }, []);
+
     // User Panel State
     const [selectedUser, setSelectedUser] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);

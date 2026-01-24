@@ -851,11 +851,40 @@ app.post('/api/admin/setup', async (req, res) => {
   res.json({ success: true, admin });
 });
 
-app.post('/api/admin/nearby-entities', async (req, res) => {
-  const { latitude, longitude } = req.body;
+// [NEW] Get Current Admin Profile (Fresh Data)
+app.get('/api/admin/me', verifyAdmin, async (req, res) => {
+  try {
+    const admin = await adminManager.db.find('id', req.user.id);
+    if (!admin) return res.status(404).json({ error: 'Admin not found' });
+    // Don't send password
+    const { password, ...rest } = admin;
+    res.json({ success: true, admin: rest });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/nearby-entities', verifyAdmin, async (req, res) => {
+  // Enforce Server-Side Geo-Fencing for Map
+  // If Admin has fixed location, IGNORE the body and use the fixed location
+  let latitude, longitude;
+
+  if (req.user.fixed_latitude && req.user.fixed_longitude) {
+    latitude = req.user.fixed_latitude;
+    longitude = req.user.fixed_longitude;
+    console.log(`[AdminMap] Enforcing Fixed Location: ${latitude}, ${longitude}`);
+  } else {
+    // Fallback to body (e.g. for superadmin moving around map manually)
+    latitude = req.body.latitude;
+    longitude = req.body.longitude;
+    console.log(`[AdminMap] Using Requested Location: ${latitude}, ${longitude}`);
+  }
+
   if (!latitude || !longitude) return res.status(400).json({ error: 'Location required' });
   const entities = await adminManager.getNearbyEntities(latitude, longitude);
-  res.json({ success: true, ...entities });
+
+  // Return the CENTER used so the frontend map can re-center if forced
+  res.json({ success: true, ...entities, enforcedCenter: { lat: latitude, lng: longitude } });
 });
 
 app.get('/api/admin/system-stats', async (req, res) => {
