@@ -14,7 +14,7 @@ const mapContainerStyle = {
 const mapOptions = {
     disableDefaultUI: true,
     zoomControl: true,
-    mapId: "38936d595166255d" // Optional: Use a dark mode map ID if available
+    // mapId: "38936d595166255d" // Optional: Use a dark mode map ID if available
 };
 
 const NearbyMap = ({ user }) => {
