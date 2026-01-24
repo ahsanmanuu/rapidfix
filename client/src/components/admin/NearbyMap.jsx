@@ -19,6 +19,11 @@ const mapOptions = {
 
 const NearbyMap = ({ user }) => {
     const [entities, setEntities] = useState({ users: [], technicians: [] });
+    // Initialize center with Fixed Location OR safe default. Avoid 'live' location initially if possible.
+    const [mapCenter, setMapCenter] = useState({
+        lat: parseFloat(user.fixed_latitude || user.location?.latitude || user.latitude || 26.1542),
+        lng: parseFloat(user.fixed_longitude || user.location?.longitude || user.longitude || 85.8918)
+    });
     const [loading, setLoading] = useState(true);
     const [map, setMap] = useState(null);
 
@@ -39,7 +44,7 @@ const NearbyMap = ({ user }) => {
         // Silent loading for auto-refresh
         if (!entities.users.length) setLoading(true);
         try {
-            // Send current props, but backend will override if fixed location exists
+            // Send known location as hint, but backend enforces truth
             const lat = user.fixed_latitude || user.location?.latitude || user.latitude;
             const lng = user.fixed_longitude || user.location?.longitude || user.longitude;
 
@@ -55,6 +60,14 @@ const NearbyMap = ({ user }) => {
                     users: res.data.users || [],
                     technicians: res.data.technicians || []
                 });
+
+                // [FIX] Enforce Server-Side Center
+                if (res.data.enforcedCenter && res.data.enforcedCenter.lat && res.data.enforcedCenter.lng) {
+                    setMapCenter({
+                        lat: parseFloat(res.data.enforcedCenter.lat),
+                        lng: parseFloat(res.data.enforcedCenter.lng)
+                    });
+                }
             }
         } catch (err) {
             console.error("Failed to fetch nearby", err);
@@ -71,17 +84,13 @@ const NearbyMap = ({ user }) => {
         return () => clearInterval(interval);
     }, [user]);
 
-    // Helper to get coords
-    const adminLat = parseFloat(user.fixed_latitude || user.location?.latitude || user.latitude || 26.1542);
-    const adminLng = parseFloat(user.fixed_longitude || user.location?.longitude || user.longitude || 85.8918);
-
     if (!isLoaded) return <div className="h-full flex items-center justify-center text-slate-400">Loading Map Engine...</div>;
 
     return (
         <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800">
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
-                center={{ lat: adminLat, lng: adminLng }}
+                center={mapCenter}
                 zoom={11} // Shows roughly 30km radius
                 options={mapOptions}
                 onLoad={onLoad}
@@ -89,7 +98,7 @@ const NearbyMap = ({ user }) => {
             >
                 {/* Admin Office Marker (Fixed) */}
                 <Marker
-                    position={{ lat: adminLat, lng: adminLng }}
+                    position={mapCenter}
                     icon={{
                         path: window.google.maps.SymbolPath.CIRCLE,
                         scale: 10,
@@ -102,7 +111,7 @@ const NearbyMap = ({ user }) => {
 
                 {/* 30KM Radius Circle */}
                 <Circle
-                    center={{ lat: adminLat, lng: adminLng }}
+                    center={mapCenter}
                     radius={30000} // 30 KM
                     options={{
                         fillColor: '#3B82F6',
