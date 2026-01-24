@@ -402,231 +402,188 @@ const TechnicianDashboard = () => {
                 </header>
 
                 {/* Dashboard Body */}
-                <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-8 bg-slate-50">
-
-                    {/* Active Jobs Section */}
-                    <section className="space-y-5">
-                        <div className="flex items-center justify-between px-1">
-                            <h2 className="text-base font-black uppercase tracking-widest text-slate-500 flex items-center gap-3">
-                                <span className="size-2.5 bg-blue-600 rounded-sm"></span>
-                                Priority Assignments
-                            </h2>
-                            <span className="bg-white px-3 py-1 rounded-full border border-slate-200 text-[10px] font-bold text-slate-500 uppercase shadow-sm">
-                                {activeJobs.length} active
-                            </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {activeJobs.length === 0 ? (
-                                <div className="col-span-full p-12 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-slate-400 bg-slate-50/50">
-                                    <ClipboardList size={40} className="mb-3 opacity-30" />
-                                    <p className="text-sm font-bold opacity-70">No active jobs right now</p>
-                                </div>
-                            ) : (
-                                activeJobs.map(job => (
-                                    <JobCard
-                                        key={job.id}
-                                        job={job}
-                                        onAccept={handleAcceptJob}
-                                        onReject={handleRejectJob}
-                                        onView={(j) => navigate(`/technician/jobs/${j.id}`)}
-                                    />
-                                ))
-                            )}
-                        </div>
-                    </section>
-
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <StatCard
-                            icon={Wallet}
-                            label="Total Earnings"
-                            value={`₹${stats.earnings.toLocaleString()}`}
-                            colorClass="border-l-blue-600"
-                            iconBgClass="bg-blue-600 text-white shadow-blue-600/30 shadow-lg"
-                        />
-                        <StatCard
-                            icon={BarChart2}
-                            label="Monthly Revenue"
-                            value={`₹${stats.monthlyRevenue.toLocaleString()}`}
-                            colorClass="border-l-emerald-500"
-                            iconBgClass="bg-emerald-500 text-white shadow-emerald-500/30 shadow-lg"
-                        />
-                        <StatCard
-                            icon={CheckCircle2}
-                            label="Jobs Completed"
-                            value={stats.completedJobs}
-                            colorClass="border-l-indigo-600"
-                            iconBgClass="bg-indigo-600 text-white shadow-indigo-600/30 shadow-lg"
-                        />
-                        <StatCard
-                            icon={Star}
-                            label="Customer Rating"
-                            value={<span className="flex items-center gap-1">{stats.rating}<span className="text-slate-400 text-base font-medium">/5</span></span>}
-                            colorClass="border-l-amber-400"
-                            iconBgClass="bg-amber-400 text-white shadow-amber-400/30 shadow-lg"
-                        />
-                    </div>
-
-                    {/* Bottom Section: Charts + Info */}
-                    <div className="grid grid-cols-12 gap-8">
-                        {/* Area Chart */}
-                        <div className="col-span-12 xl:col-span-6 flex flex-col bg-white border border-slate-100 shadow-sm rounded-2xl p-6 min-h-[350px]">
-                            <div className="flex items-center justify-between mb-8">
-                                <div>
-                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wide">Revenue Trend</h3>
-                                    <p className="text-xs text-slate-400 mt-1 font-medium">Last 7 Days performance</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button className="px-3 py-1 bg-slate-50 rounded-lg text-[10px] font-bold text-slate-500 hover:bg-slate-100 transition-colors">Week</button>
-                                    <button className="px-3 py-1 bg-transparent rounded-lg text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors">Month</button>
-                                </div>
-                            </div>
-                            <div className="flex-1 w-full min-h-0">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={earningsData}>
-                                        <defs>
-                                            <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1} />
-                                                <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} dy={10} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} tickFormatter={(val) => `₹${val}`} />
-                                        <RechartsTooltip
-                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                                            cursor={{ stroke: '#3b82f6', strokeWidth: 2, strokeDasharray: '4 4' }}
-                                        />
-                                        <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-
-                        {/* Pie Chart [NEW] */}
-                        <div className="col-span-12 md:col-span-6 xl:col-span-3 flex flex-col bg-white border border-slate-100 shadow-sm rounded-2xl p-6 min-h-[350px]">
-                            <div className="mb-6">
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wide">Job Distribution</h3>
-                                <p className="text-xs text-slate-400 mt-1 font-medium">Assignments breakdown</p>
-                            </div>
-                            <div className="flex-1 relative">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={jobStatsData}
-                                            innerRadius={60}
-                                            outerRadius={80}
-                                            paddingAngle={5}
-                                            dataKey="value"
-                                        >
-                                            {jobStatsData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="transparent" />
-                                            ))}
-                                        </Pie>
-                                        <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }} />
-                                        <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
-                                    <div className="text-center">
-                                        <p className="text-2xl font-black text-slate-800">{stats.completedJobs + activeJobs.length}</p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Right Column (Membership + Location) */}
-                        <div className="col-span-12 md:col-span-6 xl:col-span-3 space-y-6">
-                            {/* Membership Card */}
-                            <div className="bg-slate-900 p-6 rounded-2xl text-white relative overflow-hidden shadow-xl shadow-slate-900/20 group">
-                                <div className="absolute -right-10 -top-10 size-40 bg-blue-600/20 rounded-full blur-3xl group-hover:bg-blue-600/30 transition-colors"></div>
-                                <div className="relative z-10">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Current Plan</p>
-                                            <h4 className="text-2xl font-black tracking-tight">{user.membership || 'Free Plan'}</h4>
-                                        </div>
-                                        <div className="size-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                            <Shield size={20} className="text-blue-400" />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3 mb-6">
-                                        <div className="flex justify-between text-xs font-bold">
-                                            <span className="text-slate-400">Status</span>
-                                            <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 size={12} /> Active</span>
-                                        </div>
-                                        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                                            <div className="bg-blue-500 h-full w-[85%] shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                                        </div>
-                                    </div>
-                                    <button className="w-full py-2.5 bg-white text-slate-900 rounded-lg text-xs font-black hover:bg-blue-50 transition-colors uppercase tracking-wider">
-                                        Upgrade Plan
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Registered Location Card */}
-                            <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-6 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                    <MapPin size={80} className="text-blue-600" />
-                                </div>
-                                <div className="relative z-10">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Registered Base</h3>
-                                    <div className="flex items-start gap-3">
-                                        <div className="size-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                            <Check size={16} strokeWidth={3} />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-2">
-                                                {registeredAddress}
-                                            </p>
-                                            <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">Verified Location</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {/* Live Activity Feed - RESTORED */}
-                            <div className="bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col h-[280px]">
-                                <div className="p-5 border-b border-slate-50 flex items-center justify-between">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Live Feed</h3>
-                                    <div className="flex items-center gap-2">
-                                        <span className="relative flex size-2">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full size-2 bg-emerald-500"></span>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-5 space-y-5 hide-scrollbar">
-                                    <div className="flex gap-4 group">
-                                        <div className="size-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                                            <Clock size={16} strokeWidth={2.5} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-bold text-slate-800 truncate">New service request</p>
-                                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">Kitchen sink repair • Springfield</p>
-                                            <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wide">2m ago</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-4 group">
-                                        <div className="size-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                                            <CheckCircle2 size={16} strokeWidth={2.5} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-bold text-slate-800 truncate">Job #JB-2908 Done</p>
-                                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">Payment pending • ₹450</p>
-                                            <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wide">15m ago</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </main>
+                <StatCard
+                    icon={BarChart2}
+                    label="Monthly Revenue"
+                    value={`₹${stats.monthlyRevenue.toLocaleString()}`}
+                    colorClass="border-l-emerald-500"
+                    iconBgClass="bg-emerald-500 text-white shadow-emerald-500/30 shadow-lg"
+                />
+                <StatCard
+                    icon={CheckCircle2}
+                    label="Jobs Completed"
+                    value={stats.completedJobs}
+                    colorClass="border-l-indigo-600"
+                    iconBgClass="bg-indigo-600 text-white shadow-indigo-600/30 shadow-lg"
+                />
+                <StatCard
+                    icon={Star}
+                    label="Customer Rating"
+                    value={<span className="flex items-center gap-1">{stats.rating}<span className="text-slate-400 text-base font-medium">/5</span></span>}
+                    colorClass="border-l-amber-400"
+                    iconBgClass="bg-amber-400 text-white shadow-amber-400/30 shadow-lg"
+                />
         </div>
+
+                    {/* Bottom Section: Charts + Info */ }
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        {/* Area Chart */}
+        <div className="xl:col-span-6 flex flex-col bg-white border border-slate-100 shadow-sm rounded-2xl p-6 min-h-[350px]">
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wide">Revenue Trend</h3>
+                    <p className="text-xs text-slate-400 mt-1 font-medium">Last 7 Days performance</p>
+                </div>
+                <div className="flex gap-2">
+                    <button className="px-3 py-1 bg-slate-50 rounded-lg text-[10px] font-bold text-slate-500 hover:bg-slate-100 transition-colors">Week</button>
+                    <button className="px-3 py-1 bg-transparent rounded-lg text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors">Month</button>
+                </div>
+            </div>
+            <div className="flex-1 w-full min-h-0">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={earningsData}>
+                        <defs>
+                            <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1} />
+                                <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} tickFormatter={(val) => `₹${val}`} />
+                        <RechartsTooltip
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                            cursor={{ stroke: '#3b82f6', strokeWidth: 2, strokeDasharray: '4 4' }}
+                        />
+                        <Area type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+
+        {/* Pie Chart [NEW] */}
+        <div className="md:col-span-1 xl:col-span-3 flex flex-col bg-white border border-slate-100 shadow-sm rounded-2xl p-6 min-h-[350px]">
+            <div className="mb-6">
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wide">Job Distribution</h3>
+                <p className="text-xs text-slate-400 mt-1 font-medium">Assignments breakdown</p>
+            </div>
+            <div className="flex-1 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <Pie
+                            data={jobStatsData}
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                        >
+                            {jobStatsData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="transparent" />
+                            ))}
+                        </Pie>
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }} />
+                        <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                    </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
+                    <div className="text-center">
+                        <p className="text-2xl font-black text-slate-800">{stats.completedJobs + activeJobs.length}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* Right Column (Membership + Location) */}
+        <div className="md:col-span-1 xl:col-span-3 space-y-6">
+            {/* Membership Card */}
+            <div className="bg-slate-900 p-6 rounded-2xl text-white relative overflow-hidden shadow-xl shadow-slate-900/20 group">
+                <div className="absolute -right-10 -top-10 size-40 bg-blue-600/20 rounded-full blur-3xl group-hover:bg-blue-600/30 transition-colors"></div>
+                <div className="relative z-10">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Current Plan</p>
+                            <h4 className="text-2xl font-black tracking-tight">{user.membership || 'Free Plan'}</h4>
+                        </div>
+                        <div className="size-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <Shield size={20} className="text-blue-400" />
+                        </div>
+                    </div>
+                    <div className="space-y-3 mb-6">
+                        <div className="flex justify-between text-xs font-bold">
+                            <span className="text-slate-400">Status</span>
+                            <span className="text-emerald-400 flex items-center gap-1"><CheckCircle2 size={12} /> Active</span>
+                        </div>
+                        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div className="bg-blue-500 h-full w-[85%] shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                        </div>
+                    </div>
+                    <button className="w-full py-2.5 bg-white text-slate-900 rounded-lg text-xs font-black hover:bg-blue-50 transition-colors uppercase tracking-wider">
+                        Upgrade Plan
+                    </button>
+                </div>
+            </div>
+
+            {/* Registered Location Card */}
+            <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <MapPin size={80} className="text-blue-600" />
+                </div>
+                <div className="relative z-10">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Registered Base</h3>
+                    <div className="flex items-start gap-3">
+                        <div className="size-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                            <Check size={16} strokeWidth={3} />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-2">
+                                {registeredAddress}
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">Verified Location</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* Live Activity Feed - RESTORED */}
+            <div className="bg-white border border-slate-100 shadow-sm rounded-2xl flex flex-col h-[280px]">
+                <div className="p-5 border-b border-slate-50 flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Live Feed</h3>
+                    <div className="flex items-center gap-2">
+                        <span className="relative flex size-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full size-2 bg-emerald-500"></span>
+                        </span>
+                    </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-5 space-y-5 hide-scrollbar">
+                    <div className="flex gap-4 group">
+                        <div className="size-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                            <Clock size={16} strokeWidth={2.5} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate">New service request</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">Kitchen sink repair • Springfield</p>
+                            <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wide">2m ago</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-4 group">
+                        <div className="size-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                            <CheckCircle2 size={16} strokeWidth={2.5} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-slate-800 truncate">Job #JB-2908 Done</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">Payment pending • ₹450</p>
+                            <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wide">15m ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+                </div >
+            </main >
+        </div >
     );
 };
 
