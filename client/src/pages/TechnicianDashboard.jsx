@@ -4,7 +4,7 @@ import {
     LayoutDashboard, ClipboardList, MessageSquare, Wallet, BarChart2,
     Headphones, Tag, Settings, Globe, LogOut, MapPin, Signal, Calendar,
     Bell, ChevronDown, MoreVertical, Car, X, Check, Star, Clock,
-    CheckCircle2, AlertCircle, Shield, CreditCard, User
+    CheckCircle2, AlertCircle, Shield, CreditCard, User, Wifi
 } from 'lucide-react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer
@@ -15,6 +15,31 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import useSupabaseRealtime from '../hooks/useSupabaseRealtime';
 import '../components/Dashboard/TechnicianDashboard.css'; // Correct path to CSS
+
+// --- new hook for network status ---
+const useNetworkStatus = () => {
+    const [status, setStatus] = useState({ type: 'wifi', signal: '5G' });
+
+    useEffect(() => {
+        const updateNetwork = () => {
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (conn) {
+                const type = conn.type === 'wifi' ? 'wifi' : 'cellular';
+                // valid effectiveTypes: 'slow-2g', '2g', '3g', '4g'
+                const effective = conn.effectiveType ? conn.effectiveType.toUpperCase() : '4G';
+                setStatus({ type, signal: effective === 'WIFI' ? 'WiFi' : effective });
+            }
+        };
+
+        updateNetwork();
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn) {
+            conn.addEventListener('change', updateNetwork);
+            return () => conn.removeEventListener('change', updateNetwork);
+        }
+    }, []);
+    return status;
+};
 
 // --- Components ---
 
@@ -56,24 +81,24 @@ const JobCard = ({ job, onAccept, onReject, onView }) => {
         <div className={`bg-white border border-slate-200 shadow-sm rounded-xl p-5 border-l-4 ${colorClass} flex flex-col justify-between h-full`}>
             <div>
                 <div className="flex justify-between items-start mb-3">
-                    <div className="flex flex-col">
+                    <div className="flex flex-col min-w-0 flex-1 mr-2">
                         <span className={`text-[10px] font-black ${badgeClass} px-2 py-0.5 rounded w-fit mb-1 uppercase`}>
                             {statusLabel}
                         </span>
-                        <h3 className="text-base font-bold text-slate-800 line-clamp-1">{job.title || job.serviceType}</h3>
+                        <h3 className="text-base font-bold text-slate-800 line-clamp-1 truncate" title={job.title || job.serviceType}>{job.title || job.serviceType}</h3>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                         <p className="text-sm font-black text-slate-900">₹{job.offerPrice || job.amount || 0}</p>
                         <p className="text-[10px] text-slate-500 font-bold uppercase">Estimated</p>
                     </div>
                 </div>
                 <div className="space-y-2 mb-6">
-                    <div className="flex items-center gap-2 text-xs text-slate-600">
-                        <MapPin size={14} className="text-slate-400" />
+                    <div className="flex items-center gap-2 text-xs text-slate-600 min-w-0">
+                        <MapPin size={14} className="text-slate-400 shrink-0" />
                         <span className="truncate">{job.location?.address || 'Location Hidden'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-slate-600">
-                        <Clock size={14} className="text-slate-400" />
+                        <Clock size={14} className="text-slate-400 shrink-0" />
                         <span>Today, {new Date(job.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                 </div>
@@ -116,6 +141,7 @@ const TechnicianDashboard = () => {
     const { user, logout, updateUser } = useAuth(); // Assuming updateUser logic exists or needs shim
     const navigate = useNavigate();
     const socket = useSocket();
+    const network = useNetworkStatus(); // [NEW]
 
     // State
     const [stats, setStats] = useState({
@@ -127,6 +153,10 @@ const TechnicianDashboard = () => {
     const [activeJobs, setActiveJobs] = useState([]);
     const [technicianStatus, setTechnicianStatus] = useState(user?.status || 'Available');
     const [loading, setLoading] = useState(false);
+
+    // [NEW] Location State
+    const [currentLocationName, setCurrentLocationName] = useState("Locating...");
+    const [registeredAddress, setRegisteredAddress] = useState(user?.address || "Loading...");
 
     // Mock Data for Charts
     const earningsData = [
@@ -140,6 +170,46 @@ const TechnicianDashboard = () => {
     ];
 
     // --- Effects ---
+
+    // [NEW] Reverse Geocoding Effect
+    useEffect(() => {
+        if (!user) return;
+
+        const resolveDetails = async () => {
+            // 1. Registered Address from User Profile
+            setRegisteredAddress(user.fixed_address || user.address || user.baseAddress || "No Registered Address");
+
+            // 2. Live Location Reverse Geocoding
+            const lat = user.latitude || user.location?.latitude;
+            const lng = user.longitude || user.location?.longitude;
+
+            if (lat && lng) {
+                try {
+                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+                    if (!apiKey) return;
+
+                    const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`);
+                    const data = await res.json();
+
+                    if (data.results?.[0]) {
+                        // Extract neighborhood/city for cleaner display (e.g., "Marylebone, London")
+                        const comps = data.results[0].address_components;
+                        const neighborhood = comps.find(c => c.types.includes('sublocality') || c.types.includes('neighborhood'))?.short_name;
+                        const locality = comps.find(c => c.types.includes('locality'))?.short_name;
+
+                        setCurrentLocationName(neighborhood && locality ? `${neighborhood}, ${locality}` : (locality || "Unknown City"));
+                    }
+                } catch (e) {
+                    console.error("Geocoding failed", e);
+                    setCurrentLocationName(user.city || "Unknown Location");
+                }
+            } else {
+                setCurrentLocationName(user.city || "Location Pending");
+            }
+        };
+        resolveDetails();
+    }, [user]);
+
     useEffect(() => {
         fetchDashboardData();
     }, []);
@@ -212,7 +282,7 @@ const TechnicianDashboard = () => {
     return (
         <div className="flex h-screen overflow-hidden bg-background-light font-sans text-slate-900">
             {/* --- SIDEBAR --- */}
-            <aside className="w-64 flex flex-col border-r border-slate-200 bg-white hidden lg:flex">
+            <aside className="w-64 flex flex-col border-r border-slate-200 bg-white hidden lg:flex shrink-0 z-30">
                 <div className="p-6 flex items-center gap-3">
                     <div className="size-9 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
                         <Shield size={20} fill="currentColor" />
@@ -241,18 +311,18 @@ const TechnicianDashboard = () => {
 
                 <div className="p-4 mt-auto border-t border-slate-100">
                     <div className="bg-slate-50 rounded-xl p-3 flex items-center gap-3 hover:bg-slate-100 transition-colors cursor-pointer">
-                        <div className="size-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
+                        <div className="size-10 rounded-full overflow-hidden ring-2 ring-white shadow-sm shrink-0">
                             <img
                                 src={user?.photo || `https://ui-avatars.com/api/?name=${user?.name || 'User'}`}
                                 alt="Profile"
                                 className="w-full h-full object-cover"
                             />
                         </div>
-                        <div className="flex flex-col flex-1 overflow-hidden">
+                        <div className="flex flex-col flex-1 overflow-hidden min-w-0">
                             <h1 className="text-xs font-bold text-slate-900 truncate">{user?.name || 'Technician'}</h1>
                             <p className="text-[10px] text-slate-500 uppercase font-black truncate">{user?.serviceType || 'General'}</p>
                         </div>
-                        <button onClick={logout} className="text-slate-400 hover:text-red-500">
+                        <button onClick={logout} className="text-slate-400 hover:text-red-500 shrink-0">
                             <LogOut size={16} />
                         </button>
                     </div>
@@ -260,30 +330,32 @@ const TechnicianDashboard = () => {
             </aside>
 
             {/* --- MAIN CONTENT --- */}
-            <main className="flex-1 flex flex-col overflow-hidden relative">
+            <main className="flex-1 flex flex-col overflow-hidden relative bg-slate-50/50">
                 {/* Header */}
-                <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 lg:px-8 z-20 sticky top-0">
-                    <div className="flex items-center gap-4">
+                <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-4 lg:px-8 z-20 sticky top-0 shrink-0">
+                    <div className="flex items-center gap-4 min-w-0">
                         <button className="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-50 rounded-lg">
                             <ChevronDown size={20} className="rotate-90" /> {/* Placeholder for Menu */}
                         </button>
-                        <h1 className="text-lg font-bold text-slate-800">Technician Dashboard</h1>
-                        <div className="hidden md:block h-4 w-px bg-slate-200"></div>
-                        <div className="hidden md:flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <MapPin size={16} className="text-slate-400" />
-                                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-tight">
-                                    {user?.fixed_address || user?.city || 'Location Active'}
+                        <h1 className="text-lg font-bold text-slate-800 truncate mr-4">Technician Dashboard</h1>
+                        <div className="hidden md:block h-4 w-px bg-slate-200 shrink-0"></div>
+
+                        {/* Dynamic Location & Network Badge */}
+                        <div className="hidden md:flex items-center gap-4 min-w-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <MapPin size={16} className="text-slate-400 shrink-0" />
+                                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-tight truncate max-w-[150px]" title={currentLocationName}>
+                                    {currentLocationName}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <Signal size={16} className="text-slate-400" />
-                                <span className="text-[11px] font-bold text-slate-500">5G</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                {network.type === 'wifi' ? <Wifi size={16} className="text-slate-400" /> : <Signal size={16} className="text-slate-400" />}
+                                <span className="text-[11px] font-bold text-slate-500">{network.signal}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4 lg:gap-6">
+                    <div className="flex items-center gap-4 lg:gap-6 shrink-0">
                         <div className="hidden sm:flex items-center gap-2">
                             <Calendar size={16} className="text-slate-400" />
                             <span className="text-xs font-bold text-slate-600 uppercase">
@@ -293,16 +365,23 @@ const TechnicianDashboard = () => {
 
                         <div className="flex items-center gap-3">
                             <div className="relative">
+                                {/* [NEW] "Finishing Job" added + Colors */}
                                 <select
                                     value={technicianStatus}
                                     onChange={handleStatusChange}
-                                    className="appearance-none bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider pl-3 pr-8 py-2 rounded-lg border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer min-w-[120px]"
+                                    className={`appearance-none text-[10px] font-black uppercase tracking-wider pl-3 pr-8 py-2 rounded-lg border focus:outline-none focus:ring-2 cursor-pointer min-w-[140px] transition-colors
+                                        ${technicianStatus === 'Available' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-500/20' :
+                                            technicianStatus === 'Finishing Job' ? 'bg-blue-50 text-blue-700 border-blue-200 focus:ring-blue-500/20' :
+                                                technicianStatus === 'Engaged' ? 'bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-500/20' :
+                                                    'bg-rose-50 text-rose-700 border-rose-200 focus:ring-rose-500/20'}
+                                    `}
                                 >
                                     <option className="text-emerald-700" value="Available">Available</option>
-                                    <option className="text-rose-700" value="Unavailable">Not Available</option>
-                                    <option className="text-orange-700" value="Engaged">Engaged</option>
+                                    <option className="text-blue-700" value="Finishing Job">Finishing Job</option>
+                                    <option className="text-amber-700" value="Engaged">Engaged</option>
+                                    <option className="text-rose-700" value="Not Available">Not Available</option>
                                 </select>
-                                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-emerald-700 pointer-events-none" />
+                                <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none" />
                             </div>
 
                             <button className="p-2 rounded-full hover:bg-slate-100 relative text-slate-500 transition-colors">
@@ -318,7 +397,7 @@ const TechnicianDashboard = () => {
                 </header>
 
                 {/* Dashboard Body */}
-                <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 bg-slate-50/50">
+                <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
 
                     {/* Active Jobs Section */}
                     <section className="space-y-4">
@@ -330,8 +409,8 @@ const TechnicianDashboard = () => {
                             <span className="text-[10px] font-bold text-slate-400 uppercase">{activeJobs.length} assignments</span>
                         </div>
 
-                        {/* Jobs Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Jobs Grid: Gaps fixed, proper responsiveness */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {activeJobs.length === 0 ? (
                                 <div className="col-span-full p-8 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400">
                                     <ClipboardList size={32} className="mb-2 opacity-50" />
@@ -352,7 +431,7 @@ const TechnicianDashboard = () => {
                     </section>
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                         <StatCard
                             icon={Wallet}
                             label="Total Earnings"
@@ -386,9 +465,9 @@ const TechnicianDashboard = () => {
                     {/* Bottom Section: Chart + Info */}
                     <div className="grid grid-cols-12 gap-6">
                         {/* Chart Area */}
-                        <div className="col-span-12 lg:col-span-8 flex flex-col">
-                            <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 h-full min-h-[300px]">
-                                <div className="flex items-center justify-between mb-6">
+                        <div className="col-span-12 lg:col-span-8 flex flex-col h-full">
+                            <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 h-full min-h-[350px] flex flex-col">
+                                <div className="flex items-center justify-between mb-6 shrink-0">
                                     <div>
                                         <h3 className="text-base font-bold text-slate-800">Earnings Dynamics</h3>
                                         <p className="text-xs text-slate-500">Weekly performance visualization</p>
@@ -398,7 +477,7 @@ const TechnicianDashboard = () => {
                                         <option>Last 30 Days</option>
                                     </select>
                                 </div>
-                                <div className="flex-1 w-full h-[200px]">
+                                <div className="flex-1 w-full min-h-0">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={earningsData}>
                                             <defs>
@@ -451,6 +530,21 @@ const TechnicianDashboard = () => {
                                 </div>
                             </div>
 
+                            {/* [NEW] Registered Location Card */}
+                            <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-5 relative overflow-hidden">
+                                <MapPin className="absolute -right-4 -bottom-4 text-slate-100 size-24" />
+                                <div className="relative z-10">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Registered Base</h3>
+                                    <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-3">
+                                        {registeredAddress}
+                                    </p>
+                                    <div className="mt-3 inline-flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded text-[10px] font-bold text-slate-600">
+                                        <CheckCircle2 size={12} className="text-emerald-500" />
+                                        Verified Location
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Live Activity */}
                             <div className="bg-white border border-slate-200 shadow-sm rounded-xl flex flex-col h-[300px]">
                                 <div className="p-4 border-b border-slate-100 flex items-center justify-between">
@@ -463,9 +557,9 @@ const TechnicianDashboard = () => {
                                         <div className="size-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0">
                                             <Clock size={16} />
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-xs font-bold">New service request received</p>
-                                            <p className="text-[10px] text-slate-500 mt-0.5">Kitchen sink repair, Springfield Area</p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold truncate">New service request received</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">Kitchen sink repair, Springfield Area</p>
                                             <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">2 mins ago</p>
                                         </div>
                                     </div>
@@ -473,9 +567,9 @@ const TechnicianDashboard = () => {
                                         <div className="size-8 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center flex-shrink-0">
                                             <CheckCircle2 size={16} />
                                         </div>
-                                        <div className="flex-1">
-                                            <p className="text-xs font-bold">Job #JB-2908 Completed</p>
-                                            <p className="text-[10px] text-slate-500 mt-0.5">Payment of ₹450 pending verification</p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold truncate">Job #JB-2908 Completed</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5 truncate">Payment of ₹450 pending verification</p>
                                             <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">15 mins ago</p>
                                         </div>
                                     </div>
