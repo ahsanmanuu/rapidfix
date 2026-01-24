@@ -1,0 +1,16 @@
+[
+  {
+    "title": "Test Job Bid",
+    "description": "Testing database schema",
+    "created_by": "test-user-id",
+    "is_active": true,
+    "created_at": "2026-01-20T05:14:45.124Z",
+    "discount_type": "percentage",
+    "discount_value": 0,
+    "job_type": "Plumber",
+    "price": 100,
+    "user_id": "test-user-id",
+    "status": "open",
+    "type": "job_bid"
+  }
+]

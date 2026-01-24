@@ -1,0 +1,86 @@
+[
+  {
+    "id": "1767347834358",
+    "name": "mondal",
+    "email": "m@gmail.com",
+    "phone": "7994855076",
+    "serviceType": "Electrician",
+    "location": {
+      "latitude": 25.2755205,
+      "longitude": 86.9223432
+    },
+    "password": "sczone",
+    "experience": "8",
+    "addressDetails": {
+      "country": "India",
+      "state": "bihar",
+      "city": "darbhanga",
+      "pincode": "846002"
+    },
+    "documents": {
+      "photo": "/uploads/technicians/1767347834358/photo.jpg",
+      "pan": "/uploads/technicians/1767347834358/pan.jpg",
+      "aadhar": "/uploads/technicians/1767347834358/aadhar.jpg"
+    },
+    "rating": 0,
+    "reviews": [],
+    "status": "approved",
+    "joinedAt": "2026-01-02T09:57:14.358Z"
+  },
+  {
+    "id": "1767347996830",
+    "name": "akbar",
+    "email": "ak@gmail.com",
+    "phone": "7004855076",
+    "serviceType": "Inverter Technician",
+    "location": {
+      "latitude": 25.2755205,
+      "longitude": 86.9223432
+    },
+    "password": "sczone",
+    "experience": "6",
+    "addressDetails": {
+      "country": "India",
+      "state": "bihar",
+      "city": "darbhanga",
+      "pincode": "846002"
+    },
+    "documents": {
+      "photo": "/uploads/technicians/1767347996830/photo.jpg",
+      "pan": "/uploads/technicians/1767347996830/pan.jpg",
+      "aadhar": "/uploads/technicians/1767347996830/aadhar.jpg"
+    },
+    "rating": 0,
+    "reviews": [],
+    "status": "approved",
+    "joinedAt": "2026-01-02T09:59:56.830Z"
+  },
+  {
+    "id": "1767944788267",
+    "name": "sabir",
+    "email": "sabir@gmail.com",
+    "phone": "1234567890",
+    "serviceType": "Electrician",
+    "location": {
+      "latitude": 26.0898816,
+      "longitude": 85.9439104
+    },
+    "password": "sczone",
+    "experience": "10",
+    "addressDetails": {
+      "country": "india",
+      "state": "bihar",
+      "city": "darbhanaga",
+      "pincode": "846001"
+    },
+    "documents": {
+      "photo": "/uploads/technicians/1767944788267/photo.jpg",
+      "pan": "/uploads/technicians/1767944788267/pan.jpg",
+      "aadhar": "/uploads/technicians/1767944788267/aadhar.jpg"
+    },
+    "rating": 0,
+    "reviews": [],
+    "status": "available",
+    "joinedAt": "2026-01-09T07:46:28.267Z"
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "role": "admin",
+    "title": "New Job Request",
+    "message": "Job #undefined created by User",
+    "type": "job_created",
+    "read": false,
+    "recipient_id": "admin",
+    "related_id": null,
+    "created_at": "2026-01-10T07:44:06.248Z"
+  }
+]

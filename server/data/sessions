@@ -1,0 +1,66 @@
+[
+  {
+    "token": "ad412d31bb5b894dc59063bbca739ba0564c64eb35d1260dcb944e6891f46ff9",
+    "role": "user",
+    "device_id": null,
+    "expires_at": "2026-01-17T07:44:04.662Z",
+    "created_at": "2026-01-10T07:44:04.662Z"
+  },
+  {
+    "token": "21b39165245820f385200ea1e897503b6d7e8ceee56d4fa5fc5e773b27f66d77",
+    "role": "user",
+    "expires_at": "2026-01-17T07:53:54.871Z",
+    "created_at": "2026-01-10T07:53:54.871Z"
+  },
+  {
+    "token": "269ff93faa6b6e57404b0a68d7477bad0177f61949ad0f6bd8a4c278d2d3da96",
+    "role": "user",
+    "expires_at": "2026-01-17T07:57:46.876Z",
+    "created_at": "2026-01-10T07:57:46.876Z"
+  },
+  {
+    "token": "e496ab4c416465a2ba5261d6018113eea289a7b844ec8462cdd3226e97cb0396",
+    "role": "user",
+    "expires_at": "2026-01-17T07:59:59.872Z",
+    "created_at": "2026-01-10T07:59:59.872Z"
+  },
+  {
+    "token": "a9555ba9ea5576b7ff90608660f8cc713980b612477e6c4987631c04b9bc0828",
+    "role": "admin",
+    "user_id": "1768024885513",
+    "expires_at": "2026-01-17T10:56:47.935Z",
+    "created_at": "2026-01-10T10:56:47.935Z"
+  },
+  {
+    "token": "b86a3a644b04f06dbc75179af1e0115fe24a9caab339bcad5ef4e5ab62abde21",
+    "role": "admin",
+    "user_id": "1768024885513",
+    "expires_at": "2026-01-17T10:57:48.586Z",
+    "created_at": "2026-01-10T10:57:48.586Z"
+  },
+  {
+    "token": "6ec20901e956e3ad828dae52bfe89fa0bf670b4bf04cbbe644f827da1a67bb12",
+    "user_id": "9b853644-5773-439f-a590-4cf1ef2062cd",
+    "expires_at": "2026-01-17T11:14:09.566Z",
+    "created_at": "2026-01-10T11:14:09.566Z"
+  },
+  {
+    "token": "2810082e189bb9b73846ce13a3f7a1121fb7f839149af247413475b2ae0b22aa",
+    "user_id": "9b853644-5773-439f-a590-4cf1ef2062cd",
+    "expires_at": "2026-01-17T11:14:37.015Z",
+    "created_at": "2026-01-10T11:14:37.015Z"
+  },
+  {
+    "token": "b122ccf2e5cb76330e6d63575e2fc237f88dc2266fa3282aa4d978091b2dc1bf",
+    "user_id": "9b853644-5773-439f-a590-4cf1ef2062cd",
+    "expires_at": "2026-01-18T06:45:49.143Z",
+    "created_at": "2026-01-11T06:45:49.143Z"
+  },
+  {
+    "token": "933dda81540e5484ed4168c5c0cd3bddad15f46818e4005d203cbd4c8880af0a",
+    "role": "technician",
+    "user_id": "6211ffe6-25a7-4f7f-b08c-5a63dd3238d7",
+    "expires_at": "2026-01-20T15:13:32.146Z",
+    "created_at": "2026-01-13T15:13:32.146Z"
+  }
+]
