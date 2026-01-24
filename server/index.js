@@ -881,18 +881,22 @@ app.get('/api/admin/top-performers', async (req, res) => {
 });
 
 // --- Admin Routes ---
+// --- Admin Routes ---
 app.get('/api/admin/users', verifyAdmin, async (req, res) => {
-  const users = await userManager.getAllUsers();
+  const { lat, lng } = req.query;
+  const users = await adminManager.getUsers(lat, lng);
   res.json({ success: true, users });
 });
 
 app.get('/api/admin/technicians', verifyAdmin, async (req, res) => {
-  const technicians = await technicianManager.getAllTechnicians();
+  const { lat, lng } = req.query;
+  const technicians = await adminManager.getTechnicians(lat, lng);
   res.json({ success: true, technicians });
 });
 
 app.get('/api/admin/jobs', verifyAdmin, async (req, res) => {
-  const jobs = await jobManager.getAllJobs();
+  const { lat, lng } = req.query;
+  const jobs = await adminManager.getJobs(lat, lng);
   res.json({ success: true, jobs });
 });
 

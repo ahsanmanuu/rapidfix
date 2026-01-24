@@ -141,23 +141,29 @@ const AdminDashboard = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await api.get('/admin/users'); // [FIXED] Correct Endpoint
+            let query = '';
+            if (user && (user.fixed_latitude || user.latitude)) {
+                query = `?lat=${user.fixed_latitude || user.latitude}&lng=${user.fixed_longitude || user.longitude}`;
+            }
+            const response = await api.get(`/admin/users${query}`);
             const data = Array.isArray(response.data.users) ? response.data.users : [];
             setUsers(data);
         } catch (error) {
             console.error('Error fetching users:', error);
-            // setUsers([]); // Keep previous state or set empty, but don't mock
         }
     };
 
     const fetchJobs = async () => {
         try {
-            const response = await api.get('/admin/jobs'); // [FIXED] Correct Endpoint
+            let query = '';
+            if (user && (user.fixed_latitude || user.latitude)) {
+                query = `?lat=${user.fixed_latitude || user.latitude}&lng=${user.fixed_longitude || user.longitude}`;
+            }
+            const response = await api.get(`/admin/jobs${query}`);
             const data = Array.isArray(response.data.jobs) ? response.data.jobs : [];
             setJobs(data);
         } catch (error) {
             console.error('Error fetching jobs:', error);
-            // setJobs([]);
         }
     };
 
@@ -394,7 +400,11 @@ const AdminDashboard = () => {
 
             // Fetch Technicians
             try {
-                const res = await api.get('/admin/technicians');
+                let query = '';
+                if (user && (user.fixed_latitude || user.latitude)) {
+                    query = `?lat=${user.fixed_latitude || user.latitude}&lng=${user.fixed_longitude || user.longitude}`;
+                }
+                const res = await api.get(`/admin/technicians${query}`);
                 setTechnicians(res.data.technicians || []);
             } catch (error) {
                 console.error("Failed to fetch technicians", error);
@@ -402,7 +412,11 @@ const AdminDashboard = () => {
 
             // Fetch Jobs
             try {
-                const res = await api.get('/admin/jobs');
+                let query = '';
+                if (user && (user.fixed_latitude || user.latitude)) {
+                    query = `?lat=${user.fixed_latitude || user.latitude}&lng=${user.fixed_longitude || user.longitude}`;
+                }
+                const res = await api.get(`/admin/jobs${query}`);
                 setJobs(res.data.jobs || []);
             } catch (error) {
                 console.error("Failed to fetch jobs", error);
@@ -547,8 +561,8 @@ const AdminDashboard = () => {
                                                     data={stats.jobDistribution || []}
                                                     cx="50%"
                                                     cy="50%"
-                                                    innerRadius="50%"
-                                                    outerRadius="70%"
+                                                    innerRadius="40%"
+                                                    outerRadius="60%"
                                                     paddingAngle={5}
                                                     dataKey="value"
                                                 >

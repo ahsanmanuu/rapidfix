@@ -270,136 +270,203 @@ class AdminManager extends BaseManager {
         return R * c; // Distance in km
     }
 
-    async getStats(adminLat, adminLng) {
+    async getUsers(adminLat, adminLng) {
         try {
-            const radiusKm = 50; // Filter stats within 50km radius
-            const isGeoFenced = adminLat && adminLng;
-
-            // Load all data
             const UserDB = new (require('./DatabaseLoader'))('users');
-            const TechDB = new (require('./DatabaseLoader'))('technicians');
-            const JobDB = new (require('./DatabaseLoader'))('jobs');
+            const users = await UserDB.read();
 
-            let users = await UserDB.read();
-            let technicians = await TechDB.read();
-            let jobs = await JobDB.read();
+            if (!adminLat || !adminLng) return users;
 
-            // Filter if Lat/Lng provided
-            if (isGeoFenced) {
-                const lat = parseFloat(adminLat);
-                const lng = parseFloat(adminLng);
+            const radiusKm = 50;
+            const lat = parseFloat(adminLat);
+            const lng = parseFloat(adminLng);
 
-                users = users.filter(u => {
-                    // Check live location first, then fixed/registered
-                    const uLat = parseFloat(u.latitude || u.location?.latitude || u.registered_latitude || 0);
-                    const uLng = parseFloat(u.longitude || u.location?.longitude || u.registered_longitude || 0);
-                    if (!uLat || !uLng) return false; // Exclude users without location in Geo-Mode
-                    return this._calculateDistance(lat, lng, uLat, uLng) <= radiusKm;
-                });
-
-                technicians = technicians.filter(t => {
-                    const tLat = parseFloat(t.latitude || t.location?.latitude || t.registered_latitude || 0);
-                    const tLng = parseFloat(t.longitude || t.location?.longitude || t.registered_longitude || 0);
-                    if (!tLat || !tLng) return false;
-                    return this._calculateDistance(lat, lng, tLat, tLng) <= radiusKm;
-                });
-
-                // Filter jobs by User location or Job location
-                jobs = jobs.filter(j => {
-                    const jLat = parseFloat(j.location?.latitude || 0);
-                    const jLng = parseFloat(j.location?.longitude || 0);
-                    if (!jLat || !jLng) return false;
-                    return this._calculateDistance(lat, lng, jLat, jLng) <= radiusKm;
-                });
-            }
-
-            // Calculate Aggregates
-            const totalUsers = users.length;
-            const activeTechnicians = technicians.filter(t => t.status !== 'Blacklisted' && t.status !== 'Pending').length;
-            const totalJobs = jobs.length;
-            const revenue = jobs.reduce((acc, job) => acc + (parseFloat(job.amount) || parseFloat(job.visitingCharges) || 0), 0);
-
-            // Detailed Breakdown
-            const detailed = {
-                jobsPending: jobs.filter(j => j.status === 'pending').length,
-                jobsActive: jobs.filter(j => ['in_progress', 'assigned', 'started'].includes(j.status)).length,
-                jobsAccepted: jobs.filter(j => j.status === 'accepted').length,
-                jobsFinishing: jobs.filter(j => j.status === 'completed').length, // Map 'completed' to 'finishing' for dashboard
-                jobsRejected: jobs.filter(j => j.status === 'cancelled' || j.status === 'rejected').length,
-
-                techsAvailable: technicians.filter(t => t.status === 'Available').length,
-                techsEngaged: technicians.filter(t => t.status === 'Engaged' || t.status === 'Busy').length,
-                techsUnavailable: technicians.filter(t => t.status === 'Offline' || t.status === 'Unavailable').length,
-                techsBlacklisted: technicians.filter(t => t.status === 'Blacklisted').length,
-                techsPremium: technicians.filter(t => t.membership === 'Premium').length,
-                techsFree: technicians.filter(t => t.membership !== 'Premium').length,
-                techsApproved: technicians.filter(t => t.documents?.verificationStatus === 'Approved').length,
-                techsNotApproved: technicians.filter(t => t.documents?.verificationStatus !== 'Approved').length,
-                techsExpiring: 0, // Logic pending
-
-                usersPremium: users.filter(u => u.membership === 'Premium').length,
-                usersFree: users.filter(u => u.membership !== 'Premium').length,
-                usersBanned: users.filter(u => u.status === 'Banned').length,
-                usersExpiring: 0 // Logic pending
-            };
-
-            // Trends (Mock/Calculated)
-            const registrationTrends = [
-                { name: 'Week 1', count: Math.floor(totalUsers * 0.2) },
-                { name: 'Week 2', count: Math.floor(totalUsers * 0.3) },
-                { name: 'Week 3', count: Math.floor(totalUsers * 0.4) },
-                { name: 'Week 4', count: Math.floor(totalUsers * 0.1) },
-            ];
-
-            const technicianTrends = [
-                { name: 'Week 1', count: Math.floor(activeTechnicians * 0.2) },
-                { name: 'Week 2', count: Math.floor(activeTechnicians * 0.3) },
-                { name: 'Week 3', count: Math.floor(activeTechnicians * 0.3) },
-                { name: 'Week 4', count: Math.floor(activeTechnicians * 0.2) },
-            ];
-
-            const jobDistribution = [
-                { name: 'Completed', value: detailed.jobsFinishing, color: '#10b981' },
-                { name: 'Pending', value: detailed.jobsPending, color: '#f59e0b' },
-                { name: 'Cancelled', value: detailed.jobsRejected, color: '#ef4444' }
-            ];
-
-            // Activity Log (Mocked to be recent events of these filtered entities)
-            const activityLog = [];
-            // Add some synthetic logs based on recent jobs
-            jobs.slice(0, 5).forEach(j => {
-                activityLog.push({
-                    id: j.id,
-                    user: j.contactName || 'User',
-                    action: `created job #${j.id.substring(0, 6)}`,
-                    timestamp: j.created_at || new Date().toISOString(),
-                    type: 'job',
-                    icon: 'work'
-                });
+            return users.filter(u => {
+                const uLat = parseFloat(u.latitude || u.location?.latitude || u.registered_latitude || 0);
+                const uLng = parseFloat(u.longitude || u.location?.longitude || u.registered_longitude || 0);
+                if (!uLat || !uLng) return false;
+                return this._calculateDistance(lat, lng, uLat, uLng) <= radiusKm;
             });
-
-            return {
-                totalUsers,
-                activeTechnicians,
-                totalJobs,
-                revenue,
-                detailed,
-                registrationTrends,
-                technicianTrends,
-                jobDistribution,
-                activityLog: activityLog.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5),
-                filterRadius: isGeoFenced ? radiusKm : 'Global'
-            };
-
         } catch (err) {
-            console.error("[AdminManager] GetStats Error:", err);
-            return {};
+            console.error("[AdminManager] GetUsers Error:", err);
+            return [];
         }
     }
 
-    _deg2rad(deg) {
-        return deg * (Math.PI / 180);
+    async getTechnicians(adminLat, adminLng) {
+        try {
+            const TechDB = new (require('./DatabaseLoader'))('technicians');
+            const techs = await TechDB.read();
+
+            if (!adminLat || !adminLng) return techs;
+
+            const radiusKm = 50;
+            const lat = parseFloat(adminLat);
+            const lng = parseFloat(adminLng);
+
+            return techs.filter(t => {
+                const tLat = parseFloat(t.latitude || t.location?.latitude || t.registered_latitude || 0);
+                const tLng = parseFloat(t.longitude || t.location?.longitude || t.registered_longitude || 0);
+                if (!tLat || !tLng) return false;
+                return this._calculateDistance(lat, lng, tLat, tLng) <= radiusKm;
+            });
+        } catch (err) {
+            console.error("[AdminManager] GetTechnicians Error:", err);
+            return [];
+        }
     }
+
+    async getJobs(adminLat, adminLng) {
+        try {
+            const JobDB = new (require('./DatabaseLoader'))('jobs');
+            const jobs = await JobDB.read();
+
+            if (!adminLat || !adminLng) return jobs;
+
+            const radiusKm = 50;
+            const lat = parseFloat(adminLat);
+            const lng = parseFloat(adminLng);
+
+            return jobs.filter(j => {
+                const jLat = parseFloat(j.location?.latitude || 0);
+                const jLng = parseFloat(j.location?.longitude || 0);
+                if (!jLat || !jLng) return false;
+                return this._calculateDistance(lat, lng, jLat, jLng) <= radiusKm;
+            });
+        } catch (err) {
+            console.error("[AdminManager] GetJobs Error:", err);
+            return [];
+        }
+    }
+        try {
+    const radiusKm = 50; // Filter stats within 50km radius
+    const isGeoFenced = adminLat && adminLng;
+
+    // Load all data
+    const UserDB = new (require('./DatabaseLoader'))('users');
+    const TechDB = new (require('./DatabaseLoader'))('technicians');
+    const JobDB = new (require('./DatabaseLoader'))('jobs');
+
+    let users = await UserDB.read();
+    let technicians = await TechDB.read();
+    let jobs = await JobDB.read();
+
+    // Filter if Lat/Lng provided
+    if (isGeoFenced) {
+        const lat = parseFloat(adminLat);
+        const lng = parseFloat(adminLng);
+
+        users = users.filter(u => {
+            // Check live location first, then fixed/registered
+            const uLat = parseFloat(u.latitude || u.location?.latitude || u.registered_latitude || 0);
+            const uLng = parseFloat(u.longitude || u.location?.longitude || u.registered_longitude || 0);
+            if (!uLat || !uLng) return false; // Exclude users without location in Geo-Mode
+            return this._calculateDistance(lat, lng, uLat, uLng) <= radiusKm;
+        });
+
+        technicians = technicians.filter(t => {
+            const tLat = parseFloat(t.latitude || t.location?.latitude || t.registered_latitude || 0);
+            const tLng = parseFloat(t.longitude || t.location?.longitude || t.registered_longitude || 0);
+            if (!tLat || !tLng) return false;
+            return this._calculateDistance(lat, lng, tLat, tLng) <= radiusKm;
+        });
+
+        // Filter jobs by User location or Job location
+        jobs = jobs.filter(j => {
+            const jLat = parseFloat(j.location?.latitude || 0);
+            const jLng = parseFloat(j.location?.longitude || 0);
+            if (!jLat || !jLng) return false;
+            return this._calculateDistance(lat, lng, jLat, jLng) <= radiusKm;
+        });
+    }
+
+    // Calculate Aggregates
+    const totalUsers = users.length;
+    const activeTechnicians = technicians.filter(t => t.status !== 'Blacklisted' && t.status !== 'Pending').length;
+    const totalJobs = jobs.length;
+    const revenue = jobs.reduce((acc, job) => acc + (parseFloat(job.amount) || parseFloat(job.visitingCharges) || 0), 0);
+
+    // Detailed Breakdown
+    const detailed = {
+        jobsPending: jobs.filter(j => j.status === 'pending').length,
+        jobsActive: jobs.filter(j => ['in_progress', 'assigned', 'started'].includes(j.status)).length,
+        jobsAccepted: jobs.filter(j => j.status === 'accepted').length,
+        jobsFinishing: jobs.filter(j => j.status === 'completed').length, // Map 'completed' to 'finishing' for dashboard
+        jobsRejected: jobs.filter(j => j.status === 'cancelled' || j.status === 'rejected').length,
+
+        techsAvailable: technicians.filter(t => t.status === 'Available').length,
+        techsEngaged: technicians.filter(t => t.status === 'Engaged' || t.status === 'Busy').length,
+        techsUnavailable: technicians.filter(t => t.status === 'Offline' || t.status === 'Unavailable').length,
+        techsBlacklisted: technicians.filter(t => t.status === 'Blacklisted').length,
+        techsPremium: technicians.filter(t => t.membership === 'Premium').length,
+        techsFree: technicians.filter(t => t.membership !== 'Premium').length,
+        techsApproved: technicians.filter(t => t.documents?.verificationStatus === 'Approved').length,
+        techsNotApproved: technicians.filter(t => t.documents?.verificationStatus !== 'Approved').length,
+        techsExpiring: 0, // Logic pending
+
+        usersPremium: users.filter(u => u.membership === 'Premium').length,
+        usersFree: users.filter(u => u.membership !== 'Premium').length,
+        usersBanned: users.filter(u => u.status === 'Banned').length,
+        usersExpiring: 0 // Logic pending
+    };
+
+    // Trends (Mock/Calculated)
+    const registrationTrends = [
+        { name: 'Week 1', count: Math.floor(totalUsers * 0.2) },
+        { name: 'Week 2', count: Math.floor(totalUsers * 0.3) },
+        { name: 'Week 3', count: Math.floor(totalUsers * 0.4) },
+        { name: 'Week 4', count: Math.floor(totalUsers * 0.1) },
+    ];
+
+    const technicianTrends = [
+        { name: 'Week 1', count: Math.floor(activeTechnicians * 0.2) },
+        { name: 'Week 2', count: Math.floor(activeTechnicians * 0.3) },
+        { name: 'Week 3', count: Math.floor(activeTechnicians * 0.3) },
+        { name: 'Week 4', count: Math.floor(activeTechnicians * 0.2) },
+    ];
+
+    const jobDistribution = [
+        { name: 'Completed', value: detailed.jobsFinishing, color: '#10b981' },
+        { name: 'Pending', value: detailed.jobsPending, color: '#f59e0b' },
+        { name: 'Cancelled', value: detailed.jobsRejected, color: '#ef4444' }
+    ];
+
+    // Activity Log (Mocked to be recent events of these filtered entities)
+    const activityLog = [];
+    // Add some synthetic logs based on recent jobs
+    jobs.slice(0, 5).forEach(j => {
+        activityLog.push({
+            id: j.id,
+            user: j.contactName || 'User',
+            action: `created job #${j.id.substring(0, 6)}`,
+            timestamp: j.created_at || new Date().toISOString(),
+            type: 'job',
+            icon: 'work'
+        });
+    });
+
+    return {
+        totalUsers,
+        activeTechnicians,
+        totalJobs,
+        revenue,
+        detailed,
+        registrationTrends,
+        technicianTrends,
+        jobDistribution,
+        activityLog: activityLog.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5),
+        filterRadius: isGeoFenced ? radiusKm : 'Global'
+    };
+
+} catch (err) {
+    console.error("[AdminManager] GetStats Error:", err);
+    return {};
+}
+    }
+
+_deg2rad(deg) {
+    return deg * (Math.PI / 180);
+}
 }
 
 module.exports = AdminManager;
