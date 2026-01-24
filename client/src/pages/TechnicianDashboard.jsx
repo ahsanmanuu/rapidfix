@@ -14,7 +14,7 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import useSupabaseRealtime from '../hooks/useSupabaseRealtime';
-import './TechnicianDashboard.css'; // Ensure this exists or is created
+import '../components/Dashboard/TechnicianDashboard.css'; // Correct path to CSS
 
 // --- Components ---
 
