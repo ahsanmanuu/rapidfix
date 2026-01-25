@@ -27,6 +27,7 @@ const NotificationManager = require('./managers/NotificationManager');
 const BroadcastManager = require('./managers/BroadcastManager');
 const TestimonialManager = require('./managers/TestimonialManager');
 const PerformerManager = require('./managers/PerformerManager');
+const ActivityLogManager = require('./managers/ActivityLogManager'); // [NEW]
 const InvoiceManager = require('./managers/InvoiceManager');
 const InvoiceSettingsManager = require('./managers/InvoiceSettingsManager');
 const Database = require('./managers/Database'); // Explicitly needed for settings
@@ -43,6 +44,14 @@ app.use(cors({
 app.use(bodyParser.json({ limit: '10mb' })); // Increased limit for logo uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static(path.join(__dirname, '../client/dist')));
+
+
+// [NEW] Automatic Membership Expiry Check (Every 60 Seconds)
+// We need to wait for manager init, so we'll do this better after manager creation or inside server.listen
+// But `technicianManager` is created below. Let's move this to server.listen block at bottom of file usually, 
+// or just use a delayed start. 
+// Ideally, `server.listen` is where we start cron jobs.
+
 
 // GLOBAL DEBUG LOGGING
 app.use((req, res, next) => {
@@ -80,6 +89,7 @@ const storageManager = new StorageManager();
 const broadcastManager = new BroadcastManager();
 const testimonialManager = new TestimonialManager();
 const performerManager = new PerformerManager();
+const activityLogManager = new ActivityLogManager(); // [NEW]
 
 // Invoice System
 const invoiceSettingsDb = new Database('invoice_settings.json');
@@ -98,13 +108,14 @@ chatManager.setNotificationManager(notificationManager);
 supportManager.setNotificationManager(notificationManager); // [NEW] Notification support for tickets
 
 // Link Managers to Socket.io for automatic broadcasts
+// Link Managers to Socket.io for automatic broadcasts
 const allManagers = [
   userManager, technicianManager, adminManager, feedbackManager,
   locationManager, complaintManager, jobManager, financeManager,
   rideManager, sessionManager, superAdminManager, chatManager,
   offerManager, notificationManager, storageManager, broadcastManager,
   testimonialManager, performerManager, invoiceManager, invoiceSettingsManager,
-  supportManager
+  supportManager, activityLogManager
 ];
 
 allManagers.forEach(m => {
@@ -123,6 +134,7 @@ feedbackManager.setTechnicianManager(technicianManager);
 jobManager.setTechnicianManager(technicianManager);
 jobManager.setFinanceManager(financeManager);
 jobManager.setInvoiceManager(invoiceManager);
+jobManager.setActivityLogManager(activityLogManager);
 
 // [NEW] Inject JobManager into TechnicianManager for Queue Watcher (Flow 4)
 technicianManager.setJobManager(jobManager);
@@ -130,6 +142,9 @@ technicianManager.setJobManager(jobManager);
 // [NEW] Inject Dependencies into FeedbackManager
 feedbackManager.setJobManager(jobManager);
 feedbackManager.setTechnicianManager(technicianManager);
+
+// Inject into FinanceManager
+financeManager.setActivityLogManager(activityLogManager);
 
 
 
@@ -1587,6 +1602,32 @@ app.post('/api/jobs', authenticateSession, async (req, res) => {
   }
 });
 
+// [NEW] Marketplace Endpoint
+app.get('/api/jobs/available', async (req, res) => {
+  try {
+    const { serviceType } = req.query;
+    console.log(`[API] Fetching available jobs. Filter: ${serviceType || 'None'}`);
+
+    const unassigned = await jobManager.getUnassignedJobs();
+    let available = unassigned;
+
+    if (serviceType) {
+      const type = serviceType.toLowerCase();
+      available = unassigned.filter(j =>
+        (j.serviceType || j.service_type || '').toLowerCase().includes(type)
+      );
+    }
+
+    // Sort by newest
+    available.sort((a, b) => new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at));
+
+    res.json({ success: true, jobs: available });
+  } catch (err) {
+    console.error('[API] Available Jobs Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // --- Background Worker: Unassigned Job Scanner ---
 setInterval(async () => {
   try {
@@ -1669,7 +1710,11 @@ app.put('/api/jobs/:id/status', async (req, res) => {
   if (!currentJob) return res.status(404).json({ success: false, error: 'Job not found' });
 
   // 2. Update Job Status (Side effects are now handled inside JobManager)
-  const job = await jobManager.updateStatus(req.params.id, status, details);
+  // Ensure we capture technicianId and other details even if sent at top level
+  const updateDetails = { ...details, ...req.body };
+  delete updateDetails.status; // status is already extracted
+
+  const job = await jobManager.updateStatus(req.params.id, status, updateDetails);
 
   if (job) {
     res.json({ success: true, job });
@@ -1762,6 +1807,113 @@ app.post('/api/invoice-settings', upload.single('logo'), async (req, res) => {
 });
 
 // --- Technician Status & Profile Routes ---
+
+// [NEW] Aggregated Dashboard Stats
+app.get('/api/technicians/:id/dashboard-stats', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Parallel Fetch for Performance
+    const [tech, jobStats, financeTxns, complaintStats, activityLogs, activeJobsRes] = await Promise.all([
+      technicianManager.getTechnician(id),
+      jobManager.getJobStats(id),
+      financeManager.getTransactionsByUser(id, true), // true = isTechnician
+      complaintManager.getComplaintStats(id),
+      activityLogManager.db.findAll('technician_id', id),
+      jobManager.getJobsByTechnician(id)
+    ]);
+
+    // [AUTO-SYNC] Trigger background sync to ensure technician table columns match JobManager stats
+    technicianManager.syncStatsFromJobs(id).catch(err => console.error(`[Stats-Sync] Failed for ${id}:`, err));
+
+    if (!tech) {
+      return res.status(404).json({ success: false, error: 'Technician not found' });
+    }
+
+    // Process Earnings (Last 7 Days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const earningsData = [];
+    const daysMap = new Map();
+
+    // Initialize last 7 days with 0
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const dateKey = d.toISOString().split('T')[0];
+      daysMap.set(dateKey, { name: dayName, value: 0 });
+      earningsData.push(daysMap.get(dateKey));
+    }
+
+    // Populate with actual data (filtered by credit/income)
+    financeTxns.forEach(txn => {
+      if (txn.type === 'credit' && txn.created_at) { // Assuming credit is income
+        const dateKey = new Date(txn.created_at).toISOString().split('T')[0];
+        if (daysMap.has(dateKey)) {
+          daysMap.get(dateKey).value += parseFloat(txn.amount);
+        }
+      }
+    });
+
+    // Calculate Totals
+    const totalEarnings = financeTxns
+      .filter(t => t.type === 'credit')
+      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+    // Monthly Revenue
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+    const monthlyRevenue = financeTxns
+      .filter(t => t.type === 'credit' && t.created_at >= startOfMonth)
+      .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+    // Filter Activity Logs (Sort Newest, Limit 10)
+    const relevantLogs = (activityLogs || [])
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 10)
+      .map(log => ({
+        id: log.id,
+        type: log.type,
+        title: log.title,
+        message: log.message,
+        createdAt: log.created_at,
+        meta: log.meta
+      }));
+
+    // Active Jobs Processing
+    // activeJobsRes might be { success: true, jobs: [...] } or just [...]
+    const jobsList = activeJobsRes && activeJobsRes.jobs ? activeJobsRes.jobs : (Array.isArray(activeJobsRes) ? activeJobsRes : []);
+    const activeJobs = jobsList.filter(job =>
+      ['pending', 'accepted', 'in_progress', 'arrived'].includes(job.status)
+    ).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    const responseData = {
+      stats: {
+        earnings: totalEarnings,
+        monthlyRevenue: monthlyRevenue,
+        completedJobs: jobStats.completed || 0,
+        accepted: jobStats.accepted || 0,
+        pending: jobStats.pending || 0,
+        rejected: jobStats.rejected || 0,
+        usersServed: jobStats.completed || 0, // Approx
+        complaints: complaintStats.total || 0,
+        rating: tech.rating || 0
+      },
+      earningsData: earningsData, // [{ name: 'Mon', value: 1200 }, ...]
+      activeJobs: activeJobs,
+      activityFeed: relevantLogs
+    };
+
+    res.json({ success: true, ...responseData });
+
+  } catch (err) {
+    console.error("Dashboard Stats Aggregation Error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.put('/api/technicians/:id/status', async (req, res) => {
   const { status, location } = req.body;
   const tech = await technicianManager.updateStatus(req.params.id, status);
@@ -1951,13 +2103,13 @@ app.get('/api/technicians/:id/stats', async (req, res) => {
     };
 
     // 2. Earnings
-    const balance = await financeManager.getBalance(techId);
+    const balance = await financeManager.getBalance(techId, true);
 
     // Monthly Earnings (Calculated from transactions)
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    const transactions = await financeManager.getTransactionsByUser(techId);
+    const transactions = await financeManager.getTransactionsByUser(techId, true);
     const monthlyEarnings = transactions.reduce((sum, t) => {
       const tDate = new Date(t.createdAt);
       if (tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear && t.type === 'credit') {

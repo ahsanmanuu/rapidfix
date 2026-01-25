@@ -4,6 +4,7 @@ const TechnicianManager = require('./TechnicianManager');
 const NotificationManager = require('./NotificationManager');
 const FinanceManager = require('./FinanceManager');
 const ComplaintManager = require('./ComplaintManager');
+const ActivityLogManager = require('./ActivityLogManager'); // [NEW]
 
 const InvoiceManager = require('./InvoiceManager');
 
@@ -16,6 +17,7 @@ class JobManager {
         this.notificationManager = new NotificationManager();
         this.financeManager = new FinanceManager();
         this.complaintManager = new ComplaintManager();
+        this.activityManager = new ActivityLogManager(); // [NEW]
         this.invoiceManager = null; // Injected via setInvoiceManager
         this.io = null; // Will be set via server/index.js
     }
@@ -37,8 +39,12 @@ class JobManager {
         console.log('[JobManager] InvoiceManager injected successfully');
     }
 
+    setActivityLogManager(activityManager) {
+        this.activityManager = activityManager;
+    }
+
     // Helper to map DB snake_case to App camelCase
-    _mapFromDb(job) {
+    _mapFromDb(job, includeOtp = false) {
         if (!job) return null;
         try {
             const { user_id, technician_id, service_type, contact_name, contact_phone, scheduled_date, scheduled_time, created_at, updated_at, otp, visiting_charges, spare_parts_cost, tax, total_cost, ...rest } = job;
@@ -49,7 +55,7 @@ class JobManager {
             const jobTax = Number(tax || 0);
             const total = Number(total_cost || (vCharges + spareCost + jobTax));
 
-            return {
+            const mapped = {
                 ...rest,
                 userId: user_id,
                 technicianId: technician_id,
@@ -68,11 +74,17 @@ class JobManager {
                 sparePartsCost: spareCost,
                 tax: jobTax,
                 totalCost: total,
+                offerPrice: job.offer_price || job.offer_price, // fallback to rest
                 paymentStatus: job.payment_status || 'pending',
                 paymentMethod: job.payment_method,
-                otp: otp,
                 feedbackGiven: job.feedback_given || false
             };
+
+            if (includeOtp) {
+                mapped.otp = otp;
+            }
+
+            return mapped;
         } catch (err) {
             console.error("[JobManager] Error mapping from DB:", err);
             return job;
@@ -252,7 +264,7 @@ class JobManager {
 
             const dbJob = this._mapToDb(newJob);
             // Include new columns in insert
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, payment_status, payment_method';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note, payment_status, payment_method, feedback_given';
 
             console.log(`[JobManager] Inserting Job with OTP: ${otp}`);
             const saved = await this.db.add(dbJob, columns);
@@ -271,12 +283,21 @@ class JobManager {
             } else if (paymentStatus === 'paid') {
                 // Trust external payment status if passed
             }
-            const job = await this._enrichJob(this._mapFromDb(saved));
+            const job = await this._enrichJob(this._mapFromDb(saved, true)); // Include OTP for the creating user
 
             // Real-time broadcast for new job
             if (this.io) {
-                this.io.emit('new_job_created', job);
+                // Global broadcast (strips OTP for technicians/marketplace)
+                const publicJob = { ...job };
+                delete publicJob.otp;
+                this.io.emit('new_job_created', publicJob);
+
+                // Private broadcast to the specific user (includes OTP)
                 this.io.to(`user_${userId}`).emit('job_status_updated', job);
+            }
+
+            if (technicianId) {
+                await this.activityManager.log(userId, technicianId, 'job_request', 'New Job Request', `New request: ${serviceType}`, { jobId: job.id });
             }
 
             // [AUTOMATED] Run Smart Assignment Flow immediately
@@ -340,9 +361,10 @@ class JobManager {
                         continue;
                     }
 
-                    // 2. Rejection Rate Filter (< 20% in CURRENT MONTH)
+                    // 2. Rejection Rate Filter (Relaxed: < 40% only if > 5 jobs)
                     const jobStats = await this.getJobStats(tech.id, true);
-                    if (jobStats.total >= 3 && jobStats.ratio >= 0.20) {
+                    if (jobStats.total >= 5 && jobStats.ratio >= 0.40) {
+                        console.log(`[AutoAssign] Filtered ${tech.name}: High Rejection Rate (${(jobStats.ratio * 100).toFixed(1)}%)`);
                         continue;
                     }
 
@@ -350,17 +372,12 @@ class JobManager {
                     // Condition: Free < 20%
                     const isPremium = tech.membership === 'Premium' || tech.subscription === 'premium';
 
-                    // Condition B: Underutilized Logic (Implicit - they pass simpler checks)
-
-                    // Condition C: Free Tier Cap
+                    // Relaxed: Simple Cap check only for Free tier
                     if (!isPremium) {
                         const techMonthlyJobs = await this._getMonthlyJobCount(tech.id);
-                        const regionTotal = Math.max(allJobsThisMonth, 1);
-                        const share = techMonthlyJobs / regionTotal;
-
-                        // Strict: If > 10 jobs exist and tech has >= 20% share, SKIP
-                        if (allJobsThisMonth > 10 && share >= 0.20) {
-                            console.log(`[AutoAssign] Filtered ${tech.name}: Market Cap Hit (${(share * 100).toFixed(1)}%)`);
+                        // Cap at 20 jobs/month for free tier instead of relative share
+                        if (techMonthlyJobs >= 20) {
+                            console.log(`[AutoAssign] Filtered ${tech.name}: Monthly Free Tier Cap Reached (20)`);
                             continue;
                         }
                     }
@@ -440,7 +457,7 @@ class JobManager {
             await this.notificationManager.createNotification(technicianId, 'technician', notifTitle, notifBody, 'job_assigned', jobId);
 
             // Update Stats
-            await this.techManager.updateStats(technicianId, { type: 'assign' });
+            await this.techManager.syncStatsFromJobs(technicianId);
 
             return updatedJob;
         } catch (err) {
@@ -462,6 +479,22 @@ class JobManager {
                 customerMobile: job.customerMobile || job.contactPhone || customer?.phone || ""
             };
 
+            // [FIX] Address Fallback: If Job has no address, use User's Profile Address
+            if (!enriched.address || enriched.address === 'No address provided' || enriched.address.length < 5) {
+                if (customer) {
+                    // Priority: Fixed Address > Location (if string) > Location (if obj)
+                    const userAddr = customer.fixedAddress ||
+                        (typeof customer.location === 'string' ? customer.location : null) ||
+                        customer.location?.address ||
+                        customer.location?.city;
+
+                    if (userAddr) {
+                        enriched.address = userAddr;
+                        // console.log(`[JobManager] Job ${job.id} address patched from User Profile: ${userAddr}`);
+                    }
+                }
+            }
+
             if (job.technicianId) {
                 const tech = await this.techManager.getTechnician(job.technicianId);
                 if (tech) {
@@ -482,11 +515,11 @@ class JobManager {
         }
     }
 
-    async getJob(id) {
+    async getJob(id, includeOtp = false) {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note';
+            const columns = `id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, ${includeOtp ? 'otp, ' : ''}visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note, payment_status, payment_method, feedback_given`;
             const job = await this.db.find('id', id, columns);
-            return await this._enrichJob(this._mapFromDb(job));
+            return await this._enrichJob(this._mapFromDb(job, includeOtp));
         } catch (err) {
             console.error(`[JobManager] Error getting job ${id}:`, err);
             return null;
@@ -495,7 +528,9 @@ class JobManager {
 
     async getAllJobs() {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note';
+            // For admin/internal use, OTP is generally not needed unless explicitly requested.
+            // We'll fetch all columns and let _mapFromDb handle the default exclusion.
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note, payment_status, payment_method, feedback_given';
             const jobs = await this.db.read(columns);
             return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
         } catch (err) {
@@ -551,62 +586,83 @@ class JobManager {
                 // timeline is now omitted because it's not in Supabase schema cache
                 ...details
             };
+
+            // [NEW] OTP Verification for Job Completion
+            if (status === 'completed') {
+                const jobWithOtp = await this.db.find('id', id, 'id, otp');
+                const storedOtp = jobWithOtp?.otp;
+                const providedOtp = details.otp || details.OTP;
+
+                console.log(`[JobManager] Verifying OTP for Job ${id}. Stored: ${storedOtp}, Provided: ${providedOtp}`);
+
+                if (!storedOtp) {
+                    // Strict: If No OTP exists, it might be already used or never generated. Fail it.
+                    throw new Error("Security Error: This job is missing a verification code or has already been finalized.");
+                } else if (String(storedOtp) !== String(providedOtp)) {
+                    throw new Error("Invalid Verification OTP. Please ask the customer for the correct code.");
+                }
+
+                // [HARDENING] Invalidate OTP after success to prevent reuse
+                updates.otp = null;
+            }
+
             const dbUpdates = this._mapToDb(updates);
             // Add new columns to allowed update list
-            const updateCols = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note';
+            const updateCols = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note, payment_status, payment_method, feedback_given';
             const updated = await this.db.update('id', id, dbUpdates, updateCols);
-            const enriched = await this._enrichJob(this._mapFromDb(updated));
+            const enriched = await this._enrichJob(this._mapFromDb(updated, false)); // Strip OTP by default
 
             if (this.io) {
-                this.io.to(`user_${enriched.userId}`).emit('job_status_updated', enriched);
+                // To Technician: STRIPPED
                 if (enriched.technicianId) {
                     this.io.to(`tech_${enriched.technicianId}`).emit('job_status_updated', enriched);
-
-                    // [REFACTORED] Centralized Side Effects
-                    if (status === 'completed') {
-                        console.log(`[JobManager] Job ${id} completed, updating tech ${enriched.technicianId} stats and status`);
-                        await this.techManager.updateStats(enriched.technicianId, { type: 'complete' });
-                        await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
-
-                        // Process Payment (Credit Tech) - 90% of price
-                        const amount = enriched.offerPrice || enriched.visitingCharges || 0;
-                        if (amount > 0) {
-                            await this.financeManager.processPayment(enriched.technicianId, amount * 0.9, 'credit', `Job Compensation #${enriched.id}`);
-                            this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
-                            this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId) });
-                        }
-
-                        // [NEW] Generate and Send Invoice (Async)
-                        if (this.invoiceManager) {
-                            // Don't await in critical path to keep response fast, but handle errors
-                            (async () => {
-                                try {
-                                    console.log(`[JobManager] Generating and saving invoice for Job ${id}...`);
-                                    const result = await this.invoiceManager.createAndSaveInvoice(enriched);
-                                    console.log(`[JobManager] Invoice processing for Job ${id} completed. URL:`, result.url);
-                                } catch (invErr) {
-                                    console.error(`[JobManager] Invoice generation failed for Job ${id}:`, invErr);
-                                }
-                            })();
-                        } else {
-                            console.error('[JobManager] InvoiceManager not injected! Cannot send invoice.');
-                        }
-                    } else if (status === 'rejected') {
-                        console.log(`[JobManager] Job ${id} rejected, updating tech ${enriched.technicianId} stats and setting status to available`);
-                        await this.techManager.updateStats(enriched.technicianId, { type: 'reject' });
-                        await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
-                    }
-                    else if (status === 'accepted') {
-                        console.log(`[JobManager] Job ${id} accepted, updating tech ${enriched.technicianId} stats and setting status to engaged`);
-                        await this.techManager.updateStats(enriched.technicianId, { type: 'accept' });
-                        await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
-                    } else if (status === 'in_progress') {
-                        console.log(`[JobManager] Job ${id} in progress, setting tech ${enriched.technicianId} status to engaged`);
-                        await this.techManager.updateStatus(enriched.technicianId, 'engaged');
-                    }
                 }
+
+                // To Admin: STRIPPED
                 this.io.emit('admin_job_update', enriched);
-                this.io.emit('job_status_updated_admin', enriched); // Sync with Admin listener
+                this.io.emit('job_status_updated_admin', enriched);
+
+                // To User: INCLUDE OTP (Securely mapped)
+                const userEnriched = await this._enrichJob(this._mapFromDb(updated, true));
+                this.io.to(`user_${enriched.userId}`).emit('job_status_updated', userEnriched);
+            }
+
+            if (status === 'completed') {
+                console.log(`[JobManager] Job ${id} completed, syncing tech ${enriched.technicianId} stats and status`);
+                await this.techManager.syncStatsFromJobs(enriched.technicianId);
+                await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
+
+                // Process Payment (Credit Tech) - 90% of price
+                const amount = enriched.offerPrice || enriched.visitingCharges || 0;
+                if (amount > 0) {
+                    await this.financeManager.processPayment(enriched.technicianId, amount * 0.9, 'credit', `Job Compensation #${enriched.id}`, true);
+                    this.io.to(`tech_${enriched.technicianId}`).emit('wallet_updated', { balance: await this.financeManager.getBalance(enriched.technicianId, true) });
+                }
+
+                // [NEW] Generate and Send Invoice (Async)
+                if (this.invoiceManager) {
+                    (async () => {
+                        try {
+                            console.log(`[JobManager] Generating and saving invoice for Job ${id}...`);
+                            const result = await this.invoiceManager.createAndSaveInvoice(enriched);
+                            console.log(`[JobManager] Invoice processing for Job ${id} completed. URL:`, result.url);
+                        } catch (invErr) {
+                            console.error(`[JobManager] Invoice generation failed for Job ${id}:`, invErr);
+                        }
+                    })();
+                }
+            } else if (status === 'rejected') {
+                console.log(`[JobManager] Job ${id} rejected, syncing tech ${enriched.technicianId} stats and setting status to available`);
+                await this.techManager.syncStatsFromJobs(enriched.technicianId);
+                await this.techManager.updateStatus(enriched.technicianId, 'available'); // Free up tech
+            } else if (status === 'accepted') {
+                console.log(`[JobManager] Job ${id} accepted, syncing tech ${enriched.technicianId} stats and setting status to engaged`);
+                await this.techManager.syncStatsFromJobs(enriched.technicianId);
+                await this.techManager.updateStatus(enriched.technicianId, 'engaged'); // Engage tech
+            } else if (status === 'in_progress') {
+                console.log(`[JobManager] Job ${id} in progress, syncing tech ${enriched.technicianId} stats and setting status to finishing_work`);
+                await this.techManager.syncStatsFromJobs(enriched.technicianId);
+                await this.techManager.updateStatus(enriched.technicianId, 'finishing_work');
             }
 
             // [NEW] Persist Notifications
@@ -615,6 +671,24 @@ class JobManager {
             }
             if (enriched.technicianId) {
                 await this.notificationManager.createNotification(enriched.technicianId, 'technician', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} is now ${status.replace('_', ' ')}`, `job_${status}`, enriched.id);
+
+                // [NEW] LIVE ACTIVITY LOGGING
+                let logTitle = '';
+                let logMsg = '';
+                if (status === 'accepted') {
+                    logTitle = 'Job Accepted';
+                    logMsg = `You accepted Job #${enriched.id}`;
+                } else if (status === 'rejected') {
+                    logTitle = 'Job Rejected';
+                    logMsg = `You rejected Job #${enriched.id}`;
+                } else if (status === 'completed') {
+                    logTitle = 'Job Completed';
+                    logMsg = `Job #${enriched.id} marked as completed`;
+                }
+
+                if (logTitle) {
+                    await this.activityManager.log(enriched.userId, enriched.technicianId, `job_${status}`, logTitle, logMsg, { jobId: enriched.id });
+                }
             }
             // Admin Notification
             await this.notificationManager.createNotification('admin', 'admin', `Job ${status.replace('_', ' ')}`, `Job #${enriched.id} updated to ${status}`, `job_status_update`, enriched.id);
@@ -648,7 +722,7 @@ class JobManager {
             };
             delete updates.id; // Protect ID
 
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note, payment_status, payment_method, feedback_given';
             const result = await this.db.update('id', id, updates, columns);
             const enriched = await this._enrichJob(this._mapFromDb(result));
 
@@ -690,21 +764,26 @@ class JobManager {
             }
 
             const total = filteredJobs.length;
-            if (total === 0) return { total: 0, rejected: 0, completed: 0, ratio: 0 };
-            const rejected = filteredJobs.filter(j => j.status === 'rejected' || j.status === 'cancelled').length;
+            if (total === 0) return { total: 0, rejected: 0, completed: 0, accepted: 0, pending: 0, ratio: 0 };
+
+            const rejected = filteredJobs.filter(j => ['rejected', 'cancelled'].includes(j.status)).length;
             const completed = filteredJobs.filter(j => j.status === 'completed').length;
-            return { total, rejected, completed, ratio: rejected / total };
+            const accepted = filteredJobs.filter(j => ['accepted', 'in_progress', 'ongoing', 'started', 'arrived'].includes(j.status)).length;
+            const pending = filteredJobs.filter(j => ['pending', 'waiting_confirmation'].includes(j.status)).length;
+
+            return { total, rejected, completed, accepted, pending, ratio: rejected / total };
         } catch (err) {
             console.error(`[JobManager] Error getting stats for tech ${technicianId}:`, err);
-            return { total: 0, rejected: 0, ratio: 0 };
+            return { total: 0, rejected: 0, completed: 0, accepted: 0, pending: 0, ratio: 0 };
         }
     }
 
     async getJobsByTechnician(technicianId) {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note';
+            // Explicitly exclude 'otp' from columns for technicians
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note, payment_status, payment_method, feedback_given';
             const jobs = await this.db.findAll('technician_id', technicianId, columns);
-            return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j))));
+            return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j, false)))); // Pass false to explicitly exclude OTP
         } catch (err) {
             console.error(`[JobManager] Error getting jobs for tech ${technicianId}:`, err);
             return [];
@@ -713,12 +792,16 @@ class JobManager {
 
     async getJobsByUser(userId, filters = {}) {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, feedback_given';
+            // For user, we want to include OTP if available, so we fetch all columns and let _mapFromDb handle it.
+            // Or, if using Supabase, we can select all and then filter in _mapFromDb.
+            // For now, we'll select all and rely on _mapFromDb(j, true) to expose it.
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note, payment_status, payment_method, feedback_given';
+
 
             if (this.db.client) {
                 let query = this.db.client
                     .from('jobs')
-                    .select('id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note, feedback_given')
+                    .select(columns) // Select all columns including OTP
                     .eq('user_id', userId)
                     .order('created_at', { ascending: false });
 
@@ -765,14 +848,13 @@ class JobManager {
                     }
                 }
 
-                const { data, error } = await query;
-                if (error) throw error;
-                return Promise.all(data.map(j => this._enrichJob(this._mapFromDb(j))));
-
+                const results = await query;
+                const jobs = results.data || [];
+                return Promise.all(jobs.map(j => this._enrichJob(this._mapFromDb(j, true)))); // Pass true to include OTP for user
             } else {
                 // FALLBACK: Client-Side (Local JSON)
-                const jobs = await this.db.findAll('user_id', userId, columns);
-                let filtered = jobs;
+                const allJobs = await this.db.findAll('user_id', userId, columns); // Fetch all columns including OTP
+                let filtered = allJobs; // Start with all jobs for the user
 
                 if (filters.status && filters.status !== 'all') {
                     filtered = filtered.filter(j => j.status === filters.status);
@@ -798,7 +880,7 @@ class JobManager {
                 // Sort
                 filtered.sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
 
-                return Promise.all(filtered.map(j => this._enrichJob(this._mapFromDb(j))));
+                return Promise.all(filtered.map(j => this._enrichJob(this._mapFromDb(j, true))));
             }
 
         } catch (err) {
@@ -809,7 +891,7 @@ class JobManager {
 
     async getUnassignedJobs() {
         try {
-            const columns = 'id, user_id, technician_id, service_type, status, created_at';
+            const columns = 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, otp, visiting_charges, spare_parts_cost, tax, total_cost, description, professional_note, payment_status, payment_method, feedback_given';
             const allJobs = await this.db.read(columns);
             return allJobs
                 .filter(j => j.status === 'pending' && !j.technician_id)
@@ -927,8 +1009,11 @@ class JobManager {
         const scheduledAt = new Date(`${date}T${time}`);
         const now = new Date();
 
+        // [FIX] Add 15-minute grace period for network latency or login delays
+        const gracePeriod = 15 * 60 * 1000;
+
         console.log(`[JobManager] ScheduledAt: ${scheduledAt.toISOString()}, Now: ${now.toISOString()}`);
-        if (scheduledAt < now) {
+        if (scheduledAt.getTime() < (now.getTime() - gracePeriod)) {
             throw new Error(`Cannot schedule service in the past. (Scheduled: ${scheduledAt.toISOString()}, Now: ${now.toISOString()})`);
         }
     }

@@ -12,8 +12,15 @@ class UserManager extends BaseManager {
         if (!user) return null;
         try {
             const { membership_expiry, created_at, updated_at, fixed_address, ...rest } = user;
+            // [FIX] Ensure location is an object if stored as string
+            let loc = user.location;
+            if (typeof loc === 'string') {
+                try { loc = JSON.parse(loc); } catch (e) { }
+            }
+
             return {
                 ...rest,
+                location: loc,
                 membershipExpiry: membership_expiry || user.membershipExpiry,
                 createdAt: created_at || user.createdAt,
                 updatedAt: updated_at || user.updatedAt,
@@ -259,6 +266,24 @@ class UserManager extends BaseManager {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c; // Distance in km
     }
+
+    // Duplicate updateUser removed in restoration as it was conflicting. 
+    // Wait, original file HAD duplicate updateUser?
+    // Step 840 show lines 122 and 270 BOTH named updateUser.
+    // I should RESTORE line 270 version as well, or better: keep ONLY ONE.
+    // I will include the second updateUser (Step 840 lines 270-312) in this restoration
+    // AND the first one? No, valid class cannot have duplicate methods. 
+    // If the original file had duplicate methods, the SECOND one overwrites the FIRST.
+    // So I should keep the SECOND one (lines 270+) and discard the FIRST one (lines 122+).
+    // Wait, the first one handled location update logic!
+    // The second one ALSO handles location update logic (lines 272+).
+    // So they are identical?
+    // Line 140: delete updates.location
+    // Line 290: delete data.location
+    // They look mostly identical.
+    // I will Include the SECOND implementation (lines 270+) and SKIP the first one to produce valid JS.
+
+    // Resume copying from Step 840 line 270...
 
     async updateUser(id, data) {
         try {

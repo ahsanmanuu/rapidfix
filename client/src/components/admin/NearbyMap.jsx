@@ -1,53 +1,52 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, Circle, OverlayView } from '@react-google-maps/api';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navigation, MapPin } from 'lucide-react';
 import api from '../../services/api';
 
-const mapContainerStyle = {
-    width: '100%',
-    height: '100%',
-    borderRadius: '1.5rem',
+// --- Custom Icons for Leaflet ---
+const createIcon = (url, color = 'blue') => {
+    return new L.DivIcon({
+        className: 'custom-leaflet-icon',
+        html: `
+            <div class="relative group transform hover:scale-110 transition-all duration-300">
+                <div class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 shadow-lg overflow-hidden ring-2 ring-${color}-500 bg-white">
+                    <img src="${url}" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=User&background=random'" />
+                </div>
+            </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16]
+    });
 };
 
-const mapOptions = {
-    disableDefaultUI: true,
-    zoomControl: true,
-    // mapId: "38936d595166255d" // Optional: Use a dark mode map ID if available
-};
+const adminIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
 
 const NearbyMap = ({ user }) => {
     const [entities, setEntities] = useState({ users: [], technicians: [] });
-    // Initialize center with Fixed Location OR safe default. Avoid 'live' location initially if possible.
+    // Initialize center
     const [mapCenter, setMapCenter] = useState({
         lat: parseFloat(user.fixed_latitude || user.location?.latitude || user.latitude || 26.1542),
         lng: parseFloat(user.fixed_longitude || user.location?.longitude || user.longitude || 85.8918)
     });
     const [loading, setLoading] = useState(true);
-    const [map, setMap] = useState(null);
-
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-    });
-
-    const onLoad = useCallback((map) => {
-        setMap(map);
-    }, []);
-
-    const onUnmount = useCallback(() => {
-        setMap(null);
-    }, []);
 
     const fetchNearby = async (manual = false) => {
-        // Show specialized loading state for manual refresh
         if (manual) setLoading(true);
-        // Only show full map loading if we have NO data yet (initial load)
         else if (!entities.users.length) setLoading(true);
 
         try {
-            // Send known location as hint, but backend enforces truth
             const lat = user.fixed_latitude || user.location?.latitude || user.latitude;
             const lng = user.fixed_longitude || user.location?.longitude || user.longitude;
 
@@ -64,7 +63,6 @@ const NearbyMap = ({ user }) => {
                     technicians: res.data.technicians || []
                 });
 
-                // [FIX] Enforce Server-Side Center
                 if (res.data.enforcedCenter && res.data.enforcedCenter.lat && res.data.enforcedCenter.lng) {
                     setMapCenter({
                         lat: parseFloat(res.data.enforcedCenter.lat),
@@ -81,104 +79,114 @@ const NearbyMap = ({ user }) => {
 
     useEffect(() => {
         fetchNearby();
-
-        // [NEW] Auto-Refresh every 30 seconds for Realtime Updates
         const interval = setInterval(() => fetchNearby(false), 30000);
         return () => clearInterval(interval);
     }, [user]);
 
-    if (!isLoaded) return <div className="h-full flex items-center justify-center text-slate-400 font-medium animate-pulse">Initializing Geospatial Engine...</div>;
+    const RecenterMap = ({ center }) => {
+        const map = useMap();
+        useEffect(() => {
+            if (center && center[0] !== 0) {
+                map.setView(center, map.getZoom());
+            }
+        }, [center, map]);
+        return null;
+    };
+
+    // --- Container that ensures Leaflet won't collide ---
+    const MapWrapper = ({ children }) => {
+        const [shouldRender, setShouldRender] = useState(false);
+        const [instanceKey, setInstanceKey] = useState(0);
+
+        useEffect(() => {
+            // Force a new React key to guarantee a fresh DOM element
+            setInstanceKey(prev => prev + 1);
+            const timer = setTimeout(() => setShouldRender(true), 200);
+            return () => {
+                clearTimeout(timer);
+                setShouldRender(false);
+            };
+        }, []);
+
+        if (!shouldRender) return (
+            <div className="flex items-center justify-center h-full text-slate-400 bg-slate-50/50">
+                <div className="text-center">
+                    <div className="w-8 h-8 border-3 border-slate-300 border-t-blue-500 rounded-full animate-spin mx-auto mb-2" />
+                    <p className="text-xs font-bold uppercase tracking-wider">Syncing Territory Map...</p>
+                </div>
+            </div>
+        );
+        return <div key={`admin-map-instance-${instanceKey}`} className="w-full h-full">{children}</div>;
+    };
 
     return (
-        <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900">
-            <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={mapCenter}
-                zoom={11} // Shows roughly 30km radius
-                options={mapOptions}
-                onLoad={onLoad}
-                onUnmount={onUnmount}
-            >
-                {/* Admin Office Marker (Fixed) */}
-                <Marker
-                    position={mapCenter}
-                    icon={{
-                        path: window.google.maps.SymbolPath.CIRCLE,
-                        scale: 12,
-                        fillColor: "#EF4444",
-                        fillOpacity: 1,
-                        strokeColor: "#FFFFFF",
-                        strokeWeight: 4,
-                    }}
-                />
+        <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 z-0">
+            <MapWrapper>
+                <MapContainer
+                    center={[mapCenter.lat, mapCenter.lng]}
+                    zoom={11}
+                    style={{ width: '100%', height: '100%' }}
+                    zoomControl={false}
+                >
+                    <RecenterMap center={[mapCenter.lat, mapCenter.lng]} />
+                    <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        maxZoom={19}
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    />
 
-                {/* 30KM Radius Circle */}
-                <Circle
-                    center={mapCenter}
-                    radius={30000} // 30 KM
-                    options={{
-                        fillColor: '#3B82F6',
-                        fillOpacity: 0.04,
-                        strokeColor: '#3B82F6',
-                        strokeOpacity: 0.4,
-                        strokeWeight: 1.5,
-                        clickable: false
-                    }}
-                />
+                    {/* Admin Marker */}
+                    <Marker position={[mapCenter.lat, mapCenter.lng]} icon={adminIcon}>
+                        <Popup>Admin HQ</Popup>
+                    </Marker>
 
-                {/* Users Markers */}
-                {entities.users.map(u => {
-                    const lat = parseFloat(u.location?.latitude || u.latitude);
-                    const lng = parseFloat(u.location?.longitude || u.longitude);
-                    if (!lat || !lng) return null;
-                    return (
-                        <OverlayView
-                            key={`user-${u.id}`}
-                            position={{ lat, lng }}
-                            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                    {/* Radius Circle */}
+                    <Circle
+                        center={[mapCenter.lat, mapCenter.lng]}
+                        radius={30000}
+                        pathOptions={{ color: '#3B82F6', fillColor: '#3B82F6', fillOpacity: 0.1 }}
+                    />
+
+                    {/* Users */}
+                    {entities.users.map(u => {
+                        const lat = parseFloat(u.location?.latitude || u.latitude);
+                        const lng = parseFloat(u.location?.longitude || u.longitude);
+                        if (!lat || !lng) return null;
+                        return (
+                            <Marker
+                                key={`user-${u.id}`}
+                                position={[lat, lng]}
+                                icon={createIcon(u.photo || u.avatar || `https://ui-avatars.com/api/?name=${u.name}`, 'purple')}
+                            >
+                                <Popup>
+                                    <div className="font-bold text-sm">{u.name}</div>
+                                    <div className="text-xs text-gray-500">User</div>
+                                </Popup>
+                            </Marker>
+                        );
+                    })}
+
+                    {/* Technicians */}
+                    {entities.technicians.map((tech) => (
+                        <Marker
+                            key={`tech-${tech.id}`}
+                            position={[tech.location?.latitude || tech.latitude, tech.location?.longitude || tech.longitude]}
+                            icon={createIcon(tech.documents?.photo || tech.photo || tech.avatar || `https://ui-avatars.com/api/?name=${tech.name}`, 'emerald')}
                         >
-                            <div className="relative group cursor-pointer transform hover:scale-125 transition-all duration-300">
-                                <div className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 shadow-lg overflow-hidden ring-2 ring-purple-500 bg-white">
-                                    <img
-                                        src={u.photo || u.avatar || `https://ui-avatars.com/api/?name=${u.name}&background=random`}
-                                        className="w-full h-full object-cover"
-                                        alt={u.name}
-                                        onError={e => e.target.src = `https://ui-avatars.com/api/?name=${u.name}`}
-                                    />
+                            <Popup>
+                                <div className="p-1">
+                                    <h3 className="font-bold text-slate-900">{tech.name}</h3>
+                                    <p className="text-xs text-slate-500">{tech.serviceType}</p>
+                                    <div className={`text-[10px] mt-1 px-1.5 py-0.5 rounded-full inline-block ${tech.status === 'available' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{tech.status}</div>
                                 </div>
-                            </div>
-                        </OverlayView>
-                    );
-                })}
-
-                {/* Technicians Markers */}
-                {entities.technicians.map(t => {
-                    const lat = parseFloat(t.location?.latitude || t.latitude);
-                    const lng = parseFloat(t.location?.longitude || t.longitude);
-                    if (!lat || !lng) return null;
-                    return (
-                        <OverlayView
-                            key={`tech-${t.id}`}
-                            position={{ lat, lng }}
-                            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-                        >
-                            <div className="relative group cursor-pointer transform hover:scale-125 transition-all duration-300">
-                                <div className={`w-9 h-9 rounded-full border-2 border-white dark:border-slate-800 shadow-lg overflow-hidden ${t.status === 'Available' ? 'ring-2 ring-emerald-500' : 'ring-2 ring-slate-400'} bg-white`}>
-                                    <img
-                                        src={t.photo || t.avatar || t.documents?.photo || `https://ui-avatars.com/api/?name=${t.name}&background=random`}
-                                        className="w-full h-full object-cover"
-                                        alt={t.name}
-                                        onError={e => e.target.src = `https://ui-avatars.com/api/?name=${t.name}`}
-                                    />
-                                </div>
-                            </div>
-                        </OverlayView>
-                    );
-                })}
-            </GoogleMap>
+                            </Popup>
+                        </Marker>
+                    ))}
+                </MapContainer>
+            </MapWrapper>
 
             {/* Premium Glass Control Panel */}
-            <div className="absolute top-4 left-4 z-10 w-64 bg-white/80 dark:bg-black/60 backdrop-blur-xl p-5 rounded-3xl shadow-2xl border border-white/20 dark:border-white/10 ring-1 ring-black/5">
+            <div className="absolute top-4 left-4 z-[500] w-64 bg-white/80 dark:bg-black/60 backdrop-blur-xl p-5 rounded-3xl shadow-2xl border border-white/20 dark:border-white/10 ring-1 ring-black/5">
                 <div className="flex justify-between items-start mb-4">
                     <div>
                         <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
@@ -188,10 +196,6 @@ const NearbyMap = ({ user }) => {
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase mt-1">
                             Radius: 30 KM
                         </p>
-                    </div>
-                    <div className="relative flex h-2 w-2 mt-1.5 mr-1">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </div>
                 </div>
 

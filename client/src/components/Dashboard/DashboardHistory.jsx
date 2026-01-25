@@ -603,7 +603,7 @@ const DashboardHistory = ({ jobs = [] }) => {
     };
 
     // --- Real-time Updates (Socket) ---
-    const { socket } = useSocket();
+    const socket = useSocket();
 
     // [NEW] Manual Job Update Handler for Optimistic UI
     const handleManualJobUpdate = (updatedFields) => {

@@ -28,22 +28,27 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
     };
 
     useEffect(() => {
+        // 1. Resolve Address
         if (isOpen && jobDetails?.location?.latitude && jobDetails?.location?.longitude) {
             const fetchAddress = async () => {
                 try {
-                    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-                    const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${jobDetails.location.latitude},${jobDetails.location.longitude}&key=${apiKey}`);
+                    // Use OpenStreetMap Nominatim instead of Google Maps (which requires key)
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${jobDetails.location.latitude}&lon=${jobDetails.location.longitude}`);
                     const data = await res.json();
-                    if (data.results?.length > 0) {
-                        const ac = data.results[0].address_components;
-                        const locality = ac.find(c => c.types.includes('locality'))?.long_name;
-                        const sublocality = ac.find(c => c.types.includes('sublocality'))?.long_name;
-                        setReadableAddress(sublocality && locality && sublocality !== locality ? `${sublocality}, ${locality}` : (sublocality || locality || "Your Location"));
+                    if (data && data.display_name) {
+                        // Cleanup address: get first 2-3 parts
+                        const parts = data.display_name.split(',').slice(0, 3).join(', ');
+                        setReadableAddress(parts);
                     }
                 } catch (e) { console.error("Geocoding failed", e); }
             };
             fetchAddress();
+        } else if (jobDetails?.location?.address && jobDetails.location.address !== "Current Location") {
+            setReadableAddress(jobDetails.location.address);
+        }
 
+        // 2. Fetch Pricing
+        if (isOpen) {
             const fetchPricing = async () => {
                 setLoadingPricing(true);
                 try {
@@ -55,8 +60,13 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
             };
             fetchPricing();
         }
+
         if (isOpen && user?.id) fetchWalletBalance();
     }, [isOpen, jobDetails, technician, user]);
+
+    // Format Default Date/Time if missing
+    const displayDate = jobDetails?.scheduledDate || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const displayTime = jobDetails?.scheduledTime || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     useEffect(() => {
         setInsufficientFunds(paymentMethod === 'wallet' && walletBalance < pricing.total);
@@ -71,8 +81,25 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
 
     const handleConfirm = () => {
         if (!agreement) return alert("Please agree to the terms.");
+
+        // Wallet Balance Check
+        if (paymentMethod === 'wallet') {
+            if (walletBalance < pricing.total) {
+                setShowAddFunds(true);
+                return;
+            }
+        }
+
         const { scheduledDate, scheduledTime, ...rest } = jobDetails || {};
-        const payload = { ...rest, description, visitingCharges: pricing.total, agreementAccepted: true, technicianId: technician?.id || null, paymentStatus: paymentMethod === 'wallet' ? 'paid' : 'pending', paymentMethod };
+        const payload = {
+            ...rest,
+            description,
+            visitingCharges: pricing.total,
+            agreementAccepted: true,
+            technicianId: technician?.id || null,
+            paymentStatus: 'paid', // Both Wallet and Online are considered immediate payments now
+            paymentMethod
+        };
         if (scheduledDate) payload.scheduledDate = scheduledDate;
         if (scheduledTime) payload.scheduledTime = scheduledTime;
         onConfirm(payload);
@@ -84,7 +111,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9999] flex items-center justify-center p-3 bg-black/50 font-sans"
+                className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 font-sans backdrop-blur-sm"
                 onClick={onClose}
             >
                 <motion.div
@@ -92,141 +119,206 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 30 }}
                     transition={{ duration: 0.2 }}
-                    className="bg-white rounded-xl shadow-xl w-full max-w-sm max-h-[85vh] flex flex-col overflow-hidden"
+                    className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden border border-gray-100"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* Header - Clean teal gradient */}
-                    <div className="bg-gradient-to-r from-teal-600 to-teal-500 text-white p-4 shrink-0 relative">
-                        <button onClick={onClose} className="absolute top-3 right-3 p-1 text-white/70 hover:text-white rounded-full hover:bg-white/10">
-                            <X size={18} />
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-teal-600 to-teal-500 text-white p-5 shrink-0 relative">
+                        <button onClick={onClose} className="absolute top-4 right-4 p-2 text-white/80 hover:text-white rounded-full hover:bg-white/10 transition-colors">
+                            <X size={20} />
                         </button>
-                        <div className="flex items-center gap-3">
-                            <img src={photoUrl} alt="" className="w-11 h-11 rounded-full border-2 border-white/30 object-cover bg-teal-700" />
-                            <div className="overflow-hidden">
-                                <p className="text-[10px] uppercase tracking-wider text-teal-100 font-medium">{technician ? 'Your Technician' : 'Auto Assigning'}</p>
-                                <p className="font-semibold text-sm truncate">{technician?.name || 'Best Available'}</p>
+                        <div className="flex items-center gap-4">
+                            <div className="relative">
+                                <img src={photoUrl} alt="" className="w-14 h-14 rounded-full border-4 border-white/20 object-cover bg-teal-800 shadow-inner" />
                                 {technician && (
-                                    <div className="flex items-center gap-1 mt-0.5">
-                                        <Star size={10} className="text-yellow-300 fill-yellow-300" />
-                                        <span className="text-xs text-teal-100">{technician.rating || '5.0'} • {jobDetails?.serviceType}</span>
+                                    <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-teal-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white">
+                                        {technician.rating}★
                                     </div>
                                 )}
+                            </div>
+                            <div className="overflow-hidden">
+                                <p className="text-xs uppercase tracking-wider text-teal-100 font-bold mb-0.5">{technician ? 'Booking Professional' : 'Finding Professional'}</p>
+                                <p className="font-bold text-xl truncate leading-tight">{technician?.name || 'Top Available Expert'}</p>
+                                <p className="text-sm text-teal-50 opacity-90">{jobDetails?.serviceType}</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Content - Scrollable with fixed height */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-5 bg-gray-50" style={{ maxHeight: 'calc(85vh - 180px)' }}>
+                    {/* Content - Scrollable */}
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#f8fafc]" style={{ maxHeight: 'calc(90vh - 180px)' }}>
 
                         {isTechBusy && (
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 flex items-start gap-2">
-                                <Clock size={14} className="text-amber-600 shrink-0 mt-0.5" />
-                                <p className="text-xs text-amber-700"><strong>Queue:</strong> Technician busy. They'll call when free.</p>
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-3 shadow-sm">
+                                <Clock size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-bold text-amber-800">Technician is busy</p>
+                                    <p className="text-xs text-amber-700 leading-relaxed">They are currently finishing a job. They will contact you as soon as they are free.</p>
+                                </div>
                             </div>
                         )}
 
-                        {/* Schedule Info */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-5">
-                            <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Schedule</p>
-                            <div className="flex gap-4">
-                                <div className="flex items-center gap-2">
-                                    <Calendar size={14} className="text-teal-600" />
-                                    <span className="text-xs font-medium text-gray-700">{jobDetails?.scheduledDate || 'Today'}</span>
+                        {/* Location & Time Card */}
+                        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-3">
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 bg-teal-50 rounded-lg shrink-0">
+                                    <MapPin size={18} className="text-teal-600" />
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <Clock size={14} className="text-teal-600" />
-                                    <span className="text-xs font-medium text-gray-700">{jobDetails?.scheduledTime || 'Now'}</span>
+                                <div>
+                                    <p className="text-xs uppercase text-gray-500 font-bold mb-0.5">Service Location</p>
+                                    <p className="text-sm font-semibold text-gray-800 leading-snug">{readableAddress}</p>
+                                </div>
+                            </div>
+                            <div className="h-px bg-gray-100 w-full" />
+                            <div className="flex items-start gap-3">
+                                <div className="p-2 bg-teal-50 rounded-lg shrink-0">
+                                    <Calendar size={18} className="text-teal-600" />
+                                </div>
+                                <div>
+                                    <p className="text-xs uppercase text-gray-500 font-bold mb-0.5">Date & Time</p>
+                                    <p className="text-sm font-semibold text-gray-800">
+                                        {displayDate} <span className="text-gray-400 mx-1">•</span> {displayTime}
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Location */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-5">
-                            <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Location</p>
-                            <div className="flex items-center gap-2">
-                                <MapPin size={14} className="text-teal-600 shrink-0" />
-                                <span className="text-xs font-medium text-gray-700 truncate">{readableAddress}</span>
-                            </div>
-                        </div>
-
-                        {/* Description */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-5">
-                            <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Problem (Optional)</p>
+                        {/* Problem Description */}
+                        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                            <p className="text-xs uppercase text-gray-500 font-bold mb-2">Issue Description (Optional)</p>
                             <textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Describe the issue..."
-                                className="w-full p-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-teal-500 resize-none h-12"
+                                placeholder="E.g. AC is not cooling, Tap is leaking..."
+                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 resize-none h-20 transition-all"
                             />
                         </div>
 
-                        {/* Pricing */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-5">
-                            <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Charges</p>
-                            <div className="space-y-1 text-xs">
-                                <div className="flex justify-between text-gray-600">
-                                    <span>Base</span>
-                                    <span>₹{pricing.baseCharge || 0}</span>
-                                </div>
-                                {pricing.distance > 0 && (
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>Distance ({pricing.distance}km)</span>
-                                        <span>₹{pricing.distanceCharge || 0}</span>
+                        {/* Payment Selection */}
+                        <div className="space-y-3">
+                            <p className="text-xs uppercase text-gray-500 font-bold ml-1">Payment Method</p>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => setPaymentMethod('wallet')}
+                                    className={`relative p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${paymentMethod === 'wallet'
+                                        ? 'bg-teal-50 border-teal-600 text-teal-800 shadow-md ring-1 ring-teal-600/30'
+                                        : 'bg-white border-gray-100 text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    <div className={`p-2 rounded-full ${paymentMethod === 'wallet' ? 'bg-teal-100' : 'bg-gray-100'}`}>
+                                        <Wallet size={20} className={paymentMethod === 'wallet' ? 'text-teal-700' : 'text-gray-500'} />
                                     </div>
-                                )}
-                                <div className="flex justify-between pt-2 border-t border-gray-100 font-semibold text-gray-800">
-                                    <span>Total</span>
-                                    {loadingPricing ? <span className="w-10 h-4 bg-gray-200 animate-pulse rounded" /> : <span>₹{pricing.total}</span>}
-                                </div>
+                                    <div className="text-center">
+                                        <p className="font-bold text-sm">Wallet</p>
+                                        <p className={`text-xs font-semibold ${walletBalance < pricing.total ? 'text-red-500' : 'text-gray-500'}`}>
+                                            ₹{walletBalance}
+                                        </p>
+                                    </div>
+                                    {paymentMethod === 'wallet' && (
+                                        <div className="absolute top-2 right-2">
+                                            <div className="w-4 h-4 rounded-full bg-teal-600 flex items-center justify-center">
+                                                <CheckCircle size={10} className="text-white" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </button>
+
+                                <button
+                                    onClick={() => setPaymentMethod('online')}
+                                    className={`relative p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${paymentMethod === 'online'
+                                        ? 'bg-teal-50 border-teal-600 text-teal-800 shadow-md ring-1 ring-teal-600/30'
+                                        : 'bg-white border-gray-100 text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    <div className={`p-2 rounded-full ${paymentMethod === 'online' ? 'bg-teal-100' : 'bg-gray-100'}`}>
+                                        <CreditCard size={20} className={paymentMethod === 'online' ? 'text-teal-700' : 'text-gray-500'} />
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="font-bold text-sm">Pay Online</p>
+                                        <p className="text-xs text-gray-400">UPI / Card</p>
+                                    </div>
+                                    {paymentMethod === 'online' && (
+                                        <div className="absolute top-2 right-2">
+                                            <div className="w-4 h-4 rounded-full bg-teal-600 flex items-center justify-center">
+                                                <CheckCircle size={10} className="text-white" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Insufficient Funds Warning */}
+                            {insufficientFunds && paymentMethod === 'wallet' && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-2 text-red-700">
+                                        <div className="p-1.5 bg-red-100 rounded-full">
+                                            <Wallet size={14} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold uppercase">Low Balance</p>
+                                            <p className="text-xs">Needed: ₹{pricing.total}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowAddFunds(true)}
+                                        className="bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 active:scale-95 transition-all flex items-center gap-1"
+                                    >
+                                        <PlusCircle size={14} />
+                                        Add Funds
+                                    </button>
+                                </motion.div>
+                            )}
+                        </div>
+
+                        {/* Total Cost */}
+                        <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <div>
+                                <p className="text-xs uppercase text-gray-500 font-bold">Total to Pay</p>
+                                <p className="text-[10px] text-gray-400">Inc. taxes & charges</p>
+                            </div>
+                            <div className="text-2xl font-black text-slate-800">
+                                {loadingPricing ? <span className="w-16 h-8 bg-gray-200 animate-pulse rounded inline-block" /> : `₹${pricing.total}`}
                             </div>
                         </div>
 
-                        {/* Payment */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-5">
-                            <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Payment</p>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setPaymentMethod('wallet')}
-                                    className={`flex-1 p-2 rounded border text-xs font-medium transition ${paymentMethod === 'wallet' ? 'bg-teal-50 border-teal-500 text-teal-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}
-                                >
-                                    <Wallet size={12} className="inline mr-1" />
-                                    Wallet <span className={walletBalance < pricing.total ? 'text-red-500' : ''}>₹{walletBalance}</span>
-                                </button>
-                                <button
-                                    onClick={() => setPaymentMethod('cash')}
-                                    className={`flex-1 p-2 rounded border text-xs font-medium transition ${paymentMethod === 'cash' ? 'bg-teal-50 border-teal-500 text-teal-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}
-                                >
-                                    <CreditCard size={12} className="inline mr-1" />
-                                    Pay Later
-                                </button>
-                            </div>
-                            {insufficientFunds && paymentMethod === 'wallet' && (
-                                <div className="mt-2 flex items-center justify-between bg-red-50 border border-red-200 rounded p-2">
-                                    <span className="text-[10px] text-red-600 font-medium">Low balance</span>
-                                    <button onClick={() => setShowAddFunds(true)} className="text-[10px] bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all active:scale-95">
-                                        <PlusCircle size={10} /> Add Funds
-                                    </button>
-                                </div>
-                            )}
-                        </div>
                     </div>
 
                     {/* Footer */}
-                    <div className="p-6 bg-white border-t border-gray-100 shrink-0">
-                        <label onClick={() => setAgreement(!agreement)} className="flex items-start gap-4 cursor-pointer mb-6 select-none">
-                            <div className={`mt-0.5 w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${agreement ? 'bg-teal-600 border-teal-600 shadow-sm shadow-teal-600/20' : 'border-gray-300'}`}>
+                    <div className="p-5 bg-white border-t border-gray-100 shrink-0 shadow-[0_-5px_20px_rgba(0,0,0,0.03)] z-10">
+                        <label onClick={() => setAgreement(!agreement)} className="flex items-center gap-3 cursor-pointer mb-4 select-none group">
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${agreement ? 'bg-teal-600 border-teal-600' : 'border-gray-300 group-hover:border-teal-500'}`}>
                                 {agreement && <CheckCircle size={14} className="text-white" strokeWidth={3} />}
                             </div>
-                            <p className="text-sm text-gray-700 leading-tight font-medium">I accept the visiting charges and terms of service.</p>
+                            <p className="text-xs text-gray-600 font-medium group-hover:text-gray-800 transition-colors">
+                                I agree to the <span className="underline decoration-gray-300">Terms of Service</span> & <span className="underline decoration-gray-300">Privacy Policy</span>.
+                            </p>
                         </label>
 
+                        {/* Smart Button */}
                         <button
                             onClick={handleConfirm}
-                            disabled={!agreement || (insufficientFunds && paymentMethod === 'wallet')}
-                            className={`w-full py-4 rounded-xl text-white text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] ${agreement && (!insufficientFunds || paymentMethod !== 'wallet') ? 'bg-teal-600 hover:bg-teal-700 shadow-teal-600/20' : 'bg-gray-300 cursor-not-allowed'}`}
+                            disabled={!agreement}
+                            className={`w-full py-4 rounded-xl text-white text-base font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl active:scale-[0.98]
+                                ${(agreement)
+                                    ? (insufficientFunds && paymentMethod === 'wallet'
+                                        ? 'bg-red-600 hover:bg-red-700 shadow-red-500/30'
+                                        : 'bg-teal-600 hover:bg-teal-700 shadow-teal-600/30'
+                                    )
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                                }`}
                         >
-                            <ShieldCheck size={16} />
-                            {!agreement ? 'Accept Terms' : (isTechBusy ? 'Queue Booking' : 'Confirm Booking')}
+                            {insufficientFunds && paymentMethod === 'wallet' ? (
+                                <>
+                                    <PlusCircle size={20} /> Add Funds & Pay
+                                </>
+                            ) : (
+                                <>
+                                    <ShieldCheck size={20} /> {paymentMethod === 'online' ? 'Pay & Book' : 'Confirm Booking'}
+                                </>
+                            )}
                         </button>
                     </div>
                 </motion.div>

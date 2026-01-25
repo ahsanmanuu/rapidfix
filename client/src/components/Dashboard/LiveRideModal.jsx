@@ -1,11 +1,50 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { IconButton, Button, Typography, CircularProgress } from '@mui/material';
 import { Close, Navigation, MyLocation, Circle } from '@mui/icons-material';
-import { GoogleMap, useJsApiLoader, Marker, DirectionsRenderer } from '@react-google-maps/api';
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 const containerStyle = {
     width: '100%',
     height: '100%'
+};
+
+// --- Helper to handle map centering without re-mounting ---
+const RecenterMap = ({ center }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (center && center.lat !== 0) {
+            map.setView(center, map.getZoom());
+        }
+    }, [center, map]);
+    return null;
+};
+
+// --- Container that ensures Leaflet won't collide ---
+const MapWrapper = ({ children }) => {
+    const [shouldRender, setShouldRender] = useState(false);
+    const [instanceKey, setInstanceKey] = useState(0);
+
+    useEffect(() => {
+        // Force a new React key to guarantee a fresh DOM element
+        setInstanceKey(prev => prev + 1);
+        const timer = setTimeout(() => setShouldRender(true), 200);
+        return () => {
+            clearTimeout(timer);
+            setShouldRender(false);
+        };
+    }, []);
+
+    if (!shouldRender) return (
+        <div className="flex items-center justify-center h-full text-gray-400 bg-gray-50/50">
+            <div className="text-center">
+                <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-sm font-medium">Starting Live Navigation...</p>
+            </div>
+        </div>
+    );
+    return <div key={`live-map-instance-${instanceKey}`} style={{ height: '100%', width: '100%' }}>{children}</div>;
 };
 
 const LiveRideModal = ({ job, technicianId, userId, onClose, socket, onEndRide }) => {
@@ -15,13 +54,6 @@ const LiveRideModal = ({ job, technicianId, userId, onClose, socket, onEndRide }
     const [directions, setDirections] = useState(null);
     const [error, setError] = useState(null);
     const watchIdRef = useRef(null);
-
-    // Mock Google Maps API Key for dev if missing
-    // Ideally this comes from env
-    const { isLoaded } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY // Using key found in project
-    });
 
     useEffect(() => {
         if (job?.location) {
@@ -33,23 +65,18 @@ const LiveRideModal = ({ job, technicianId, userId, onClose, socket, onEndRide }
     }, [job]);
 
     useEffect(() => {
-        // Start Watching Position
         if (navigator.geolocation) {
             watchIdRef.current = navigator.geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude, heading } = position.coords;
                     const newPos = { lat: latitude, lng: longitude };
-
                     setCurrentPos(newPos);
                     setHeading(heading || 0);
 
                     // Emit to Server
-                    // Using existing rideId passed via props or we need to fetch it?
-                    // Assuming for now simple technician-based room broadcast or explicit ride update
-                    // Ideally we pass rideId
                     socket.emit('ride_location_update', {
                         rideId: job.activeRideId,
-                        location: { latitude, longitude }, // Use standard latitude/longitude for backend consistency
+                        location: { latitude, longitude },
                         userId,
                         technicianId
                     });
@@ -58,11 +85,7 @@ const LiveRideModal = ({ job, technicianId, userId, onClose, socket, onEndRide }
                     console.error("Location Error", err);
                     setError("Unable to retrieve location. Please enable GPS.");
                 },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 20000,
-                    maximumAge: 1000
-                }
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 }
             );
         } else {
             setError("Geolocation is not supported by this browser.");
@@ -72,30 +95,6 @@ const LiveRideModal = ({ job, technicianId, userId, onClose, socket, onEndRide }
             if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
         };
     }, [socket, job, technicianId, userId]);
-
-    // Calculate Directions (Mock-ish or Real if API Key valid)
-    useEffect(() => {
-        if (isLoaded && currentPos && destination && window.google) {
-            const directionsService = new window.google.maps.DirectionsService();
-            directionsService.route(
-                {
-                    origin: currentPos,
-                    destination: destination,
-                    travelMode: window.google.maps.TravelMode.DRIVING,
-                },
-                (result, status) => {
-                    if (status === window.google.maps.DirectionsStatus.OK) {
-                        setDirections(result);
-                    } else {
-                        console.error(`error fetching directions ${result}`);
-                    }
-                }
-            );
-        }
-    }, [isLoaded, currentPos, destination]);
-
-
-    if (!isLoaded) return <div className="h-full flex items-center justify-center bg-gray-100"><CircularProgress /></div>;
 
     return (
         <div className="fixed inset-0 z-[99999] bg-white flex flex-col animate-in slide-in-from-bottom duration-300">
@@ -121,45 +120,58 @@ const LiveRideModal = ({ job, technicianId, userId, onClose, socket, onEndRide }
                     </div>
                 )}
 
-                <GoogleMap
-                    mapContainerStyle={containerStyle}
-                    center={currentPos || destination || { lat: 0, lng: 0 }}
-                    zoom={15}
-                    options={{
-                        disableDefaultUI: true,
-                        zoomControl: true,
-                    }}
-                >
-                    {currentPos && (
-                        <Marker
-                            position={currentPos}
-                            icon={{
-                                path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                                scale: 5,
-                                rotation: heading,
-                                fillColor: "#4285F4",
-                                fillOpacity: 1,
-                                strokeWeight: 2,
-                                strokeColor: "white",
-                            }}
+                <MapWrapper>
+                    <MapContainer
+                        center={currentPos || destination || { lat: 0, lng: 0 }}
+                        zoom={18}
+                        style={containerStyle}
+                        zoomControl={false}
+                    >
+                        <RecenterMap center={currentPos || destination || { lat: 0, lng: 0 }} />
+                        <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            maxZoom={19}
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         />
-                    )}
 
-                    {destination && <Marker position={destination} label="C" />}
+                        {currentPos && (
+                            <Marker
+                                position={currentPos}
+                                icon={new L.DivIcon({
+                                    className: 'custom-leaflet-icon',
+                                    html: `
+                                        <div style="transform: rotate(${heading}deg); transition: transform 0.5s ease;">
+                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="#4285F4" stroke="white" stroke-width="2">
+                                                <path d="M12 2L2 22L12 18L22 22L12 2Z" />
+                                            </svg>
+                                        </div>
+                                    `,
+                                    iconSize: [40, 40],
+                                    iconAnchor: [20, 20]
+                                })}
+                            />
+                        )}
 
-                    {directions && (
-                        <DirectionsRenderer
-                            directions={directions}
-                            options={{
-                                polylineOptions: {
-                                    strokeColor: "#4285F4",
-                                    strokeWeight: 5,
-                                },
-                                suppressMarkers: true // We use custom markers
-                            }}
-                        />
-                    )}
-                </GoogleMap>
+                        {destination && (
+                            <Marker
+                                position={destination}
+                                icon={new L.DivIcon({
+                                    className: 'custom-leaflet-icon',
+                                    html: '<div class="w-8 h-8 rounded-full bg-red-600 border-2 border-white shadow-lg flex items-center justify-center text-white font-bold">C</div>',
+                                    iconSize: [32, 32],
+                                    iconAnchor: [16, 32]
+                                })}
+                            />
+                        )}
+
+                        {currentPos && destination && (
+                            <Polyline
+                                positions={[currentPos, destination]}
+                                pathOptions={{ color: '#4285F4', weight: 4, dashArray: '10, 10' }}
+                            />
+                        )}
+                    </MapContainer>
+                </MapWrapper>
 
                 {/* Floating Info Card */}
                 <div className="absolute bottom-6 left-4 right-4 bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex items-center justify-between">

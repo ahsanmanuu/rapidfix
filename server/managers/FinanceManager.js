@@ -2,6 +2,7 @@ const Database = require('./DatabaseLoader');
 const crypto = require('crypto');
 const axios = require('axios');
 const PDFDocument = require('pdfkit');
+const ActivityLogManager = require('./ActivityLogManager'); // [NEW]
 
 // PhonePe Sandbox Credentials
 const PHONEPE_HOST_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox";
@@ -12,6 +13,7 @@ const SALT_INDEX = 1;
 class FinanceManager {
     constructor() {
         this.db = new Database('finance');
+        this.activityManager = new ActivityLogManager(); // [NEW]
         this.io = null;
     }
 
@@ -19,13 +21,18 @@ class FinanceManager {
         this.io = io;
     }
 
+    setActivityLogManager(activityManager) {
+        this.activityManager = activityManager;
+    }
+
     _mapFromDb(txn) {
         if (!txn) return null;
         try {
-            const { user_id, associated_id, created_at, ...rest } = txn;
+            const { user_id, technician_id, associated_id, created_at, ...rest } = txn;
             return {
                 ...rest,
                 userId: user_id,
+                technicianId: technician_id,
                 associatedId: associated_id,
                 createdAt: created_at
             };
@@ -38,9 +45,10 @@ class FinanceManager {
     _mapToDb(txn) {
         if (!txn) return null;
         try {
-            const { userId, associatedId, createdAt, id, ...rest } = txn;
+            const { userId, technicianId, associatedId, createdAt, id, ...rest } = txn;
             const mapped = { ...rest };
             if (userId !== undefined) mapped.user_id = userId;
+            if (technicianId !== undefined) mapped.technician_id = technicianId;
             if (associatedId !== undefined) mapped.associated_id = associatedId;
             if (createdAt !== undefined) mapped.created_at = createdAt;
             if (id !== undefined) mapped.id = id;
@@ -51,10 +59,11 @@ class FinanceManager {
         }
     }
 
-    async createTransaction(userId, associatedId, type, amount, description) {
+    async createTransaction(userId, associatedId, type, amount, description, technicianId = null) {
         try {
             const transaction = {
-                userId,
+                userId: technicianId ? null : userId,
+                technicianId: technicianId,
                 associatedId,
                 type,
                 amount: parseFloat(amount),
@@ -66,10 +75,13 @@ class FinanceManager {
             const saved = await this.db.add(dbTxn);
             const result = this._mapFromDb(saved);
 
+            const targetId = technicianId || userId;
+            const targetRoom = technicianId ? `tech_${technicianId}` : `user_${userId}`;
+
             if (this.io) {
-                this.io.to(`user_${userId}`).emit('new_transaction', result);
-                const balance = await this.getBalance(userId);
-                this.io.to(`user_${userId}`).emit('wallet_balance_update', { balance });
+                this.io.to(targetRoom).emit('new_transaction', result);
+                const balance = await this.getBalance(targetId, !!technicianId);
+                this.io.to(targetRoom).emit('wallet_balance_update', { balance });
                 this.io.emit('admin_finance_update', result);
             }
 
@@ -80,8 +92,12 @@ class FinanceManager {
         }
     }
 
-    async processPayment(userId, amount, type, description) {
-        return await this.createTransaction(userId, 'SYSTEM', type, amount, description);
+    async processPayment(userId, amount, type, description, isTechnician = false) {
+        // [NEW] Log Earnings
+        if (type === 'credit') {
+            await this.activityManager.log(null, userId, 'payment_received', 'Payment Received', `Received ₹${amount} for ${description}`, { amount });
+        }
+        return await this.createTransaction(isTechnician ? null : userId, 'SYSTEM', type, amount, description, isTechnician ? userId : null);
     }
 
     async processJobPayment(userId, amount, jobId) {
@@ -115,15 +131,15 @@ class FinanceManager {
         }
     }
 
-    async getBalance(userId) {
+    async getBalance(userId, isTechnician = false) {
         try {
-            const transactions = await this.db.findAll('user_id', userId);
+            const transactions = await this.db.findAll(isTechnician ? 'technician_id' : 'user_id', userId);
             return transactions.reduce((acc, curr) => {
                 const t = this._mapFromDb(curr);
                 return t.type === 'credit' ? acc + t.amount : acc - t.amount;
             }, 0);
         } catch (err) {
-            console.error(`[FinanceManager] Error getting balance for user ${userId}:`, err);
+            console.error(`[FinanceManager] Error getting balance for ${isTechnician ? 'tech' : 'user'} ${userId}:`, err);
             return 0;
         }
     }
@@ -142,12 +158,12 @@ class FinanceManager {
         }
     }
 
-    async getTransactionsByUser(userId) {
+    async getTransactionsByUser(userId, isTechnician = false) {
         try {
-            const txns = await this.db.findAll('user_id', userId);
+            const txns = await this.db.findAll(isTechnician ? 'technician_id' : 'user_id', userId);
             return txns.map(t => this._mapFromDb(t));
         } catch (err) {
-            console.error(`[FinanceManager] Error getting txns for user ${userId}:`, err);
+            console.error(`[FinanceManager] Error getting txns for ${isTechnician ? 'tech' : 'user'} ${userId}:`, err);
             return [];
         }
     }
@@ -206,17 +222,17 @@ class FinanceManager {
     }
 
     // [New] Helper for Auto-Assignment Algo
-    async getMonthlyEarnings(userId) {
+    async getMonthlyEarnings(userId, isTechnician = false) {
         try {
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-            const txns = await this.db.findAll('user_id', userId);
+            const txns = await this.db.findAll(isTechnician ? 'technician_id' : 'user_id', userId);
             return txns
                 .filter(t => t.type === 'credit' && t.created_at >= startOfMonth)
                 .reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
         } catch (err) {
-            console.error(`[FinanceManager] Error getting monthly earnings for ${userId}:`, err);
+            console.error(`[FinanceManager] Error getting monthly earnings for ${isTechnician ? 'tech' : 'user'} ${userId}:`, err);
             return 0;
         }
     }

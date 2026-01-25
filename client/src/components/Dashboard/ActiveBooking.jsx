@@ -15,7 +15,8 @@ import {
     StepConnector,
     styled,
     Stack,
-    Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton
+    Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton,
+    CircularProgress
 } from '@mui/material';
 import {
     Check,
@@ -37,7 +38,49 @@ import {
     Edit,
     Save,
 } from '@mui/icons-material';
-import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// --- Helper to handle map centering without re-mounting ---
+const RecenterMap = ({ center }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (center && center[0] !== 0) {
+            map.setView(center, map.getZoom());
+        }
+    }, [center, map]);
+    return null;
+};
+
+// --- Container that ensures Leaflet won't collide ---
+const MapWrapper = ({ children }) => {
+    const [shouldRender, setShouldRender] = useState(false);
+    const [instanceKey, setInstanceKey] = useState(0);
+
+    useEffect(() => {
+        // Force a new React key to guarantee a fresh DOM element
+        setInstanceKey(prev => prev + 1);
+        const timer = setTimeout(() => setShouldRender(true), 200);
+        return () => {
+            clearTimeout(timer);
+            setShouldRender(false);
+        };
+    }, []);
+
+    if (!shouldRender) return (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', bgcolor: '#f8fafc', borderRadius: 3 }}>
+            <Box sx={{ textAlign: 'center' }}>
+                <CircularProgress size={32} thickness={5} sx={{ color: PRIMARY_BLUE, mb: 1.5 }} />
+                <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', fontWeight: 'bold' }}>
+                    Initializing Tracking Map...
+                </Typography>
+            </Box>
+        </Box>
+    );
+    return <div key={`active-map-instance-${instanceKey}`} style={{ height: '100%', width: '100%' }}>{children}</div>;
+};
+
 import { useSocket } from '../../context/SocketContext';
 import { useNavigate } from 'react-router-dom';
 import { updateUserJob, cancelJob, createSupportSession, sendSupportMessage, getChatHistory, sendChatMessage } from '../../services/api';
@@ -200,11 +243,7 @@ const ActiveBooking = ({ job }) => {
     }, [socket, currentJob]);
 
 
-    // Google Maps Loader
-    const { isLoaded, loadError } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-    });
+
 
     const steps = ['Request Received', 'Pro Assigned', 'Work Started', 'Completed'];
 
@@ -548,13 +587,43 @@ const ActiveBooking = ({ job }) => {
                                         </Stack>
                                     </Grid>
                                     <Grid item xs={12} md={7} sx={{ width: '100%', minWidth: 0 }}>
-                                        <Box id="map-container-box" sx={{ height: { xs: 300, md: '100%' }, minHeight: { md: 350 }, width: '100%', minWidth: '100%', position: 'relative', borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider', display: 'block' }}>
-                                            {loadError ? <Box sx={{ height: '100%', bgcolor: '#fef2f2', color: '#dc2626', p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}><Typography variant="caption">Map Error: {loadError.message}</Typography></Box> : isLoaded ? (
-                                                <GoogleMap mapContainerStyle={{ width: '100%', height: '100%', minWidth: '100%' }} center={jobPos} zoom={15} onLoad={map => { setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 500); const bounds = new window.google.maps.LatLngBounds(); bounds.extend(jobPos); if (techLocation) { bounds.extend(techLocation); map.fitBounds(bounds); } else { map.setCenter(jobPos); } }} options={{ disableDefaultUI: false, zoomControl: true, mapTypeControl: false, streetViewControl: false, fullscreenControl: true }}>
-                                                    <Marker position={jobPos} animation={window.google.maps.Animation.DROP} />
-                                                    {techLocation && <Marker position={techLocation} icon={{ path: window.google?.maps?.SymbolPath?.FORWARD_CLOSED_ARROW, scale: 5, fillColor: PRIMARY_BLUE, fillOpacity: 1, strokeWeight: 1, rotation: 0 }} label={{ text: "Tech", color: "white", fontSize: "10px", fontWeight: "bold" }} />}
-                                                </GoogleMap>
-                                            ) : <Box sx={{ height: '100%', bgcolor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Typography variant="caption" color="text.secondary">Loading Map...</Typography></Box>}
+                                        <Box id="map-container-box" sx={{ height: { xs: 300, md: '100%' }, minHeight: { md: 350 }, width: '100%', minWidth: '100%', position: 'relative', borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider', display: 'block', zIndex: 0 }}>
+                                            <MapWrapper>
+                                                <MapContainer
+                                                    center={[jobLat, jobLng]}
+                                                    zoom={18}
+                                                    style={{ width: '100%', height: '100%' }}
+                                                    zoomControl={false}
+                                                >
+                                                    <RecenterMap center={[jobLat, jobLng]} />
+                                                    <TileLayer
+                                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                        maxZoom={19}
+                                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                    />
+                                                    <Marker position={[jobLat, jobLng]} icon={new L.DivIcon({
+                                                        className: 'custom-leaflet-icon',
+                                                        html: '<div class="w-8 h-8 rounded-full bg-blue-600 border-2 border-white shadow-md flex items-center justify-center text-white font-bold">J</div>',
+                                                        iconSize: [32, 32],
+                                                        iconAnchor: [16, 32]
+                                                    })}>
+                                                        <Popup>Job Location</Popup>
+                                                    </Marker>
+                                                    {techLocation && (
+                                                        <Marker
+                                                            position={[techLocation.lat, techLocation.lng]}
+                                                            icon={new L.DivIcon({
+                                                                className: 'custom-leaflet-icon',
+                                                                html: `<div class="p-1 bg-white rounded-full shadow-lg"><div class="text-blue-600 font-bold text-xs">TECH</div></div>`,
+                                                                iconSize: [40, 40],
+                                                                iconAnchor: [20, 20]
+                                                            })}
+                                                        >
+                                                            <Popup>Technician Location</Popup>
+                                                        </Marker>
+                                                    )}
+                                                </MapContainer>
+                                            </MapWrapper>
                                         </Box>
                                     </Grid>
                                 </Grid>

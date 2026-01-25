@@ -50,7 +50,7 @@ const PRIMARY_BLUE = '#2563eb';
 
 const DashboardFinance = () => {
     const { user } = useAuth();
-    const { socket } = useSocket();
+    const socket = useSocket();
 
     // State
     const [balance, setBalance] = useState(0);

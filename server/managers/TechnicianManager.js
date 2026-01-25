@@ -145,11 +145,12 @@ class TechnicianManager extends BaseManager {
             if (tech.joinedAt || tech.joined_at) mapped.joined_at = tech.joinedAt || tech.joined_at;
             if (tech.updatedAt || tech.updated_at) mapped.updated_at = tech.updatedAt || tech.updated_at;
 
-            // Ignored/Missing Columns in Schema:
-            // created_at, created_by, membership_expiry
-            // total_jobs, completed_jobs, rejected_jobs, pending_jobs, accepted_jobs
-            // base_address, service_radius
-            // registered_latitude, registered_longitude, fixed_latitude, fixed_longitude
+            // Stats Columns
+            if (tech.totalJobs !== undefined || tech.total_jobs !== undefined) mapped.total_jobs = tech.totalJobs !== undefined ? tech.totalJobs : tech.total_jobs;
+            if (tech.completedJobs !== undefined || tech.completed_jobs !== undefined) mapped.completed_jobs = tech.completedJobs !== undefined ? tech.completedJobs : tech.completed_jobs;
+            if (tech.rejectedJobs !== undefined || tech.rejected_jobs !== undefined) mapped.rejected_jobs = tech.rejectedJobs !== undefined ? tech.rejectedJobs : tech.rejected_jobs;
+            if (tech.pendingJobs !== undefined || tech.pending_jobs !== undefined) mapped.pending_jobs = tech.pendingJobs !== undefined ? tech.pendingJobs : tech.pending_jobs;
+            if (tech.acceptedJobs !== undefined || tech.accepted_jobs !== undefined) mapped.accepted_jobs = tech.acceptedJobs !== undefined ? tech.acceptedJobs : tech.accepted_jobs;
 
             return mapped;
         } catch (err) {
@@ -226,6 +227,13 @@ class TechnicianManager extends BaseManager {
                     verificationStatus: 'Pending',
                     photo: null
                 },
+
+                // Initialize Stats
+                totalJobs: 0,
+                completedJobs: 0,
+                rejectedJobs: 0,
+                pendingJobs: 0,
+                acceptedJobs: 0,
 
                 // Add Creator ID using deterministic UUID helper if needed
                 createdBy: this._toUuid(createdBy)
@@ -618,18 +626,77 @@ class TechnicianManager extends BaseManager {
 
     async updateMembership(id, type) {
         try {
-            const result = await this.db.update('id', id, {
+            const now = new Date();
+            const expiryDate = new Date();
+            expiryDate.setDate(now.getDate() + 30); // 30 Days Validity
+
+            const updates = {
                 membership: type,
-                membership_since: new Date().toISOString()
-            });
+                membership_since: now.toISOString(),
+                membership_expiry: expiryDate.toISOString()
+            };
+
+            const result = await this.db.update('id', id, updates);
             const tech = this._mapFromDb(result);
+
             if (this.io) {
-                this.io.to(`tech_${id}`).emit('membership_updated', { membership: type });
+                this.io.to(`tech_${id}`).emit('membership_updated', {
+                    membership: type,
+                    expiry: expiryDate.toISOString()
+                });
+                this.io.emit('admin_tech_update', tech);
             }
             return tech;
         } catch (err) {
             console.error(`[TechnicianManager] Error updating membership for tech ${id}:`, err);
             return null;
+        }
+    }
+
+    // [NEW] Automatic Expiry Check
+    async checkExpiredMemberships() {
+        try {
+            const allTechs = await this.getAllTechnicians();
+            const now = new Date();
+
+            let expiredCount = 0;
+
+            for (const tech of allTechs) {
+                // Only check Premium/Pro members with an expiry date
+                if (tech.membership === 'Standard') continue;
+                if (!tech.membershipExpiry) continue;
+
+                const expiry = new Date(tech.membershipExpiry);
+
+                // If Expired
+                if (expiry < now) {
+                    console.log(`[TechnicianManager] Membership Expired for ${tech.name} (${tech.id}). Downgrading...`);
+
+                    // Update DB to Standard
+                    const updates = {
+                        membership: 'Standard',
+                        membership_expiry: null // Clear expiry or keep as record? Let's clear to be clean.
+                    };
+
+                    const result = await this.db.update('id', tech.id, updates);
+                    const updatedTech = this._mapFromDb(result);
+
+                    // Real-time Notify
+                    if (this.io) {
+                        this.io.to(`tech_${tech.id}`).emit('membership_updated', {
+                            membership: 'Standard',
+                            expired: true
+                        });
+                        this.io.emit('admin_tech_update', updatedTech);
+                    }
+                    expiredCount++;
+                }
+            }
+            if (expiredCount > 0) {
+                console.log(`[TechnicianManager] Processed ${expiredCount} expired memberships.`);
+            }
+        } catch (err) {
+            console.error("[TechnicianManager] Error checking expirations:", err);
         }
     }
 
@@ -642,7 +709,7 @@ class TechnicianManager extends BaseManager {
             let completed = tech.completed_jobs || 0;
             let rejected = tech.rejected_jobs || 0;
             let pending = tech.pending_jobs || 0;
-            let accepted = tech.accepted_jobs || 0; // [NEW]
+            let accepted = tech.accepted_jobs || 0;
 
             if (type === 'assign') {
                 total += 1;
@@ -652,9 +719,6 @@ class TechnicianManager extends BaseManager {
                 if (pending > 0) pending -= 1;
             } else if (type === 'complete') {
                 completed += 1;
-                // 'accepted' job becomes 'completed'. 'accepted' count remains as historical record of acceptance? 
-                // Usually dashboard stats are 'current state'. 
-                // Let's assume 'Accepted' means 'Currently Active'.
                 if (accepted > 0) accepted -= 1;
             } else if (type === 'reject') {
                 rejected += 1;
@@ -674,11 +738,40 @@ class TechnicianManager extends BaseManager {
 
             if (this.io) {
                 this.io.to(`tech_${id}`).emit('stats_updated', updatedTech);
-                this.io.emit('admin_tech_update', updatedTech); // [NEW] Notify Admin
+                this.io.emit('admin_tech_update', updatedTech);
             }
             return updatedTech;
         } catch (err) {
             console.error(`[TechnicianManager] Error updating stats for tech ${id}:`, err);
+            return null;
+        }
+    }
+
+    async syncStatsFromJobs(id) {
+        try {
+            if (!this.jobManager) return null;
+
+            console.log(`[TechnicianManager] Force-syncing stats for Tech ${id} from Jobs Manager...`);
+            const stats = await this.jobManager.getJobStats(id);
+
+            const updates = {
+                total_jobs: stats.total,
+                completed_jobs: stats.completed,
+                rejected_jobs: stats.rejected,
+                pending_jobs: stats.pending,
+                accepted_jobs: stats.accepted
+            };
+
+            const result = await this.db.update('id', id, updates);
+            const updatedTech = this._mapFromDb(result);
+
+            if (this.io) {
+                this.io.to(`tech_${id}`).emit('stats_updated', updatedTech);
+                this.io.emit('admin_tech_update', updatedTech);
+            }
+            return updatedTech;
+        } catch (err) {
+            console.error(`[TechnicianManager] Error syncing stats for tech ${id}:`, err);
             return null;
         }
     }

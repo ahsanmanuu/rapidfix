@@ -14,7 +14,9 @@ import DashboardHistory from '../components/Dashboard/DashboardHistory';
 import ActiveBooking from '../components/Dashboard/ActiveBooking';
 import Offers from '../pages/Offers';
 import Complaints from '../pages/Complaints';
-import { getMyJobs, getUserProfile } from '../services/api';
+import TechnicianSearchModal from '../components/TechnicianSearchModal';
+import BookingConfirmationModal from '../components/BookingConfirmationModal';
+import { createJob, getMyJobs, getUserProfile } from '../services/api';
 import { useSocket } from '../context/SocketContext';
 
 import { useAuth } from '../context/AuthContext';
@@ -28,6 +30,45 @@ const Dashboard = () => {
     const [activeTab, setActiveTab] = useState('home');
     const [jobs, setJobs] = useState([]);
     const [isBanned, setIsBanned] = useState(false);
+
+    // --- Lifted Modal State ---
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [selectedTechnician, setSelectedTechnician] = useState(null);
+    const [bookingParams, setBookingParams] = useState(null);
+
+    const handleOpenSearch = (params) => {
+        setBookingParams(params);
+        setIsSearchOpen(true);
+    };
+
+    const handleTechnicianSelect = (tech) => {
+        setSelectedTechnician(tech);
+        setIsSearchOpen(false);
+        setIsConfirmOpen(true);
+    };
+
+    const handleConfirmBooking = async (finalBookingData) => {
+        try {
+            const payload = {
+                ...bookingParams,
+                ...finalBookingData,
+                userId: user.id,
+                technicianId: finalBookingData.technicianId || selectedTechnician?.id,
+            };
+
+            const res = await createJob(payload);
+            if (res.data.success) {
+                setIsConfirmOpen(false);
+                alert("Booking created successfully!");
+                fetchJobs(user.id); // Refresh jobs list
+            }
+        } catch (error) {
+            console.error("Job Creation Failed", error);
+            const errorMsg = error.response?.data?.error || error.message || "Unknown error";
+            alert(`Failed to create booking: ${errorMsg}`);
+        }
+    };
 
     // Socket Hook
     const socket = useSocket();
@@ -203,8 +244,20 @@ const Dashboard = () => {
                 onLogout={handleLogout}
             >
                 <div className="animate-fade-in h-full">
-                    {activeTab === 'home' && <DashboardHome user={user} jobs={jobs} setActiveTab={setActiveTab} />}
-                    {activeTab === 'services' && <ServiceHub />}
+                    {activeTab === 'home' && (
+                        <DashboardHome
+                            user={user}
+                            jobs={jobs}
+                            setActiveTab={setActiveTab}
+                            onOpenSearch={handleOpenSearch}
+                        />
+                    )}
+                    {activeTab === 'services' && (
+                        <ServiceHub
+                            user={user}
+                            onOpenSearch={handleOpenSearch}
+                        />
+                    )}
                     {activeTab === 'bookings' && <ActiveBooking job={jobs.find(j => !['completed', 'cancelled', 'rejected'].includes(j.status)) || jobs[0]} />}
 
                     {activeTab === 'history' && <DashboardHistory jobs={jobs} />}
@@ -216,6 +269,29 @@ const Dashboard = () => {
                     {activeTab === 'finance' && <DashboardFinance user={user} />}
                 </div>
             </DashboardLayout>
+
+            {/* Centralized Modals */}
+            <TechnicianSearchModal
+                key={`central-search-${isSearchOpen}`}
+                isOpen={isSearchOpen}
+                onClose={() => setIsSearchOpen(false)}
+                userLocation={bookingParams?.location || user?.location}
+                serviceType={bookingParams?.serviceType || 'General'}
+                onBook={handleTechnicianSelect}
+            />
+
+            <BookingConfirmationModal
+                key={`central-confirm-${isConfirmOpen}`}
+                isOpen={isConfirmOpen}
+                onClose={() => setIsConfirmOpen(false)}
+                technician={selectedTechnician}
+                jobDetails={{
+                    ...bookingParams,
+                    scheduledDate: undefined,
+                    scheduledTime: undefined
+                }}
+                onConfirm={handleConfirmBooking}
+            />
         </ErrorBoundary>
     );
 };

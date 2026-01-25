@@ -1,0 +1,1861 @@
+[dotenv@17.2.3] injecting env (4) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[DatabaseLoader] USE_SUPABASE: true -> Using: Supabase
+[InvoiceManager] SMTP credentials missing. Email sharing will be simulated.
+[JobManager] InvoiceManager injected successfully
+[JobManager] InvoiceManager injected successfully
+[SupportManager] Starting Inactivity Monitor...
+Fixofy Server running on port 3000
+Environment: Production (Supabase)
+A user connected: AWgDA4kyhJDyUKNNAAAB
+A user connected: AWgDA4kyhJDyUKNNAAAB
+User AWgDA4kyhJDyUKNNAAAB joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User AWgDA4kyhJDyUKNNAAAB joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AdminManager] Default admin admin@fixofy.com found.
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T14:59:09.954Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T14:59:25.702Z POST /api/users/login
+[UserManager] Login Attempt for: sa@gmail.com
+[UserManager] User found. ID: 7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[Supabase:sessions] Inserting item with keys: [ 'token', 'role', 'user_id', 'expires_at', 'created_at' ]
+[Supabase] Operation failed (attempt 1/3): Could not find the 'role' column of 'sessions' in the schema cache
+[Supabase:sessions] Inserting item with keys: [ 'token', 'role', 'user_id', 'expires_at', 'created_at' ]
+[Supabase] Operation failed (attempt 2/3): Could not find the 'role' column of 'sessions' in the schema cache
+[Supabase:sessions] Inserting item with keys: [ 'token', 'role', 'user_id', 'expires_at', 'created_at' ]
+[Supabase] Operation failed (attempt 3/3): Could not find the 'role' column of 'sessions' in the schema cache
+[SessionManager] 'role' column missing in DB. Retrying without role.
+[Supabase:sessions] Inserting item with keys: [ 'token', 'user_id', 'expires_at', 'created_at' ]
+[GLOBAL-DEBUG] 2026-01-25T14:59:32.207Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[GLOBAL-DEBUG] 2026-01-25T14:59:32.216Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+A user connected: qbz9z6Z-k_o0rbi9AAAD
+A user connected: qbz9z6Z-k_o0rbi9AAAD
+User qbz9z6Z-k_o0rbi9AAAD joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User qbz9z6Z-k_o0rbi9AAAD joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[GLOBAL-DEBUG] 2026-01-25T14:59:32.879Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+User disconnected: qbz9z6Z-k_o0rbi9AAAD
+User disconnected: qbz9z6Z-k_o0rbi9AAAD
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T14:59:33.620Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T14:59:33.626Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T14:59:33.674Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T14:59:33.797Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T14:59:33.845Z POST /api/api/support/session
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+A user connected: DPEWI_CQt_sB3J6PAAAF
+A user connected: DPEWI_CQt_sB3J6PAAAF
+[GLOBAL-DEBUG] 2026-01-25T14:59:33.851Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+User DPEWI_CQt_sB3J6PAAAF joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User DPEWI_CQt_sB3J6PAAAF joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T14:59:33.862Z GET /api/api/offers
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T14:59:33.870Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T14:59:33.874Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+User disconnected: DPEWI_CQt_sB3J6PAAAF
+User disconnected: DPEWI_CQt_sB3J6PAAAF
+[GLOBAL-DEBUG] 2026-01-25T14:59:34.051Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T14:59:34.052Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T14:59:34.054Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T14:59:34.178Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: qpL1nKeHE7HK_xiqAAAH
+A user connected: qpL1nKeHE7HK_xiqAAAH
+User qpL1nKeHE7HK_xiqAAAH joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User qpL1nKeHE7HK_xiqAAAH joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T14:59:34.893Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T14:59:43.619Z POST /api/technicians/search
+[GLOBAL-DEBUG] 2026-01-25T15:00:09.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:01:09.921Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:02:09.923Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:03:09.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:04:09.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:05:09.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:06:09.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:07:09.938Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: qpL1nKeHE7HK_xiqAAAH
+User disconnected: qpL1nKeHE7HK_xiqAAAH
+[GLOBAL-DEBUG] 2026-01-25T15:08:09.488Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:08:09.490Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+A user connected: lov1dszUAvWgOA56AAAJ
+A user connected: lov1dszUAvWgOA56AAAJ
+User lov1dszUAvWgOA56AAAJ joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User lov1dszUAvWgOA56AAAJ joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:08:09.966Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.071Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+User disconnected: lov1dszUAvWgOA56AAAJ
+User disconnected: lov1dszUAvWgOA56AAAJ
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.493Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.505Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.506Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.511Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.516Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.555Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.557Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.567Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.577Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: 8T5sGFyq8HUEsCfgAAAL
+A user connected: 8T5sGFyq8HUEsCfgAAAL
+User 8T5sGFyq8HUEsCfgAAAL joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User 8T5sGFyq8HUEsCfgAAAL joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: 8T5sGFyq8HUEsCfgAAAL
+User disconnected: 8T5sGFyq8HUEsCfgAAAL
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.959Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.961Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:08:11.964Z POST /api/api/support/session
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:08:12.088Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:08:12.193Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+A user connected: MgufroYryieXblWHAAAN
+A user connected: MgufroYryieXblWHAAAN
+User MgufroYryieXblWHAAAN joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User MgufroYryieXblWHAAAN joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:08:17.302Z POST /api/technicians/search
+[GLOBAL-DEBUG] 2026-01-25T15:09:09.953Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:10:09.928Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:11:09.947Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:12:09.921Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:13:09.908Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:14:09.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:15:09.921Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[GLOBAL-DEBUG] 2026-01-25T15:16:09.933Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+[JobManager] Error getting unassigned jobs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 172.64.149.246:443, 64:ff9b::6812:260a:443, 104.18.38.10:443, 64:ff9b::ac40:95f6:443, timeout: 10000ms) (UND_ERR_CONNECT_TIMEOUT)\n' +
+    'ConnectTimeoutError: Connect Timeout Error (attempted addresses: 172.64.149.246:443, 64:ff9b::6812:260a:443, 104.18.38.10:443, 64:ff9b::ac40:95f6:443, timeout: 10000ms)\n' +
+    '    at onConnectTimeout (node:internal/deps/undici/undici:1532:23)\n' +
+    '    at Immediate._onImmediate (node:internal/deps/undici/undici:1498:35)\n' +
+    '    at process.processImmediate (node:internal/timers:505:21)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding all in support_sessions: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms) (UND_ERR_CONNECT_TIMEOUT)\n' +
+    'ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms)\n' +
+    '    at onConnectTimeout (node:internal/deps/undici/undici:1532:23)\n' +
+    '    at Immediate._onImmediate (node:internal/deps/undici/undici:1498:35)\n' +
+    '    at process.processImmediate (node:internal/timers:505:21)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+[JobManager] Error getting unassigned jobs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms) (UND_ERR_CONNECT_TIMEOUT)\n' +
+    'ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms)\n' +
+    '    at onConnectTimeout (node:internal/deps/undici/undici:1532:23)\n' +
+    '    at Immediate._onImmediate (node:internal/deps/undici/undici:1498:35)\n' +
+    '    at process.processImmediate (node:internal/timers:505:21)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding all in jobs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms) (UND_ERR_CONNECT_TIMEOUT)\n' +
+    'ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms)\n' +
+    '    at onConnectTimeout (node:internal/deps/undici/undici:1532:23)\n' +
+    '    at Immediate._onImmediate (node:internal/deps/undici/undici:1498:35)\n' +
+    '    at process.processImmediate (node:internal/timers:505:21)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding all in activity_logs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms) (UND_ERR_CONNECT_TIMEOUT)\n' +
+    'ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms)\n' +
+    '    at onConnectTimeout (node:internal/deps/undici/undici:1532:23)\n' +
+    '    at Immediate._onImmediate (node:internal/deps/undici/undici:1498:35)\n' +
+    '    at process.processImmediate (node:internal/timers:505:21)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding all in complaints: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms) (UND_ERR_CONNECT_TIMEOUT)\n' +
+    'ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms)\n' +
+    '    at onConnectTimeout (node:internal/deps/undici/undici:1532:23)\n' +
+    '    at Immediate._onImmediate (node:internal/deps/undici/undici:1498:35)\n' +
+    '    at process.processImmediate (node:internal/timers:505:21)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding all in jobs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms) (UND_ERR_CONNECT_TIMEOUT)\n' +
+    'ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms)\n' +
+    '    at onConnectTimeout (node:internal/deps/undici/undici:1532:23)\n' +
+    '    at Immediate._onImmediate (node:internal/deps/undici/undici:1498:35)\n' +
+    '    at process.processImmediate (node:internal/timers:505:21)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding in technicians: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms) (UND_ERR_CONNECT_TIMEOUT)\n' +
+    'ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms)\n' +
+    '    at onConnectTimeout (node:internal/deps/undici/undici:1532:23)\n' +
+    '    at Immediate._onImmediate (node:internal/deps/undici/undici:1498:35)\n' +
+    '    at process.processImmediate (node:internal/timers:505:21)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding all in finance: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms) (UND_ERR_CONNECT_TIMEOUT)\n' +
+    'ConnectTimeoutError: Connect Timeout Error (attempted addresses: 64:ff9b::6812:260a:443, 172.64.149.246:443, 64:ff9b::ac40:95f6:443, 104.18.38.10:443, timeout: 10000ms)\n' +
+    '    at onConnectTimeout (node:internal/deps/undici/undici:1532:23)\n' +
+    '    at Immediate._onImmediate (node:internal/deps/undici/undici:1498:35)\n' +
+    '    at process.processImmediate (node:internal/timers:505:21)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding in users: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding in jobs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+User disconnected: MgufroYryieXblWHAAAN
+User disconnected: MgufroYryieXblWHAAAN
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[GLOBAL-DEBUG] 2026-01-25T15:16:56.405Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[GLOBAL-DEBUG] 2026-01-25T15:16:56.409Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[JobManager] Error getting jobs for user 7ea49a32-d50c-48bc-adac-5d5dfa542be1: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[GLOBAL-DEBUG] 2026-01-25T15:16:56.424Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[JobManager] Error getting jobs for user 7ea49a32-d50c-48bc-adac-5d5dfa542be1: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding in jobs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+A user connected: -orz_mJc2md6GO2EAAAP
+A user connected: -orz_mJc2md6GO2EAAAP
+User -orz_mJc2md6GO2EAAAP joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User -orz_mJc2md6GO2EAAAP joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding in sessions: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[AUTH] Session Validation Failed for token: 476c2...
+[GLOBAL-DEBUG] 2026-01-25T15:16:57.435Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding in jobs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[GLOBAL-DEBUG] 2026-01-25T15:16:57.759Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:16:57.764Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:16:57.780Z POST /api/api/support/session
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[GLOBAL-DEBUG] 2026-01-25T15:16:57.793Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:16:57.796Z POST /api/api/support/session
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:16:57.807Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[GLOBAL-DEBUG] 2026-01-25T15:16:57.816Z GET /api/api/offers
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+User disconnected: -orz_mJc2md6GO2EAAAP
+User disconnected: -orz_mJc2md6GO2EAAAP
+[GLOBAL-DEBUG] 2026-01-25T15:16:57.829Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding in sessions: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[AUTH] Session Validation Failed for token: 476c2...
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding in jobs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding all in notifications: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding all in notifications: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding in jobs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 2/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 3/3): TypeError: fetch failed
+Error finding in jobs: {
+  message: 'TypeError: fetch failed',
+  details: 'TypeError: fetch failed\n' +
+    '\n' +
+    'Caused by: Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co (ENOTFOUND)\n' +
+    'Error: getaddrinfo ENOTFOUND cmyazetngnfesfmeohuj.supabase.co\n' +
+    '    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:122:26)',
+  hint: '',
+  code: ''
+}
+[GLOBAL-DEBUG] 2026-01-25T15:17:06.190Z POST /api/users/login
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[UserManager] Login Attempt for: sa@gmail.com
+[UserManager] User found. ID: 7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[Supabase:sessions] Inserting item with keys: [ 'token', 'role', 'user_id', 'expires_at', 'created_at' ]
+[Supabase] Operation failed (attempt 1/3): Could not find the 'role' column of 'sessions' in the schema cache
+[Supabase:sessions] Inserting item with keys: [ 'token', 'role', 'user_id', 'expires_at', 'created_at' ]
+[Supabase] Operation failed (attempt 2/3): Could not find the 'role' column of 'sessions' in the schema cache
+[Supabase:sessions] Inserting item with keys: [ 'token', 'role', 'user_id', 'expires_at', 'created_at' ]
+[Supabase] Operation failed (attempt 3/3): Could not find the 'role' column of 'sessions' in the schema cache
+[SessionManager] 'role' column missing in DB. Retrying without role.
+[Supabase:sessions] Inserting item with keys: [ 'token', 'user_id', 'expires_at', 'created_at' ]
+[GLOBAL-DEBUG] 2026-01-25T15:17:12.045Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:17:12.047Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[GLOBAL-DEBUG] 2026-01-25T15:17:12.050Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+A user connected: Y5bt7vuV9XNOlISmAAAR
+A user connected: Y5bt7vuV9XNOlISmAAAR
+User Y5bt7vuV9XNOlISmAAAR joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User Y5bt7vuV9XNOlISmAAAR joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: Y5bt7vuV9XNOlISmAAAR
+User disconnected: Y5bt7vuV9XNOlISmAAAR
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.517Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.518Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.519Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.520Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.522Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.524Z POST /api/api/support/session
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.539Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.543Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.550Z GET /api/api/offers
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.554Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:17:14.562Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: l35XJIfCpIJpfzVTAAAT
+A user connected: l35XJIfCpIJpfzVTAAAT
+User l35XJIfCpIJpfzVTAAAT joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User l35XJIfCpIJpfzVTAAAT joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: l35XJIfCpIJpfzVTAAAT
+User disconnected: l35XJIfCpIJpfzVTAAAT
+[GLOBAL-DEBUG] 2026-01-25T15:17:15.997Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:17:16.002Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:17:16.014Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:17:16.018Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+A user connected: BbRJX3FlED2cX4CeAAAV
+A user connected: BbRJX3FlED2cX4CeAAAV
+User BbRJX3FlED2cX4CeAAAV joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User BbRJX3FlED2cX4CeAAAV joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:17:18.258Z POST /api/technicians/search
+[GLOBAL-DEBUG] 2026-01-25T15:18:09.926Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:19:09.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:20:09.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:21:09.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:22:09.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:23:09.944Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:24:09.945Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:25:09.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:26:09.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: BbRJX3FlED2cX4CeAAAV
+User disconnected: BbRJX3FlED2cX4CeAAAV
+[GLOBAL-DEBUG] 2026-01-25T15:26:43.041Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:26:43.046Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+A user connected: kAKuL9FH_NHfuOveAAAX
+A user connected: kAKuL9FH_NHfuOveAAAX
+User kAKuL9FH_NHfuOveAAAX joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User kAKuL9FH_NHfuOveAAAX joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:26:43.690Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+User disconnected: kAKuL9FH_NHfuOveAAAX
+User disconnected: kAKuL9FH_NHfuOveAAAX
+[GLOBAL-DEBUG] 2026-01-25T15:26:43.980Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:26:43.986Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:26:43.994Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:26:43.998Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:26:44.000Z POST /api/api/support/session
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:26:44.016Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:26:44.021Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:26:44.029Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:26:44.032Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+A user connected: -eVyoQqNoD6ZZGfhAAAZ
+A user connected: -eVyoQqNoD6ZZGfhAAAZ
+User -eVyoQqNoD6ZZGfhAAAZ joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User -eVyoQqNoD6ZZGfhAAAZ joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: -eVyoQqNoD6ZZGfhAAAZ
+User disconnected: -eVyoQqNoD6ZZGfhAAAZ
+[GLOBAL-DEBUG] 2026-01-25T15:26:44.515Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:26:44.516Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:26:44.518Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:26:44.588Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: LS-w4wCFGJ9UXZDEAAAb
+A user connected: LS-w4wCFGJ9UXZDEAAAb
+User LS-w4wCFGJ9UXZDEAAAb joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User LS-w4wCFGJ9UXZDEAAAb joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:26:45.021Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:26:49.568Z POST /api/technicians/search
+[GLOBAL-DEBUG] 2026-01-25T15:27:09.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:28:09.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:29:09.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:30:09.928Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: LS-w4wCFGJ9UXZDEAAAb
+User disconnected: LS-w4wCFGJ9UXZDEAAAb
+[GLOBAL-DEBUG] 2026-01-25T15:30:51.832Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:30:51.839Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+A user connected: 8TtkVIuBUq22cUUPAAAd
+A user connected: 8TtkVIuBUq22cUUPAAAd
+User 8TtkVIuBUq22cUUPAAAd joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User 8TtkVIuBUq22cUUPAAAd joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:30:53.690Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+User disconnected: 8TtkVIuBUq22cUUPAAAd
+User disconnected: 8TtkVIuBUq22cUUPAAAd
+[GLOBAL-DEBUG] 2026-01-25T15:30:53.937Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[GLOBAL-DEBUG] 2026-01-25T15:30:53.991Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:30:53.995Z GET /api/api/offers
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:30:53.999Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:30:54.006Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:30:54.009Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:30:54.018Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:30:54.022Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:30:54.023Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:30:54.030Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: DyHZ8peXP0SI-WOKAAAf
+A user connected: DyHZ8peXP0SI-WOKAAAf
+User DyHZ8peXP0SI-WOKAAAf joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User DyHZ8peXP0SI-WOKAAAf joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: DyHZ8peXP0SI-WOKAAAf
+User disconnected: DyHZ8peXP0SI-WOKAAAf
+[GLOBAL-DEBUG] 2026-01-25T15:30:54.509Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:30:54.521Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:30:54.522Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:30:54.523Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+A user connected: -WmE63k7hAXGQ7VnAAAh
+A user connected: -WmE63k7hAXGQ7VnAAAh
+User -WmE63k7hAXGQ7VnAAAh joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User -WmE63k7hAXGQ7VnAAAh joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:30:59.468Z POST /api/technicians/search
+User disconnected: -WmE63k7hAXGQ7VnAAAh
+User disconnected: -WmE63k7hAXGQ7VnAAAh
+[GLOBAL-DEBUG] 2026-01-25T15:31:08.877Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:31:08.879Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+A user connected: lHSNG75U2hrJC1vLAAAj
+A user connected: lHSNG75U2hrJC1vLAAAj
+User lHSNG75U2hrJC1vLAAAj joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User lHSNG75U2hrJC1vLAAAj joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:31:09.563Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+User disconnected: lHSNG75U2hrJC1vLAAAj
+User disconnected: lHSNG75U2hrJC1vLAAAj
+[GLOBAL-DEBUG] 2026-01-25T15:31:09.868Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:31:09.872Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:31:09.874Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:31:09.877Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:31:09.885Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:31:09.896Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:31:09.903Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:31:09.904Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:31:10.000Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:31:10.094Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+A user connected: ie2kPiEI-UMd-KayAAAl
+A user connected: ie2kPiEI-UMd-KayAAAl
+User ie2kPiEI-UMd-KayAAAl joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User ie2kPiEI-UMd-KayAAAl joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: ie2kPiEI-UMd-KayAAAl
+User disconnected: ie2kPiEI-UMd-KayAAAl
+[GLOBAL-DEBUG] 2026-01-25T15:31:10.497Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:31:10.498Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:31:10.506Z POST /api/api/support/session
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:31:10.531Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[GLOBAL-DEBUG] 2026-01-25T15:31:10.569Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: 2mIvWPoQdiGSS3K4AAAn
+A user connected: 2mIvWPoQdiGSS3K4AAAn
+User 2mIvWPoQdiGSS3K4AAAn joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User 2mIvWPoQdiGSS3K4AAAn joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:31:13.366Z POST /api/technicians/search
+[GLOBAL-DEBUG] 2026-01-25T15:32:09.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:33:09.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:34:09.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:35:09.962Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:36:09.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: 2mIvWPoQdiGSS3K4AAAn
+User disconnected: 2mIvWPoQdiGSS3K4AAAn
+[GLOBAL-DEBUG] 2026-01-25T15:36:27.636Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:36:27.641Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+A user connected: 9dw2f_XGhsYM8q_VAAAp
+A user connected: 9dw2f_XGhsYM8q_VAAAp
+User 9dw2f_XGhsYM8q_VAAAp joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User 9dw2f_XGhsYM8q_VAAAp joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:36:28.591Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+User disconnected: 9dw2f_XGhsYM8q_VAAAp
+User disconnected: 9dw2f_XGhsYM8q_VAAAp
+[GLOBAL-DEBUG] 2026-01-25T15:36:28.924Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:36:28.932Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:36:28.935Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:36:28.935Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:36:28.973Z POST /api/api/support/session
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:36:28.999Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:36:29.011Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:36:29.011Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:36:29.025Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: v7X7IXtGQzcTyjUEAAAr
+A user connected: v7X7IXtGQzcTyjUEAAAr
+User v7X7IXtGQzcTyjUEAAAr joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User v7X7IXtGQzcTyjUEAAAr joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: v7X7IXtGQzcTyjUEAAAr
+User disconnected: v7X7IXtGQzcTyjUEAAAr
+[GLOBAL-DEBUG] 2026-01-25T15:36:29.455Z GET /api/api/offers
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:36:29.459Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:36:29.461Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:36:29.539Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: Y6eV201BObocNjbeAAAt
+A user connected: Y6eV201BObocNjbeAAAt
+User Y6eV201BObocNjbeAAAt joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User Y6eV201BObocNjbeAAAt joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:36:29.830Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:36:38.427Z POST /api/technicians/search
+[GLOBAL-DEBUG] 2026-01-25T15:37:09.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:38:09.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:39:09.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:40:09.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:41:09.912Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: Y6eV201BObocNjbeAAAt
+User disconnected: Y6eV201BObocNjbeAAAt
+[GLOBAL-DEBUG] 2026-01-25T15:41:30.741Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:41:30.743Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+A user connected: tm9JJ29VPJBFpFiOAAAv
+A user connected: tm9JJ29VPJBFpFiOAAAv
+User tm9JJ29VPJBFpFiOAAAv joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User tm9JJ29VPJBFpFiOAAAv joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: tm9JJ29VPJBFpFiOAAAv
+User disconnected: tm9JJ29VPJBFpFiOAAAv
+[GLOBAL-DEBUG] 2026-01-25T15:41:32.073Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:41:32.074Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:41:32.082Z POST /api/api/support/session
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:41:32.084Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:41:32.086Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: Ewht7dxPTrvmMTryAAAx
+A user connected: Ewht7dxPTrvmMTryAAAx
+User Ewht7dxPTrvmMTryAAAx joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User Ewht7dxPTrvmMTryAAAx joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:41:44.926Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:41:44.927Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+User disconnected: Ewht7dxPTrvmMTryAAAx
+User disconnected: Ewht7dxPTrvmMTryAAAx
+[GLOBAL-DEBUG] 2026-01-25T15:41:45.847Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:41:45.852Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:41:45.854Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:41:45.856Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:41:45.859Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: KL58RyFOgWI9CMjzAAAz
+A user connected: KL58RyFOgWI9CMjzAAAz
+User KL58RyFOgWI9CMjzAAAz joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User KL58RyFOgWI9CMjzAAAz joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:42:09.975Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:42:39.068Z GET /api/api/offers
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:42:39.072Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:42:39.074Z POST /api/api/support/session
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:43:09.924Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:44:09.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:45:09.907Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: KL58RyFOgWI9CMjzAAAz
+User disconnected: KL58RyFOgWI9CMjzAAAz
+[GLOBAL-DEBUG] 2026-01-25T15:45:32.729Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:45:32.733Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+A user connected: gzDJRkG3YtR72wqiAAA1
+A user connected: gzDJRkG3YtR72wqiAAA1
+User gzDJRkG3YtR72wqiAAA1 joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User gzDJRkG3YtR72wqiAAA1 joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: gzDJRkG3YtR72wqiAAA1
+User disconnected: gzDJRkG3YtR72wqiAAA1
+[GLOBAL-DEBUG] 2026-01-25T15:45:33.774Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:45:33.787Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:45:33.789Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:45:33.790Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:45:33.800Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: qubO1OR7r5z3XMGiAAA3
+A user connected: qubO1OR7r5z3XMGiAAA3
+User qubO1OR7r5z3XMGiAAA3 joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User qubO1OR7r5z3XMGiAAA3 joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:45:39.319Z POST /api/technicians/search
+[GLOBAL-DEBUG] 2026-01-25T15:45:50.402Z POST /api/technicians/search
+[GLOBAL-DEBUG] 2026-01-25T15:45:54.027Z POST /api/jobs/estimate
+[GLOBAL-DEBUG] 2026-01-25T15:45:54.031Z GET /api/finance/wallet/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:45:57.913Z POST /api/jobs
+[AUTH] Request: POST /api/jobs
+[AUTH] Token Source: Header
+[API] POST /jobs payload: {
+  "serviceType": "Painter",
+  "location": {
+    "latitude": 26.125911654908986,
+    "longitude": 85.89201183891386,
+    "address": "Current Location"
+  },
+  "contactName": "samreen",
+  "contactPhone": "",
+  "description": "Quick Tile Booking",
+  "visitingCharges": 99.14,
+  "agreementAccepted": true,
+  "technicianId": "ac6fadb7-2f4a-4e05-b9b3-45ecad94344e",
+  "paymentStatus": "paid",
+  "paymentMethod": "wallet",
+  "userId": "7ea49a32-d50c-48bc-adac-5d5dfa542be1"
+}
+[JobManager] createJob starting.
+[JobManager] creating job for user 7ea49a32-d50c-48bc-adac-5d5dfa542be1, service: Painter, schedule: undefined undefined
+[JobManager] Inserting Job with OTP: 8928
+[Supabase:jobs] Inserting item with keys: [
+  'user_id',          'technician_id',
+  'service_type',     'status',
+  'contact_phone',    'contact_name',
+  'scheduled_date',   'scheduled_time',
+  'otp',              'visiting_charges',
+  'spare_parts_cost', 'tax',
+  'total_cost',       'payment_status',
+  'payment_method',   'location',
+  'address',          'description',
+  'created_at',       'updated_at'
+]
+[Supabase:finance] Inserting item with keys: [
+  'type',
+  'amount',
+  'description',
+  'status',
+  'user_id',
+  'technician_id',
+  'associated_id',
+  'created_at'
+]
+[ActivityLog] Logging: New Job Request - New request: Painter (Tech: ac6fadb7-2f4a-4e05-b9b3-45ecad94344e)
+[Supabase:activity_logs] Inserting item with keys: [
+  'user_id',
+  'technician_id',
+  'type',
+  'title',
+  'message',
+  'meta',
+  'read',
+  'created_at'
+]
+[GLOBAL-DEBUG] 2026-01-25T15:46:01.594Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[GLOBAL-DEBUG] 2026-01-25T15:46:01.599Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:46:01.604Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:46:01.609Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[NotificationManager] Virtual notification (non-UUID): admin
+[GLOBAL-DEBUG] 2026-01-25T15:46:03.145Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:46:03.859Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[GLOBAL-DEBUG] 2026-01-25T15:46:04.189Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: qubO1OR7r5z3XMGiAAA3
+User disconnected: qubO1OR7r5z3XMGiAAA3
+[GLOBAL-DEBUG] 2026-01-25T15:46:05.050Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[GLOBAL-DEBUG] 2026-01-25T15:46:05.122Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: l6a7p4o_f_rmBOfjAAA5
+A user connected: l6a7p4o_f_rmBOfjAAA5
+User l6a7p4o_f_rmBOfjAAA5 joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User l6a7p4o_f_rmBOfjAAA5 joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:46:07.105Z GET /api/api/offers
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:46:07.110Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:46:07.112Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:46:09.921Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:47:09.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: l6a7p4o_f_rmBOfjAAA5
+User disconnected: l6a7p4o_f_rmBOfjAAA5
+[GLOBAL-DEBUG] 2026-01-25T15:47:15.209Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:47:15.211Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+A user connected: LGqKtd0MtlnvGaygAAA7
+A user connected: LGqKtd0MtlnvGaygAAA7
+User LGqKtd0MtlnvGaygAAA7 joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User LGqKtd0MtlnvGaygAAA7 joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: LGqKtd0MtlnvGaygAAA7
+User disconnected: LGqKtd0MtlnvGaygAAA7
+[GLOBAL-DEBUG] 2026-01-25T15:47:16.402Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T15:47:16.424Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T15:47:16.425Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T15:47:16.427Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T15:47:16.477Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: v-tgS-YLb3Dp_7aWAAA9
+A user connected: v-tgS-YLb3Dp_7aWAAA9
+User v-tgS-YLb3Dp_7aWAAA9 joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User v-tgS-YLb3Dp_7aWAAA9 joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:47:27.989Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: AWgDA4kyhJDyUKNNAAAB
+User disconnected: AWgDA4kyhJDyUKNNAAAB
+[GLOBAL-DEBUG] 2026-01-25T15:47:29.779Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:47:29.826Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+A user connected: ccSStYR83tf0sU1rAAA_
+A user connected: ccSStYR83tf0sU1rAAA_
+User ccSStYR83tf0sU1rAAA_ joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User ccSStYR83tf0sU1rAAA_ joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[GLOBAL-DEBUG] 2026-01-25T15:47:30.928Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:47:38.838Z PUT /api/jobs/1a58574b-35c8-428d-bb3a-67a3d28b1ad4/status
+[GLOBAL-DEBUG] 2026-01-25T15:47:39.901Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[JobManager] Job 1a58574b-35c8-428d-bb3a-67a3d28b1ad4 accepted, updating tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e stats and setting status to engaged
+[GLOBAL-DEBUG] 2026-01-25T15:47:41.092Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[TechnicianManager] Updating status for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e: engaged
+[TechnicianManager] Calling DB update with status: engaged
+[TechnicianManager] DB update successful for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e, new status: engaged
+[TechnicianManager] Emitting socket events for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e status update
+[Supabase:notifications] Inserting item with keys: [ 'user_id', 'title', 'message', 'type', 'read', 'created_at' ]
+[GLOBAL-DEBUG] 2026-01-25T15:47:41.888Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: ccSStYR83tf0sU1rAAA_
+User disconnected: ccSStYR83tf0sU1rAAA_
+[Supabase:notifications] Inserting item with keys: [ 'user_id', 'title', 'message', 'type', 'read', 'created_at' ]
+A user connected: WYM-LINT2t6l1n-GAABB
+A user connected: WYM-LINT2t6l1n-GAABB
+User WYM-LINT2t6l1n-GAABB joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User WYM-LINT2t6l1n-GAABB joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[NotificationManager] Error creating notification: {
+  code: '23503',
+  details: 'Key (user_id)=(ac6fadb7-2f4a-4e05-b9b3-45ecad94344e) is not present in table "users".',
+  hint: null,
+  message: 'insert or update on table "notifications" violates foreign key constraint "notifications_user_id_fkey"'
+}
+[ActivityLog] Logging: Job Accepted - You accepted Job #1a58574b-35c8-428d-bb3a-67a3d28b1ad4 (Tech: ac6fadb7-2f4a-4e05-b9b3-45ecad94344e)
+[Supabase:activity_logs] Inserting item with keys: [
+  'user_id',
+  'technician_id',
+  'type',
+  'title',
+  'message',
+  'meta',
+  'read',
+  'created_at'
+]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[NotificationManager] Virtual notification (non-UUID): admin
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:47:42.855Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:47:44.168Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:47:45.232Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:47:51.940Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:48:01.931Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:48:12.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:48:22.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:48:32.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:48:42.907Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:48:52.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:49:02.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:49:53.283Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:50:01.941Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:50:08.207Z PUT /api/jobs/1a58574b-35c8-428d-bb3a-67a3d28b1ad4/status
+[JobManager] Job 1a58574b-35c8-428d-bb3a-67a3d28b1ad4 in progress, setting tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e status to finishing_work
+[TechnicianManager] Updating status for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e: finishing_work
+[TechnicianManager] Calling DB update with status: finishing_work
+[GLOBAL-DEBUG] 2026-01-25T15:50:10.421Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[TechnicianManager] DB update successful for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e, new status: finishing_work
+[TechnicianManager] Emitting socket events for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e status update
+[Supabase:notifications] Inserting item with keys: [ 'user_id', 'title', 'message', 'type', 'read', 'created_at' ]
+User disconnected: WYM-LINT2t6l1n-GAABB
+User disconnected: WYM-LINT2t6l1n-GAABB
+[Supabase:notifications] Inserting item with keys: [ 'user_id', 'title', 'message', 'type', 'read', 'created_at' ]
+A user connected: OYEGQ2FZPmsRfFnvAABD
+A user connected: OYEGQ2FZPmsRfFnvAABD
+User OYEGQ2FZPmsRfFnvAABD joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User OYEGQ2FZPmsRfFnvAABD joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[NotificationManager] Error creating notification: {
+  code: '23503',
+  details: 'Key (user_id)=(ac6fadb7-2f4a-4e05-b9b3-45ecad94344e) is not present in table "users".',
+  hint: null,
+  message: 'insert or update on table "notifications" violates foreign key constraint "notifications_user_id_fkey"'
+}
+[NotificationManager] Virtual notification (non-UUID): admin
+[GLOBAL-DEBUG] 2026-01-25T15:50:11.598Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:50:12.971Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:50:25.520Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:50:30.905Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:50:40.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:50:50.905Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:51:00.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:51:10.906Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:51:20.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:52:09.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:52:46.507Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: OYEGQ2FZPmsRfFnvAABD
+User disconnected: OYEGQ2FZPmsRfFnvAABD
+[GLOBAL-DEBUG] 2026-01-25T15:52:51.188Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:52:51.190Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+A user connected: 5wHOJwJgr_dH8ervAABF
+A user connected: 5wHOJwJgr_dH8ervAABF
+User 5wHOJwJgr_dH8ervAABF joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User 5wHOJwJgr_dH8ervAABF joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[GLOBAL-DEBUG] 2026-01-25T15:52:52.273Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:53:01.250Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:53:11.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:53:21.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:53:31.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:53:41.924Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:53:51.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:54:01.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:55:09.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:55:22.850Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:55:31.250Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:55:41.904Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:55:51.907Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:56:01.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:56:11.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:56:21.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:56:31.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:57:09.921Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:58:09.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:59:09.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:59:11.258Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: 5wHOJwJgr_dH8ervAABF
+User disconnected: 5wHOJwJgr_dH8ervAABF
+[GLOBAL-DEBUG] 2026-01-25T15:59:13.618Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T15:59:13.619Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+A user connected: Q0C3EseDl1e4ReN5AABH
+A user connected: Q0C3EseDl1e4ReN5AABH
+User Q0C3EseDl1e4ReN5AABH joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User Q0C3EseDl1e4ReN5AABH joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[GLOBAL-DEBUG] 2026-01-25T15:59:14.624Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T15:59:23.693Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:59:33.907Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:59:43.907Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T15:59:53.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:00:03.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:00:13.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:00:23.906Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: v-tgS-YLb3Dp_7aWAAA9
+User disconnected: v-tgS-YLb3Dp_7aWAAA9
+[GLOBAL-DEBUG] 2026-01-25T16:00:46.677Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T16:00:46.679Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+A user connected: AdVpJ2dNfkLvQQzVAABJ
+A user connected: AdVpJ2dNfkLvQQzVAABJ
+User AdVpJ2dNfkLvQQzVAABJ joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User AdVpJ2dNfkLvQQzVAABJ joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: AdVpJ2dNfkLvQQzVAABJ
+User disconnected: AdVpJ2dNfkLvQQzVAABJ
+[GLOBAL-DEBUG] 2026-01-25T16:00:47.531Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T16:00:47.533Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T16:00:47.535Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T16:00:47.536Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T16:00:47.550Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: 6W-s2nDmtAspWzjdAABL
+A user connected: 6W-s2nDmtAspWzjdAABL
+User 6W-s2nDmtAspWzjdAABL joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User 6W-s2nDmtAspWzjdAABL joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T16:01:09.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:01:14.693Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:01:23.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:01:33.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:01:43.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:01:53.912Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:02:03.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:02:13.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:03:09.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:04:09.921Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:05:09.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:06:09.912Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: 6W-s2nDmtAspWzjdAABL
+User disconnected: 6W-s2nDmtAspWzjdAABL
+User disconnected: Q0C3EseDl1e4ReN5AABH
+User disconnected: Q0C3EseDl1e4ReN5AABH
+[GLOBAL-DEBUG] 2026-01-25T16:26:18.892Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+A user connected: xqIGMs-SrXCPK8wuAABO
+A user connected: xqIGMs-SrXCPK8wuAABO
+User xqIGMs-SrXCPK8wuAABO joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User xqIGMs-SrXCPK8wuAABO joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+A user connected: GDI1IsV5bOZJ6O-3AABP
+A user connected: GDI1IsV5bOZJ6O-3AABP
+User GDI1IsV5bOZJ6O-3AABP joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User GDI1IsV5bOZJ6O-3AABP joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+User disconnected: xqIGMs-SrXCPK8wuAABO
+User disconnected: xqIGMs-SrXCPK8wuAABO
+User disconnected: GDI1IsV5bOZJ6O-3AABP
+User disconnected: GDI1IsV5bOZJ6O-3AABP
+[GLOBAL-DEBUG] 2026-01-25T16:26:24.732Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T16:26:24.734Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+A user connected: hbZ_Gq4S2F0gsE1MAABR
+A user connected: hbZ_Gq4S2F0gsE1MAABR
+User hbZ_Gq4S2F0gsE1MAABR joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User hbZ_Gq4S2F0gsE1MAABR joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[GLOBAL-DEBUG] 2026-01-25T16:26:25.830Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T16:26:25.833Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+A user connected: HWLnOWAI3EVGJZCHAABT
+A user connected: HWLnOWAI3EVGJZCHAABT
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+User HWLnOWAI3EVGJZCHAABT joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User HWLnOWAI3EVGJZCHAABT joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User disconnected: HWLnOWAI3EVGJZCHAABT
+User disconnected: HWLnOWAI3EVGJZCHAABT
+[GLOBAL-DEBUG] 2026-01-25T16:26:27.175Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T16:26:27.183Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T16:26:27.184Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T16:26:27.189Z POST /api/api/support/session
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T16:26:27.194Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: lRY569bkjoLqiMtDAABV
+A user connected: lRY569bkjoLqiMtDAABV
+User lRY569bkjoLqiMtDAABV joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User lRY569bkjoLqiMtDAABV joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[Supabase] Operation failed (attempt 1/3): TypeError: fetch failed
+[GLOBAL-DEBUG] 2026-01-25T16:26:37.199Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:26:38.457Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:26:45.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:26:55.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:27:05.925Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:27:15.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:27:24.966Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:27:35.931Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:27:46.980Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:27:49.675Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T16:27:49.684Z GET /api/api/offers
+[GLOBAL-DEBUG] 2026-01-25T16:27:49.701Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T16:27:49.706Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T16:27:49.706Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T16:27:49.710Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T16:27:50.126Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T16:27:50.127Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+User disconnected: lRY569bkjoLqiMtDAABV
+User disconnected: lRY569bkjoLqiMtDAABV
+[GLOBAL-DEBUG] 2026-01-25T16:27:51.602Z POST /api/api/support/session
+[GLOBAL-DEBUG] 2026-01-25T16:27:51.606Z GET /api/api/offers
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T16:27:51.609Z GET /api/api/complaints/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+Error: ENOENT: no such file or directory, stat 'C:\Users\MANUU\Downloads\rapidfix_supa\rapidfix_supa\client\dist\index.html'
+[GLOBAL-DEBUG] 2026-01-25T16:27:52.277Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: hYfi56Og0SrDmo6fAABX
+A user connected: hYfi56Og0SrDmo6fAABX
+User hYfi56Og0SrDmo6fAABX joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User hYfi56Og0SrDmo6fAABX joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T16:28:00.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:28:10.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:28:20.906Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:28:30.926Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:28:31.610Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T16:28:32.064Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:28:41.923Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:28:51.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:29:01.906Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:29:11.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:29:21.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:29:31.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:29:41.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:29:51.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:30:01.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:30:11.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:30:21.907Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:30:31.903Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:30:41.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:30:51.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:31:01.908Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:31:11.912Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:31:21.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:31:31.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:31:41.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:31:51.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:32:01.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:32:11.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:32:21.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:32:33.285Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:32:41.489Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:32:51.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:33:01.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:33:11.482Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:33:12.118Z PUT /api/jobs/1a58574b-35c8-428d-bb3a-67a3d28b1ad4/status
+[JobManager] Job 1a58574b-35c8-428d-bb3a-67a3d28b1ad4 completed, updating tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e stats and status
+[GLOBAL-DEBUG] 2026-01-25T16:33:14.099Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:33:14.111Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[GLOBAL-DEBUG] 2026-01-25T16:33:14.124Z GET /api/jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[API] GET /jobs/user/7ea49a32-d50c-48bc-adac-5d5dfa542be1 query: {}
+[JobManager] getJobsByUser Filters: {
+  search: undefined,
+  status: undefined,
+  startDate: undefined,
+  endDate: undefined
+}
+[GLOBAL-DEBUG] 2026-01-25T16:33:14.128Z GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Request: GET /api/users/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+[AUTH] Token Source: Header
+[TechnicianManager] Updating status for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e: available
+[TechnicianManager] Calling DB update with status: available
+[TechnicianManager] DB update successful for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e, new status: available
+[TechnicianManager] Emitting socket events for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e status update
+[TechnicianManager] Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e is now Available. Checking Queue...
+[JobManager] Checking Queue for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e...
+[ActivityLog] Logging: Payment Received - Received ₹89.226 for Job Compensation #1a58574b-35c8-428d-bb3a-67a3d28b1ad4 (Tech: ac6fadb7-2f4a-4e05-b9b3-45ecad94344e)
+[Supabase:activity_logs] Inserting item with keys: [
+  'user_id',
+  'technician_id',
+  'type',
+  'title',
+  'message',
+  'meta',
+  'read',
+  'created_at'
+]
+User disconnected: hYfi56Og0SrDmo6fAABX
+User disconnected: hYfi56Og0SrDmo6fAABX
+User disconnected: hbZ_Gq4S2F0gsE1MAABR
+User disconnected: hbZ_Gq4S2F0gsE1MAABR
+[Supabase:finance] Inserting item with keys: [
+  'type',
+  'amount',
+  'description',
+  'status',
+  'user_id',
+  'technician_id',
+  'associated_id',
+  'created_at'
+]
+[GLOBAL-DEBUG] 2026-01-25T16:33:15.192Z GET /api/notifications/7ea49a32-d50c-48bc-adac-5d5dfa542be1
+A user connected: 3IsdHrkq7B0nuUapAABa
+A user connected: 3IsdHrkq7B0nuUapAABa
+A user connected: k4NcvDRvXj-ENwHcAABb
+A user connected: k4NcvDRvXj-ENwHcAABb
+User 3IsdHrkq7B0nuUapAABa joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User 3IsdHrkq7B0nuUapAABa joined room user_7ea49a32-d50c-48bc-adac-5d5dfa542be1
+User k4NcvDRvXj-ENwHcAABb joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User k4NcvDRvXj-ENwHcAABb joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[GLOBAL-DEBUG] 2026-01-25T16:33:15.395Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[JobManager] Generating and saving invoice for Job 1a58574b-35c8-428d-bb3a-67a3d28b1ad4...
+[InvoiceManager] Generating PDF for Job 1a58574b-35c8-428d-bb3a-67a3d28b1ad4
+[Supabase:notifications] Inserting item with keys: [ 'user_id', 'title', 'message', 'type', 'read', 'created_at' ]
+[InvoiceManager] PDF Generation Completed for Job 1a58574b-35c8-428d-bb3a-67a3d28b1ad4. Size: 134698 bytes
+[InvoiceManager] PDF Header Check: "%PDF-1.3
+%����
+8 0 o" (Hex: 255044462d312e330a25)
+[InvoiceManager] PDF Content Verification: File is large enough (134698 bytes) to contain data.
+[Supabase:notifications] Inserting item with keys: [ 'user_id', 'title', 'message', 'type', 'read', 'created_at' ]
+[GLOBAL-DEBUG] 2026-01-25T16:33:16.483Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[NotificationManager] Error creating notification: {
+  code: '23503',
+  details: 'Key (user_id)=(ac6fadb7-2f4a-4e05-b9b3-45ecad94344e) is not present in table "users".',
+  hint: null,
+  message: 'insert or update on table "notifications" violates foreign key constraint "notifications_user_id_fkey"'
+}
+[ActivityLog] Logging: Job Completed - Job #1a58574b-35c8-428d-bb3a-67a3d28b1ad4 marked as completed (Tech: ac6fadb7-2f4a-4e05-b9b3-45ecad94344e)
+[Supabase:activity_logs] Inserting item with keys: [
+  'user_id',
+  'technician_id',
+  'type',
+  'title',
+  'message',
+  'meta',
+  'read',
+  'created_at'
+]
+[NotificationManager] Virtual notification (non-UUID): admin
+[GLOBAL-DEBUG] 2026-01-25T16:33:17.500Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[InvoiceManager] Creating new invoice record for Job 1a58574b-35c8-428d-bb3a-67a3d28b1ad4
+[Supabase:invoices] Inserting item with keys: [
+  'job_id',
+  'invoice_number',
+  'amount',
+  'pdf_url',
+  'status',
+  'created_at'
+]
+[InvoiceManager] Successfully synced invoice for Job 1a58574b-35c8-428d-bb3a-67a3d28b1ad4 to DB and Storage.
+[GLOBAL-DEBUG] 2026-01-25T16:33:18.639Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User 7ea49a32-d50c-48bc-adac-5d5dfa542be1 not found in DB.
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+[InvoiceManager] Simulation: Sending to []
+[JobManager] Invoice processing for Job 1a58574b-35c8-428d-bb3a-67a3d28b1ad4 completed. URL: https://cmyazetngnfesfmeohuj.supabase.co/storage/v1/object/public/technician-documents/invoices/invoices/1a58574b-35c8-428d-bb3a-67a3d28b1ad4-1769358796202.pdf
+[GLOBAL-DEBUG] 2026-01-25T16:33:19.757Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:33:25.020Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:33:35.022Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:33:45.021Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:33:55.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:34:05.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:34:15.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:34:25.024Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:34:35.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:34:45.904Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:34:55.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:35:05.928Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:35:15.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:35:25.912Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:35:35.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:35:45.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:35:55.988Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:36:05.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:36:15.927Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:36:25.929Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:36:35.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:36:45.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:36:55.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:37:05.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:37:15.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:37:25.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:37:35.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:37:45.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:37:55.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:38:05.927Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:38:15.908Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:38:25.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:38:35.908Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:38:45.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:38:55.905Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:39:05.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:39:15.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:39:25.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:40:09.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:41:09.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:42:09.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:43:09.912Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:43:47.753Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:43:51.661Z PUT /api/jobs/6adfeda4-ad3f-4137-8541-4864362dc375/status
+[JobManager] Job 6adfeda4-ad3f-4137-8541-4864362dc375 in progress, setting tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e status to finishing_work
+[TechnicianManager] Updating status for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e: finishing_work
+[TechnicianManager] Calling DB update with status: finishing_work
+[GLOBAL-DEBUG] 2026-01-25T16:43:53.829Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[TechnicianManager] DB update successful for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e, new status: finishing_work
+[TechnicianManager] Emitting socket events for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e status update
+[Supabase:notifications] Inserting item with keys: [ 'user_id', 'title', 'message', 'type', 'read', 'created_at' ]
+User disconnected: k4NcvDRvXj-ENwHcAABb
+User disconnected: k4NcvDRvXj-ENwHcAABb
+A user connected: j3YsMV4c_YIms_DTAABd
+A user connected: j3YsMV4c_YIms_DTAABd
+User j3YsMV4c_YIms_DTAABd joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User j3YsMV4c_YIms_DTAABd joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[Supabase:notifications] Inserting item with keys: [ 'user_id', 'title', 'message', 'type', 'read', 'created_at' ]
+[NotificationManager] Error creating notification: {
+  code: '23503',
+  details: 'Key (user_id)=(ac6fadb7-2f4a-4e05-b9b3-45ecad94344e) is not present in table "users".',
+  hint: null,
+  message: 'insert or update on table "notifications" violates foreign key constraint "notifications_user_id_fkey"'
+}
+[NotificationManager] Virtual notification (non-UUID): admin
+[GLOBAL-DEBUG] 2026-01-25T16:43:55.149Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:43:56.343Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T16:44:04.210Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:44:07.791Z PUT /api/jobs/6adfeda4-ad3f-4137-8541-4864362dc375/status
+[JobManager] Job 6adfeda4-ad3f-4137-8541-4864362dc375 completed, updating tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e stats and status
+[GLOBAL-DEBUG] 2026-01-25T16:44:10.958Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[TechnicianManager] Updating status for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e: available
+[TechnicianManager] Calling DB update with status: available
+[TechnicianManager] DB update successful for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e, new status: available
+[TechnicianManager] Emitting socket events for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e status update
+[TechnicianManager] Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e is now Available. Checking Queue...
+[JobManager] Checking Queue for Tech ac6fadb7-2f4a-4e05-b9b3-45ecad94344e...
+[JobManager] Generating and saving invoice for Job 6adfeda4-ad3f-4137-8541-4864362dc375...
+[InvoiceManager] Generating PDF for Job 6adfeda4-ad3f-4137-8541-4864362dc375
+[Supabase:notifications] Inserting item with keys: [ 'user_id', 'title', 'message', 'type', 'read', 'created_at' ]
+[InvoiceManager] PDF Generation Completed for Job 6adfeda4-ad3f-4137-8541-4864362dc375. Size: 134673 bytes
+[InvoiceManager] PDF Header Check: "%PDF-1.3
+%����
+8 0 o" (Hex: 255044462d312e330a25)
+[InvoiceManager] PDF Content Verification: File is large enough (134673 bytes) to contain data.
+User disconnected: j3YsMV4c_YIms_DTAABd
+User disconnected: j3YsMV4c_YIms_DTAABd
+[GLOBAL-DEBUG] 2026-01-25T16:44:12.036Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[Supabase:notifications] Inserting item with keys: [ 'user_id', 'title', 'message', 'type', 'read', 'created_at' ]
+A user connected: v29cHW0OJYNG6t5QAABf
+A user connected: v29cHW0OJYNG6t5QAABf
+User v29cHW0OJYNG6t5QAABf joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+User v29cHW0OJYNG6t5QAABf joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[NotificationManager] Error creating notification: {
+  code: '23503',
+  details: 'Key (user_id)=(ac6fadb7-2f4a-4e05-b9b3-45ecad94344e) is not present in table "users".',
+  hint: null,
+  message: 'insert or update on table "notifications" violates foreign key constraint "notifications_user_id_fkey"'
+}
+[ActivityLog] Logging: Job Completed - Job #6adfeda4-ad3f-4137-8541-4864362dc375 marked as completed (Tech: ac6fadb7-2f4a-4e05-b9b3-45ecad94344e)
+[Supabase:activity_logs] Inserting item with keys: [
+  'user_id',
+  'technician_id',
+  'type',
+  'title',
+  'message',
+  'meta',
+  'read',
+  'created_at'
+]
+[NotificationManager] Virtual notification (non-UUID): admin
+[GLOBAL-DEBUG] 2026-01-25T16:44:13.000Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[InvoiceManager] Creating new invoice record for Job 6adfeda4-ad3f-4137-8541-4864362dc375
+[Supabase:invoices] Inserting item with keys: [
+  'job_id',
+  'invoice_number',
+  'amount',
+  'pdf_url',
+  'status',
+  'created_at'
+]
+[InvoiceManager] Successfully synced invoice for Job 6adfeda4-ad3f-4137-8541-4864362dc375 to DB and Storage.
+[GLOBAL-DEBUG] 2026-01-25T16:44:14.178Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[InvoiceManager] Simulation: Sending to []
+[JobManager] Invoice processing for Job 6adfeda4-ad3f-4137-8541-4864362dc375 completed. URL: https://cmyazetngnfesfmeohuj.supabase.co/storage/v1/object/public/technician-documents/invoices/invoices/6adfeda4-ad3f-4137-8541-4864362dc375-1769359451893.pdf
+[GLOBAL-DEBUG] 2026-01-25T16:44:15.316Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[Supabase:locations] Inserting item with keys: [ 'user_id', 'technician_id', 'latitude', 'longitude' ]
+[LocationManager] Skipped location update: User ac6fadb7-2f4a-4e05-b9b3-45ecad94344e not found in DB.
+[GLOBAL-DEBUG] 2026-01-25T16:44:21.906Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:44:31.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:44:41.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:44:51.912Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:45:01.904Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:45:11.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:45:21.907Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:45:23.618Z POST /api/support/session
+[GLOBAL-DEBUG] 2026-01-25T16:45:31.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:45:41.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:45:51.893Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:46:01.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:46:11.905Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:46:21.907Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:46:31.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:46:41.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:46:51.924Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:47:01.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:47:11.907Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:47:21.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:47:31.910Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:47:41.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:47:51.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:48:01.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:48:11.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:48:21.888Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:48:31.906Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:48:41.893Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:48:51.889Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:49:01.891Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:49:11.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:49:21.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:49:31.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:49:41.985Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:49:51.931Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:50:01.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:50:11.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:50:21.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:50:31.923Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:50:41.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:50:51.921Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:51:01.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:51:11.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:51:21.905Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:51:31.923Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:51:41.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:51:51.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:52:01.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:52:11.907Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:52:21.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:52:31.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:52:41.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:52:51.901Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:53:01.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:53:11.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:53:21.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:53:31.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:53:41.888Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:53:51.939Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:54:01.909Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:54:11.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:54:21.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:54:31.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:54:41.908Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:54:51.931Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:55:01.924Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:55:11.930Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:55:21.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:55:31.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:55:41.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:55:51.921Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:56:01.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:56:11.924Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:56:21.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:56:31.934Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:56:41.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:56:51.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:57:01.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:57:12.007Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:57:21.893Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:57:31.937Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:57:41.912Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:57:51.925Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:58:01.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:58:11.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:58:22.037Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:58:31.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:58:41.912Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:58:51.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:59:01.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:59:11.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:59:21.931Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:59:31.928Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:59:41.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T16:59:51.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:00:01.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:00:11.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:00:21.913Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:00:31.919Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:00:41.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:00:51.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:01:01.938Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:01:11.921Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:01:21.916Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:01:31.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:01:41.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:01:51.924Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:02:01.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:02:12.052Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:02:21.926Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:03:09.923Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:04:09.931Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:05:09.929Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:06:09.918Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:07:09.953Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:08:09.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:09:09.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:10:02.482Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T17:10:02.488Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:10:12.906Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:10:22.917Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:10:32.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:10:42.915Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:10:52.924Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:11:09.923Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:12:09.922Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:13:09.914Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:14:09.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:14:12.284Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:14:22.911Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:14:32.920Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:14:42.288Z GET /api/technicians/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e/dashboard-stats
+[GLOBAL-DEBUG] 2026-01-25T17:14:44.292Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T17:14:48.240Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T17:14:55.675Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T17:14:57.230Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header

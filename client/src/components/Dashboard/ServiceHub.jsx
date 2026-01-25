@@ -18,16 +18,12 @@ import { createJob } from '../../services/api'; // [NEW]
 
 
 
-const ServiceHub = () => {
+const ServiceHub = ({ onOpenSearch }) => {
     const theme = useTheme();
     const { user } = useAuth();
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const [bookingParams, setBookingParams] = useState(null);
 
     // New Modals State
     const [isScheduleOpen, setIsScheduleOpen] = useState(false);
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false); // [NEW]
-    const [selectedTechnician, setSelectedTechnician] = useState(null); // [NEW]
     const [selectedService, setSelectedService] = useState('');
     const [isOfferOpen, setIsOfferOpen] = useState(false);
     const [selectedOffer, setSelectedOffer] = useState(null);
@@ -48,16 +44,13 @@ const ServiceHub = () => {
         // QUICK BOOKING LOGIC: Detect Location -> Open Map
 
         const launchModal = (loc) => {
-            setBookingParams({
+            onOpenSearch({
                 serviceType: serviceName,
                 location: loc,
-                // NOTE: For immediate bookings, do NOT set scheduledDate/scheduledTime
-                // This prevents "past date" validation errors if user takes time to confirm
                 contactName: user ? user.name : '',
                 contactPhone: '',
                 description: 'Quick Tile Booking'
             });
-            setIsSearchOpen(true);
         };
 
         const handleLocationError = (error = null) => {
@@ -105,43 +98,6 @@ const ServiceHub = () => {
     const handleClaimOffer = (offer) => {
         setSelectedOffer(offer);
         setIsOfferOpen(true);
-    };
-
-    // [New] Handle Technician Select from Map
-    const handleTechnicianSelect = (technician) => {
-        setSelectedTechnician(technician);
-        setIsSearchOpen(false);
-        setIsConfirmOpen(true);
-    };
-
-    // [New] Handle Confirmation & Booking
-    const handleConfirmBooking = (finalBookingData) => {
-        if (!user) {
-            alert("Please login to book a service"); // Should be handled by AuthGuard ideally
-            return;
-        }
-        createJobRequest({ ...bookingParams, ...finalBookingData, userId: user.id });
-    };
-
-    // [New] API Call
-    const createJobRequest = async (fullData) => {
-        try {
-            const payload = {
-                ...fullData,
-                technicianId: fullData.technicianId || selectedTechnician?.id,
-            };
-
-            const res = await createJob(payload);
-            if (res.data.success) {
-                setIsConfirmOpen(false);
-                alert("Booking created successfully!");
-                // Optionally redirect to Active Booking or History
-            }
-        } catch (error) {
-            console.error("Job Creation Failed", error);
-            const errorMsg = error.response?.data?.error || error.message || "Unknown error";
-            alert(`Failed to create booking: ${errorMsg}`);
-        }
     };
 
 
@@ -422,29 +378,6 @@ const ServiceHub = () => {
                 open={isMakeOfferOpen}
                 onClose={() => setIsMakeOfferOpen(false)}
                 user={user}
-            />
-
-            {/* Technician Search Modal */}
-            <TechnicianSearchModal
-                isOpen={isSearchOpen}
-                onClose={() => setIsSearchOpen(false)}
-                userLocation={bookingParams?.location}
-                serviceType={bookingParams?.serviceType}
-                onBook={handleTechnicianSelect} // [UPDATED]
-            />
-
-            {/* [NEW] Booking Confirmation Modal */}
-            <BookingConfirmationModal
-                isOpen={isConfirmOpen}
-                onClose={() => setIsConfirmOpen(false)}
-                technician={selectedTechnician}
-                jobDetails={{
-                    ...bookingParams,
-                    // For immediate bookings, explicitly set undefined to skip backend date validation
-                    scheduledDate: undefined,
-                    scheduledTime: undefined
-                }}
-                onConfirm={handleConfirmBooking}
             />
 
         </Box>

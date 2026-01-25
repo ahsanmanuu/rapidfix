@@ -32,20 +32,11 @@ const CardStyle = {
     backgroundColor: '#fff'
 };
 
-const DashboardHome = ({ jobs = [], setActiveTab }) => {
+const DashboardHome = ({ jobs = [], setActiveTab, onOpenSearch }) => {
     const { user } = useAuth();
     const socket = useSocket();
     const theme = useTheme();
     const [searchTerm, setSearchTerm] = useState('');
-
-    // Debug: Log received jobs
-    console.log("[DashboardHome] Jobs received:", jobs.length, jobs.map(j => ({ id: j.id?.slice(0, 8), status: j.status })));
-
-    // Booking State
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const [selectedTechnician, setSelectedTechnician] = useState(null);
-    const [bookingParams, setBookingParams] = useState(null);
 
     // Support Chat State
     const [activeSession, setActiveSession] = useState(null);
@@ -175,27 +166,13 @@ const DashboardHome = ({ jobs = [], setActiveTab }) => {
     const recentActivity = jobs.slice(0, 5);
 
     const handleBookNow = (serviceTitle) => {
-        setBookingParams({
+        onOpenSearch({
             serviceType: serviceTitle,
             location: user?.location,
             contactName: user?.name,
             contactPhone: user?.phone,
             description: 'Quick Request'
         });
-        setIsSearchOpen(true);
-    };
-
-    const handleConfirmBooking = async (finalData) => {
-        try {
-            const payload = { ...bookingParams, ...finalData, userId: user.id };
-            await createJob(payload);
-            setIsConfirmOpen(false);
-            alert(`Booking Confirmed!`);
-            window.location.reload();
-        } catch (e) {
-            console.error(e);
-            alert('Booking failed');
-        }
     };
 
     const handleSubmitFeedback = async () => {
@@ -682,32 +659,6 @@ const DashboardHome = ({ jobs = [], setActiveTab }) => {
                 </Box>
             </Box>
 
-            {/* Modals from Booking Flow */}
-            <TechnicianSearchModal
-                open={isSearchOpen}
-                onClose={() => setIsSearchOpen(false)}
-                userLocation={user?.location}
-                onSelectTechnician={(tech) => {
-                    setSelectedTechnician(tech);
-                    setIsSearchOpen(false);
-                    setIsConfirmOpen(true);
-                }}
-            />
-
-            {selectedTechnician && bookingParams && (
-                <BookingConfirmationModal
-                    isOpen={isConfirmOpen}
-                    onClose={() => setIsConfirmOpen(false)}
-                    technician={selectedTechnician}
-                    jobDetails={{
-                        ...bookingParams,
-                        // For immediate bookings, don't send date/time to skip backend validation
-                        scheduledDate: undefined,
-                        scheduledTime: undefined
-                    }}
-                    onConfirm={handleConfirmBooking}
-                />
-            )}
         </Box>
     );
 };

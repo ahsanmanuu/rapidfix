@@ -49,8 +49,11 @@ export const getMyJobs = (userId, params = {}) => api.get(`/jobs/user/${userId}`
 export const getJobsByTechnician = (techId) => api.get(`/jobs/technician/${techId}`);
 export const createJob = (data) => api.post('/jobs', data);
 export const searchTechnicians = (data) => api.post('/technicians/search', data);
+export const updateTechnicianStatus = (techId, status) => api.put(`/technicians/${techId}/status`, { status });
 export const acceptJob = (jobId, technicianId) => api.put(`/jobs/${jobId}/status`, { status: 'accepted', technicianId });
-export const completeJob = (jobId) => api.put(`/jobs/${jobId}/status`, { status: 'completed' });
+export const rejectJob = (jobId, reason) => api.put(`/jobs/${jobId}/status`, { status: 'rejected', reason });
+export const startJob = (jobId) => api.put(`/jobs/${jobId}/status`, { status: 'in_progress' });
+export const completeJob = (jobId, otp) => api.put(`/jobs/${jobId}/status`, { status: 'completed', otp });
 export const cancelJob = (jobId, reason) => api.put(`/jobs/${jobId}/status`, { status: 'cancelled', reason }); // [NEW]
 export const updateUserJob = (jobId, data) => api.put(`/jobs/${jobId}`, data); // [NEW] Reschedule
 export const getAllJobs = () => api.get('/jobs');

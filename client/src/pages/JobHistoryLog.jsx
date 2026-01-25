@@ -56,181 +56,185 @@ const JobHistoryLog = () => {
     ];
 
     const headerActions = (
-        <button className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2">
+        <button className="px-3 sm:px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2">
             <span className="material-symbols-outlined text-sm">download</span>
-            Export Logs
+            <span className="hidden sm:inline">Export Logs</span>
         </button>
     );
 
     return (
         <TechnicianLayout title="Job History Log" headerActions={headerActions}>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50">
-                {/* Search & Filter Bar */}
-                <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex flex-wrap items-center gap-4">
-                    <div className="flex-1 min-w-[240px]">
-                        <div className="relative">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-                            <input
-                                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder:text-slate-400 transition-all outline-none"
-                                placeholder="Search Customer, ID or Technician..."
-                                type="text"
-                            />
+            <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50/50 p-6 lg:p-8 scroll-smooth">
+                <div className="max-w-7xl mx-auto space-y-8">
+                    {/* Stats Widgets (Moved to Top) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex items-center gap-4 bg-gradient-to-br from-emerald-50 to-white">
+                            <div className="size-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 shrink-0">
+                                <span className="material-symbols-outlined">verified</span>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Completed</p>
+                                <h4 className="text-xl font-black text-slate-800">182 Jobs</h4>
+                            </div>
+                        </div>
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex items-center gap-4 bg-gradient-to-br from-rose-50 to-white">
+                            <div className="size-10 bg-rose-100 rounded-lg flex items-center justify-center text-rose-600 shrink-0">
+                                <span className="material-symbols-outlined">cancel</span>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Cancelled</p>
+                                <h4 className="text-xl font-black text-slate-800">12 Jobs</h4>
+                            </div>
+                        </div>
+                        <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex items-center gap-4 bg-gradient-to-br from-blue-50/50 to-white">
+                            <div className="size-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
+                                <span className="material-symbols-outlined">payments</span>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Revenue Period</p>
+                                <h4 className="text-xl font-black text-slate-800">₹42,850.00</h4>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Status</span>
-                            <div className="relative">
-                                <select className="text-xs font-bold border border-slate-200 rounded-lg bg-white px-3 py-2 focus:ring-2 focus:ring-blue-500/20 outline-none pr-8 appearance-none cursor-pointer hover:border-slate-300 transition-colors">
-                                    <option>All Statuses</option>
-                                    <option>Completed</option>
-                                    <option>Cancelled</option>
-                                    <option>Refunded</option>
-                                </select>
-                                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">expand_more</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Service</span>
-                            <div className="relative">
-                                <select className="text-xs font-bold border border-slate-200 rounded-lg bg-white px-3 py-2 focus:ring-2 focus:ring-blue-500/20 outline-none pr-8 appearance-none cursor-pointer hover:border-slate-300 transition-colors">
-                                    <option>All Services</option>
-                                    <option>Plumbing</option>
-                                    <option>Electrical</option>
-                                </select>
-                                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">expand_more</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5 hover:border-slate-300 transition-colors cursor-pointer">
-                            <span className="material-symbols-outlined text-slate-400 text-lg">event</span>
-                            <div className="flex flex-col">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Date Range</span>
-                                <span className="text-[11px] font-bold text-slate-700">Oct 01 - Oct 24</span>
-                            </div>
-                        </div>
-                        <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 transition-colors">
-                            <span className="material-symbols-outlined text-lg">filter_alt</span>
-                        </button>
-                    </div>
-                </div>
 
-                {/* Main Table */}
-                <div className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200">
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Job ID</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Customer & UID</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Technician</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Service Type</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Date & Time</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Status</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Payment</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {jobs.map((job) => (
-                                    <tr key={job.id} className="hover:bg-slate-50/80 transition-colors group">
-                                        <td className="px-6 py-4 font-black text-blue-600 text-xs">{job.id}</td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-slate-900">{job.customer.name}</span>
-                                                <span className="text-[10px] text-slate-400 font-medium">UID: {job.customer.uid}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                {job.technician.avatar ? (
-                                                    <div className="size-6 rounded-full bg-slate-200 bg-cover bg-center" style={{ backgroundImage: `url("${job.technician.avatar}")` }}></div>
-                                                ) : (
-                                                    <div className="size-6 rounded-full bg-slate-200 flex items-center justify-center">
-                                                        <span className="material-symbols-outlined text-xs text-slate-400">person</span>
-                                                    </div>
-                                                )}
-                                                <span className="text-xs font-semibold text-slate-600">{job.technician.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-                                                <span className={`material-symbols-outlined text-sm ${job.service.color}`}>{job.service.icon}</span>
-                                                {job.service.type}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-bold text-slate-700">{job.date}</span>
-                                                <span className="text-[10px] text-slate-400">{job.time}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${job.statusClass}`}>
-                                                {job.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className={`text-xs font-black ${job.paymentStrike ? 'text-slate-400 line-through' : 'text-slate-900'}`}>{job.payment}</span>
-                                                <span className="material-symbols-outlined text-sm text-slate-400">{job.paymentIcon}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="text-slate-400 hover:text-blue-600 transition-colors p-1 rounded-md hover:bg-slate-100">
-                                                <span className="material-symbols-outlined text-lg">more_vert</span>
-                                            </button>
-                                        </td>
+                    {/* Search & Filter Bar */}
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex flex-wrap items-center gap-4">
+                        <div className="flex-1 min-w-[240px]">
+                            <div className="relative">
+                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                                <input
+                                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder:text-slate-400 transition-all outline-none"
+                                    placeholder="Search Customer, ID or Technician..."
+                                    type="text"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Status</span>
+                                <div className="relative">
+                                    <select className="text-xs font-bold border border-slate-200 rounded-lg bg-white px-3 py-2 focus:ring-2 focus:ring-blue-500/20 outline-none pr-8 appearance-none cursor-pointer hover:border-slate-300 transition-colors">
+                                        <option>All Statuses</option>
+                                        <option>Completed</option>
+                                        <option>Cancelled</option>
+                                        <option>Refunded</option>
+                                    </select>
+                                    <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">expand_more</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Service</span>
+                                <div className="relative">
+                                    <select className="text-xs font-bold border border-slate-200 rounded-lg bg-white px-3 py-2 focus:ring-2 focus:ring-blue-500/20 outline-none pr-8 appearance-none cursor-pointer hover:border-slate-300 transition-colors">
+                                        <option>All Services</option>
+                                        <option>Plumbing</option>
+                                        <option>Electrical</option>
+                                    </select>
+                                    <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">expand_more</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5 hover:border-slate-300 transition-colors cursor-pointer">
+                                <span className="material-symbols-outlined text-slate-400 text-lg">event</span>
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Date Range</span>
+                                    <span className="text-[11px] font-bold text-slate-700">Oct 01 - Oct 24</span>
+                                </div>
+                            </div>
+                            <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 transition-colors">
+                                <span className="material-symbols-outlined text-lg">filter_alt</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Main Table */}
+                    <div className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-200">
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Job ID</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Customer & UID</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Technician</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Service Type</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Date & Time</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Status</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Payment</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    {/* Pagination */}
-                    <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                        <span className="text-[11px] font-bold text-slate-500 uppercase">Showing 1 to 4 of 248 entries</span>
-                        <div className="flex items-center gap-1">
-                            <button className="size-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-white disabled:opacity-50 transition-colors" disabled>
-                                <span className="material-symbols-outlined text-lg">chevron_left</span>
-                            </button>
-                            <button className="size-8 flex items-center justify-center rounded bg-blue-600 text-white font-bold text-xs shadow-sm">1</button>
-                            <button className="size-8 flex items-center justify-center rounded border border-slate-200 text-slate-600 font-bold text-xs hover:bg-white transition-colors">2</button>
-                            <button className="size-8 flex items-center justify-center rounded border border-slate-200 text-slate-600 font-bold text-xs hover:bg-white transition-colors">3</button>
-                            <button className="size-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-white transition-colors">
-                                <span className="material-symbols-outlined text-lg">chevron_right</span>
-                            </button>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {jobs.map((job) => (
+                                        <tr key={job.id} className="hover:bg-slate-50/80 transition-colors group">
+                                            <td className="px-6 py-4 font-black text-blue-600 text-xs">{job.id}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-slate-900">{job.customer.name}</span>
+                                                    <span className="text-[10px] text-slate-400 font-medium">UID: {job.customer.uid}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    {job.technician.avatar ? (
+                                                        <div className="size-6 rounded-full bg-slate-200 bg-cover bg-center" style={{ backgroundImage: `url("${job.technician.avatar}")` }}></div>
+                                                    ) : (
+                                                        <div className="size-6 rounded-full bg-slate-200 flex items-center justify-center">
+                                                            <span className="material-symbols-outlined text-xs text-slate-400">person</span>
+                                                        </div>
+                                                    )}
+                                                    <span className="text-xs font-semibold text-slate-600">{job.technician.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                                                    <span className={`material-symbols-outlined text-sm ${job.service.color}`}>{job.service.icon}</span>
+                                                    {job.service.type}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-slate-700">{job.date}</span>
+                                                    <span className="text-[10px] text-slate-400">{job.time}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${job.statusClass}`}>
+                                                    {job.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-xs font-black ${job.paymentStrike ? 'text-slate-400 line-through' : 'text-slate-900'}`}>{job.payment}</span>
+                                                    <span className="material-symbols-outlined text-sm text-slate-400">{job.paymentIcon}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <button className="text-slate-400 hover:text-blue-600 transition-colors p-1 rounded-md hover:bg-slate-100">
+                                                    <span className="material-symbols-outlined text-lg">more_vert</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Pagination */}
+                        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                            <span className="text-[11px] font-bold text-slate-500 uppercase">Showing 1 to 4 of 248 entries</span>
+                            <div className="flex items-center gap-1">
+                                <button className="size-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-white disabled:opacity-50 transition-colors" disabled>
+                                    <span className="material-symbols-outlined text-lg">chevron_left</span>
+                                </button>
+                                <button className="size-8 flex items-center justify-center rounded bg-blue-600 text-white font-bold text-xs shadow-sm">1</button>
+                                <button className="size-8 flex items-center justify-center rounded border border-slate-200 text-slate-600 font-bold text-xs hover:bg-white transition-colors">2</button>
+                                <button className="size-8 flex items-center justify-center rounded border border-slate-200 text-slate-600 font-bold text-xs hover:bg-white transition-colors">3</button>
+                                <button className="size-8 flex items-center justify-center rounded border border-slate-200 text-slate-400 hover:bg-white transition-colors">
+                                    <span className="material-symbols-outlined text-lg">chevron_right</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Footer Stats Widgets */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-6">
-                    <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex items-center gap-4 bg-gradient-to-br from-emerald-50 to-white">
-                        <div className="size-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 shrink-0">
-                            <span className="material-symbols-outlined">verified</span>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Completed</p>
-                            <h4 className="text-xl font-black text-slate-800">182 Jobs</h4>
-                        </div>
-                    </div>
-                    <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex items-center gap-4 bg-gradient-to-br from-rose-50 to-white">
-                        <div className="size-10 bg-rose-100 rounded-lg flex items-center justify-center text-rose-600 shrink-0">
-                            <span className="material-symbols-outlined">cancel</span>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Cancelled</p>
-                            <h4 className="text-xl font-black text-slate-800">12 Jobs</h4>
-                        </div>
-                    </div>
-                    <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex items-center gap-4 bg-gradient-to-br from-blue-50/50 to-white">
-                        <div className="size-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 shrink-0">
-                            <span className="material-symbols-outlined">payments</span>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Revenue Period</p>
-                            <h4 className="text-xl font-black text-slate-800">₹42,850.00</h4>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </TechnicianLayout>

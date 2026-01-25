@@ -10,17 +10,15 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './components/ToastSystem'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <ThemeProvider>
-        <AuthProvider>
-          <ToastProvider>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
-          </ToastProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
-  </React.StrictMode>,
+  <ErrorBoundary>
+    <ThemeProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </ToastProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </ErrorBoundary>,
 )

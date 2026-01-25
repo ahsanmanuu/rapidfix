@@ -164,6 +164,7 @@ const Home = () => {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isRequesting, setIsRequesting] = useState(false);
     const [loadingServiceId, setLoadingServiceId] = useState(null);
+    const [loadingCardId, setLoadingCardId] = useState(null);
 
     // Auto-advance slides
     useEffect(() => {
@@ -205,8 +206,9 @@ const Home = () => {
     const handleLoginSuccess = (userData) => {
         setUser(userData);
         setIsLoginOpen(false);
-        if (bookingParams && selectedTechnician) {
-            createJobRequest({ ...bookingParams, userId: userData.id });
+        // Re-open confirmation modal to allow user to check wallet balance and confirm
+        if (bookingParams) {
+            setIsConfirmOpen(true);
         }
     };
 
@@ -239,7 +241,11 @@ const Home = () => {
 
     const handleBookNow = (serviceType = 'Electrician', technician = null) => {
         // Set loading state
-        setLoadingServiceId(serviceType);
+        if (technician) {
+            setLoadingCardId(technician.id);
+        } else {
+            setLoadingServiceId(serviceType);
+        }
 
         setTimeout(() => {
             if (technician) {
@@ -257,6 +263,7 @@ const Home = () => {
                     technicianId: technician.id
                 });
                 setIsConfirmOpen(true);
+                setLoadingCardId(null);
                 setLoadingServiceId(null);
                 return;
             }
@@ -501,8 +508,13 @@ const Home = () => {
                                     {service.icon}
                                 </div>
                                 <h3 className="text-[#111418] font-semibold text-[10px] md:text-xs leading-tight">{service.title}</h3>
-                                <button className="w-full py-2 rounded-lg bg-orange-500/5 text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white font-bold text-xs border border-[#FF6B00]/30 transition-all disabled:opacity-50">
-                                    {loadingServiceId === service.id ? 'Loading...' : 'Book Now'}
+                                <button className="w-full py-2 rounded-lg bg-orange-500/5 text-[#FF6B00] hover:bg-[#FF6B00] hover:text-white font-bold text-xs border border-[#FF6B00]/30 transition-all disabled:opacity-50 flex items-center justify-center gap-1">
+                                    {loadingServiceId === service.id ? (
+                                        <>
+                                            <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                            Loading...
+                                        </>
+                                    ) : 'Book Now'}
                                 </button>
                             </div>
                         ))}
@@ -606,10 +618,18 @@ const Home = () => {
 
                                             {/* Book Button */}
                                             <button
+                                                disabled={loadingCardId === tech.id}
                                                 onClick={() => handleBookNow(tech.serviceType, tech)}
-                                                className="mt-auto w-full py-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black uppercase tracking-widest text-sm shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/40 transition-all active:scale-[0.98]"
+                                                className="mt-auto w-full py-4 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-black uppercase tracking-widest text-sm shadow-lg shadow-orange-500/20 hover:shadow-xl hover:shadow-orange-500/40 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                                             >
-                                                Book Now
+                                                {loadingCardId === tech.id ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                        Loading...
+                                                    </>
+                                                ) : (
+                                                    'Book Now'
+                                                )}
                                             </button>
                                         </div>
                                     );
