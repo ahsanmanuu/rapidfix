@@ -1859,3 +1859,12 @@ User v29cHW0OJYNG6t5QAABf joined room tech_ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
 [GLOBAL-DEBUG] 2026-01-25T17:14:57.230Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
 [AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
 [AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T17:17:44.251Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T17:17:48.237Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header
+[GLOBAL-DEBUG] 2026-01-25T17:17:50.702Z GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Request: GET /api/users/ac6fadb7-2f4a-4e05-b9b3-45ecad94344e
+[AUTH] Token Source: Header

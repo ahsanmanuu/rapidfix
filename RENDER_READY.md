@@ -14,7 +14,7 @@ Follow these exact settings to deploy your application on Render.
 | **Region** | `Singapore` (or nearest to you) |
 | **Branch** | `main` |
 | **Root Directory** | `.` (Leave as default) |
-| **Build Command** | `npm run build` |
+| **Build Command** | `npm install --prefix server --legacy-peer-deps && npm install --prefix client --legacy-peer-deps && npm run build --prefix client` |
 | **Start Command** | `npm start` |
 
 ## 3. Environment Variables
