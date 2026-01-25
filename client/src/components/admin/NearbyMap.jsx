@@ -58,9 +58,32 @@ const NearbyMap = ({ user }) => {
 
             const res = await api.post('/admin/nearby-entities', { latitude: lat, longitude: lng });
             if (res.data.success) {
+                const adminLat = lat;
+                const adminLng = lng;
+                const RADIUS_KM = 30;
+
+                // Simple Haversine for Client-side filtering (if server sends too many)
+                const getDistance = (lat1, lon1, lat2, lon2) => {
+                    const R = 6371; // km
+                    const dLat = (lat2 - lat1) * Math.PI / 180;
+                    const dLon = (lon2 - lon1) * Math.PI / 180;
+                    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    return R * c;
+                };
+
+                const validTechs = (res.data.technicians || []).filter(t => {
+                    const tLat = t.location?.latitude || t.latitude;
+                    const tLng = t.location?.longitude || t.longitude;
+                    if (!tLat || !tLng) return false;
+                    return getDistance(adminLat, adminLng, tLat, tLng) <= RADIUS_KM;
+                });
+
                 setEntities({
-                    users: res.data.users || [],
-                    technicians: res.data.technicians || []
+                    users: res.data.users || [], // Users might be global, but can filter similarly if needed
+                    technicians: validTechs
                 });
 
                 if (res.data.enforcedCenter && res.data.enforcedCenter.lat && res.data.enforcedCenter.lng) {
@@ -95,28 +118,9 @@ const NearbyMap = ({ user }) => {
 
     // --- Container that ensures Leaflet won't collide ---
     const MapWrapper = ({ children }) => {
-        const [shouldRender, setShouldRender] = useState(false);
-        const [instanceKey, setInstanceKey] = useState(0);
-
-        useEffect(() => {
-            // Force a new React key to guarantee a fresh DOM element
-            setInstanceKey(prev => prev + 1);
-            const timer = setTimeout(() => setShouldRender(true), 200);
-            return () => {
-                clearTimeout(timer);
-                setShouldRender(false);
-            };
-        }, []);
-
-        if (!shouldRender) return (
-            <div className="flex items-center justify-center h-full text-slate-400 bg-slate-50/50">
-                <div className="text-center">
-                    <div className="w-8 h-8 border-3 border-slate-300 border-t-blue-500 rounded-full animate-spin mx-auto mb-2" />
-                    <p className="text-xs font-bold uppercase tracking-wider">Syncing Territory Map...</p>
-                </div>
-            </div>
-        );
-        return <div key={`admin-map-instance-${instanceKey}`} className="w-full h-full">{children}</div>;
+        // [FIX] Removed forced re-mounting logic that caused blinking
+        // Only ensuring container exists
+        return <div className="w-full h-full">{children}</div>;
     };
 
     return (

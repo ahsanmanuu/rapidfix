@@ -229,6 +229,9 @@ class JobManager {
 
             // 1. Pre-Check Wallet Balance
             if (paymentMethod === 'wallet') {
+                if (!userId) {
+                    throw new Error("User must be logged in to use wallet.");
+                }
                 const balance = await this.financeManager.getBalance(userId);
                 if (balance < total) {
                     throw new Error("Insufficient wallet balance.");

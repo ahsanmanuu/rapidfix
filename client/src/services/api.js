@@ -73,6 +73,8 @@ export const getRidesByTechnician = (techId) => api.get(`/rides/technician/${tec
 
 export const getOffers = () => api.get('/offers');
 export const createOffer = (data) => api.post('/offers', data);
+export const acceptOffer = (offerId) => api.post(`/offers/${offerId}/accept`);
+export const deleteOffer = (offerId) => api.delete(`/offers/${offerId}`);
 export const getUserOffers = (userId) => api.get(`/offers/user/${userId}`);
 export const getTestimonials = () => api.get('/testimonials'); // [NEW] Public Testimonials
 export const getWalletBalance = (userId) => api.get(`/finance/wallet/${userId}`);

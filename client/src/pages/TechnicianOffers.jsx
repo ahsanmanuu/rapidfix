@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TechnicianLayout from '../components/TechnicianLayout';
+import { getOffers, acceptOffer } from '../services/api';
 
 // Helper for Material Symbols
 const MaterialIcon = ({ name, className = "" }) => (
@@ -34,21 +35,63 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 const TechnicianOffers = () => {
     const [activeTab, setActiveTab] = useState('Admin Offers');
     const [activeModal, setActiveModal] = useState(null); // 'offers', 'targets', 'contracts', 'history'
+    const [offers, setOffers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock Content for Modals
+    useEffect(() => {
+        const fetchOffers = async () => {
+            try {
+                const res = await getOffers();
+                if (res.data.success) {
+                    setOffers(res.data.offers || []);
+                }
+            } catch (err) {
+                console.error("Failed to fetch offers:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOffers();
+    }, []);
+
+    const handleAccept = async (offerId) => {
+        try {
+            const res = await acceptOffer(offerId);
+            if (res.data.success) {
+                alert("Offer Accepted / Job Created!");
+                // Refresh offers
+                const updated = offers.filter(o => o.id !== offerId);
+                setOffers(updated);
+            }
+        } catch (err) {
+            console.error("Failed to accept offer:", err);
+            alert(err.response?.data?.error || "Failed to accept offer");
+        }
+    };
+
+    // Filter offers based on tab (Conceptual filtering for now)
+    const filteredOffers = offers.filter(offer => {
+        if (activeTab === 'Admin Offers') return true; // Show all for now
+        // Implement specific logic based on offer properties later
+        return true;
+    });
+
+    // Mock Content for Modals (Keep static for now as they are specific features)
     const renderModalContent = () => {
         switch (activeModal) {
             case 'offers':
                 return (
                     <div className="space-y-4">
-                        <p className="text-sm text-[#4c9a73]">You have 3 active offers available this week.</p>
-                        <div className="p-3 border border-[#13ec80] bg-[#13ec80]/5 rounded-lg flex gap-3 items-center">
-                            <MaterialIcon name="bolt" className="text-[#13ec80]" />
-                            <div>
-                                <p className="font-bold text-[#0d1b14] text-sm">Weekend Hustle</p>
-                                <p className="text-xs text-[#4c9a73]">1.5x Payout Surge</p>
+                        <p className="text-sm text-[#4c9a73]">You have {offers.length} active offers available.</p>
+                        {offers.slice(0, 3).map(offer => (
+                            <div key={offer.id} className="p-3 border border-[#13ec80] bg-[#13ec80]/5 rounded-lg flex gap-3 items-center">
+                                <MaterialIcon name="bolt" className="text-[#13ec80]" />
+                                <div>
+                                    <p className="font-bold text-[#0d1b14] text-sm">{offer.title}</p>
+                                    <p className="text-xs text-[#4c9a73]">{offer.description}</p>
+                                </div>
                             </div>
-                        </div>
+                        ))}
                     </div>
                 );
             case 'targets':
@@ -74,13 +117,6 @@ const TechnicianOffers = () => {
                             </div>
                             <p className="text-xs text-[#4c9a73]">Monthly Maintenance • ₹15,000/mo</p>
                         </div>
-                        <div className="p-3 border border-[#e7f3ed] rounded-lg opacity-60">
-                            <div className="flex justify-between mb-1">
-                                <p className="font-bold text-[#0d1b14] text-sm">City Mall Plaza</p>
-                                <span className="bg-orange-100 text-orange-600 text-[10px] px-2 py-0.5 rounded font-bold">Pending</span>
-                            </div>
-                            <p className="text-xs text-[#4c9a73]">Electrical Contract • Reviewing</p>
-                        </div>
                     </div>
                 );
             case 'history':
@@ -89,10 +125,6 @@ const TechnicianOffers = () => {
                         <div className="flex justify-between items-center text-sm p-2 hover:bg-[#f6f8f7] rounded">
                             <span className="text-[#0d1b14] font-medium">Amazon Voucher</span>
                             <span className="text-[#4c9a73]">-500 pts</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm p-2 hover:bg-[#f6f8f7] rounded">
-                            <span className="text-[#0d1b14] font-medium">Cash Withdrawal</span>
-                            <span className="text-[#4c9a73]">-1200 pts</span>
                         </div>
                     </div>
                 );
@@ -183,7 +215,7 @@ const TechnicianOffers = () => {
                     {/* Featured Carousel */}
                     <div className="px-8 pt-8">
                         <div className="flex overflow-x-auto gap-4 pb-6 scrollbar-hide snap-x">
-                            {/* Carousel Card 1 */}
+                            {/* Static Promotional Cards (Can be made dynamic later) */}
                             <div className="min-w-[85vw] md:min-w-[600px] flex-1 snap-start relative group rounded-2xl overflow-hidden bg-black aspect-[21/9] shadow-lg">
                                 <div className="absolute inset-0 bg-cover bg-center opacity-60 transition-transform duration-500 group-hover:scale-105" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2000&auto=format&fit=crop')" }}></div>
                                 <div className="absolute inset-0 bg-gradient-to-r from-black/90 to-transparent"></div>
@@ -196,19 +228,6 @@ const TechnicianOffers = () => {
                                     </button>
                                 </div>
                             </div>
-                            {/* Carousel Card 2 */}
-                            <div className="min-w-[85vw] md:min-w-[600px] flex-1 snap-start relative group rounded-2xl overflow-hidden bg-[#102219] aspect-[21/9] shadow-lg">
-                                <div className="absolute inset-0 bg-cover bg-center opacity-60 transition-transform duration-500 group-hover:scale-105" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=2000&auto=format&fit=crop')" }}></div>
-                                <div className="absolute inset-0 bg-gradient-to-r from-[#0d1b14]/90 to-transparent"></div>
-                                <div className="relative h-full flex flex-col justify-center p-6 md:p-10 max-w-xl">
-                                    <span className="bg-orange-400 text-white text-[10px] font-bold px-2 py-1 rounded-full w-fit mb-4 uppercase tracking-wider">Seasonal Surge</span>
-                                    <h2 className="text-white text-2xl md:text-3xl font-bold mb-2 leading-tight">2x Payouts This Weekend</h2>
-                                    <p className="text-gray-300 text-sm mb-6 max-w-sm hidden md:block">Complete 3+ emergency calls during peak hours (6 PM - 11 PM) for double bonus points.</p>
-                                    <button className="flex items-center gap-2 bg-[#13ec80] text-[#0d1b14] px-6 py-2.5 rounded-lg font-bold text-sm w-fit transition-transform hover:scale-105 hover:bg-[#13ec80]/90">
-                                        Track Progress <MaterialIcon name="trending_up" className="text-sm" />
-                                    </button>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -217,10 +236,10 @@ const TechnicianOffers = () => {
                         <div className="flex items-end justify-between mb-4">
                             <h2 className="text-[#0d1b14] text-2xl font-bold">Active Opportunities</h2>
                             <div className="flex gap-2">
-                                <span className="text-xs text-[#4c9a73] font-medium">Viewing 12 active offers</span>
+                                <span className="text-xs text-[#4c9a73] font-medium">Viewing {offers.length} active offers</span>
                             </div>
                         </div>
-                        <div className="flex border-b border-[#cfe7db] gap-8 overflow-x-auto"> {/* Added scroll for tabs on mobile */}
+                        <div className="flex border-b border-[#cfe7db] gap-8 overflow-x-auto">
                             {['Admin Offers', 'Super Admin Exclusives', 'Targeted Goals', 'Seasonal'].map((tab) => (
                                 <button
                                     key={tab}
@@ -238,127 +257,57 @@ const TechnicianOffers = () => {
 
                     {/* Offers Grid */}
                     <div className="px-8 pb-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        {/* Offer Card 1: Annual Bonus */}
-                        <div className="bg-white rounded-2xl border border-[#e7f3ed] overflow-hidden shadow-sm hover:shadow-lg transition-all group duration-300">
-                            <div className="h-1.5 bg-blue-500 w-full"></div>
-                            <div className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-2 bg-blue-50 text-blue-500 rounded-lg">
-                                        <MaterialIcon name="workspace_premium" />
-                                    </div>
-                                    <span className="bg-red-50 text-red-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                                        <MaterialIcon name="timer" className="text-[14px]" /> 12d Left
-                                    </span>
-                                </div>
-                                <h3 className="text-[#0d1b14] text-lg font-bold mb-1">Annual Loyalty Bonus</h3>
-                                <p className="text-sm text-[#4c9a73] mb-4">Complete 500 jobs this year to unlock elite status rewards.</p>
-                                <div className="bg-[#f6f8f7] p-4 rounded-xl mb-6">
-                                    <div className="flex justify-between items-end">
-                                        <div>
-                                            <p className="text-[10px] font-bold text-[#4c9a73] uppercase tracking-wider mb-1">Potential Reward</p>
-                                            <p className="text-2xl font-black text-[#0d1b14]">₹50,000</p>
+                        {loading ? (
+                            <div className="col-span-full py-10 text-center text-gray-400">Loading offers...</div>
+                        ) : offers.length === 0 ? (
+                            <div className="col-span-full py-10 text-center text-gray-400">No active offers at the moment.</div>
+                        ) : (
+                            offers.map(offer => (
+                                <div key={offer.id} className="bg-white rounded-2xl border border-[#e7f3ed] overflow-hidden shadow-sm hover:shadow-lg transition-all group duration-300">
+                                    <div className={`h-1.5 w-full ${offer.type === 'job_bid' ? 'bg-[#13ec80]' : 'bg-blue-500'}`}></div>
+                                    <div className="p-6">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className={`p-2 rounded-lg ${offer.type === 'job_bid' ? 'bg-[#13ec80]/10 text-[#13ec80]' : 'bg-blue-50 text-blue-500'}`}>
+                                                <MaterialIcon name={offer.type === 'job_bid' ? 'bolt' : 'workspace_premium'} />
+                                            </div>
+                                            {offer.expiryDate && (
+                                                <span className="bg-red-50 text-red-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                    <MaterialIcon name="timer" className="text-[14px]" />
+                                                    {new Date(offer.expiryDate).toLocaleDateString()}
+                                                </span>
+                                            )}
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-[10px] font-bold text-blue-500 mb-1 uppercase">Progress</p>
-                                            <p className="text-sm font-bold text-[#0d1b14]">412/500</p>
+                                        <h3 className="text-[#0d1b14] text-lg font-bold mb-1">{offer.title}</h3>
+                                        <p className="text-sm text-[#4c9a73] mb-4">{offer.description}</p>
+
+                                        <div className="mb-6">
+                                            {offer.price ? (
+                                                <div className="bg-[#f6f8f7] p-3 rounded-lg border border-[#e7f3ed]">
+                                                    <p className="text-[9px] font-bold text-[#4c9a73] uppercase">Value</p>
+                                                    <p className="text-xl font-bold text-[#0d1b14]">₹{offer.price}</p>
+                                                </div>
+                                            ) : (
+                                                <div className="bg-[#13ec80]/5 p-4 rounded-xl">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <span className="text-xs font-bold text-[#0d1b14]">CODE</span>
+                                                        <span className="text-[10px] text-[#13ec80] font-bold cursor-pointer hover:underline">COPY</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-between border-2 border-dashed border-[#13ec80]/30 p-2 rounded-lg">
+                                                        <code className="font-bold text-[#0d1b14] tracking-wide">{offer.code || 'N/A'}</code>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-[#e7f3ed] rounded-full mt-3 overflow-hidden">
-                                        <div className="bg-blue-500 h-full w-[82%] rounded-full"></div>
-                                    </div>
-                                </div>
-                                <button className="w-full py-3 border-2 border-[#13ec80] text-[#0d1b14] rounded-xl font-bold text-sm hover:bg-[#13ec80] transition-colors">
-                                    View Full Milestones
-                                </button>
-                            </div>
-                        </div>
 
-                        {/* Offer Card 2: Targeted */}
-                        <div className="bg-white rounded-2xl border border-[#e7f3ed] overflow-hidden shadow-sm hover:shadow-lg transition-all group duration-300">
-                            <div className="h-1.5 bg-[#13ec80] w-full"></div>
-                            <div className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-2 bg-[#13ec80]/10 text-[#13ec80] rounded-lg">
-                                        <MaterialIcon name="bolt" />
-                                    </div>
-                                    <span className="bg-orange-50 text-orange-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                                        <MaterialIcon name="schedule" className="text-[14px]" /> Expires in 14h
-                                    </span>
-                                </div>
-                                <h3 className="text-[#0d1b14] text-lg font-bold mb-1">Weekend Hustle</h3>
-                                <p className="text-sm text-[#4c9a73] mb-4">Complete 5 extra jobs this weekend for an instant 1.5x payout surge.</p>
-                                <div className="bg-[#13ec80]/5 p-4 rounded-xl mb-6">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-xs font-bold text-[#0d1b14]">PROMO CODE</span>
-                                        <span className="text-[10px] text-[#13ec80] font-bold cursor-pointer hover:underline">CLICK TO COPY</span>
-                                    </div>
-                                    <div className="flex items-center justify-between border-2 border-dashed border-[#13ec80]/30 p-2 rounded-lg cursor-pointer hover:bg-[#13ec80]/10 transition-colors group/code">
-                                        <code className="font-bold text-[#0d1b14] tracking-wide">WKNDSURGE24</code>
-                                        <MaterialIcon name="content_copy" className="text-sm text-[#4c9a73] group-hover/code:text-[#13ec80]" />
+                                        <button
+                                            onClick={() => handleAccept(offer.id)}
+                                            className="w-full py-3 bg-[#13ec80] text-[#0d1b14] rounded-xl font-bold text-sm shadow-md hover:shadow-lg hover:bg-[#13ec80]/90 transition-all">
+                                            {offer.type === 'job_bid' ? 'Accept Job' : 'Claim Offer'}
+                                        </button>
                                     </div>
                                 </div>
-                                <button className="w-full py-3 bg-[#13ec80] text-[#0d1b14] rounded-xl font-bold text-sm shadow-md hover:shadow-lg hover:bg-[#13ec80]/90 transition-all">
-                                    Activate Offer
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Offer Card 3: AMC Plans */}
-                        <div className="bg-white rounded-2xl border border-[#e7f3ed] overflow-hidden shadow-sm hover:shadow-lg transition-all group duration-300">
-                            <div className="h-1.5 bg-orange-400 w-full"></div>
-                            <div className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-2 bg-orange-50 text-orange-400 rounded-lg">
-                                        <MaterialIcon name="assignment_ind" />
-                                    </div>
-                                    <span className="bg-green-50 text-green-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                                        <MaterialIcon name="verified" className="text-[14px]" /> Featured
-                                    </span>
-                                </div>
-                                <h3 className="text-[#0d1b14] text-lg font-bold mb-1">Elite AMC Portfolio</h3>
-                                <p className="text-sm text-[#4c9a73] mb-4">Lock in 10 high-value building maintenance contracts in your area.</p>
-                                <div className="grid grid-cols-2 gap-3 mb-6">
-                                    <div className="bg-[#f6f8f7] p-3 rounded-lg border border-[#e7f3ed]">
-                                        <p className="text-[9px] font-bold text-[#4c9a73] uppercase">Avg Contract</p>
-                                        <p className="text-sm font-bold text-[#0d1b14]">₹12,000/mo</p>
-                                    </div>
-                                    <div className="bg-[#f6f8f7] p-3 rounded-lg border border-[#e7f3ed]">
-                                        <p className="text-[9px] font-bold text-[#4c9a73] uppercase">Commitment</p>
-                                        <p className="text-sm font-bold text-[#0d1b14]">12 Months</p>
-                                    </div>
-                                </div>
-                                <button className="w-full py-3 bg-black text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all">
-                                    Review Contracts
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Offer Card 4: Referral */}
-                        <div className="bg-white rounded-2xl border border-[#e7f3ed] overflow-hidden shadow-sm hover:shadow-lg transition-all group duration-300">
-                            <div className="h-1.5 bg-purple-500 w-full"></div>
-                            <div className="p-6">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="p-2 bg-purple-50 text-purple-500 rounded-lg">
-                                        <MaterialIcon name="group_add" />
-                                    </div>
-                                    <span className="bg-purple-50 text-purple-500 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Ongoing</span>
-                                </div>
-                                <h3 className="text-[#0d1b14] text-lg font-bold mb-1">Refer a Pro</h3>
-                                <p className="text-sm text-[#4c9a73] mb-4">Earn ₹2,000 for every certified plumber or electrician you bring to the hub.</p>
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="flex -space-x-3">
-                                        <div className="size-8 rounded-full border-2 border-white bg-gray-200 bg-cover" style={{ backgroundImage: "url('https://i.pravatar.cc/100?img=11')" }}></div>
-                                        <div className="size-8 rounded-full border-2 border-white bg-gray-300 bg-cover" style={{ backgroundImage: "url('https://i.pravatar.cc/100?img=12')" }}></div>
-                                        <div className="size-8 rounded-full border-2 border-white bg-[#13ec80] flex items-center justify-center text-[10px] font-bold text-[#0d1b14]">+</div>
-                                    </div>
-                                    <span className="text-xs font-semibold text-[#0d1b14]">4 Pros Referred</span>
-                                </div>
-                                <button className="w-full py-3 bg-[#e7f3ed] text-[#0d1b14] rounded-xl font-bold text-sm hover:bg-[#13ec80] transition-all">
-                                    Invite Friends
-                                </button>
-                            </div>
-                        </div>
-
+                            ))
+                        )}
                     </div>
                 </div>
 

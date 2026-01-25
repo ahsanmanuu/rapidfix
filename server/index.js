@@ -1520,6 +1520,68 @@ app.post('/api/locations', async (req, res) => {
   }
 });
 
+// --- Offer Routes ---
+app.get('/api/offers', authenticateSession, async (req, res) => {
+  try {
+    const { userId, type } = req.query;
+    // If technician, maybe filter relevant offers? For now, return all active.
+    let offers = await offerManager.getAllOffers();
+    if (userId) offers = offers.filter(o => o.userId === userId);
+    if (type) offers = offers.filter(o => o.type === type);
+    res.json({ success: true, offers });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/offers', authenticateSession, async (req, res) => {
+  try {
+    // Only Admin/SuperAdmin/Technician(for bids)
+    // Assuming Technicians can create 'job_bid' offers
+    if (req.body.type !== 'job_bid' && !['admin', 'superadmin'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
+    }
+
+    // If technician creating a bid, enforce userId
+    if (req.body.type === 'job_bid' && req.user.role === 'technician') {
+      req.body.userId = req.user.id;
+    }
+
+    const offer = await offerManager.createOffer(req.body);
+    res.json({ success: true, offer });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/offers/:id/accept', authenticateSession, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const technicianId = req.user.id; // The one accepting
+
+    if (req.user.role !== 'technician') {
+      return res.status(403).json({ success: false, error: 'Only technicians can accept offers' });
+    }
+
+    const job = await offerManager.acceptOffer(id, technicianId);
+    res.json({ success: true, job });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/offers/:id', authenticateSession, async (req, res) => {
+  try {
+    if (!['admin', 'superadmin'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
+    }
+    await offerManager.deleteOffer(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // --- Complaint Routes ---
 // --- Complaint Routes ---
 app.post('/api/complaints', async (req, res) => {
@@ -2132,6 +2194,105 @@ app.get('/api/technicians/:id/stats', async (req, res) => {
 
   } catch (error) {
     console.error("Technician Stats Error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// [NEW] Dashboard Stats Endpoint (Aggregated for Technician Dashboard)
+app.get('/api/technicians/:id/dashboard-stats', async (req, res) => {
+  try {
+    const techId = req.params.id;
+    const tech = await technicianManager.getTechnician(techId);
+    if (!tech) return res.status(404).json({ success: false, error: 'Technician not found' });
+
+    // 1. Fetch All Jobs for Tech
+    const allJobs = await jobManager.getJobsByTechnician(techId);
+
+    // 2. Filter Lists
+    const activeJobs = allJobs.filter(j => ['assigned', 'accepted', 'in_progress', 'started', 'arrived'].includes(j.status));
+
+    // 3. Calculate Stats
+    const completedJobs = allJobs.filter(j => j.status === 'completed' || j.status === 'work_done');
+    const rejectedJobs = allJobs.filter(j => j.status === 'rejected');
+    const acceptedJobs = allJobs.filter(j => j.status === 'accepted');
+
+    // Earnings
+    const balance = await financeManager.getBalance(techId, true);
+
+    // Monthly & Today Earnings
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const todayStr = now.toDateString();
+
+    const transactions = await financeManager.getTransactionsByUser(techId, true);
+
+    const monthlyRevenue = transactions.reduce((sum, t) => {
+      const tDate = new Date(t.createdAt);
+      if (tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear && t.type === 'credit') {
+        return sum + t.amount;
+      }
+      return sum;
+    }, 0);
+
+    const todayEarnings = transactions.reduce((sum, t) => {
+      const tDate = new Date(t.createdAt);
+      if (tDate.toDateString() === todayStr && t.type === 'credit') {
+        return sum + t.amount;
+      }
+      return sum;
+    }, 0);
+
+    const stats = {
+      earnings: balance,
+      completedJobs: completedJobs.length,
+      rating: tech.rating || 0,
+      active: activeJobs.length,
+      pending: allJobs.filter(j => j.status === 'assigned').length,
+      todayEarnings,
+      monthlyRevenue,
+      usersServed: new Set(completedJobs.map(j => j.userId)).size,
+      complaints: 0, // Placeholder
+      accepted: acceptedJobs.length,
+      rejected: rejectedJobs.length
+    };
+
+    // 4. Earnings Data (Last 7 Days)
+    const earningsData = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayStr = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayDateStr = d.toDateString();
+
+      const dayAmount = transactions.reduce((sum, t) => {
+        const tDate = new Date(t.createdAt);
+        if (tDate.toDateString() === dayDateStr && t.type === 'credit') return sum + t.amount;
+        return sum;
+      }, 0);
+
+      earningsData.push({ name: dayStr, amount: dayAmount });
+    }
+
+    // 5. Activity Feed (From Notifications for now)
+    const notifications = notificationManager.getNotifications(techId);
+    const activityFeed = notifications.slice(0, 10).map(n => ({
+      id: n.id,
+      description: n.message,
+      time: n.createdAt,
+      type: n.type
+    }));
+
+    res.json({
+      success: true,
+      stats,
+      activeJobs,
+      activityFeed,
+      earningsData
+    });
+
+  } catch (error) {
+    console.error("Dashboard Stats Error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

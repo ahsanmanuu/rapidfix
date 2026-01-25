@@ -69,8 +69,8 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
     const displayTime = jobDetails?.scheduledTime || new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     useEffect(() => {
-        setInsufficientFunds(paymentMethod === 'wallet' && walletBalance < pricing.total);
-    }, [paymentMethod, walletBalance, pricing]);
+        setInsufficientFunds(user && paymentMethod === 'wallet' && walletBalance < pricing.total);
+    }, [user, paymentMethod, walletBalance, pricing]);
 
     if (!isOpen) return null;
 
@@ -209,8 +209,8 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                                     </div>
                                     <div className="text-center">
                                         <p className="font-bold text-sm">Wallet</p>
-                                        <p className={`text-xs font-semibold ${walletBalance < pricing.total ? 'text-red-500' : 'text-gray-500'}`}>
-                                            ₹{walletBalance}
+                                        <p className={`text-xs font-semibold ${user && walletBalance < pricing.total ? 'text-red-500' : 'text-gray-500'}`}>
+                                            {user ? `₹${walletBalance}` : 'Login to see'}
                                         </p>
                                     </div>
                                     {paymentMethod === 'wallet' && (
@@ -310,7 +310,11 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                                     : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
                                 }`}
                         >
-                            {insufficientFunds && paymentMethod === 'wallet' ? (
+                            {!user ? (
+                                <>
+                                    <ShieldCheck size={20} /> Login & Book Now
+                                </>
+                            ) : insufficientFunds && paymentMethod === 'wallet' ? (
                                 <>
                                     <PlusCircle size={20} /> Add Funds & Pay
                                 </>

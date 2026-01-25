@@ -374,9 +374,8 @@ class TechnicianManager extends BaseManager {
             const lon = parseFloat(userLon);
             const type = this._normalizeType(serviceType);
 
-            // [UPDATED] Relaxed limit for testing/demo availability
-            // const effectiveRadius = Math.min(Number(radius) || 30, 30);
-            const effectiveRadius = Number(radius) || 10000; // Global search for demo
+            // [UPDATED] Radius is now 30km by default as per requirement
+            const effectiveRadius = Number(radius) || 30;
 
             // Fix: Fetch technicians from DB if not available in scope
             const allTechs = await this.db.read();
