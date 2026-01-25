@@ -13,6 +13,8 @@ const AddFundsModal = ({ isOpen, onClose, onSuccess }) => {
     const [method, setMethod] = useState('phonepe');
 
     if (!isOpen) return null;
+    // [FIX] Safety check: If no user, don't show (prevents crash on user.id access)
+    if (!user) return null;
 
     const handleApplyPromo = async () => {
         if (!promoCode) return;

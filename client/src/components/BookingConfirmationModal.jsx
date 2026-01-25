@@ -82,7 +82,22 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
     const handleConfirm = () => {
         if (!agreement) return alert("Please agree to the terms.");
 
-        // Wallet Balance Check
+        // [FIX] Guest Logic: If not logged in, proceed to OnConfirm (which should handle login)
+        // Do NOT check wallet balance for guests (balance is 0, so it would always trigger Add Funds)
+        if (!user) {
+            onConfirm({
+                ...jobDetails,
+                description,
+                visitingCharges: pricing.total,
+                agreementAccepted: true,
+                paymentMethod,
+                paymentStatus: 'pending', // Will be handled after login
+                technicianId: technician?.id || null
+            });
+            return;
+        }
+
+        // Wallet Balance Check (Only for Logged In Users)
         if (paymentMethod === 'wallet') {
             if (walletBalance < pricing.total) {
                 setShowAddFunds(true);

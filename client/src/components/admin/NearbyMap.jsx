@@ -33,6 +33,21 @@ const adminIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
+const RecenterMap = ({ center }) => {
+    const map = useMap();
+    useEffect(() => {
+        if (center && center[0] !== 0) {
+            map.setView(center, map.getZoom());
+        }
+    }, [center, map]);
+    return null;
+};
+
+// --- Container that ensures Leaflet won't collide ---
+const MapWrapper = ({ children }) => {
+    return <div className="w-full h-full">{children}</div>;
+};
+
 const NearbyMap = ({ user }) => {
     const [entities, setEntities] = useState({ users: [], technicians: [] });
     // Initialize center
@@ -105,23 +120,6 @@ const NearbyMap = ({ user }) => {
         const interval = setInterval(() => fetchNearby(false), 30000);
         return () => clearInterval(interval);
     }, [user]);
-
-    const RecenterMap = ({ center }) => {
-        const map = useMap();
-        useEffect(() => {
-            if (center && center[0] !== 0) {
-                map.setView(center, map.getZoom());
-            }
-        }, [center, map]);
-        return null;
-    };
-
-    // --- Container that ensures Leaflet won't collide ---
-    const MapWrapper = ({ children }) => {
-        // [FIX] Removed forced re-mounting logic that caused blinking
-        // Only ensuring container exists
-        return <div className="w-full h-full">{children}</div>;
-    };
 
     return (
         <div className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 z-0">
