@@ -333,3 +333,6 @@ BEGIN
         CREATE POLICY "Service role has full access" ON chats FOR ALL USING (auth.role() = 'service_role');
     END IF;
 END $$;
+- -   A d d   r e a s o n   c o l u m n   t o   j o b s   t a b l e   t o   s u p p o r t   r e j e c t i o n   r e a s o n s   a n d   c a n c e l l a t i o n s  
+ A L T E R   T A B L E   j o b s   A D D   C O L U M N   I F   N O T   E X I S T S   r e a s o n   T E X T ;  
+ 

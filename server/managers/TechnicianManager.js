@@ -46,7 +46,15 @@ class TechnicianManager extends BaseManager {
             const acceptedJobs = tech.accepted_jobs || tech.acceptedJobs || 0;
 
             const documents = tech.documents || {};
-            const location = tech.location || {};
+            let location = tech.location || {};
+            if (typeof location === 'string') {
+                try {
+                    location = JSON.parse(location);
+                } catch (e) {
+                    // console.warn("Failed to parse location JSON", e);
+                    location = {};
+                }
+            }
             const baseAddress = tech.base_address || tech.baseAddress;
             const serviceRadius = tech.service_radius || tech.serviceRadius || 2;
 
@@ -74,6 +82,7 @@ class TechnicianManager extends BaseManager {
 
             return {
                 ...tech,
+                role: 'technician',
                 serviceType,
                 addressDetails,
                 reviewCount,
@@ -400,15 +409,19 @@ class TechnicianManager extends BaseManager {
                     tLon = tech.registeredLongitude || tech.fixedLongitude;
                 }
 
-                // Checking valid numbers
-                if (tLat === undefined || tLon === undefined || isNaN(parseFloat(tLat)) || isNaN(parseFloat(tLon))) return null;
+                const parsedLat = parseFloat(tLat);
+                const parsedLon = parseFloat(tLon);
 
-                const dist = this.calculateDistance(lat, lon, parseFloat(tLat), parseFloat(tLon));
+                // Checking valid numbers and EXCLUDE (0,0) as it's likely a default/bug
+                if (isNaN(parsedLat) || isNaN(parsedLon)) return null;
+                if (Math.abs(parsedLat) < 0.0001 && Math.abs(parsedLon) < 0.0001) return null;
+
+                const dist = this.calculateDistance(lat, lon, parsedLat, parsedLon);
                 const { password, ...rest } = tech;
 
                 return {
                     ...rest,
-                    location: { latitude: tLat, longitude: tLon, address: tech.baseAddress || '' },
+                    location: { latitude: parsedLat, longitude: parsedLon, address: tech.baseAddress || '' },
                     distance: parseFloat(dist.toFixed(1))
                 };
             }).filter(item => item !== null && item.distance <= effectiveRadius);

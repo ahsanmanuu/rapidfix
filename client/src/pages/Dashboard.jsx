@@ -162,7 +162,23 @@ const Dashboard = () => {
 
         const handleRealtimeUpdate = (data) => {
             console.log("Realtime Update Received:", data);
-            fetchJobs(user.id);
+
+            // [OPTIMISTIC] Update jobs state immediately if data contains job info
+            if (data && data.id) {
+                setJobs(prevJobs => {
+                    const exists = prevJobs.some(j => j.id === data.id);
+                    if (exists) {
+                        return prevJobs.map(j => j.id === data.id ? { ...j, ...data } : j);
+                    } else {
+                        // If it's a new job, prepend it
+                        return [data, ...prevJobs];
+                    }
+                });
+            } else {
+                // Fallback to fetch if data is incomplete
+                fetchJobs(user.id);
+            }
+
             // Also refresh profile if needed
             fetchProfile(user.id);
         };

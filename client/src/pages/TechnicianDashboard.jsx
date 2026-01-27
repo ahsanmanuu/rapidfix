@@ -46,45 +46,7 @@ const StatCard = ({ icon: Icon, label, value, colorClass, iconBgClass, compact }
     </motion.div>
 );
 
-const LocationCard = ({ user }) => {
-    const [addr, setAddr] = useState(null);
-    const lat = user?.latitude || user?.fixedLatitude || user?.registeredLatitude || user?.location?.latitude;
-    const lng = user?.longitude || user?.fixedLongitude || user?.registeredLongitude || user?.location?.longitude;
 
-    // Explicit Address String Name (Preferred)
-    const storedAddress = user?.addressDetails || user?.baseAddress || user?.location?.address;
-
-    // Fallback
-    const coordString = (lat && lng) ? `${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)}` : "Pending...";
-
-    const display = storedAddress || addr || coordString;
-
-    useMemo(() => {
-        if (!storedAddress && lat && lng && !addr) {
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data && data.display_name) {
-                        // Cleanup
-                        const parts = data.display_name.split(',').slice(0, 3).join(', ');
-                        setAddr(parts);
-                    }
-                })
-                .catch(e => console.error(e));
-        }
-    }, [lat, lng, storedAddress, addr]);
-
-    return (
-        <StatCard
-            icon={MapPin}
-            label="Registered Location"
-            value={display}
-            colorClass="border-l-indigo-500"
-            iconBgClass="bg-indigo-50 text-indigo-600"
-            compact
-        />
-    );
-};
 
 const OtpVerificationModal = ({ isOpen, onClose, onVerify, loading }) => {
     const [otp, setOtp] = useState(['', '', '', '']);
@@ -374,7 +336,7 @@ const TechnicianDashboard = () => {
 
     return (
         <TechnicianLayout title="Dashboard">
-            <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50/50 p-6 lg:p-8 scroll-smooth">
+            <div className="h-full">
                 <motion.div
                     className="max-w-7xl mx-auto space-y-6 lg:space-y-8"
                     variants={containerVariants}
@@ -535,7 +497,6 @@ const TechnicianDashboard = () => {
                         <StatCard icon={X} label="Rejected Jobs" value={stats.rejected || 0} colorClass="border-l-rose-500" iconBgClass="bg-rose-50 text-rose-600" compact />
                         <StatCard icon={User} label="Users Served" value={stats.usersServed || 0} colorClass="border-l-cyan-500" iconBgClass="bg-cyan-50 text-cyan-600" compact />
                         <StatCard icon={AlertCircle} label="Complaints" value={stats.complaints || 0} colorClass="border-l-red-600" iconBgClass="bg-red-50 text-red-600" compact />
-                        <LocationCard user={user} />
                         <StatCard icon={Zap} label="Customer Rating" value={`${stats.rating || 0}/5`} colorClass="border-l-amber-400" iconBgClass="bg-amber-50 text-amber-500" compact />
                     </motion.div>
 

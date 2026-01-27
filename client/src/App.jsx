@@ -13,6 +13,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import JobHistoryLog from './pages/JobHistoryLog';
 import Wallet from './pages/Wallet';
+import TechWallet from './pages/TechWallet';
 import EarningsHub from './pages/EarningsHub';
 import FeedbackHub from './pages/FeedbackHub';
 import TechnicianOffers from './pages/TechnicianOffers';
@@ -31,7 +32,7 @@ function App() {
   const navigate = useNavigate();
 
   const { pathname } = useLocation();
-  const isDashboard = pathname.includes('dashboard') || pathname.includes('wallet') || pathname.includes('job-history') || pathname.includes('earnings-hub') || pathname.includes('feedback-hub') || pathname.includes('technician-offers');
+  const isDashboard = pathname.includes('dashboard') || pathname.includes('wallet') || pathname.includes('job-history') || pathname.includes('earnings-hub') || pathname.includes('feedback-hub') || pathname.includes('technician-offers') || pathname.includes('technician/chat');
 
   return (
     <ThemeCustomization>
@@ -76,7 +77,7 @@ function App() {
               />
               <Route
                 path="/wallet"
-                element={user ? <Wallet /> : <Navigate to="/login" />}
+                element={user ? (user.role === 'technician' ? <TechWallet /> : <Wallet />) : <Navigate to="/login" />}
               />
               <Route
                 path="/earnings-hub"

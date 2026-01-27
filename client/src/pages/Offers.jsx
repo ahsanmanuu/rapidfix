@@ -17,27 +17,34 @@ const Offers = () => {
             fetchOffers();
         }
 
+        const handleNewOffer = (newOffer) => {
+            if (newOffer.type === 'job_bid' && newOffer.userId === user?.id) {
+                setMyBids(prev => [newOffer, ...prev]);
+            } else if (!newOffer.type || newOffer.type === 'coupon') {
+                setOffers(prev => [newOffer, ...prev]);
+            }
+        };
+
+        const handleOfferDelete = ({ id }) => {
+            setOffers(prev => prev.filter(o => o.id !== id));
+            setMyBids(prev => prev.filter(o => o.id !== id));
+        };
+
+        const handleOfferUpdate = (updatedOffer) => {
+            setMyBids(prev => prev.map(o => o.id === updatedOffer.id ? updatedOffer : o));
+        };
+
         if (socket) {
-            socket.on('new_offer_created', (newOffer) => {
-                if (newOffer.type === 'job_bid' && newOffer.userId === user?.id) {
-                    setMyBids(prev => [newOffer, ...prev]);
-                } else if (!newOffer.type || newOffer.type === 'coupon') {
-                    setOffers(prev => [newOffer, ...prev]);
-                }
-            });
-            socket.on('offer_deleted', ({ id }) => {
-                setOffers(prev => prev.filter(o => o.id !== id));
-                setMyBids(prev => prev.filter(o => o.id !== id));
-            });
-            socket.on('offer_updated', (updatedOffer) => {
-                setMyBids(prev => prev.map(o => o.id === updatedOffer.id ? updatedOffer : o));
-            });
+            socket.on('new_offer_created', handleNewOffer);
+            socket.on('offer_deleted', handleOfferDelete);
+            socket.on('offer_updated', handleOfferUpdate);
         }
 
         return () => {
             if (socket) {
-                socket.off('new_offer_created');
-                socket.off('offer_deleted');
+                socket.off('new_offer_created', handleNewOffer);
+                socket.off('offer_deleted', handleOfferDelete);
+                socket.off('offer_updated', handleOfferUpdate);
             }
         };
     }, [socket, user]);

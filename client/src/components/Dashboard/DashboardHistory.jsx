@@ -546,8 +546,17 @@ const DashboardHistory = ({ jobs = [] }) => {
     const [loading, setLoading] = useState(false);
     const [showFilters, setShowFilters] = useState(false); // Toggle for advanced filters on mobile/desktop
 
-    // Sync with props ONLY if no filters are active (to prevent overwriting filtered results on real-time updates)
+    // Sync with props: When 'jobs' prop updates (via parent's socket), merge into localJobs
     useEffect(() => {
+        setLocalJobs(prevLocal => {
+            // Map over existing local jobs and update if found in fresh prop
+            return prevLocal.map(localJob => {
+                const refreshed = jobs.find(j => j.id === localJob.id);
+                return refreshed ? { ...localJob, ...refreshed } : localJob;
+            });
+        });
+
+        // If NO filters active, full sync
         const hasFilters = search || (statusFilter && statusFilter !== 'all') || startDate || endDate;
         if (!hasFilters) {
             setLocalJobs(jobs);
@@ -633,10 +642,12 @@ const DashboardHistory = ({ jobs = [] }) => {
 
 
         socket.on('job_status_updated', handleJobUpdate);
-        socket.on('job_updated', handleJobUpdate); // Listen to both just in case
+        socket.on('job_status_change', handleJobUpdate);
+        socket.on('job_updated', handleJobUpdate);
 
         return () => {
             socket.off('job_status_updated', handleJobUpdate);
+            socket.off('job_status_change', handleJobUpdate);
             socket.off('job_updated', handleJobUpdate);
         };
     }, [socket]);

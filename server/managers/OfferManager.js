@@ -84,7 +84,7 @@ class OfferManager {
             );
 
             // Update Offer Status
-            await this.db.update(offerId, { status: 'accepted' });
+            await this.db.update('id', offerId, { status: 'accepted' });
 
             // Emit update
             if (this.io) {

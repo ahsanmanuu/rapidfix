@@ -302,9 +302,17 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                 <h2 className="text-lg font-bold text-gray-800">
                                     {searching ? 'Searching...' : `Nearby ${serviceType}s`}
                                 </h2>
-                                <p className="text-xs text-gray-500">
-                                    {searching ? 'Scanning area...' : `${sortedTechs.length} found within 30km`}
-                                </p>
+                                <div className="flex flex-col gap-1">
+                                    <p className="text-xs text-gray-500">
+                                        {searching ? 'Scanning area...' : `${sortedTechs.length} found within 30km`}
+                                    </p>
+                                    {userLocation?.address && (
+                                        <p className="text-[10px] text-gray-400 truncate max-w-full flex items-center gap-1">
+                                            <MapPin size={10} />
+                                            Near: {userLocation.address}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             {/* List */}

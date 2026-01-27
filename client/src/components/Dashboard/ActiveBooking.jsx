@@ -204,41 +204,45 @@ const ActiveBooking = ({ job }) => {
     useEffect(() => {
         if (!socket || !currentJob) return;
 
-        // Job Status Update
-        socket.on('job_status_updated', (updatedJob) => {
+        const handleStatusUpdate = (updatedJob) => {
             if (updatedJob.id === currentJob.id) {
                 setCurrentJob(prev => ({ ...prev, ...updatedJob }));
             }
-        });
+        };
 
-        // Job Full Update
-        socket.on('job_updated', (updatedJob) => {
+        const handleUpdate = (updatedJob) => {
             if (updatedJob.id === currentJob.id) {
                 setCurrentJob(updatedJob);
             }
-        });
+        };
 
-        // Technician Location Update
-        socket.on('technician_location_update', (data) => {
+        const handleLocationUpdate = (data) => {
             if (data.technicianId === currentJob.technicianId) {
-                setTechLocation({ lat: data.latitude, lng: data.longitude });
+                if (data.latitude && data.longitude) {
+                    setTechLocation({ lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) });
+                }
             }
-        });
+        };
 
-        // Chat Message Received
-        socket.on('receive_message', (message) => {
-            // Check if this message belongs to current tech chat AND current job
+        const handleReceiveMessage = (message) => {
             if ((message.senderId === currentJob.technicianId || message.receiverId === currentJob.technicianId) &&
-                (!message.jobId || message.jobId === currentJob.id)) { // [UPDATED] Filter by Job ID
+                (!message.jobId || message.jobId === currentJob.id)) {
                 setTechChatHistory(prev => [...prev, message]);
             }
-        });
+        };
+
+        socket.on('job_status_updated', handleStatusUpdate);
+        socket.on('job_status_change', handleStatusUpdate); // Added
+        socket.on('job_updated', handleUpdate);
+        socket.on('technician_location_update', handleLocationUpdate);
+        socket.on('receive_message', handleReceiveMessage);
 
         return () => {
-            socket.off('job_status_updated');
-            socket.off('job_updated');
-            socket.off('technician_location_update');
-            socket.off('receive_message');
+            socket.off('job_status_updated', handleStatusUpdate);
+            socket.off('job_status_change', handleStatusUpdate);
+            socket.off('job_updated', handleUpdate);
+            socket.off('technician_location_update', handleLocationUpdate);
+            socket.off('receive_message', handleReceiveMessage);
         };
     }, [socket, currentJob]);
 
@@ -259,8 +263,14 @@ const ActiveBooking = ({ job }) => {
     if (status === 'on_way') activeStep = 2; // Treat as part of active phase
 
     // Job Location
-    const jobLat = parseFloat(currentJob?.location?.latitude || 28.6139);
-    const jobLng = parseFloat(currentJob?.location?.longitude || 77.2090);
+    // [FIX] Checking specific object structure from Supabase vs Local JSON
+    // Sometimes it comes as location: { latitude: ..., longitude: ... } or location: { lat: ..., lng: ... }
+    const loc = currentJob?.location || {};
+    const rawLat = loc.latitude || loc.lat || 28.6139;
+    const rawLng = loc.longitude || loc.lng || 77.2090;
+
+    const jobLat = parseFloat(rawLat) || 28.6139;
+    const jobLng = parseFloat(rawLng) || 77.2090;
     const jobPos = { lat: jobLat, lng: jobLng };
 
     // Handler Functions
@@ -271,6 +281,7 @@ const ActiveBooking = ({ job }) => {
                 scheduledTime: rescheduleData.time,
                 description: `${currentJob.description || ''} [Rescheduled by User]`
             });
+            setRescheduleData({ date: '', time: '' }); // Clear
             setOpenReschedule(false);
             alert("Booking rescheduled successfully!");
         } catch (err) {
@@ -282,8 +293,13 @@ const ActiveBooking = ({ job }) => {
         if (!confirm("Are you sure you want to cancel this booking?")) return;
         try {
             await cancelJob(currentJob.id, cancelReason);
+            // Optimistic update locally
+            setCurrentJob(prev => ({ ...prev, status: 'cancelled', reason: cancelReason }));
             setOpenCancel(false);
             alert("Booking cancelled.");
+            // No need to navigate if we want to stay on the panel to show cancelled state, 
+            // but user expects to go back. 
+            // However, the socket update from parent will handle the 'jump' anyway.
             navigate('/dashboard');
         } catch (err) {
             alert("Failed to cancel: " + err.message);
@@ -382,16 +398,26 @@ const ActiveBooking = ({ job }) => {
     const [openRestriction, setOpenRestriction] = useState(false);
 
     const checkModificationAllowed = () => {
+        // [FIX] Grace Period: Allow modification if created < 15 mins ago
+        if (currentJob?.createdAt) {
+            const created = new Date(currentJob.createdAt);
+            const now = new Date();
+            const diffMins = (now - created) / (1000 * 60);
+            if (diffMins < 15) return true;
+        }
+
         if (!currentJob?.scheduledDate) return true;
 
         try {
             const dateStr = currentJob.scheduledDate.split('T')[0];
             const timeStr = currentJob.scheduledTime || '00:00';
-            const scheduled = new Date(`${dateStr}T${timeStr}`);
+            const scheduled = new Date(`${dateStr}T${timeStr.split(' ')[0]}`); // Safer parsing
             const now = new Date();
             const diffMs = scheduled - now;
             const diffHours = diffMs / (1000 * 60 * 60);
 
+            // Logic: Cannot cancel if < 2 hours remaining
+            // But if we are here, grace period check already failed, so strict 2 hour rule applies.
             return diffHours >= 2;
         } catch (e) {
             console.error("Time calc error", e);
@@ -609,7 +635,7 @@ const ActiveBooking = ({ job }) => {
                                                     })}>
                                                         <Popup>Job Location</Popup>
                                                     </Marker>
-                                                    {techLocation && (
+                                                    {techLocation && techLocation.lat !== undefined && techLocation.lng !== undefined && (
                                                         <Marker
                                                             position={[techLocation.lat, techLocation.lng]}
                                                             icon={new L.DivIcon({

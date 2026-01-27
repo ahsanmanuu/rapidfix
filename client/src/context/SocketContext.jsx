@@ -22,9 +22,10 @@ export const SocketProvider = ({ children, user }) => {
             newSocket.on('connect', () => {
                 console.log('Connected to socket server:', newSocket.id);
                 // Join user-specific room
-                const roomPrefix = user.role === 'technician' ? 'tech_' : 'user_';
+                const isTechnician = user.role === 'technician' || user.serviceType;
+                const roomPrefix = isTechnician ? 'tech_' : 'user_';
                 const roomName = `${roomPrefix}${user.id}`;
-                console.log(`🔌 Requesting to join room: ${roomName}`);
+                console.log(`🔌 Requesting to join room: ${roomName} (Role: ${user.role}, isTech: ${!!isTechnician})`);
                 newSocket.emit('join_room', roomName);
 
                 // Also update location immediately upon connection if available

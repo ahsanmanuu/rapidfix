@@ -19,6 +19,10 @@ class FeedbackManager {
         this.jobManager = jobManager;
     }
 
+    setAnalyticsManager(analyticsManager) {
+        this.analyticsManager = analyticsManager;
+    }
+
     _mapFromDb(fb) {
         if (!fb) return null;
         try {
@@ -118,6 +122,11 @@ class FeedbackManager {
             if (this.techManager && avgRating !== null) {
                 await this.techManager.updateRating(technicianId, avgRating);
                 console.log(`[FeedbackManager] Updated technician rating in database`);
+            }
+
+            // Sync Detailed Analytics
+            if (this.analyticsManager) {
+                await this.analyticsManager.syncStats(technicianId);
             }
 
             if (this.io) {

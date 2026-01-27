@@ -61,6 +61,10 @@ class FinanceManager {
 
     async createTransaction(userId, associatedId, type, amount, description, technicianId = null) {
         try {
+            if (!userId && !technicianId) {
+                console.warn(`[FinanceManager] WARNING: Creating orphan transaction for ${associatedId}. No userId or technicianId provided.`);
+            }
+
             const transaction = {
                 userId: technicianId ? null : userId,
                 technicianId: technicianId,
@@ -68,9 +72,17 @@ class FinanceManager {
                 type,
                 amount: parseFloat(amount),
                 description,
+                category: 'Job Fees', // Default
                 status: 'completed',
                 createdAt: new Date().toISOString()
             };
+
+            // [NEW] Category Handling
+            if (description.toLowerCase().includes('tip')) transaction.category = 'Tips';
+            if (description.toLowerCase().includes('bonus')) transaction.category = 'Bonuses';
+            if (description.toLowerCase().includes('refund')) transaction.category = 'Refunds';
+            if (description.toLowerCase().includes('withdrawal')) transaction.category = 'Withdrawal';
+
             const dbTxn = this._mapToDb(transaction);
             const saved = await this.db.add(dbTxn);
             const result = this._mapFromDb(saved);
@@ -78,10 +90,15 @@ class FinanceManager {
             const targetId = technicianId || userId;
             const targetRoom = technicianId ? `tech_${technicianId}` : `user_${userId}`;
 
+            // [NEW] Sync Analytics on every transaction
+            if (technicianId) {
+                this.syncAnalytics(technicianId).catch(e => console.error("Sync Analytics failed", e));
+            }
+
             if (this.io) {
                 this.io.to(targetRoom).emit('new_transaction', result);
                 const balance = await this.getBalance(targetId, !!technicianId);
-                this.io.to(targetRoom).emit('wallet_balance_update', { balance });
+                this.io.to(targetRoom).emit('wallet_updated', { balance });
                 this.io.emit('admin_finance_update', result);
             }
 
@@ -92,12 +109,12 @@ class FinanceManager {
         }
     }
 
-    async processPayment(userId, amount, type, description, isTechnician = false) {
+    async processPayment(userId, amount, type, description, isTechnician = false, associatedId = 'SYSTEM') {
         // [NEW] Log Earnings
         if (type === 'credit') {
             await this.activityManager.log(null, userId, 'payment_received', 'Payment Received', `Received ₹${amount} for ${description}`, { amount });
         }
-        return await this.createTransaction(isTechnician ? null : userId, 'SYSTEM', type, amount, description, isTechnician ? userId : null);
+        return await this.createTransaction(isTechnician ? null : userId, associatedId, type, amount, description, isTechnician ? userId : null);
     }
 
     async processJobPayment(userId, amount, jobId) {
@@ -237,78 +254,97 @@ class FinanceManager {
         }
     }
 
-    async generateStatementPdf(userId, res) {
-        try {
-            const balance = await this.getBalance(userId);
-            const transactions = await this.getTransactionsByUser(userId);
+    async generateStatementPdf(userId) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const balance = await this.getBalance(userId);
+                const transactions = await this.getTransactionsByUser(userId);
 
-            const doc = new PDFDocument({ margin: 50 });
+                const doc = new PDFDocument({ margin: 50, size: 'A4' });
+                const chunks = [];
 
-            // Headers
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename=statement-${userId}-${Date.now()}.pdf`);
+                doc.on('data', (chunk) => chunks.push(chunk));
+                doc.on('end', () => resolve(Buffer.concat(chunks)));
+                doc.on('error', (err) => {
+                    console.error("[FinanceManager] PDF Generation Error:", err);
+                    reject(err);
+                });
 
-            doc.pipe(res);
+                // 1. HEADER SECTION
+                doc.fillColor('#1e293b').fontSize(24).font('Helvetica-Bold').text('Wallet Statement', 50, 50);
+                doc.fontSize(10).font('Helvetica').fillColor('#64748b').text('Fixofy Services Private Limited', 50, 80);
 
-            // Title
-            doc.fontSize(20).font('Helvetica-Bold').text('Fixofy Wallet Statement', { align: 'center' });
-            doc.moveDown();
+                // Metadata (Right side)
+                doc.fontSize(9).font('Helvetica').fillColor('#64748b');
+                doc.text(`Statement Date: ${new Date().toLocaleDateString()}`, 350, 55, { align: 'right', width: 200 });
+                doc.text(`Time: ${new Date().toLocaleTimeString()}`, 350, 68, { align: 'right', width: 200 });
+                doc.text(`User ID: ${String(userId).slice(0, 18)}...`, 350, 82, { align: 'right', width: 200 });
 
-            // Metadata
-            doc.fontSize(10).font('Helvetica').text(`Generated on: ${new Date().toLocaleString()}`, { align: 'right' });
-            doc.text(`User ID: ${userId}`, { align: 'left' });
-            doc.moveDown();
+                // 2. BALANCE BOX
+                const boxY = 120;
+                doc.rect(50, boxY, 500, 60).fill('#f8fafc').stroke('#e2e8f0');
+                doc.fillColor('#475569').fontSize(11).font('Helvetica').text('Available Balance', 75, boxY + 23);
+                doc.fillColor('#0f172a').fontSize(22).font('Helvetica-Bold').text(`INR ${(Number(balance) || 0).toFixed(2)}`, 300, boxY + 20, { align: 'right', width: 230 });
 
-            // Balance Box
-            doc.rect(50, doc.y, 510, 40).fill('#f8fafc').stroke('#e2e8f0');
-            doc.fillColor('#000000').fontSize(12).text('Current Balance:', 70, doc.y - 25);
-            doc.fontSize(14).font('Helvetica-Bold').text(`₹${balance.toFixed(2)}`, 450, doc.y - 28, { align: 'right' });
-            doc.moveDown(4);
+                // 3. TABLE HEADER
+                const tableHeaderY = 210;
+                const colX = { date: 50, desc: 140, amount: 420, status: 500 };
 
-            // Transactions Table Header
-            const tableTop = doc.y;
-            const colX = { date: 50, desc: 150, amount: 400, status: 500 };
+                doc.fillColor('#64748b').fontSize(10).font('Helvetica-Bold');
+                doc.text('DATE', colX.date, tableHeaderY);
+                doc.text('DESCRIPTION', colX.desc, tableHeaderY);
+                doc.text('AMOUNT', colX.amount, tableHeaderY, { align: 'right', width: 70 });
+                doc.text('STATUS', colX.status, tableHeaderY, { align: 'right', width: 50 });
 
-            doc.fontSize(10).font('Helvetica-Bold');
-            doc.text('DATE', colX.date, tableTop);
-            doc.text('DESCRIPTION', colX.desc, tableTop);
-            doc.text('AMOUNT', colX.amount, tableTop, { align: 'right', width: 60 });
-            doc.text('STATUS', colX.status, tableTop, { align: 'right', width: 50 });
+                doc.moveTo(50, tableHeaderY + 18).lineTo(550, tableHeaderY + 18).strokeColor('#e2e8f0').lineWidth(1).stroke();
 
-            doc.moveTo(50, tableTop + 15).lineTo(560, tableTop + 15).strokeColor('#e2e8f0').stroke();
+                // 4. TRANSACTIONS LIST
+                let currentY = tableHeaderY + 35;
+                const sorted = [...(transactions || [])].sort((a, b) => new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0));
 
-            // Rows
-            let y = tableTop + 25;
-            doc.font('Helvetica').fontSize(10).fillColor('#334155');
+                sorted.forEach((txn) => {
+                    if (currentY > 750) {
+                        doc.addPage();
+                        currentY = 50;
 
-            transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).forEach((txn) => {
-                if (y > 700) {
-                    doc.addPage();
-                    y = 50;
-                }
+                        // Header on new page
+                        doc.fillColor('#64748b').fontSize(10).font('Helvetica-Bold');
+                        doc.text('DATE', colX.date, currentY);
+                        doc.text('DESCRIPTION', colX.desc, currentY);
+                        doc.text('AMOUNT', colX.amount, currentY, { align: 'right', width: 70 });
+                        doc.text('STATUS', colX.status, currentY, { align: 'right', width: 50 });
+                        doc.moveTo(50, currentY + 18).lineTo(550, currentY + 18).strokeColor('#e2e8f0').lineWidth(1).stroke();
+                        currentY += 35;
+                    }
 
-                const date = new Date(txn.createdAt).toLocaleDateString();
-                const isCredit = txn.type === 'credit';
+                    const dateStr = txn.createdAt || txn.created_at || new Date().toISOString();
+                    const date = new Date(dateStr).toLocaleDateString();
+                    const isCredit = txn.type === 'credit';
+                    const amt = Number(txn.amount) || 0;
+                    const statusStr = String(txn.status || 'Success').toUpperCase();
+                    const descStr = String(txn.description || 'Service Transaction');
 
-                doc.text(date, colX.date, y);
-                doc.text(txn.description, colX.desc, y, { width: 230, ellipsis: true });
+                    doc.font('Helvetica').fillColor('#334155').fontSize(9);
+                    doc.text(date, colX.date, currentY);
+                    doc.text(descStr, colX.desc, currentY, { width: 240, ellipsis: true });
 
-                doc.fillColor(isCredit ? '#166534' : '#000000');
-                doc.text(`${isCredit ? '+' : '-'}₹${txn.amount.toFixed(2)}`, colX.amount, y, { align: 'right', width: 60 });
+                    doc.font('Helvetica-Bold').fillColor(isCredit ? '#15803d' : '#0f172a');
+                    doc.text(`${isCredit ? '+' : '-'} INR ${amt.toFixed(2)}`, colX.amount, currentY, { align: 'right', width: 70 });
 
-                doc.fillColor('#334155');
-                doc.text(txn.status.toUpperCase(), colX.status, y, { align: 'right', width: 50 });
+                    doc.font('Helvetica').fillColor('#64748b');
+                    doc.text(statusStr, colX.status, currentY, { align: 'right', width: 50 });
 
-                y += 20;
-                doc.moveTo(50, y - 5).lineTo(560, y - 5).strokeColor('#f1f5f9').stroke();
-            });
+                    currentY += 30;
+                    doc.moveTo(50, currentY - 8).lineTo(550, currentY - 8).strokeColor('#f1f5f9').lineWidth(0.5).stroke();
+                });
 
-            doc.end();
+                doc.end();
 
-        } catch (err) {
-            console.error("[FinanceManager] PDF Gen Error:", err);
-            if (!res.headersSent) res.status(500).send("Error generating PDF statement");
-        }
+            } catch (err) {
+                console.error("[FinanceManager] PDF Gen Internal Error:", err);
+                reject(err);
+            }
+        });
     }
 
     // [New] Helper for Auto-Assignment Algo
@@ -475,7 +511,6 @@ class FinanceManager {
         }
     }
 
-    // Manual Status Check (Good for callback verification)
     async checkPhonePeStatus(merchantTransactionId) {
         try {
             const keyIndex = SALT_INDEX;
@@ -500,6 +535,354 @@ class FinanceManager {
         } catch (error) {
             console.error("[FinanceManager] PhonePe Status Error:", error.message);
             return null;
+        }
+    }
+
+    // ==========================================
+    // NEW: WALLET & WITHDRAWAL LOGIC
+    // ==========================================
+
+    async addBankAccount(technicianId, details) {
+        try {
+            if (!this.db.client) throw new Error("Database not connected");
+
+            const { data, error } = await this.db.client
+                .from('bank_accounts')
+                .insert({
+                    technician_id: technicianId,
+                    bank_name: details.bank_name || details.bankName,
+                    account_number: details.account_number || details.accountNumber,
+                    ifsc_code: details.ifsc_code || details.ifscCode,
+                    account_holder_name: details.account_holder_name || details.accountHolderName,
+                    is_primary: details.is_primary || details.isPrimary || false
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (err) {
+            console.error("[FinanceManager] Error adding bank account:", err);
+            throw err;
+        }
+    }
+
+    async getBankAccounts(technicianId) {
+        try {
+            if (!this.db.client) return [];
+            const { data, error } = await this.db.client
+                .from('bank_accounts')
+                .select('*')
+                .eq('technician_id', technicianId)
+                .order('is_primary', { ascending: false });
+
+            if (error) throw error;
+            return data;
+        } catch (err) {
+            console.error("[FinanceManager] Error fetching bank accounts:", err);
+            return [];
+        }
+    }
+
+    async requestWithdrawal(technicianId, amount, bankAccountId) {
+        try {
+            if (!this.db.client) throw new Error("Database not connected");
+
+            const balance = await this.getBalance(technicianId, true);
+            if (balance < amount) throw new Error("Insufficient wallet balance");
+
+            // 1. Create Withdrawal Record
+            const { data: withdrawal, error } = await this.db.client
+                .from('withdrawals')
+                .insert({
+                    technician_id: technicianId,
+                    bank_account_id: bankAccountId,
+                    amount: amount,
+                    status: 'pending' // pending -> processing -> completed
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // 2. Debit Wallet immediately (locked funds)
+            await this.createTransaction(
+                null,
+                withdrawal.id,
+                'debit',
+                amount,
+                `Withdrawal Request #${withdrawal.id.slice(0, 8)}`,
+                technicianId
+            );
+
+            return withdrawal;
+        } catch (err) {
+            console.error("[FinanceManager] Error requesting withdrawal:", err);
+            throw err;
+        }
+    }
+
+    async getWithdrawals(technicianId) {
+        try {
+            if (!this.db.client) return [];
+            const { data, error } = await this.db.client
+                .from('withdrawals')
+                .select('*, bank_accounts(bank_name, account_number)')
+                .eq('technician_id', technicianId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            return data;
+        } catch (err) {
+            console.error("[FinanceManager] Error fetching withdrawals:", err);
+            return [];
+        }
+    }
+
+    // ==========================================
+    // NEW: ANALYTICS & AI INSIGHTS
+    // ==========================================
+
+    async getFinancialStats(technicianId) {
+        try {
+            const txns = await this.db.findAll('technician_id', technicianId);
+            const earnings = txns.filter(t => t.type === 'credit');
+            const withdrawals = txns.filter(t => t.description.toLowerCase().includes('withdrawal'));
+
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+            // 1. Income Distribution (Pie Chart)
+            const incomeMap = { 'Job Fees': 0, 'Tips': 0, 'Bonuses': 0 };
+            earnings.forEach(t => {
+                const cat = t.category || 'Job Fees';
+                if (incomeMap[cat] !== undefined) incomeMap[cat] += parseFloat(t.amount);
+                else incomeMap['Job Fees'] += parseFloat(t.amount); // Fallback
+            });
+
+            // 2. Weekly Trends (Bar Chart)
+            const weeklyTrends = Array(7).fill(0); // Mon-Sun
+            const tempDate = new Date(now);
+            const day = tempDate.getDay();
+            const diff = tempDate.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+            const startOfWeek = new Date(tempDate.setDate(diff));
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            earnings.forEach(t => {
+                const date = new Date(t.created_at);
+                if (date >= startOfWeek) {
+                    const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1; // Mon=0
+                    weeklyTrends[dayIndex] += parseFloat(t.amount);
+                }
+            });
+
+            // 3. This Month vs Last Month
+            const thisMonthEarnings = earnings
+                .filter(t => new Date(t.created_at) >= startOfMonth)
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+            const lastMonthEarnings = earnings
+                .filter(t => {
+                    const d = new Date(t.created_at);
+                    return d >= startOfLastMonth && d <= endOfLastMonth;
+                })
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+            const monthTrend = lastMonthEarnings === 0 ? 100 : ((thisMonthEarnings - lastMonthEarnings) / lastMonthEarnings * 100);
+
+            // 4. Avg Per Job (Credits only)
+            const jobCredits = earnings.filter(t => t.category === 'Job Fees' || !t.category);
+            const avgPerJob = jobCredits.length > 0
+                ? jobCredits.reduce((sum, t) => sum + parseFloat(t.amount), 0) / jobCredits.length
+                : 0;
+
+            // 5. Projected
+            const daysPassed = now.getDate();
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const projectedEarnings = daysPassed > 0 ? (thisMonthEarnings / daysPassed) * daysInMonth : 0;
+
+            return {
+                incomeDistribution: [
+                    { name: 'Job Fees', value: incomeMap['Job Fees'], color: '#3b82f6' },
+                    { name: 'Tips', value: incomeMap['Tips'], color: '#10b981' },
+                    { name: 'Bonuses', value: incomeMap['Bonuses'], color: '#f59e0b' }
+                ],
+                weeklyTrends: weeklyTrends,
+                totalEarnings: earnings.reduce((sum, t) => sum + parseFloat(t.amount), 0),
+                totalWithdrawn: withdrawals.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0),
+                thisWeekEarnings: weeklyTrends.reduce((a, b) => a + b, 0),
+                thisMonthEarnings,
+                avgPerJob,
+                projectedEarnings,
+                trends: {
+                    month: monthTrend.toFixed(1),
+                    week: "+5.2", // Mock for now or calculate vs last week
+                    avg: "+2.4"
+                }
+            };
+        } catch (err) {
+            console.error("[FinanceManager] Error getting stats:", err);
+            return {
+                incomeDistribution: [],
+                weeklyTrends: [],
+                totalEarnings: 0,
+                totalWithdrawn: 0,
+                thisWeekEarnings: 0,
+                thisMonthEarnings: 0,
+                avgPerJob: 0,
+                projectedEarnings: 0,
+                trends: { month: "0", week: "0", avg: "0" }
+            };
+        }
+    }
+
+    async getAIAnalytics(technicianId) {
+        try {
+            if (this.db.client) {
+                const { data, error } = await this.db.client
+                    .from('technician_finance_analytics')
+                    .select('*')
+                    .eq('technician_id', technicianId)
+                    .single();
+
+                if (data) {
+                    return {
+                        taxEstimation: { amount: data.tax_estimation, message: data.tax_message },
+                        savingsSuggestion: { amount: data.savings_goal, message: data.savings_message },
+                        peakInsight: { message: data.peak_insight },
+                        healthScore: data.health_score
+                    };
+                }
+            }
+            return this.calculateAIAnalytics(technicianId);
+        } catch (err) {
+            console.error("[FinanceManager] Error getting AI analytics:", err);
+            return this.calculateAIAnalytics(technicianId);
+        }
+    }
+
+    async calculateAIAnalytics(technicianId) {
+        try {
+            const txns = await this.db.findAll('technician_id', technicianId);
+            const earnings = txns.filter(t => t.type === 'credit');
+            const totalEarnings = earnings.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+            let taxRate = 0;
+            if (totalEarnings > 100000) taxRate = 0.20;
+            else if (totalEarnings > 50000) taxRate = 0.10;
+            const estimatedTax = totalEarnings * taxRate;
+
+            const dayCounts = {};
+            earnings.forEach(t => {
+                const day = new Date(t.created_at).toLocaleDateString('en-US', { weekday: 'long' });
+                dayCounts[day] = (dayCounts[day] || 0) + parseFloat(t.amount);
+            });
+            const topDay = Object.keys(dayCounts).sort((a, b) => dayCounts[b] - dayCounts[a])[0] || 'Monday';
+            const score = Math.min(100, Math.floor((earnings.length * 2) + (totalEarnings / 1000)));
+
+            return {
+                taxEstimation: {
+                    amount: estimatedTax,
+                    message: totalEarnings > 0
+                        ? `Suggested set aside for Q4 taxes (${(taxRate * 100)}% bracket).`
+                        : "Start earning to see your automated tax estimations."
+                },
+                savingsSuggestion: {
+                    amount: totalEarnings * 0.15,
+                    message: totalEarnings > 0
+                        ? "Save 15% more this week to reach your goal."
+                        : "Did you know? Technicians who save 10% monthly reach goals 3x faster."
+                },
+                peakInsight: {
+                    message: earnings.length > 0
+                        ? `${topDay}s are your top-earning days.`
+                        : "Complete 3 jobs to unlock your personalized peak earning windows."
+                },
+                healthScore: earnings.length > 0 ? score : 100 // Give new users a perfect starting score
+            };
+        } catch (err) {
+            console.error("[FinanceManager] Error calculating analytics:", err);
+            return {};
+        }
+    }
+
+    async syncAnalytics(technicianId) {
+        try {
+            if (!this.db.client) return;
+            const analytics = await this.calculateAIAnalytics(technicianId);
+
+            const { error } = await this.db.client
+                .from('technician_finance_analytics')
+                .upsert({
+                    technician_id: technicianId,
+                    tax_estimation: analytics.taxEstimation?.amount || 0,
+                    tax_message: analytics.taxEstimation?.message,
+                    savings_goal: analytics.savingsSuggestion?.amount || 0,
+                    savings_message: analytics.savingsSuggestion?.message,
+                    peak_insight: analytics.peakInsight?.message,
+                    health_score: analytics.healthScore || 0,
+                    last_updated: new Date().toISOString()
+                }, { onConflict: 'technician_id' });
+
+            if (error) throw error;
+            return analytics;
+        } catch (err) {
+            console.error("[FinanceManager] Error syncing analytics:", err);
+        }
+    }
+
+    // --- Wallet Pots ---
+    async getPots(technicianId) {
+        try {
+            if (!this.db.client) return [];
+            const { data, error } = await this.db.client
+                .from('wallet_pots')
+                .select('*')
+                .eq('technician_id', technicianId);
+            if (error) throw error;
+            return data;
+        } catch (err) {
+            console.error("[FinanceManager] Error getting pots:", err);
+            return [];
+        }
+    }
+
+    async updatePot(technicianId, name, amount, operation = 'add') {
+        try {
+            if (!this.db.client) throw new Error("DB not connected");
+
+            // 1. Get current pot or create
+            let { data: pot, error } = await this.db.client
+                .from('wallet_pots')
+                .select('*')
+                .eq('technician_id', technicianId)
+                .eq('name', name)
+                .single();
+
+            if (!pot) {
+                const { data: newPot, error: createError } = await this.db.client
+                    .from('wallet_pots')
+                    .insert({ technician_id: technicianId, name, current_amount: 0 })
+                    .select().single();
+                if (createError) throw createError;
+                pot = newPot;
+            }
+
+            const newAmount = operation === 'add' ? pot.current_amount + amount : pot.current_amount - amount;
+
+            const { data: updated, error: updateError } = await this.db.client
+                .from('wallet_pots')
+                .update({ current_amount: newAmount, updated_at: new Date().toISOString() })
+                .eq('id', pot.id)
+                .select().single();
+
+            if (updateError) throw updateError;
+            return updated;
+        } catch (err) {
+            console.error("[FinanceManager] Error updating pot:", err);
+            throw err;
         }
     }
 }

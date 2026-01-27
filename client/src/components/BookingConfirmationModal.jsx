@@ -79,13 +79,16 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
         : `https://ui-avatars.com/api/?name=${technician?.name || 'T'}&background=0D9488&color=fff&size=48`;
     const isTechBusy = ['engaged', 'finishing_work', 'finishing work'].includes((technician?.status || '').toLowerCase());
 
-    const handleConfirm = () => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleConfirm = async () => {
         if (!agreement) return alert("Please agree to the terms.");
+        setIsSubmitting(true);
 
         // [FIX] Guest Logic: If not logged in, proceed to OnConfirm (which should handle login)
         // Do NOT check wallet balance for guests (balance is 0, so it would always trigger Add Funds)
         if (!user) {
-            onConfirm({
+            await onConfirm({
                 ...jobDetails,
                 description,
                 visitingCharges: pricing.total,
@@ -94,6 +97,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                 paymentStatus: 'pending', // Will be handled after login
                 technicianId: technician?.id || null
             });
+            setIsSubmitting(false);
             return;
         }
 
@@ -101,6 +105,7 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
         if (paymentMethod === 'wallet') {
             if (walletBalance < pricing.total) {
                 setShowAddFunds(true);
+                setIsSubmitting(false);
                 return;
             }
         }
@@ -117,7 +122,12 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
         };
         if (scheduledDate) payload.scheduledDate = scheduledDate;
         if (scheduledTime) payload.scheduledTime = scheduledTime;
-        onConfirm(payload);
+
+        try {
+            await onConfirm(payload);
+        } catch (e) {
+            setIsSubmitting(false);
+        }
     };
 
     return createPortal(
@@ -315,9 +325,9 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                         {/* Smart Button */}
                         <button
                             onClick={handleConfirm}
-                            disabled={!agreement}
+                            disabled={!agreement || isSubmitting}
                             className={`w-full py-4 rounded-xl text-white text-base font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl active:scale-[0.98]
-                                ${(agreement)
+                                ${(agreement && !isSubmitting)
                                     ? (insufficientFunds && paymentMethod === 'wallet'
                                         ? 'bg-red-600 hover:bg-red-700 shadow-red-500/30'
                                         : 'bg-teal-600 hover:bg-teal-700 shadow-teal-600/30'
@@ -325,7 +335,12 @@ const BookingConfirmationModal = ({ isOpen, onClose, technician, jobDetails, onC
                                     : 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
                                 }`}
                         >
-                            {!user ? (
+                            {isSubmitting ? (
+                                <>
+                                    <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                                    Processing...
+                                </>
+                            ) : !user ? (
                                 <>
                                     <ShieldCheck size={20} /> Login & Book Now
                                 </>

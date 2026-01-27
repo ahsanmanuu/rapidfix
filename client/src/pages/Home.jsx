@@ -193,13 +193,13 @@ const Home = () => {
         setIsConfirmOpen(true);
     };
 
-    const handleConfirmBooking = (finalBookingData) => {
+    const handleConfirmBooking = async (finalBookingData) => {
         if (!user) {
             setIsConfirmOpen(false);
             setIsLoginOpen(true);
             setBookingParams(prev => ({ ...prev, ...finalBookingData }));
         } else {
-            createJobRequest({ ...bookingParams, ...finalBookingData, userId: user.id });
+            return await createJobRequest({ ...bookingParams, ...finalBookingData, userId: user.id });
         }
     };
 
@@ -299,7 +299,7 @@ const Home = () => {
                 const defaultLoc = {
                     latitude: 28.6139,
                     longitude: 77.2090,
-                    address: "New Delhi (Default)"
+                    address: "New Delhi (Default - Location Access Denied)"
                 };
                 launchModal(defaultLoc);
             };
@@ -316,6 +316,10 @@ const Home = () => {
                         longitude: position.coords.longitude,
                         address: "Current Location"
                     };
+                    // Persist for future use to avoid continuous prompts
+                    if (user && updateUser) {
+                        updateUser({ location: loc }).catch(err => console.error("Failed to persist location", err));
+                    }
                     launchModal(loc);
                 },
                 (error) => {

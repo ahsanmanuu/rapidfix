@@ -103,17 +103,19 @@ const DashboardHome = ({ jobs = [], setActiveTab, onOpenSearch }) => {
     useEffect(() => {
         if (!socket) return;
 
-        socket.on('support_message', (msg) => {
+        const handleSupportMessage = (msg) => {
             // Only add if it belongs to current session or if we are just starting
             setMessages(prev => {
                 // Avoid duplicates
                 if (prev.find(m => m.id === msg.id)) return prev;
                 return [...prev, msg];
             });
-        });
+        };
+
+        socket.on('support_message', handleSupportMessage);
 
         return () => {
-            socket.off('support_message');
+            socket.off('support_message', handleSupportMessage);
         };
     }, [socket]);
 

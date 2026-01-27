@@ -12,21 +12,16 @@ const FeedbackHub = () => {
     const [safetyRating, setSafetyRating] = useState(7);
     const [clarityRating, setClarityRating] = useState(9); // Excellent
 
+    const headerActions = (
+        <button className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 bg-white text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
+            <MaterialIcon name="file_download" className="text-[16px]" />
+            <span className="hidden sm:inline">Export Report</span>
+        </button>
+    );
+
     return (
-        <TechnicianLayout title="Feedback Hub">
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-4 font-sans text-slate-900 bg-slate-50">
-                {/* Header Section */}
-                <div className="flex justify-between items-end mb-1">
-                    <div>
-                        <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Progress & Feedback Hub</h1>
-                        <p className="text-xs text-slate-500">Real-time performance metrics and deep sentiment analysis.</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <button className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 bg-white text-xs font-bold rounded hover:bg-slate-50 transition-colors">
-                            <MaterialIcon name="file_download" className="text-[16px]" /> Export
-                        </button>
-                    </div>
-                </div>
+        <TechnicianLayout title="Feedback Hub" headerActions={headerActions}>
+            <div className="space-y-4 font-sans text-slate-900">
 
                 {/* KPI Cards Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">

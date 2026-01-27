@@ -28,6 +28,7 @@ const BroadcastManager = require('./managers/BroadcastManager');
 const TestimonialManager = require('./managers/TestimonialManager');
 const PerformerManager = require('./managers/PerformerManager');
 const ActivityLogManager = require('./managers/ActivityLogManager'); // [NEW]
+const AnalyticsManager = require('./managers/AnalyticsManager');
 const InvoiceManager = require('./managers/InvoiceManager');
 const InvoiceSettingsManager = require('./managers/InvoiceSettingsManager');
 const Database = require('./managers/Database'); // Explicitly needed for settings
@@ -90,6 +91,7 @@ const broadcastManager = new BroadcastManager();
 const testimonialManager = new TestimonialManager();
 const performerManager = new PerformerManager();
 const activityLogManager = new ActivityLogManager(); // [NEW]
+const analyticsManager = new AnalyticsManager();
 
 // Invoice System
 const invoiceSettingsDb = new Database('invoice_settings.json');
@@ -97,9 +99,12 @@ const invoiceSettingsManager = new InvoiceSettingsManager(invoiceSettingsDb);
 const invoiceManager = new InvoiceManager(invoiceSettingsManager, adminManager, storageManager);
 
 const jobManager = new JobManager();
+analyticsManager.setSocketIO(io);
+
 // Resolve Circular Dependencies
 invoiceManager.setJobManager(jobManager);
 jobManager.setInvoiceManager(invoiceManager); // Ensure JobManager has InvoiceManager linkage
+jobManager.setAnalyticsManager(analyticsManager);
 offerManager.setJobManager(jobManager);
 offerManager.setUserManager(userManager);
 offerManager.setTechnicianManager(technicianManager);
@@ -115,7 +120,7 @@ const allManagers = [
   rideManager, sessionManager, superAdminManager, chatManager,
   offerManager, notificationManager, storageManager, broadcastManager,
   testimonialManager, performerManager, invoiceManager, invoiceSettingsManager,
-  supportManager, activityLogManager
+  supportManager, activityLogManager, analyticsManager
 ];
 
 allManagers.forEach(m => {
@@ -126,13 +131,15 @@ allManagers.forEach(m => {
   }
 });
 
-// Connect FeedbackManager to TechnicianManager for rating updates
+// Connect FeedbackManager dependencies
 feedbackManager.setTechnicianManager(technicianManager);
+feedbackManager.setJobManager(jobManager);
+feedbackManager.setAnalyticsManager(analyticsManager);
 
-// Connect JobManager to TechnicianManager and FinanceManager
-// Connect JobManager to TechnicianManager and FinanceManager
+// Connect JobManager dependencies
 jobManager.setTechnicianManager(technicianManager);
 jobManager.setFinanceManager(financeManager);
+jobManager.setAnalyticsManager(analyticsManager);
 jobManager.setInvoiceManager(invoiceManager);
 jobManager.setActivityLogManager(activityLogManager);
 
@@ -145,6 +152,12 @@ feedbackManager.setTechnicianManager(technicianManager);
 
 // Inject into FinanceManager
 financeManager.setActivityLogManager(activityLogManager);
+
+// [NEW] Link OfferManager Dependencies
+offerManager.setJobManager(jobManager);
+offerManager.setUserManager(userManager);
+offerManager.setTechnicianManager(technicianManager);
+offerManager.setNotificationManager(notificationManager);
 
 
 
@@ -642,8 +655,11 @@ app.post('/api/technicians/login', async (req, res) => {
 
   if (technician) {
     // Create Session
-    const session = await sessionManager.createSession(technician.id, 'technician', req.body.deviceId); // [FIX] Added await
-    res.json({ success: true, technician, sessionToken: session.token });
+    const session = await sessionManager.createSession(technician.id, 'technician', req.body.deviceId);
+
+    // Ensure role is injected for socket room identification
+    const technicianWithRole = { ...technician, role: 'technician' };
+    res.json({ success: true, technician: technicianWithRole, sessionToken: session.token });
   } else {
     // [DIAGNOSTIC] Check if failure is due to DB connection
     try {
@@ -1521,73 +1537,13 @@ app.post('/api/locations', async (req, res) => {
 });
 
 // --- Offer Routes ---
-app.get('/api/offers', authenticateSession, async (req, res) => {
-  try {
-    const { userId, type } = req.query;
-    // If technician, maybe filter relevant offers? For now, return all active.
-    let offers = await offerManager.getAllOffers();
-    if (userId) offers = offers.filter(o => o.userId === userId);
-    if (type) offers = offers.filter(o => o.type === type);
-    res.json({ success: true, offers });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/offers', authenticateSession, async (req, res) => {
-  try {
-    // Only Admin/SuperAdmin/Technician(for bids)
-    // Assuming Technicians can create 'job_bid' offers
-    if (req.body.type !== 'job_bid' && !['admin', 'superadmin'].includes(req.user.role)) {
-      return res.status(403).json({ success: false, error: 'Unauthorized' });
-    }
-
-    // If technician creating a bid, enforce userId
-    if (req.body.type === 'job_bid' && req.user.role === 'technician') {
-      req.body.userId = req.user.id;
-    }
-
-    const offer = await offerManager.createOffer(req.body);
-    res.json({ success: true, offer });
-  } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
-  }
-});
-
-app.post('/api/offers/:id/accept', authenticateSession, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const technicianId = req.user.id; // The one accepting
-
-    if (req.user.role !== 'technician') {
-      return res.status(403).json({ success: false, error: 'Only technicians can accept offers' });
-    }
-
-    const job = await offerManager.acceptOffer(id, technicianId);
-    res.json({ success: true, job });
-  } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
-  }
-});
-
-app.delete('/api/offers/:id', authenticateSession, async (req, res) => {
-  try {
-    if (!['admin', 'superadmin'].includes(req.user.role)) {
-      return res.status(403).json({ success: false, error: 'Unauthorized' });
-    }
-    await offerManager.deleteOffer(req.params.id);
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+// --- Offer Routes moved down to dedicated section ---
 
 // --- Complaint Routes ---
 // --- Complaint Routes ---
 app.post('/api/complaints', async (req, res) => {
   try {
-    const { userId, technicianId, subject, description, category, evidence } = req.body;
-    const complaint = await complaintManager.createComplaint(userId, technicianId, subject, description, category, evidence);
+    const complaint = await complaintManager.createComplaint(req.body);
     res.json({ success: true, complaint });
   } catch (error) {
     console.error('[API] Complaint Create Error:', error);
@@ -1747,11 +1703,7 @@ app.put('/api/jobs/:id', async (req, res) => {
   }
 });
 
-app.get('/api/jobs/available', async (req, res) => {
-  const { serviceType } = req.query;
-  const jobs = await jobManager.getAvailableJobs(serviceType);
-  res.json({ success: true, jobs });
-});
+// --- Duplicate /api/jobs/available removed ---
 
 app.get('/api/jobs/technician/:id', async (req, res) => {
   const jobs = await jobManager.getJobsByTechnician(req.params.id);
@@ -1765,23 +1717,28 @@ app.get('/api/jobs/:id', async (req, res) => {
 });
 
 app.put('/api/jobs/:id/status', async (req, res) => {
-  const { status, details } = req.body; // details: { technicianId, reason, otp }
+  try {
+    const { status, details } = req.body; // details: { technicianId, reason, otp }
 
-  // 1. Get current job to know context (price, techId, etc.)
-  const currentJob = await jobManager.getJob(req.params.id);
-  if (!currentJob) return res.status(404).json({ success: false, error: 'Job not found' });
+    // 1. Get current job to know context (price, techId, etc.)
+    const currentJob = await jobManager.getJob(req.params.id);
+    if (!currentJob) return res.status(404).json({ success: false, error: 'Job not found' });
 
-  // 2. Update Job Status (Side effects are now handled inside JobManager)
-  // Ensure we capture technicianId and other details even if sent at top level
-  const updateDetails = { ...details, ...req.body };
-  delete updateDetails.status; // status is already extracted
+    // 2. Update Job Status (Side effects are now handled inside JobManager)
+    // Ensure we capture technicianId and other details even if sent at top level
+    const updateDetails = { ...details, ...req.body };
+    delete updateDetails.status; // status is already extracted
 
-  const job = await jobManager.updateStatus(req.params.id, status, updateDetails);
+    const job = await jobManager.updateStatus(req.params.id, status, updateDetails);
 
-  if (job) {
-    res.json({ success: true, job });
+    if (job) {
+      res.json({ success: true, job });
+    }
+    else res.status(500).json({ success: false, error: 'Failed to update job' });
+  } catch (err) {
+    console.error(`[API] Error updating job status ${req.params.id}:`, err);
+    res.status(400).json({ success: false, error: err.message });
   }
-  else res.status(500).json({ success: false, error: 'Failed to update job' });
 });
 
 // --- Feedback Routes ---
@@ -1848,6 +1805,8 @@ app.post('/api/invoice-settings', upload.single('logo'), async (req, res) => {
   try {
     const updates = req.body;
 
+
+
     // Handle logo upload
     if (req.file) {
       // Logic to save file appropriately
@@ -1864,6 +1823,143 @@ app.post('/api/invoice-settings', upload.single('logo'), async (req, res) => {
     res.json({ success: true, settings });
   } catch (err) {
     console.error('Invoice Settings Update Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+
+// ==========================================
+// NEW: WALLET ROUTES
+// ==========================================
+
+app.get('/api/finance/wallet/:technicianId', async (req, res) => {
+  try {
+    const { technicianId } = req.params;
+    const balance = await financeManager.getBalance(technicianId, true);
+    const stats = await financeManager.getFinancialStats(technicianId);
+    const analytics = await financeManager.getAIAnalytics(technicianId);
+
+    res.json({
+      success: true,
+      wallet: {
+        balance,
+        available: balance, // Debits are already subtracted in getBalance
+        ...stats,
+        analytics
+      }
+    });
+  } catch (err) {
+    console.error('[API] Wallet Fetch Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/finance/banks/:technicianId', async (req, res) => {
+  try {
+    const banks = await financeManager.getBankAccounts(req.params.technicianId);
+    res.json({ success: true, banks });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/finance/banks', async (req, res) => {
+  try {
+    const { technicianId, ...details } = req.body;
+    const method = await financeManager.addBankAccount(technicianId, details);
+    res.json({ success: true, method });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/finance/withdraw', async (req, res) => {
+  try {
+    const { technicianId, amount, bankAccountId } = req.body;
+    const withdrawal = await financeManager.requestWithdrawal(technicianId, amount, bankAccountId);
+    res.json({ success: true, withdrawal });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/finance/withdrawals/:technicianId', async (req, res) => {
+  try {
+    const withdrawals = await financeManager.getWithdrawals(req.params.technicianId);
+    res.json({ success: true, withdrawals });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/finance/tax-reports/:technicianId', async (req, res) => {
+  try {
+    const analytics = await financeManager.getAIAnalytics(req.params.technicianId);
+    res.json({
+      success: true,
+      taxData: analytics.taxEstimation,
+      healthScore: analytics.healthScore
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/finance/invoices/:technicianId', async (req, res) => {
+  try {
+    const jobs = await jobManager.getJobsByTechnician(req.params.technicianId);
+    const invoices = jobs
+      .filter(j => j.status === 'Completed' || j.status === 'completed')
+      .map(j => ({
+        id: j.id,
+        date: j.updatedAt,
+        amount: j.totalCost || j.offerPrice || 0,
+        customer: j.contactName,
+        service: j.serviceType,
+        status: 'Paid',
+        invoiceUrl: j.invoiceUrl || j.invoice_url
+      }));
+    res.json({ success: true, invoices });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/technicians/:id/transactions', async (req, res) => {
+  try {
+    const transactions = await financeManager.getTransactionsByUser(req.params.id, true);
+    res.json({ success: true, transactions });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// --- Pots & Analytics Routes [NEW] ---
+app.get('/api/finance/pots/:technicianId', async (req, res) => {
+  try {
+    const pots = await financeManager.getPots(req.params.technicianId);
+    res.json({ success: true, pots });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/finance/pots/update', async (req, res) => {
+  try {
+    const { technicianId, name, amount, operation } = req.body;
+    const pot = await financeManager.updatePot(technicianId, name, amount, operation);
+    res.json({ success: true, pot });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/finance/analytics/sync', async (req, res) => {
+  try {
+    const { technicianId } = req.body;
+    const analytics = await financeManager.syncAnalytics(technicianId);
+    res.json({ success: true, analytics });
+  } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -1901,19 +1997,28 @@ app.get('/api/technicians/:id/dashboard-stats', async (req, res) => {
     const daysMap = new Map();
 
     // Initialize last 7 days with 0
+    // [FIX] Use local date string components to match transaction dates accurately in local timezone
+    const getLocalYMD = (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
-      const dateKey = d.toISOString().split('T')[0];
+      // const dateKey = d.toISOString().split('T')[0]; // OLD UTC
+      const dateKey = getLocalYMD(d); // NEW Local
       daysMap.set(dateKey, { name: dayName, value: 0 });
       earningsData.push(daysMap.get(dateKey));
     }
 
     // Populate with actual data (filtered by credit/income)
     financeTxns.forEach(txn => {
-      if (txn.type === 'credit' && txn.created_at) { // Assuming credit is income
-        const dateKey = new Date(txn.created_at).toISOString().split('T')[0];
+      if (txn.type === 'credit' && txn.createdAt) { // [FIX] Use mapped createdAt
+        const dateKey = getLocalYMD(new Date(txn.createdAt));
         if (daysMap.has(dateKey)) {
           daysMap.get(dateKey).value += parseFloat(txn.amount);
         }
@@ -1928,7 +2033,7 @@ app.get('/api/technicians/:id/dashboard-stats', async (req, res) => {
     // Monthly Revenue
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
     const monthlyRevenue = financeTxns
-      .filter(t => t.type === 'credit' && t.created_at >= startOfMonth)
+      .filter(t => t.type === 'credit' && t.createdAt && t.createdAt >= startOfMonth) // [FIX] Use mapped createdAt
       .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
 
     // Filter Activity Logs (Sort Newest, Limit 10)
@@ -1948,8 +2053,8 @@ app.get('/api/technicians/:id/dashboard-stats', async (req, res) => {
     // activeJobsRes might be { success: true, jobs: [...] } or just [...]
     const jobsList = activeJobsRes && activeJobsRes.jobs ? activeJobsRes.jobs : (Array.isArray(activeJobsRes) ? activeJobsRes : []);
     const activeJobs = jobsList.filter(job =>
-      ['pending', 'accepted', 'in_progress', 'arrived'].includes(job.status)
-    ).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      ['pending', 'assigned', 'accepted', 'in_progress', 'arrived', 'ongoing', 'started'].includes(job.status)
+    ).sort((a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt));
 
     const responseData = {
       stats: {
@@ -1959,7 +2064,7 @@ app.get('/api/technicians/:id/dashboard-stats', async (req, res) => {
         accepted: jobStats.accepted || 0,
         pending: jobStats.pending || 0,
         rejected: jobStats.rejected || 0,
-        usersServed: jobStats.completed || 0, // Approx
+        usersServed: new Set(jobsList.filter(j => ['completed', 'work_done'].includes(j.status)).map(j => j.userId)).size,
         complaints: complaintStats.total || 0,
         rating: tech.rating || 0
       },
@@ -1968,11 +2073,33 @@ app.get('/api/technicians/:id/dashboard-stats', async (req, res) => {
       activityFeed: relevantLogs
     };
 
-    res.json({ success: true, ...responseData });
-
+    return res.json({ success: true, ...responseData });
   } catch (err) {
-    console.error("Dashboard Stats Aggregation Error:", err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('[Dashboard-Stats] Error:', err);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// [NEW] Job History with Filtering/Pagination
+app.get('/api/technicians/:id/job-history', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, serviceType, startDate, endDate, search, page, limit } = req.query;
+
+    const result = await jobManager.getJobHistory(id, {
+      status,
+      serviceType,
+      startDate,
+      endDate,
+      search,
+      page,
+      limit
+    });
+
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error('[JobHistory] Error:', err);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
@@ -2067,7 +2194,51 @@ app.get('/api/finance/wallet/:userId', async (req, res) => {
     const { userId } = req.params;
     const balance = await financeManager.getBalance(userId);
     const transactions = await financeManager.getTransactionsByUser(userId);
-    res.json({ success: true, balance, transactions });
+
+    // Calculate Stats
+    const totalEarnings = transactions
+      .filter(t => t.type === 'credit')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const totalWithdrawn = transactions
+      .filter(t => t.type === 'debit' && t.category === 'withdrawal')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    // Calculate Weekly Trends (Last 7 Days) - Mon to Sun
+    // Current approach: Sum amounts per day for current week
+    const weeklyTrends = [0, 0, 0, 0, 0, 0, 0];
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 = Sun, 1 = Mon
+    // Adjust to Mon=0, Sun=6
+    const todayIndex = currentDay === 0 ? 6 : currentDay - 1;
+
+    // Filter last 7 days? Or just current week?
+    // Let's do: Mon(0)..Sun(6) of CURRENT week
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - todayIndex);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    transactions.forEach(t => {
+      if (t.type === 'credit') {
+        const tDate = new Date(t.createdAt || t.created_at);
+        if (tDate >= startOfWeek) {
+          const day = tDate.getDay(); // 0-6
+          const idx = day === 0 ? 6 : day - 1; // Map to 0=Mon
+          weeklyTrends[idx] += Number(t.amount);
+        }
+      }
+    });
+
+    const wallet = {
+      balance,
+      available: balance, // simplified
+      totalEarnings,
+      totalWithdrawn,
+      weeklyTrends,
+      transactions // Include if needed, though sent separate in hook
+    };
+
+    res.json({ success: true, wallet, transactions });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -2075,10 +2246,15 @@ app.get('/api/finance/wallet/:userId', async (req, res) => {
 
 app.get('/api/finance/statement/:userId', async (req, res) => {
   try {
-    await financeManager.generateStatementPdf(req.params.userId, res);
+    const pdfBuffer = await financeManager.generateStatementPdf(req.params.userId);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=statement-${req.params.userId}.pdf`);
+    res.send(pdfBuffer);
   } catch (err) {
     console.error("PDF Route Error:", err);
-    res.status(500).send("Error");
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, error: 'Failed to generate PDF statement' });
+    }
   }
 });
 
@@ -2198,104 +2374,7 @@ app.get('/api/technicians/:id/stats', async (req, res) => {
   }
 });
 
-// [NEW] Dashboard Stats Endpoint (Aggregated for Technician Dashboard)
-app.get('/api/technicians/:id/dashboard-stats', async (req, res) => {
-  try {
-    const techId = req.params.id;
-    const tech = await technicianManager.getTechnician(techId);
-    if (!tech) return res.status(404).json({ success: false, error: 'Technician not found' });
-
-    // 1. Fetch All Jobs for Tech
-    const allJobs = await jobManager.getJobsByTechnician(techId);
-
-    // 2. Filter Lists
-    const activeJobs = allJobs.filter(j => ['assigned', 'accepted', 'in_progress', 'started', 'arrived'].includes(j.status));
-
-    // 3. Calculate Stats
-    const completedJobs = allJobs.filter(j => j.status === 'completed' || j.status === 'work_done');
-    const rejectedJobs = allJobs.filter(j => j.status === 'rejected');
-    const acceptedJobs = allJobs.filter(j => j.status === 'accepted');
-
-    // Earnings
-    const balance = await financeManager.getBalance(techId, true);
-
-    // Monthly & Today Earnings
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    const todayStr = now.toDateString();
-
-    const transactions = await financeManager.getTransactionsByUser(techId, true);
-
-    const monthlyRevenue = transactions.reduce((sum, t) => {
-      const tDate = new Date(t.createdAt);
-      if (tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear && t.type === 'credit') {
-        return sum + t.amount;
-      }
-      return sum;
-    }, 0);
-
-    const todayEarnings = transactions.reduce((sum, t) => {
-      const tDate = new Date(t.createdAt);
-      if (tDate.toDateString() === todayStr && t.type === 'credit') {
-        return sum + t.amount;
-      }
-      return sum;
-    }, 0);
-
-    const stats = {
-      earnings: balance,
-      completedJobs: completedJobs.length,
-      rating: tech.rating || 0,
-      active: activeJobs.length,
-      pending: allJobs.filter(j => j.status === 'assigned').length,
-      todayEarnings,
-      monthlyRevenue,
-      usersServed: new Set(completedJobs.map(j => j.userId)).size,
-      complaints: 0, // Placeholder
-      accepted: acceptedJobs.length,
-      rejected: rejectedJobs.length
-    };
-
-    // 4. Earnings Data (Last 7 Days)
-    const earningsData = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dayStr = d.toLocaleDateString('en-US', { weekday: 'short' });
-      const dayDateStr = d.toDateString();
-
-      const dayAmount = transactions.reduce((sum, t) => {
-        const tDate = new Date(t.createdAt);
-        if (tDate.toDateString() === dayDateStr && t.type === 'credit') return sum + t.amount;
-        return sum;
-      }, 0);
-
-      earningsData.push({ name: dayStr, amount: dayAmount });
-    }
-
-    // 5. Activity Feed (From Notifications for now)
-    const notifications = notificationManager.getNotifications(techId);
-    const activityFeed = notifications.slice(0, 10).map(n => ({
-      id: n.id,
-      description: n.message,
-      time: n.createdAt,
-      type: n.type
-    }));
-
-    res.json({
-      success: true,
-      stats,
-      activeJobs,
-      activityFeed,
-      earningsData
-    });
-
-  } catch (error) {
-    console.error("Dashboard Stats Error:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+// --- Redundant Dashboard Stats route removed. Using unified aggregated route above (L1825). ---
 
 // [NEW] Monthly Stats Endpoint
 

@@ -49,7 +49,7 @@ class SupabaseDatabase {
     _cleanColumns(columns) {
         if (!columns || columns === '*') {
             if (this.table === 'jobs') {
-                return 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at';
+                return 'id, user_id, technician_id, service_type, status, contact_name, contact_phone, address, scheduled_date, scheduled_time, created_at, updated_at, location, visiting_charges, spare_parts_cost, tax, total_cost, offer_price, description, payment_status, payment_method';
             }
             return columns || '*';
         }

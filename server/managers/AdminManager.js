@@ -203,14 +203,12 @@ class AdminManager extends BaseManager {
         }
     }
 
-    // [NEW] Get nearby users and technicians within 30km fixed radius
+    // [MODIFIED] Get nearby users and technicians within 30km fixed radius
     async getNearbyEntities(adminLat, adminLng) {
         try {
-            const radiusKm = 30; // Fixed 30 KM radius as per requirements
-
-            // We need access to users and technicians. 
-            // Ideally should inject UserManager and TechnicianManager, but for now we'll lazily load or use DB directly.
-            // Using DB directly to avoid circular dependency hell if Managers require each other.
+            const radiusKm = 30; // Fixed 30 KM radius
+            const lat = parseFloat(adminLat);
+            const lng = parseFloat(adminLng);
 
             // DatabaseLoader will return SupabaseDatabase or JSON Database
             const UserDB = new (require('./DatabaseLoader'))('users');
@@ -220,21 +218,29 @@ class AdminManager extends BaseManager {
             const technicians = await TechDB.read();
 
             const nearbyUsers = users.filter(u => {
-                if (!u.latitude || !u.longitude) return false;
-                const dist = this._calculateDistance(adminLat, adminLng, u.latitude, u.longitude);
+                // Priority: Live Location -> Registered Location
+                const uLat = parseFloat(u.location?.latitude || u.latitude || u.registered_latitude || 0);
+                const uLng = parseFloat(u.location?.longitude || u.longitude || u.registered_longitude || 0);
+
+                if (!uLat || !uLng) return false;
+                const dist = this._calculateDistance(lat, lng, uLat, uLng);
                 return dist <= radiusKm;
             });
 
             const nearbyTechs = technicians.filter(t => {
-                if (!t.latitude || !t.longitude) return false;
-                const dist = this._calculateDistance(adminLat, adminLng, t.latitude, t.longitude);
+                // Priority: Live Location -> Registered Location
+                const tLat = parseFloat(t.location?.latitude || t.latitude || t.registered_latitude || 0);
+                const tLng = parseFloat(t.location?.longitude || t.longitude || t.registered_longitude || 0);
+
+                if (!tLat || !tLng) return false;
+                const dist = this._calculateDistance(lat, lng, tLat, tLng);
                 return dist <= radiusKm;
             });
 
             return {
                 users: nearbyUsers,
                 technicians: nearbyTechs,
-                center: { lat: adminLat, lng: adminLng, radius: radiusKm }
+                center: { lat: lat, lng: lng, radius: radiusKm }
             };
 
         } catch (err) {

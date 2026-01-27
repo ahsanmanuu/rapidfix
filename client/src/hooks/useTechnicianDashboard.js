@@ -61,17 +61,43 @@ const useTechnicianDashboard = () => {
         if (socket) {
             const handleUpdate = (data) => {
                 console.log('[Dashboard] Realtime Update:', data);
+
+                // [OPTIMISTIC] If update contains job info, sync list immediately
+                if (data && data.id) {
+                    setActiveJobs(prev => {
+                        const exists = prev.some(j => j.id === data.id);
+
+                        // Check if job should still be in active list
+                        const isActive = ['pending', 'accepted', 'in_progress', 'arrived', 'arriving', 'on_the_way'].includes(data.status);
+
+                        if (isActive) {
+                            if (exists) {
+                                return prev.map(j => j.id === data.id ? { ...j, ...data } : j);
+                            } else {
+                                // Add to list if it's new and active
+                                return [data, ...prev];
+                            }
+                        } else {
+                            // If NOT active anymore (cancelled/completed), remove it
+                            return prev.filter(j => j.id !== data.id);
+                        }
+                    });
+
+                    // Optional: Update stats if status changed
+                    // (Easier to just call fetchData for full stats consistency)
+                }
+
                 fetchData();
             };
 
             const handleActivity = (data) => {
-                // Optimistic update for activity feed if we wanted, but fetching fresh is safer for consistency
                 console.log('[Dashboard] New Activity:', data);
                 fetchData();
             };
 
             socket.on('new_job_assigned', handleUpdate);
             socket.on('job_status_updated', handleUpdate);
+            socket.on('job_updated', handleUpdate); // Added
             socket.on('wallet_updated', handleUpdate);
             socket.on('new_job_created', handleUpdate); // For unassigned jobs in marketplace
 

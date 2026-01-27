@@ -13,11 +13,13 @@ class ComplaintManager {
     _mapFromDb(complaint) {
         if (!complaint) return null;
         try {
-            const { user_id, technician_id, ...rest } = complaint;
+            const { user_id, technician_id, job_id, reported_by_role, ...rest } = complaint;
             return {
                 ...rest,
                 userId: user_id,
-                technicianId: technician_id
+                technicianId: technician_id,
+                jobId: job_id,
+                reportedByRole: reported_by_role
             };
         } catch (err) {
             console.error("[ComplaintManager] Error mapping from DB:", err);
@@ -28,10 +30,12 @@ class ComplaintManager {
     _mapToDb(complaint) {
         if (!complaint) return null;
         try {
-            const { userId, technicianId, id, timeline, ...rest } = complaint;
+            const { userId, technicianId, jobId, reportedByRole, id, timeline, ...rest } = complaint;
             const mapped = { ...rest };
             if (userId !== undefined) mapped.user_id = userId;
             if (technicianId !== undefined) mapped.technician_id = technicianId;
+            if (jobId !== undefined) mapped.job_id = jobId;
+            if (reportedByRole !== undefined) mapped.reported_by_role = reportedByRole;
             if (id !== undefined) mapped.id = id;
             if (timeline !== undefined) mapped.timeline = timeline; // JSONB
             return mapped;
@@ -41,15 +45,17 @@ class ComplaintManager {
         }
     }
 
-    async createComplaint(userId, technicianId, subject, description, category, evidence) {
+    async createComplaint(data) {
         try {
             const complaint = {
-                userId,
-                technicianId,
-                subject,
-                description,
-                category: category || 'General',
-                evidence: evidence || [], // JSONB in DB
+                userId: data.userId,
+                technicianId: data.technicianId,
+                jobId: data.jobId,
+                subject: data.subject,
+                description: data.description,
+                category: data.category || 'General',
+                reportedByRole: data.reportedByRole || 'user',
+                evidence: data.evidence || [], // JSONB in DB
                 status: 'open',
                 created_at: new Date().toISOString(),
                 timeline: [

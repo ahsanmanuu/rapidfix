@@ -22,24 +22,25 @@ const Complaints = () => {
             fetchData();
         }
 
-        if (socket && user) {
-            // Listen for status updates
-            socket.on('complaint_status_updated', (updatedComplaint) => {
-                setComplaints(prev => prev.map(c => c.id === updatedComplaint.id ? updatedComplaint : c));
-            });
+        const handleStatusUpdate = (updatedComplaint) => {
+            setComplaints(prev => prev.map(c => c.id === updatedComplaint.id ? updatedComplaint : c));
+        };
 
-            // If user creates a complaint elsewhere or admin creates one for them (rare but possible)
-            socket.on('new_complaint', (newComplaint) => {
-                if (newComplaint.userId === user.id) {
-                    setComplaints(prev => [newComplaint, ...prev]);
-                }
-            });
+        const handleNewComplaint = (newComplaint) => {
+            if (newComplaint.userId === user.id) {
+                setComplaints(prev => [newComplaint, ...prev]);
+            }
+        };
+
+        if (socket && user) {
+            socket.on('complaint_status_updated', handleStatusUpdate);
+            socket.on('new_complaint', handleNewComplaint);
         }
 
         return () => {
             if (socket) {
-                socket.off('complaint_status_updated');
-                socket.off('new_complaint');
+                socket.off('complaint_status_updated', handleStatusUpdate);
+                socket.off('new_complaint', handleNewComplaint);
             }
         };
     }, [user, socket]);
