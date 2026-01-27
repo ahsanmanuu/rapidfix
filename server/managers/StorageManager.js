@@ -101,7 +101,7 @@ class StorageManager {
 
     async _uploadToSupabase(file, folder, filename) {
         try {
-            const bucket = folder === 'technicians' ? 'technician-documents' : 'user-avatars';
+            const bucket = (folder === 'technicians' || folder === 'chat-attachments') ? 'technician-documents' : 'user-avatars';
             const contentType = file.mimetype;
             const fileContent = fs.readFileSync(file.path);
 

@@ -1,36 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import TechnicianLayout from '../components/TechnicianLayout';
 import { getOffers, acceptOffer } from '../services/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    X, Store, Target, FileText, History, Bolt, Star, Timer, Copy,
+    ArrowRight, BrainCircuit, TrendingUp, CheckCircle2, Wallet, Award, Briefcase, Zap
+} from 'lucide-react';
 
-// Helper for Material Symbols
-const MaterialIcon = ({ name, className = "" }) => (
-    <span className={`material-symbols-outlined ${className}`}>{name}</span>
+const GlassCard = ({ children, className = "", delay = 0 }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: delay }}
+        className={`bg-slate-900/40 backdrop-blur-md border border-white/5 rounded-2xl shadow-xl ${className}`}
+    >
+        {children}
+    </motion.div>
 );
 
-// Generic Modal Component
-const Modal = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-[#cfe7db] overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="flex justify-between items-center p-5 border-b border-[#f0f7f4]">
-                    <h3 className="text-lg font-bold text-[#0d1b14]">{title}</h3>
-                    <button onClick={onClose} className="p-1 rounded-full hover:bg-[#f0f7f4] transition-colors text-[#4c9a73]">
-                        <MaterialIcon name="close" className="text-xl" />
-                    </button>
-                </div>
-                <div className="p-6 max-h-[70vh] overflow-y-auto">
-                    {children}
-                </div>
-                <div className="p-4 bg-[#f8fcfa] border-t border-[#f0f7f4] flex justify-end">
-                    <button onClick={onClose} className="px-4 py-2 bg-[#13ec80] text-[#0d1b14] font-bold text-sm rounded-lg hover:bg-[#13ec80]/90 transition-colors">
-                        Close
-                    </button>
-                </div>
+const GlassModal = ({ children, onClose, title }) => (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md" onClick={onClose}>
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl w-full max-w-lg overflow-hidden relative"
+        >
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="flex justify-between items-center p-6 border-b border-white/10 bg-white/5 relative z-10">
+                <h3 className="text-lg font-black text-white tracking-tight uppercase">{title}</h3>
+                <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors text-slate-400 hover:text-white">
+                    <X size={20} />
+                </button>
             </div>
-        </div>
-    );
-};
+
+            <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar relative z-10">
+                {children}
+            </div>
+
+            <div className="p-4 border-t border-white/10 bg-white/5 flex justify-end relative z-10">
+                <button onClick={onClose} className="px-6 py-2.5 bg-slate-800 text-white font-bold text-xs rounded-xl hover:bg-slate-700 transition-colors uppercase tracking-widest border border-white/5">
+                    Close
+                </button>
+            </div>
+        </motion.div>
+    </div>
+);
 
 const TechnicianOffers = () => {
     const [activeTab, setActiveTab] = useState('Admin Offers');
@@ -58,37 +76,30 @@ const TechnicianOffers = () => {
         try {
             const res = await acceptOffer(offerId);
             if (res.data.success) {
-                alert("Offer Accepted / Job Created!");
-                // Refresh offers
+                // You might want to show a nicer toast here
                 const updated = offers.filter(o => o.id !== offerId);
                 setOffers(updated);
             }
         } catch (err) {
             console.error("Failed to accept offer:", err);
-            alert(err.response?.data?.error || "Failed to accept offer");
+            // Handle error state or user notification
         }
     };
 
-    // Filter offers based on tab (Conceptual filtering for now)
-    const filteredOffers = offers.filter(offer => {
-        if (activeTab === 'Admin Offers') return true; // Show all for now
-        // Implement specific logic based on offer properties later
-        return true;
-    });
-
-    // Mock Content for Modals (Keep static for now as they are specific features)
     const renderModalContent = () => {
         switch (activeModal) {
             case 'offers':
                 return (
                     <div className="space-y-4">
-                        <p className="text-sm text-[#4c9a73]">You have {offers.length} active offers available.</p>
+                        <p className="text-sm text-slate-400 font-medium">You have <span className="text-emerald-400 font-bold">{offers.length}</span> active offers available.</p>
                         {offers.slice(0, 3).map(offer => (
-                            <div key={offer.id} className="p-3 border border-[#13ec80] bg-[#13ec80]/5 rounded-lg flex gap-3 items-center">
-                                <MaterialIcon name="bolt" className="text-[#13ec80]" />
+                            <div key={offer.id} className="p-4 border border-white/10 bg-slate-800/50 rounded-xl flex gap-4 items-center hover:border-emerald-500/30 transition-colors">
+                                <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+                                    <Bolt size={20} />
+                                </div>
                                 <div>
-                                    <p className="font-bold text-[#0d1b14] text-sm">{offer.title}</p>
-                                    <p className="text-xs text-[#4c9a73]">{offer.description}</p>
+                                    <p className="font-bold text-white text-sm">{offer.title}</p>
+                                    <p className="text-xs text-slate-400 mt-0.5">{offer.description}</p>
                                 </div>
                             </div>
                         ))}
@@ -96,35 +107,45 @@ const TechnicianOffers = () => {
                 );
             case 'targets':
                 return (
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                            <p className="font-bold text-[#0d1b14]">Weekly Goal</p>
-                            <span className="text-xs font-bold text-[#13ec80]">On Track</span>
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                                <p className="font-bold text-white uppercase text-xs tracking-wider">Weekly Goal</p>
+                                <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">ON TRACK</span>
+                            </div>
+                            <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: '75%' }}
+                                    className="bg-emerald-500 h-full rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+                                ></motion.div>
+                            </div>
+                            <p className="text-xs text-slate-400 font-medium text-right">Completed 15/20 Jobs</p>
                         </div>
-                        <div className="w-full bg-[#e7f3ed] h-3 rounded-full overflow-hidden">
-                            <div className="bg-[#13ec80] h-full w-[75%] rounded-full"></div>
-                        </div>
-                        <p className="text-xs text-[#4c9a73]">Completed 15/20 Jobs</p>
                     </div>
                 );
             case 'contracts':
                 return (
                     <div className="space-y-3">
-                        <div className="p-3 border border-[#e7f3ed] rounded-lg">
-                            <div className="flex justify-between mb-1">
-                                <p className="font-bold text-[#0d1b14] text-sm">Green Valley Apts</p>
-                                <span className="bg-[#e7f3ed] text-[#4c9a73] text-[10px] px-2 py-0.5 rounded font-bold">Active</span>
+                        <div className="p-4 border border-white/10 bg-slate-800/50 rounded-xl hover:bg-slate-800/70 transition-colors group cursor-pointer">
+                            <div className="flex justify-between mb-2">
+                                <p className="font-bold text-white text-sm group-hover:text-indigo-400 transition-colors">Green Valley Apts</p>
+                                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-2 py-0.5 rounded font-bold uppercase">Active</span>
                             </div>
-                            <p className="text-xs text-[#4c9a73]">Monthly Maintenance • ₹15,000/mo</p>
+                            <p className="text-xs text-slate-400 flex items-center gap-2">
+                                <Briefcase size={12} /> Monthly Maintenance • ₹15,000/mo
+                            </p>
                         </div>
                     </div>
                 );
             case 'history':
                 return (
                     <div className="space-y-3">
-                        <div className="flex justify-between items-center text-sm p-2 hover:bg-[#f6f8f7] rounded">
-                            <span className="text-[#0d1b14] font-medium">Amazon Voucher</span>
-                            <span className="text-[#4c9a73]">-500 pts</span>
+                        <div className="flex justify-between items-center text-sm p-4 bg-slate-800/30 border border-white/5 rounded-xl">
+                            <span className="text-white font-medium flex items-center gap-2">
+                                <Award size={16} className="text-amber-400" /> Amazon Voucher
+                            </span>
+                            <span className="text-rose-400 font-bold font-mono">-500 pts</span>
                         </div>
                     </div>
                 );
@@ -145,155 +166,206 @@ const TechnicianOffers = () => {
 
     return (
         <TechnicianLayout title="Technician Hub">
-            <div className="flex flex-1 flex-col lg:flex-row h-full overflow-hidden font-sans text-[#0d1b14]">
+            <div className="flex flex-1 flex-col lg:flex-row h-full font-sans text-slate-200 bg-slate-950 overflow-hidden">
+                {/* Decorative BG */}
+                <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                    <div className="absolute top-[10%] left-[5%] w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] animate-pulse-slow"></div>
+                    <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] bg-emerald-600/10 rounded-full blur-[100px] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+                </div>
+
                 {/* Internal Sidebar */}
-                <aside className="flex w-full lg:w-72 flex-col gap-6 bg-white border-b lg:border-b-0 lg:border-r border-[#e7f3ed] p-6 h-auto lg:h-full overflow-y-auto shrink-0">
+                <aside className="relative flex w-full lg:w-80 flex-col gap-6 bg-slate-900/50 border-b lg:border-b-0 lg:border-r border-white/5 p-6 h-auto lg:h-full overflow-y-auto shrink-0 backdrop-blur-sm z-10">
 
                     {/* Progress Tracker */}
-                    <div className="flex flex-col gap-4 p-4 rounded-xl bg-[#13ec80]/10 border border-[#13ec80]/20">
-                        <div className="flex justify-between items-center">
-                            <span className="text-xs font-bold uppercase tracking-wider text-[#0d1b14]">Targeted Goal</span>
-                            <span className="text-xs font-bold text-[#13ec80] bg-black px-2 py-0.5 rounded-full">Active</span>
+                    <GlassCard className="p-5 bg-gradient-to-br from-indigo-900/20 to-slate-900/50 border-indigo-500/20">
+                        <div className="flex justify-between items-center mb-3">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Targeted Goal</span>
+                            <span className="text-[10px] font-bold text-white bg-indigo-500/20 border border-indigo-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <span className="size-1.5 rounded-full bg-indigo-400 animate-pulse"></span> Active
+                            </span>
                         </div>
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm font-medium text-[#0d1b14]">
-                                <span>Weekend Surge</span>
+                        <div className="space-y-3">
+                            <div className="flex justify-between text-xs font-bold text-white">
+                                <span className="flex items-center gap-1.5"><Zap size={12} className="text-amber-400" /> Weekend Surge</span>
                                 <span>3/5 Jobs</span>
                             </div>
-                            <div className="w-full bg-[#e7f3ed] h-2 rounded-full overflow-hidden">
-                                <div className="bg-[#13ec80] h-full rounded-full" style={{ width: '60%' }}></div>
+                            <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-white/5">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: '60%' }}
+                                    transition={{ duration: 1, delay: 0.5 }}
+                                    className="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                                ></motion.div>
                             </div>
                         </div>
-                        <div className="mt-2 flex items-start gap-2 bg-white/50 p-2 rounded-lg">
-                            <MaterialIcon name="psychology" className="text-[#13ec80] text-lg" />
+                        <div className="mt-4 flex items-start gap-3 bg-slate-950/50 p-3 rounded-xl border border-white/5">
+                            <BrainCircuit className="text-indigo-400 shrink-0 mt-0.5" size={18} />
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-bold text-[#4c9a73]">AI PREDICTION</span>
-                                <p className="text-[11px] text-[#0d1b14] leading-tight">85% likelihood of completion based on your current speed.</p>
+                                <span className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-0.5">AI Prediction</span>
+                                <p className="text-[11px] text-slate-400 leading-relaxed font-medium">85% likelihood of completion based on your current speed.</p>
                             </div>
                         </div>
-                    </div>
+                    </GlassCard>
 
                     {/* Navigation Tiles */}
-                    <div className="flex flex-col gap-2">
-                        <p className="text-xs font-bold text-[#4c9a73] px-1 mb-2 uppercase tracking-widest">Quick Actions</p>
+                    <div className="flex flex-col gap-3">
+                        <p className="text-[10px] font-black text-slate-500 px-1 uppercase tracking-widest">Quick Actions</p>
                         <div className="grid grid-cols-2 gap-3">
-                            <button onClick={() => setActiveModal('offers')} className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#f6f8f7] border border-[#e7f3ed] hover:border-[#13ec80] hover:bg-[#13ec80]/5 transition-all gap-2 text-center group">
-                                <MaterialIcon name="storefront" className="text-[#4c9a73] group-hover:text-[#13ec80] transition-colors" />
-                                <span className="text-[11px] font-bold text-[#0d1b14] leading-tight">Active Offers</span>
+                            <button onClick={() => setActiveModal('offers')} className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-800/40 border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all gap-2 text-center group">
+                                <Store className="text-slate-400 group-hover:text-emerald-400 transition-colors" size={20} />
+                                <span className="text-[10px] font-bold text-slate-300 group-hover:text-white uppercase tracking-wider">Offers</span>
                             </button>
-                            <button onClick={() => setActiveModal('targets')} className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#f6f8f7] border border-[#e7f3ed] hover:border-[#13ec80] hover:bg-[#13ec80]/5 transition-all gap-2 text-center group">
-                                <MaterialIcon name="track_changes" className="text-[#4c9a73] group-hover:text-[#13ec80] transition-colors" />
-                                <span className="text-[11px] font-bold text-[#0d1b14] leading-tight">My Targets</span>
+                            <button onClick={() => setActiveModal('targets')} className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-800/40 border border-white/5 hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-all gap-2 text-center group">
+                                <Target className="text-slate-400 group-hover:text-indigo-400 transition-colors" size={20} />
+                                <span className="text-[10px] font-bold text-slate-300 group-hover:text-white uppercase tracking-wider">Targets</span>
                             </button>
-                            <button onClick={() => setActiveModal('contracts')} className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#f6f8f7] border border-[#e7f3ed] hover:border-[#13ec80] hover:bg-[#13ec80]/5 transition-all gap-2 text-center group">
-                                <MaterialIcon name="contract" className="text-[#4c9a73] group-hover:text-[#13ec80] transition-colors" />
-                                <span className="text-[11px] font-bold text-[#0d1b14] leading-tight">AMC Contracts</span>
+                            <button onClick={() => setActiveModal('contracts')} className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-800/40 border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all gap-2 text-center group">
+                                <FileText className="text-slate-400 group-hover:text-blue-400 transition-colors" size={20} />
+                                <span className="text-[10px] font-bold text-slate-300 group-hover:text-white uppercase tracking-wider">Contracts</span>
                             </button>
-                            <button onClick={() => setActiveModal('history')} className="flex flex-col items-center justify-center p-3 rounded-xl bg-[#f6f8f7] border border-[#e7f3ed] hover:border-[#13ec80] hover:bg-[#13ec80]/5 transition-all gap-2 text-center group">
-                                <MaterialIcon name="history" className="text-[#4c9a73] group-hover:text-[#13ec80] transition-colors" />
-                                <span className="text-[11px] font-bold text-[#0d1b14] leading-tight">History</span>
+                            <button onClick={() => setActiveModal('history')} className="flex flex-col items-center justify-center p-4 rounded-2xl bg-slate-800/40 border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all gap-2 text-center group">
+                                <History className="text-slate-400 group-hover:text-amber-400 transition-colors" size={20} />
+                                <span className="text-[10px] font-bold text-slate-300 group-hover:text-white uppercase tracking-wider">History</span>
                             </button>
                         </div>
                     </div>
 
-                    <div className="mt-auto border-t border-[#e7f3ed] pt-6 hidden lg:block">
-                        <div className="flex items-center justify-between mb-4">
+                    <div className="mt-auto border-t border-white/5 pt-6 hidden lg:block">
+                        <div className="flex items-center justify-between mb-4 px-1">
                             <div className="flex flex-col">
-                                <span className="text-xs text-[#4c9a73]">Total Earned</span>
-                                <span className="text-xl font-bold text-[#0d1b14]">₹14,500</span>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total Earned</span>
+                                <span className="text-2xl font-black text-white tracking-tight">₹14,500</span>
                             </div>
-                            <MaterialIcon name="payments" className="text-[#13ec80]" />
+                            <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20">
+                                <Wallet size={20} />
+                            </div>
                         </div>
-                        <button className="w-full py-3 bg-[#13ec80] text-[#0d1b14] rounded-lg font-bold text-sm tracking-wide shadow-lg shadow-[#13ec80]/20 hover:shadow-[#13ec80]/40 transition-shadow">
+                        <button className="w-full py-3.5 bg-emerald-600 text-white rounded-xl font-black text-xs tracking-widest shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 hover:shadow-emerald-500/30 transition-all uppercase hover:scale-[1.02] active:scale-[0.98]">
                             Withdraw Earnings
                         </button>
                     </div>
                 </aside>
 
                 {/* Main Content Area */}
-                <div className="flex-1 flex flex-col overflow-y-auto bg-[#f8fcfa]">
+                <div className="relative flex-1 flex flex-col overflow-y-auto z-10 custom-scrollbar">
                     {/* Featured Carousel */}
-                    <div className="px-8 pt-8">
-                        <div className="flex overflow-x-auto gap-4 pb-6 scrollbar-hide snap-x">
-                            {/* Static Promotional Cards (Can be made dynamic later) */}
-                            <div className="min-w-[85vw] md:min-w-[600px] flex-1 snap-start relative group rounded-2xl overflow-hidden bg-black aspect-[21/9] shadow-lg">
-                                <div className="absolute inset-0 bg-cover bg-center opacity-60 transition-transform duration-500 group-hover:scale-105" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2000&auto=format&fit=crop')" }}></div>
-                                <div className="absolute inset-0 bg-gradient-to-r from-black/90 to-transparent"></div>
-                                <div className="relative h-full flex flex-col justify-center p-6 md:p-10 max-w-xl">
-                                    <span className="bg-[#13ec80] text-[#0d1b14] text-[10px] font-bold px-2 py-1 rounded-full w-fit mb-4 uppercase tracking-wider">High Value</span>
-                                    <h2 className="text-white text-2xl md:text-3xl font-bold mb-2 leading-tight">AMC Partnership: High-Value Contracts</h2>
-                                    <p className="text-gray-300 text-sm mb-6 max-w-sm hidden md:block">Join the Annual Maintenance Program for steady monthly income and exclusive priority jobs.</p>
-                                    <button className="flex items-center gap-2 bg-white text-black px-6 py-2.5 rounded-lg font-bold text-sm w-fit transition-transform hover:scale-105 hover:bg-gray-100">
-                                        Apply Now <MaterialIcon name="arrow_forward" className="text-sm" />
+                    <div className="px-6 md:px-8 pt-6 md:pt-8 min-h-[300px]">
+                        <div className="flex overflow-x-visible gap-6 pb-8 snap-x">
+                            {/* Static Promotional Cards */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="min-w-full md:min-w-[650px] flex-1 snap-start relative group rounded-3xl overflow-hidden bg-slate-900 aspect-[21/9] shadow-2xl border border-white/10"
+                            >
+                                <div className="absolute inset-0 bg-cover bg-center opacity-40 transition-transform duration-700 group-hover:scale-105 saturate-0 group-hover:saturate-100" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2000&auto=format&fit=crop')" }}></div>
+                                <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent"></div>
+                                <div className="relative h-full flex flex-col justify-center p-8 md:p-12 max-w-2xl">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <span className="bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-lg shadow-emerald-500/30">High Value</span>
+                                        <span className="text-emerald-400 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"><Star size={12} fill="currentColor" /> Premium Partner</span>
+                                    </div>
+                                    <h2 className="text-white text-3xl md:text-4xl font-black mb-3 leading-tight tracking-tight">AMC Partnership: <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">High-Value Contracts</span></h2>
+                                    <p className="text-slate-300 text-sm mb-8 max-w-md font-medium leading-relaxed hidden md:block">Join the Annual Maintenance Program for steady monthly income, exclusive priority jobs, and guaranteed payouts.</p>
+                                    <button className="flex items-center gap-3 bg-white text-slate-950 px-8 py-3.5 rounded-xl font-black text-xs uppercase tracking-widest w-fit transition-all hover:scale-105 hover:bg-slate-200">
+                                        Apply Now <ArrowRight size={16} />
                                     </button>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
                     </div>
 
                     {/* Section Header & Tabs */}
-                    <div className="px-8 pb-4">
-                        <div className="flex items-end justify-between mb-4">
-                            <h2 className="text-[#0d1b14] text-2xl font-bold">Active Opportunities</h2>
-                            <div className="flex gap-2">
-                                <span className="text-xs text-[#4c9a73] font-medium">Viewing {offers.length} active offers</span>
+                    <div className="px-6 md:px-8 pb-4 sticky top-0 z-20 bg-slate-950/80 backdrop-blur-md border-b border-white/5 pt-2">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
+                            <div>
+                                <h2 className="text-white text-2xl font-black tracking-tight mb-1">Active Opportunities</h2>
+                                <p className="text-slate-400 text-sm font-medium">Explore and claim available jobs and offers.</p>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 rounded-lg border border-white/5">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <span className="text-xs text-emerald-400 font-bold uppercase tracking-wider">{offers.length} active offers</span>
                             </div>
                         </div>
-                        <div className="flex border-b border-[#cfe7db] gap-8 overflow-x-auto">
+                        <div className="flex border-b border-white/5 gap-8 overflow-x-auto no-scrollbar">
                             {['Admin Offers', 'Super Admin Exclusives', 'Targeted Goals', 'Seasonal'].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
-                                    className={`flex flex-col items-center justify-center border-b-[3px] pb-3 pt-2 px-1 transition-colors whitespace-nowrap ${activeTab === tab
-                                        ? 'border-[#13ec80] text-[#0d1b14]'
-                                        : 'border-transparent text-[#4c9a73] hover:text-[#0d1b14]'
+                                    className={`relative flex flex-col items-center justify-center pb-4 px-1 transition-all whitespace-nowrap outline-none ${activeTab === tab
+                                        ? 'text-white'
+                                        : 'text-slate-500 hover:text-slate-300'
                                         }`}
                                 >
-                                    <p className="text-sm font-bold leading-normal">{tab}</p>
+                                    <p className="text-sm font-bold leading-normal tracking-wide">{tab}</p>
+                                    {activeTab === tab && (
+                                        <motion.div
+                                            layoutId="activeTab"
+                                            className="absolute bottom-0 w-full h-[2px] bg-gradient-to-r from-indigo-500 to-emerald-500"
+                                        />
+                                    )}
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     {/* Offers Grid */}
-                    <div className="px-8 pb-12 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="px-6 md:px-8 py-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
                         {loading ? (
-                            <div className="col-span-full py-10 text-center text-gray-400">Loading offers...</div>
+                            <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-500 gap-4">
+                                <div className="size-10 border-4 border-slate-800 border-t-emerald-500 rounded-full animate-spin"></div>
+                                <p className="text-xs font-bold uppercase tracking-widest">Loading offers...</p>
+                            </div>
                         ) : offers.length === 0 ? (
-                            <div className="col-span-full py-10 text-center text-gray-400">No active offers at the moment.</div>
+                            <div className="col-span-full py-20 text-center space-y-4">
+                                <div className="size-20 bg-slate-900 rounded-full flex items-center justify-center mx-auto border border-white/5">
+                                    <Store className="text-slate-700" size={32} />
+                                </div>
+                                <p className="text-slate-500 font-bold">No active offers at the moment.</p>
+                            </div>
                         ) : (
-                            offers.map(offer => (
-                                <div key={offer.id} className="bg-white rounded-2xl border border-[#e7f3ed] overflow-hidden shadow-sm hover:shadow-lg transition-all group duration-300">
-                                    <div className={`h-1.5 w-full ${offer.type === 'job_bid' ? 'bg-[#13ec80]' : 'bg-blue-500'}`}></div>
+                            offers.map((offer, index) => (
+                                <GlassCard key={offer.id} delay={index * 0.1} className="overflow-hidden group hover:border-white/10 hover:shadow-2xl hover:shadow-emerald-900/10 transition-all duration-300">
+                                    <div className={`h-1 w-full bg-gradient-to-r ${offer.type === 'job_bid' ? 'from-emerald-500 to-teal-500' : 'from-blue-500 to-indigo-500'}`}></div>
                                     <div className="p-6">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div className={`p-2 rounded-lg ${offer.type === 'job_bid' ? 'bg-[#13ec80]/10 text-[#13ec80]' : 'bg-blue-50 text-blue-500'}`}>
-                                                <MaterialIcon name={offer.type === 'job_bid' ? 'bolt' : 'workspace_premium'} />
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className={`p-3 rounded-xl border border-white/5 ${offer.type === 'job_bid' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                                                {offer.type === 'job_bid' ? <Bolt size={20} /> : <Award size={20} />}
                                             </div>
                                             {offer.expiryDate && (
-                                                <span className="bg-red-50 text-red-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                                                    <MaterialIcon name="timer" className="text-[14px]" />
-                                                    {new Date(offer.expiryDate).toLocaleDateString()}
-                                                </span>
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                                                    <Timer size={12} />
+                                                    <span className="text-[10px] font-black uppercase tracking-wider">{new Date(offer.expiryDate).toLocaleDateString()}</span>
+                                                </div>
                                             )}
                                         </div>
-                                        <h3 className="text-[#0d1b14] text-lg font-bold mb-1">{offer.title}</h3>
-                                        <p className="text-sm text-[#4c9a73] mb-4">{offer.description}</p>
+
+                                        <div className="space-y-2 mb-6 min-h-[5rem]">
+                                            <h3 className="text-white text-lg font-black tracking-tight leading-tight group-hover:text-emerald-400 transition-colors">{offer.title}</h3>
+                                            <p className="text-sm text-slate-400 font-medium leading-relaxed">{offer.description}</p>
+                                        </div>
 
                                         <div className="mb-6">
                                             {offer.price ? (
-                                                <div className="bg-[#f6f8f7] p-3 rounded-lg border border-[#e7f3ed]">
-                                                    <p className="text-[9px] font-bold text-[#4c9a73] uppercase">Value</p>
-                                                    <p className="text-xl font-bold text-[#0d1b14]">₹{offer.price}</p>
+                                                <div className="bg-slate-950/50 p-4 rounded-xl border border-white/5 flex flex-col items-center">
+                                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Value</p>
+                                                    <p className="text-2xl font-black text-white tracking-tight">₹{offer.price}</p>
                                                 </div>
                                             ) : (
-                                                <div className="bg-[#13ec80]/5 p-4 rounded-xl">
+                                                <div className="bg-slate-950/50 p-4 rounded-xl border border-white/5 group-hover:border-emerald-500/20 transition-colors">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <span className="text-xs font-bold text-[#0d1b14]">CODE</span>
-                                                        <span className="text-[10px] text-[#13ec80] font-bold cursor-pointer hover:underline">COPY</span>
+                                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">CODE</span>
+                                                        <button
+                                                            className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold hover:text-emerald-300 transition-colors"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigator.clipboard.writeText(offer.code);
+                                                            }}
+                                                        >
+                                                            <Copy size={10} /> COPY
+                                                        </button>
                                                     </div>
-                                                    <div className="flex items-center justify-between border-2 border-dashed border-[#13ec80]/30 p-2 rounded-lg">
-                                                        <code className="font-bold text-[#0d1b14] tracking-wide">{offer.code || 'N/A'}</code>
+                                                    <div className="flex items-center justify-center border border-dashed border-slate-700 bg-slate-900/50 p-2.5 rounded-lg group-hover:border-emerald-500/30 transition-colors">
+                                                        <code className="font-mono font-bold text-white tracking-widest">{offer.code || 'N/A'}</code>
                                                     </div>
                                                 </div>
                                             )}
@@ -301,24 +373,30 @@ const TechnicianOffers = () => {
 
                                         <button
                                             onClick={() => handleAccept(offer.id)}
-                                            className="w-full py-3 bg-[#13ec80] text-[#0d1b14] rounded-xl font-bold text-sm shadow-md hover:shadow-lg hover:bg-[#13ec80]/90 transition-all">
+                                            className={`w-full py-4 rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98]
+                                                ${offer.type === 'job_bid'
+                                                    ? 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-500'
+                                                    : 'bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-500'}`}
+                                        >
                                             {offer.type === 'job_bid' ? 'Accept Job' : 'Claim Offer'}
                                         </button>
                                     </div>
-                                </div>
+                                </GlassCard>
                             ))
                         )}
                     </div>
                 </div>
 
-                {/* Modal Overlay */}
-                <Modal
-                    isOpen={!!activeModal}
-                    onClose={() => setActiveModal(null)}
-                    title={getModalTitle()}
-                >
-                    {renderModalContent()}
-                </Modal>
+                <AnimatePresence>
+                    {activeModal && (
+                        <GlassModal
+                            onClose={() => setActiveModal(null)}
+                            title={getModalTitle()}
+                        >
+                            {renderModalContent()}
+                        </GlassModal>
+                    )}
+                </AnimatePresence>
             </div>
         </TechnicianLayout>
     );

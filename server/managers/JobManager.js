@@ -538,6 +538,9 @@ class JobManager {
 
             // Update Stats
             await this.techManager.syncStatsFromJobs(technicianId);
+            if (this.analyticsManager) {
+                await this.analyticsManager.syncStats(technicianId);
+            }
 
             return updatedJob;
         } catch (err) {
@@ -821,6 +824,15 @@ class JobManager {
                 console.log(`[JobManager] Job ${id} in progress, syncing tech ${enriched.technicianId} stats and setting status to finishing_work`);
                 await this.techManager.syncStatsFromJobs(enriched.technicianId);
                 await this.techManager.updateStatus(enriched.technicianId, 'finishing_work');
+            } else if (status === 'cancelled') {
+                console.log(`[JobManager] Job ${id} cancelled, syncing tech ${enriched.technicianId} stats and setting status to available`);
+                await this.techManager.syncStatsFromJobs(enriched.technicianId);
+                await this.techManager.updateStatus(enriched.technicianId, 'available');
+            }
+
+            // [NEW] Global Analytics Sync for Realtime Updates
+            if (enriched.technicianId && this.analyticsManager) {
+                await this.analyticsManager.syncStats(enriched.technicianId);
             }
 
             // [NEW] Persist Notifications
@@ -842,6 +854,9 @@ class JobManager {
                 } else if (status === 'completed') {
                     logTitle = 'Job Completed';
                     logMsg = `Job #${enriched.id} marked as completed`;
+                } else if (status === 'cancelled') {
+                    logTitle = 'Job Cancelled';
+                    logMsg = `Job #${enriched.id} was cancelled`;
                 }
 
                 if (logTitle) {

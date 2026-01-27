@@ -45,21 +45,21 @@ const SidebarItem = ({ icon: Icon, label, active, badge, onClick }) => (
         whileHover={{ scale: 1.01, x: 4 }}
         whileTap={{ scale: 0.98 }}
         onClick={onClick}
-        className={`w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl font-black transition-all text-[13px] relative group overflow-hidden
+        className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl font-bold transition-all text-sm relative group overflow-hidden mb-2
         ${active
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200/50'
-                : 'text-slate-500 hover:bg-blue-50/50 hover:text-blue-600'}`}
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200/50 ring-1 ring-blue-500/50'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
     >
         {active && (
             <motion.div
                 layoutId="activeIndicator"
-                className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-white rounded-r-full"
+                className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-white/40 rounded-r-full"
             />
         )}
-        <Icon size={20} strokeWidth={active ? 3 : 2} className={active ? 'text-white' : 'text-slate-400 group-hover:text-blue-600 transition-colors'} />
-        <span className="flex-1 text-left tracking-tight uppercase tracking-widest">{label}</span>
+        <Icon size={20} strokeWidth={active ? 2.5 : 2} className={active ? 'text-white' : 'text-slate-400 group-hover:text-blue-600 transition-colors'} />
+        <span className="flex-1 text-left tracking-wide">{label}</span>
         {badge && (
-            <span className={`text-[9px] px-2 py-0.5 rounded-lg font-black uppercase tracking-tighter ${active ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600'}`}>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${active ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600'}`}>
                 {badge}
             </span>
         )}
@@ -176,18 +176,18 @@ const TechnicianLayout = ({ children, title = "Dashboard", headerActions }) => {
 
             {/* --- SIDEBAR --- */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-40 w-80 flex flex-col border-r border-slate-200 bg-white transition-all duration-500 ease-in-out lg:translate-x-0 shrink-0 shadow-2xl lg:shadow-[20px_0_60px_-15px_rgba(0,0,0,0.03)]
+                className={`fixed lg:static inset-y-0 left-0 z-40 w-[300px] flex flex-col border-r border-slate-200 bg-white transition-all duration-500 ease-in-out lg:translate-x-0 shrink-0 shadow-2xl lg:shadow-[20px_0_60px_-15px_rgba(0,0,0,0.03)]
                 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
                 {/* --- Header / Logo --- */}
-                <div className="p-10 pb-6 flex items-center justify-between">
+                <div className="px-8 py-10 flex items-center justify-between">
                     <div className="flex items-center gap-4 group cursor-pointer" onClick={() => navigate('/technician-dashboard')}>
-                        <div className="size-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-blue-200 group-hover:scale-105 transition-all overflow-hidden p-2">
-                            <img src="/logo.png" alt="Fixofy" className="w-full h-full object-contain brightness-0 invert" />
+                        <div className="size-11 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center p-2 shadow-sm group-hover:shadow-md transition-all">
+                            <img src="/logo.png" alt="Fixofy" className="w-full h-full object-contain" />
                         </div>
                         <div className="flex flex-col">
-                            <h2 className="text-xl font-black tracking-tighter text-slate-900 leading-none">RapidFix</h2>
-                            <p className="text-[10px] font-black text-blue-600 tracking-[0.2em] uppercase mt-1">Technician</p>
+                            <h2 className="text-xl font-bold tracking-tight text-slate-900 leading-none">RapidFix</h2>
+                            <p className="text-[11px] font-bold text-slate-400 tracking-wide mt-1">Technician Portal</p>
                         </div>
                     </div>
                     <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-slate-600 bg-slate-50 rounded-xl">
@@ -196,15 +196,15 @@ const TechnicianLayout = ({ children, title = "Dashboard", headerActions }) => {
                 </div>
 
                 {/* --- Sections --- */}
-                <nav className="flex-1 px-5 space-y-6 overflow-y-auto hide-scrollbar py-6">
+                <nav className="flex-1 px-6 space-y-8 overflow-y-auto hide-scrollbar py-2">
                     {/* CORE SECTION */}
-                    <div className="space-y-1.5">
-                        <div className="px-5 mb-3 flex items-center justify-between">
-                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Core Engine</p>
+                    <div className="space-y-1">
+                        <div className="px-2 mb-3">
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest opacity-80">Overview</p>
                         </div>
                         <SidebarItem
                             icon={LayoutDashboard}
-                            label="Overview"
+                            label="Dashboard"
                             active={isActive('/technician-dashboard') || isActive('/dashboard')}
                             onClick={() => navigate('/technician-dashboard')}
                         />
@@ -224,9 +224,9 @@ const TechnicianLayout = ({ children, title = "Dashboard", headerActions }) => {
                     </div>
 
                     {/* FINANCE SECTION */}
-                    <div className="space-y-1.5 pt-4 border-t border-slate-100">
-                        <div className="px-5 mb-3">
-                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Financials</p>
+                    <div className="space-y-1">
+                        <div className="px-2 mb-3 mt-6">
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest opacity-80">Finance</p>
                         </div>
                         <SidebarItem
                             icon={Wallet}
@@ -236,7 +236,7 @@ const TechnicianLayout = ({ children, title = "Dashboard", headerActions }) => {
                         />
                         <SidebarItem
                             icon={BarChart2}
-                            label="Earnings"
+                            label="Earnings Hub"
                             active={isActive('/earnings-hub')}
                             onClick={() => navigate('/earnings-hub')}
                         />
@@ -249,9 +249,9 @@ const TechnicianLayout = ({ children, title = "Dashboard", headerActions }) => {
                     </div>
 
                     {/* TOOLS SECTION */}
-                    <div className="space-y-1.5 pt-4 border-t border-slate-100">
-                        <div className="px-5 mb-3">
-                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Support & Feedback</p>
+                    <div className="space-y-1">
+                        <div className="px-2 mb-3 mt-6">
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest opacity-80">Support</p>
                         </div>
                         <SidebarItem
                             icon={Headphones}
@@ -259,7 +259,7 @@ const TechnicianLayout = ({ children, title = "Dashboard", headerActions }) => {
                             active={isActive('/feedback-hub')}
                             onClick={() => navigate('/feedback-hub')}
                         />
-                        <SidebarItem icon={Settings} label="Settings" onClick={() => { }} />
+                        <SidebarItem icon={Settings} label="Preferences" onClick={() => { }} />
                     </div>
                 </nav>
 
@@ -322,6 +322,7 @@ const TechnicianLayout = ({ children, title = "Dashboard", headerActions }) => {
                     </div>
 
                     <div className="flex items-center gap-3 lg:gap-6 shrink-0">
+                        {headerActions && <div className="hidden md:block mr-2">{headerActions}</div>}
                         {/* Status Toggle Area */}
                         <div className="flex items-center gap-4">
                             <div className="relative group">

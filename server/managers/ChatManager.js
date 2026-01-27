@@ -17,13 +17,15 @@ class ChatManager {
     _mapFromDb(chat) {
         if (!chat) return null;
         try {
-            const { sender_id, receiver_id, sender_name, job_id, created_at, ...rest } = chat;
+            const { sender_id, receiver_id, sender_name, job_id, created_at, attachment_url, type, ...rest } = chat;
             return {
                 ...rest,
                 senderId: sender_id,
                 receiverId: receiver_id,
                 senderName: sender_name,
-                jobId: job_id, // [NEW]
+                jobId: job_id,
+                attachmentUrl: attachment_url || chat.attachmentUrl,
+                type: type || chat.type || 'text',
                 createdAt: created_at || chat.createdAt
             };
         } catch (err) {
@@ -35,12 +37,14 @@ class ChatManager {
     _mapToDb(chat) {
         if (!chat) return null;
         try {
-            const { senderId, receiverId, senderName, jobId, createdAt, id, ...rest } = chat;
+            const { senderId, receiverId, senderName, jobId, createdAt, id, attachmentUrl, type, ...rest } = chat;
             const mapped = { ...rest };
             if (senderId !== undefined) mapped.sender_id = senderId;
             if (receiverId !== undefined) mapped.receiver_id = receiverId;
             if (senderName !== undefined) mapped.sender_name = senderName;
-            if (jobId !== undefined) mapped.job_id = jobId; // [NEW]
+            if (jobId !== undefined) mapped.job_id = jobId;
+            if (attachmentUrl !== undefined) mapped.attachment_url = attachmentUrl;
+            if (type !== undefined) mapped.type = type;
             if (createdAt !== undefined) mapped.created_at = createdAt;
             if (id !== undefined) mapped.id = id;
             return mapped;
@@ -50,14 +54,16 @@ class ChatManager {
         }
     }
 
-    async sendMessage(senderId, receiverId, message, senderName, jobId = null) {
+    async sendMessage(senderId, receiverId, message, senderName, jobId = null, attachmentUrl = null, type = 'text') {
         try {
             const chat = {
                 senderId,
                 receiverId,
                 senderName,
-                message,
-                jobId, // [NEW]
+                message, // Can be empty if attachment exists
+                jobId,
+                attachmentUrl,
+                type, // 'text', 'image', 'voice', 'file'
                 read: false,
                 createdAt: new Date().toISOString()
             };
@@ -69,17 +75,24 @@ class ChatManager {
                 // Emit to specific users
                 this.io.to(`user_${receiverId}`).emit('new_message', result);
                 this.io.to(`user_${senderId}`).emit('message_sent', result);
+
+                // Also broadcast to Job Room if jobId exists (for context awareness)
+                if (jobId) {
+                    this.io.to(`job_${jobId}`).emit('new_message', result);
+                }
             }
 
             // [NEW] Auto-Notify Recipient & Admin
             if (this.notificationManager) {
                 // 1. Notify Recipient
                 const role = receiverId.includes('-') ? 'user' : 'technician';
+                const notifBody = type === 'text' ? message : `Sent a ${type}`;
+
                 await this.notificationManager.createNotification(
                     receiverId,
                     'unknown', // Role is hard to guess explicitly but 'unknown' works
                     `New Message from ${senderName}`,
-                    message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+                    notifBody.substring(0, 50) + (notifBody.length > 50 ? '...' : ''),
                     'chat_message',
                     jobId || saved.id
                 );
@@ -89,7 +102,7 @@ class ChatManager {
                     'admin',
                     'admin',
                     `Chat: ${senderName} -> Recipient`,
-                    `Job #${jobId}: ${message.substring(0, 50)}`,
+                    `Job #${jobId}: ${notifBody.substring(0, 50)}`,
                     'admin_chat_alert',
                     jobId || saved.id
                 );

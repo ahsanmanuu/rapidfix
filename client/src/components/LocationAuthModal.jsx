@@ -1,142 +1,79 @@
 import { useState, useEffect } from 'react';
-import { MapPin, ShieldCheck, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
 
 const LocationAuthModal = ({ isOpen, onConfirm }) => {
     const [isChecked, setIsChecked] = useState(false);
-    const [isVisible, setIsVisible] = useState(false);
-
-    useEffect(() => {
-        if (isOpen) {
-            setIsVisible(true);
-        } else {
-            setIsVisible(false); // Immediate hide for logic, cleanup via timeout if needed
-        }
-    }, [isOpen]);
 
     if (!isOpen) return null;
 
     return (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            zIndex: 9999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'blur(5px)',
-            opacity: isVisible ? 1 : 0,
-            transition: 'opacity 0.3s ease'
-        }}>
-            <div style={{
-                backgroundColor: '#fff',
-                borderRadius: '24px',
-                padding: '40px',
-                width: '90%',
-                maxWidth: '500px',
-                textAlign: 'center',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-                transform: isVisible ? 'scale(1)' : 'scale(0.9)',
-                transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                border: '1px solid rgba(249, 89, 89, 0.1)'
-            }}>
-                <div style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '50%',
-                    backgroundColor: '#fff0f0',
-                    color: '#f95959',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 24px',
-                }}>
-                    <MapPin size={40} strokeWidth={2.5} />
-                </div>
-
-                <h2 style={{
-                    color: '#333',
-                    fontSize: '24px',
-                    fontWeight: '800',
-                    fontFamily: "'Montserrat', sans-serif",
-                    marginBottom: '16px'
-                }}>
-                    Location Access Required
-                </h2>
-
-                <p style={{
-                    color: '#666',
-                    fontSize: '15px',
-                    lineHeight: '1.6',
-                    fontFamily: "'Montserrat', sans-serif",
-                    marginBottom: '24px'
-                }}>
-                    <strong>Location Permission is MANDATORY.</strong><br />
-                    Please register from your <strong>Original Work Place</strong>, otherwise
-                    <span style={{ color: '#f95959', fontWeight: 'bold' }}> Job Assignments will not work correctly.</span>
-                </p>
-
-                <div style={{
-                    backgroundColor: '#f8f9fa',
-                    padding: '20px',
-                    borderRadius: '16px',
-                    marginBottom: '30px',
-                    textAlign: 'left',
-                    border: '1px solid #eee'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', cursor: 'pointer' }} onClick={() => setIsChecked(!isChecked)}>
-                        <div style={{
-                            width: '24px',
-                            height: '24px',
-                            borderRadius: '6px',
-                            border: `2px solid ${isChecked ? '#f95959' : '#ddd'}`,
-                            backgroundColor: isChecked ? '#f95959' : 'transparent',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginRight: '12px',
-                            marginTop: '2px',
-                            transition: 'all 0.2s',
-                            flexShrink: 0
-                        }}>
-                            {isChecked && <CheckCircle size={16} color="#fff" />}
-                        </div>
-                        <p style={{ margin: 0, fontSize: '13px', color: '#555', fontFamily: "'Montserrat', sans-serif" }}>
-                            I agree to the <strong>Partner Terms & Conditions</strong> and certify that I am currently at my base of operations.
-                        </p>
-                    </div>
-                </div>
-
-                <button
-                    onClick={() => isChecked && onConfirm()}
-                    disabled={!isChecked}
-                    style={{
-                        background: isChecked ? 'linear-gradient(45deg, #f95959, #ff7b7b)' : '#eee',
-                        color: isChecked ? '#fff' : '#aaa',
-                        border: 'none',
-                        padding: '16px 32px',
-                        borderRadius: '30px',
-                        fontSize: '14px',
-                        fontWeight: '700',
-                        textTransform: 'uppercase',
-                        cursor: isChecked ? 'pointer' : 'not-allowed',
-                        width: '100%',
-                        boxShadow: isChecked ? '0 10px 20px rgba(249, 89, 89, 0.3)' : 'none',
-                        transition: 'all 0.3s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '10px'
-                    }}
+        <AnimatePresence>
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                    transition={{ type: "spring", duration: 0.5 }}
+                    className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
                 >
-                    <ShieldCheck size={20} />
-                    Enable Location & Proceed
-                </button>
+                    {/* Background Effects */}
+                    <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div className="relative z-10 p-8 text-center space-y-6">
+                        <div className="size-20 bg-gradient-to-br from-rose-500/20 to-pink-600/20 rounded-2xl flex items-center justify-center mx-auto ring-1 ring-rose-500/30 shadow-lg shadow-rose-500/10">
+                            <MapPin size={40} className="text-rose-400" strokeWidth={1.5} />
+                        </div>
+
+                        <div>
+                            <h2 className="text-2xl font-black text-white tracking-tight leading-tight">
+                                Location Access Required
+                            </h2>
+                            <p className="text-sm font-medium text-slate-400 mt-3 leading-relaxed">
+                                Please register from your <strong className="text-rose-400">Original Work Place</strong>.
+                                Accurate location is mandatory for job assignments.
+                            </p>
+                        </div>
+
+                        <div
+                            onClick={() => setIsChecked(!isChecked)}
+                            className={`
+                                cursor-pointer group rounded-xl p-4 border transition-all duration-300 text-left flex gap-3
+                                ${isChecked
+                                    ? 'bg-rose-500/10 border-rose-500/40 shadow-[0_0_20px_rgba(244,63,94,0.1)]'
+                                    : 'bg-slate-800/50 border-white/5 hover:border-white/10'
+                                }
+                            `}
+                        >
+                            <div className={`
+                                shrink-0 size-6 rounded-full border-2 flex items-center justify-center transition-all duration-300
+                                ${isChecked ? 'bg-rose-500 border-rose-500' : 'border-slate-600 group-hover:border-slate-500'}
+                            `}>
+                                {isChecked && <CheckCircle2 size={14} className="text-white" strokeWidth={3} />}
+                            </div>
+                            <p className={`text-xs font-bold leading-relaxed transition-colors ${isChecked ? 'text-slate-200' : 'text-slate-500 group-hover:text-slate-400'}`}>
+                                I agree to the Partner Terms & Conditions and certify that I am currently at my base of operations.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={() => isChecked && onConfirm()}
+                            disabled={!isChecked}
+                            className={`
+                                w-full py-4 rounded-xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300
+                                ${isChecked
+                                    ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-lg shadow-rose-600/20 hover:shadow-rose-600/30 transform hover:scale-[1.02] active:scale-[0.98]'
+                                    : 'bg-slate-800 text-slate-500 cursor-not-allowed'}
+                            `}
+                        >
+                            <ShieldCheck size={18} />
+                            Enable & Proceed
+                        </button>
+                    </div>
+                </motion.div>
             </div>
-        </div>
+        </AnimatePresence>
     );
 };
 

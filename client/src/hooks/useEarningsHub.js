@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 
-const useEarningsHub = () => {
+const useEarningsHub = (timeRange = '30D') => {
     const { user } = useAuth();
     const socket = useSocket();
     const [loading, setLoading] = useState(true);
@@ -28,16 +28,35 @@ const useEarningsHub = () => {
 
     const technicianId = user?.id;
 
-    const fetchData = async () => {
+    // Wrapped in useCallback to ensure stability
+    const fetchData = useCallback(async () => {
         if (!technicianId) return;
+
+        // Don't set loading true here to avoid flickering on soft refreshes if desired, 
+        // but for range change we might want it. Let's keep smooth.
+
         try {
-            const res = await api.get(`/technicians/${technicianId}/earnings-hub`);
+            const res = await api.get(`/technicians/${technicianId}/earnings-hub`, {
+                params: { timeRange }
+            });
             if (res.data && res.data.success) {
                 setData({
-                    stats: res.data.stats,
-                    earningsData: res.data.earningsData,
-                    aiCoach: res.data.aiCoach,
-                    recentJobs: res.data.recentJobs
+                    stats: res.data.stats || {
+                        projectedNet: 0,
+                        netTrend: 0,
+                        efficiency: 0,
+                        fvr: 0,
+                        pendingValue: 0,
+                        pendingJobs: 0,
+                        safety: 5,
+                        speed: 5,
+                        growthPotential: 0,
+                        rank: "...",
+                        regionMessage: "..."
+                    },
+                    earningsData: res.data.earningsData || [],
+                    aiCoach: res.data.aiCoach || [],
+                    recentJobs: res.data.recentJobs || []
                 });
             }
         } catch (err) {
@@ -45,11 +64,9 @@ const useEarningsHub = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [technicianId, timeRange]);
 
     useEffect(() => {
-        if (!technicianId) return;
-
         fetchData();
 
         // Socket listeners for real-time reactivity
@@ -69,7 +86,7 @@ const useEarningsHub = () => {
                 socket.off('analytics_updated', handleUpdate);
             };
         }
-    }, [technicianId, socket]);
+    }, [fetchData, socket]); // fetchData includes timeRange and technicianId deps
 
     return {
         ...data,

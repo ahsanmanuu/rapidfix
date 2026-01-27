@@ -63,7 +63,11 @@ const useTechnicianDashboard = () => {
                 console.log('[Dashboard] Realtime Update:', data);
 
                 // [OPTIMISTIC] If update contains job info, sync list immediately
-                if (data && data.id) {
+                // Only treat as job if it has job-specific fields (scheduledDate, or technicianId property distinct from id)
+                // Technicians have 'id' and 'serviceType', so those aren't unique enough.
+                const isJob = data && data.id && (data.technicianId || data.scheduledDate || data.userId);
+
+                if (isJob) {
                     setActiveJobs(prev => {
                         const exists = prev.some(j => j.id === data.id);
 

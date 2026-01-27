@@ -48,6 +48,21 @@ const StatCard = ({ icon: Icon, label, value, colorClass, iconBgClass, compact }
 
 
 
+// --- Reusable Modern Modal ---
+const GlassModal = ({ children, onClose, className = "" }) => (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}>
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            onClick={(e) => e.stopPropagation()}
+            className={`bg-white border border-slate-100 shadow-2xl rounded-3xl w-full max-w-md overflow-hidden relative ${className}`}
+        >
+            {children}
+        </motion.div>
+    </div>
+);
+
 const OtpVerificationModal = ({ isOpen, onClose, onVerify, loading }) => {
     const [otp, setOtp] = useState(['', '', '', '']);
     const inputs = useMemo(() => Array(4).fill(0), []);
@@ -82,59 +97,52 @@ const OtpVerificationModal = ({ isOpen, onClose, onVerify, loading }) => {
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200"
-                    >
-                        <div className="p-1 px-2 flex justify-end">
-                            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                                <X size={20} />
-                            </button>
+                <GlassModal onClose={onClose}>
+                    <div className="relative p-2 flex justify-end">
+                        <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors">
+                            <X size={20} />
+                        </button>
+                    </div>
+                    <div className="px-8 pb-10 pt-2 text-center space-y-8">
+                        <div className="size-20 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm ring-4 ring-blue-50/50">
+                            <Shield size={32} strokeWidth={2} />
                         </div>
-                        <div className="p-6 pt-2 text-center space-y-4">
-                            <div className="size-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                                <Shield size={32} />
-                            </div>
-                            <h3 className="text-xl font-black text-slate-800 tracking-tight">Verify Completion</h3>
-                            <p className="text-sm text-slate-500 font-medium px-4">
-                                Enter the 4-digit code provided by the customer to finalize this job.
+                        <div className="space-y-2">
+                            <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Verify Completion</h3>
+                            <p className="text-sm text-slate-500 font-medium leading-relaxed max-w-[280px] mx-auto">
+                                Ask the customer for the 4-digit code to securely finalize this job.
                             </p>
-
-                            <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-                                <div className="flex justify-center gap-3">
-                                    {inputs.map((_, i) => (
-                                        <input
-                                            key={i}
-                                            id={`otp-${i}`}
-                                            type="text"
-                                            inputMode="numeric"
-                                            maxLength="1"
-                                            value={otp[i]}
-                                            onChange={(e) => handleChange(i, e.target.value)}
-                                            onKeyDown={(e) => handleKeyDown(i, e)}
-                                            className="w-12 h-14 text-center text-2xl font-black border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-slate-800"
-                                            autoFocus={i === 0}
-                                            required
-                                        />
-                                    ))}
-                                </div>
-
-                                <div className="flex gap-3 pt-2">
-                                    <button
-                                        type="submit"
-                                        disabled={loading || otp.join('').length !== 4}
-                                        className="w-full py-3.5 px-4 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 uppercase tracking-widest disabled:opacity-50 disabled:shadow-none"
-                                    >
-                                        {loading ? 'Verifying...' : 'Complete Job'}
-                                    </button>
-                                </div>
-                            </form>
                         </div>
-                    </motion.div>
-                </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-8">
+                            <div className="flex justify-center gap-4">
+                                {inputs.map((_, i) => (
+                                    <input
+                                        key={i}
+                                        id={`otp-${i}`}
+                                        type="text"
+                                        inputMode="numeric"
+                                        maxLength="1"
+                                        value={otp[i]}
+                                        onChange={(e) => handleChange(i, e.target.value)}
+                                        onKeyDown={(e) => handleKeyDown(i, e)}
+                                        className="w-14 h-16 text-center text-3xl font-bold bg-slate-50 border border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all outline-none text-slate-900 shadow-sm placeholder:text-slate-300"
+                                        autoFocus={i === 0}
+                                        required
+                                    />
+                                ))}
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading || otp.join('').length !== 4}
+                                className="w-full py-4 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:shadow-none disabled:translate-y-0"
+                            >
+                                {loading ? 'Verifying...' : 'Complete Job'}
+                            </button>
+                        </form>
+                    </div>
+                </GlassModal>
             )}
         </AnimatePresence>
     );
@@ -149,101 +157,107 @@ const JobDetailsModal = ({ isOpen, onClose, job }) => {
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200"
-                    >
-                        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                            <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                <span className="size-2 bg-blue-600 rounded-full"></span>
-                                Job Details
-                            </h3>
-                            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 transition-colors bg-white rounded-full shadow-sm border border-slate-100">
-                                <X size={18} />
-                            </button>
+                <GlassModal onClose={onClose} className="max-w-2xl h-[85vh] flex flex-col">
+                    {/* Header */}
+                    <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/5 backdrop-blur-sm shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="size-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                                <ClipboardList size={20} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black uppercase tracking-widest text-white">Job Details</h3>
+                                <p className="text-[10px] font-bold text-slate-400">ID: #{job.id.slice(0, 8).toUpperCase()}</p>
+                            </div>
+                        </div>
+                        <button onClick={onClose} className="p-2 text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg border border-white/5">
+                            <X size={20} />
+                        </button>
+                    </div>
+
+                    {/* Scrollable Content */}
+                    <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1 relative z-10">
+                        {/* Service Header */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 p-6 bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-2xl border border-white/5 shadow-inner">
+                            <div>
+                                <span className={`text-[10px] font-black px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase mb-3 inline-block tracking-wider`}>
+                                    {job.status?.replace('_', ' ') || "Service Request"}
+                                </span>
+                                <h4 className="text-3xl font-black text-white leading-tight mb-2 tracking-tight">{job.serviceType || job.service_type || "Service Request"}</h4>
+                                <div className="flex items-center gap-2 text-xs text-slate-400 font-bold uppercase tracking-wider">
+                                    <Calendar size={14} className="text-slate-500" />
+                                    <span>Assigned: {formattedDate}</span>
+                                </div>
+                            </div>
+                            <div className="text-right bg-slate-950/50 p-4 rounded-xl border border-white/5">
+                                <p className="text-3xl font-black text-emerald-400 tracking-tight">₹{job.totalCost ?? job.total_cost ?? job.offerPrice ?? job.offer_price ?? job.visitingCharges ?? job.visiting_charges ?? '0'}</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Est. Revenue</p>
+                            </div>
                         </div>
 
-                        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-                            {/* Service Header */}
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <span className="text-[10px] font-black px-2 py-0.5 rounded bg-blue-50 text-blue-600 uppercase mb-2 inline-block">
-                                        {job.status?.replace('_', ' ') || 'Job ID: ' + job.id.slice(0, 8)}
-                                    </span>
-                                    <h4 className="text-2xl font-black text-slate-800 leading-tight">{job.serviceType || job.service_type || "Service Request"}</h4>
-                                    <p className="text-xs text-slate-400 font-bold mt-1 uppercase tracking-tighter">Assigned: {formattedDate}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-2xl font-black text-blue-600">₹{job.totalCost ?? job.total_cost ?? job.offerPrice ?? job.offer_price ?? job.visitingCharges ?? job.visiting_charges ?? '0'}</p>
-                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Est. Revenue</p>
-                                </div>
-                            </div>
-
-                            {/* Customer Info */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
-                                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                                        <User size={12} className="text-blue-500" /> Customer Information
-                                    </h5>
-                                    <div>
-                                        <p className="text-sm font-black text-slate-800">{job.contactName || job.customer?.name || "Customer"}</p>
-                                        <a href={`tel:${job.customerMobile || job.contactPhone || job.customer?.phone}`} className="text-blue-600 text-xs font-bold hover:underline flex items-center gap-1.5 mt-1">
-                                            <Phone size={14} />
-                                            {job.customerMobile || job.contactPhone || job.customer?.phone || "No phone provided"}
-                                        </a>
-                                    </div>
-                                </div>
-
-                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
-                                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                                        <MapPin size={12} className="text-emerald-500" /> Work Location
-                                    </h5>
-                                    <p className="text-xs font-medium text-slate-700 leading-relaxed italic">
-                                        {job.address || "No address details available."}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Description */}
-                            <div className="space-y-2">
-                                <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                    <ClipboardList size={12} className="text-orange-500" /> Job Description
+                        {/* Info Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="p-6 bg-slate-800/30 rounded-2xl border border-white/5 space-y-4 hover:border-white/10 transition-colors">
+                                <h5 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                                    <User size={14} /> Customer Information
                                 </h5>
-                                <div className="p-4 bg-white border border-slate-100 rounded-xl text-xs font-medium text-slate-600 leading-relaxed">
-                                    {job.description || "No specific instructions provided by the customer."}
+                                <div>
+                                    <p className="text-lg font-bold text-white mb-1">{job.contactName || job.customer?.name || "Customer"}</p>
+                                    <a href={`tel:${job.customerMobile || job.contactPhone || job.customer?.phone}`} className="inline-flex items-center gap-2 text-indigo-400 text-sm font-bold hover:text-indigo-300 transition-colors bg-indigo-500/10 px-3 py-1.5 rounded-lg">
+                                        <Phone size={14} />
+                                        {job.customerMobile || job.contactPhone || job.customer?.phone || "No phone provided"}
+                                    </a>
                                 </div>
                             </div>
 
-                            {/* Action Summary */}
-                            <div className="pt-2">
-                                <div className="flex items-center gap-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100 text-[10px] font-bold text-blue-700 uppercase tracking-tight">
-                                    <AlertCircle size={14} className="shrink-0" />
-                                    Remember to follow all safety protocols and verify the job completion with the customer code.
-                                </div>
+                            <div className="p-6 bg-slate-800/30 rounded-2xl border border-white/5 space-y-4 hover:border-white/10 transition-colors">
+                                <h5 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-2">
+                                    <MapPin size={14} /> Work Location
+                                </h5>
+                                <p className="text-sm font-medium text-slate-300 leading-relaxed">
+                                    {job.address || "No address details available."}
+                                </p>
                             </div>
                         </div>
 
-                        <div className="p-4 border-t border-slate-100 bg-slate-50/30 flex gap-3">
-                            <button
-                                onClick={onClose}
-                                className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-black hover:bg-slate-50 transition-colors uppercase tracking-widest shadow-sm"
-                            >
-                                Close
-                            </button>
-                            <button
-                                onClick={() => {
-                                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address)}`, '_blank');
-                                }}
-                                className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 uppercase tracking-widest"
-                            >
-                                Get Directions
-                            </button>
+                        {/* Description */}
+                        <div className="space-y-3">
+                            <h5 className="text-[10px] font-black text-amber-400 uppercase tracking-widest flex items-center gap-2 pl-1">
+                                <ClipboardList size={14} /> Job Description
+                            </h5>
+                            <div className="p-6 bg-slate-950/50 border border-white/10 rounded-2xl text-sm font-medium text-slate-300 leading-7 shadow-inner">
+                                "{job.description || "No specific instructions provided by the customer."}"
+                            </div>
                         </div>
-                    </motion.div>
-                </div>
+
+                        {/* Safety Warning */}
+                        <div className="flex items-start gap-4 p-4 bg-blue-500/5 rounded-xl border border-blue-500/20">
+                            <AlertCircle size={20} className="text-blue-400 shrink-0 mt-0.5" />
+                            <p className="text-xs font-medium text-slate-400 leading-relaxed">
+                                <strong className="text-blue-400 block mb-1">Safety First</strong>
+                                Ensure you follow all standard operating procedures and verify the completion code with the customer before leaving the premises.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="p-6 border-t border-white/10 bg-white/5 backdrop-blur-sm flex flex-col sm:flex-row gap-4 shrink-0 mt-auto">
+                        <button
+                            onClick={onClose}
+                            className="flex-1 py-3.5 px-4 bg-transparent border border-white/10 text-slate-300 rounded-xl text-xs font-black hover:bg-white/5 hover:text-white transition-colors uppercase tracking-widest"
+                        >
+                            Close Details
+                        </button>
+                        <button
+                            onClick={() => {
+                                window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address)}`, '_blank');
+                            }}
+                            className="flex-[2] py-3.5 px-4 bg-blue-600 text-white rounded-xl text-xs font-black hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/20 uppercase tracking-widest flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99]"
+                        >
+                            <MapPin size={16} />
+                            Get Directions
+                        </button>
+                    </div>
+                </GlassModal>
             )}
         </AnimatePresence>
     );

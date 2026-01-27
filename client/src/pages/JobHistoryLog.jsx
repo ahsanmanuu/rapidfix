@@ -2,6 +2,25 @@ import React, { useState } from 'react';
 import TechnicianLayout from '../components/TechnicianLayout';
 import useJobHistory from '../hooks/useJobHistory';
 import { useAuth } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, AlertCircle, Calendar, MapPin, User, ClipboardList, CheckCircle2, AlertTriangle, FileText, Download } from 'lucide-react';
+
+// --- Reusable Glass Components ---
+const GlassModal = ({ children, onClose, className = "" }) => (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md" onClick={onClose}>
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            onClick={(e) => e.stopPropagation()}
+            className={`bg-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl w-full overflow-hidden relative ${className}`}
+        >
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            {children}
+        </motion.div>
+    </div>
+);
 
 const ReportIssueModal = ({ job, onClose, onSubmit }) => {
     const [submitting, setSubmitting] = useState(false);
@@ -29,55 +48,62 @@ const ReportIssueModal = ({ job, onClose, onSubmit }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <div>
-                        <h3 className="text-xl font-black text-slate-800 tracking-tight">Report Issue</h3>
-                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-0.5">Job #{job.id.slice(-6).toUpperCase()}</p>
+        <AnimatePresence>
+            <GlassModal onClose={onClose} className="max-w-md">
+                <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/5 backdrop-blur-sm">
+                    <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-400 border border-rose-500/20">
+                            <AlertTriangle size={20} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black text-white tracking-tight">Report Issue</h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Job #{job.id.slice(-6).toUpperCase()}</p>
+                        </div>
                     </div>
-                    <button onClick={onClose} className="size-10 rounded-xl hover:bg-white hover:shadow-md transition-all flex items-center justify-center text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100">
-                        <span className="material-symbols-outlined">close</span>
+                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg">
+                        <X size={20} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                <form onSubmit={handleSubmit} className="p-6 space-y-6 relative z-10">
                     <div className="space-y-4">
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Category</label>
-                            <select
-                                required
-                                value={formData.category}
-                                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                            >
-                                <option>Job Related</option>
-                                <option>Payment Issue</option>
-                                <option>User Behavior</option>
-                                <option>App Bug</option>
-                                <option>Other</option>
-                            </select>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 pl-1">Category</label>
+                            <div className="relative">
+                                <select
+                                    required
+                                    value={formData.category}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                                    className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-sm font-bold text-white focus:ring-2 focus:ring-rose-500/20 outline-none transition-all appearance-none cursor-pointer hover:bg-slate-800"
+                                >
+                                    <option className="bg-slate-900 text-slate-300">Job Related</option>
+                                    <option className="bg-slate-900 text-slate-300">Payment Issue</option>
+                                    <option className="bg-slate-900 text-slate-300">User Behavior</option>
+                                    <option className="bg-slate-900 text-slate-300">App Bug</option>
+                                    <option className="bg-slate-900 text-slate-300">Other</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Subject</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 pl-1">Subject</label>
                             <input
                                 required
                                 type="text"
                                 placeholder="E.g. Payment not received"
                                 value={formData.subject}
                                 onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                                className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-sm font-bold text-white placeholder:text-slate-600 focus:ring-2 focus:ring-rose-500/20 outline-none transition-all"
                             />
                         </div>
                         <div>
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5">Description</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 pl-1">Description</label>
                             <textarea
                                 required
                                 rows="4"
                                 placeholder="Describe the issue in detail..."
                                 value={formData.description}
                                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"
+                                className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-sm font-medium text-white placeholder:text-slate-600 focus:ring-2 focus:ring-rose-500/20 outline-none transition-all resize-none"
                             ></textarea>
                         </div>
                     </div>
@@ -86,149 +112,151 @@ const ReportIssueModal = ({ job, onClose, onSubmit }) => {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 hover:bg-slate-50 border border-slate-200 transition-all font-inter"
+                            className="flex-1 py-3.5 px-4 bg-transparent border border-white/10 text-slate-400 rounded-xl text-xs font-black uppercase tracking-widest hover:text-white hover:bg-white/5 transition-all"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="flex-3 px-6 py-3 bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-700 shadow-lg shadow-rose-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="flex-[2] py-3.5 px-4 bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-500 shadow-lg shadow-rose-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
-                            {submitting ? (
-                                <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            ) : (
-                                <span className="material-symbols-outlined text-sm">report_problem</span>
-                            )}
                             {submitting ? 'Submitting...' : 'Submit Report'}
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </GlassModal>
+        </AnimatePresence>
     );
 };
 
 const JobDetailModal = ({ job, onClose, onReport }) => {
     if (!job) return null;
 
+    const dateSource = job.createdAt || job.created_at;
+    const formattedDate = dateSource ? new Date(dateSource).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <div>
-                        <h3 className="text-xl font-black text-slate-800 tracking-tight">Job Details</h3>
-                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-0.5">#{job.id.toUpperCase()}</p>
+        <AnimatePresence>
+            <GlassModal onClose={onClose} className="max-w-2xl h-[85vh] flex flex-col">
+                {/* Header */}
+                <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/5 backdrop-blur-sm shrink-0">
+                    <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                            <FileText size={20} />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black uppercase tracking-widest text-white">Job Details</h3>
+                            <p className="text-[10px] font-bold text-slate-400">ID: #{job.id.slice(0, 8).toUpperCase()}</p>
+                        </div>
                     </div>
-                    <button onClick={onClose} className="size-10 rounded-xl hover:bg-white hover:shadow-md transition-all flex items-center justify-center text-slate-400 hover:text-slate-900 border border-transparent hover:border-slate-100">
-                        <span className="material-symbols-outlined">close</span>
+                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 rounded-lg border border-white/5">
+                        <X size={20} />
                     </button>
                 </div>
 
-                <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh]">
+                <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1 relative z-10">
+                    {/* Customer Info */}
                     <div className="grid grid-cols-2 gap-8">
                         <div className="space-y-4">
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Customer Info</label>
-                                <p className="text-sm font-bold text-slate-900">{job.contactName || 'Customer'}</p>
+                                <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest block mb-1">Customer Info</label>
+                                <p className="text-sm font-bold text-white">{job.contactName || 'Customer'}</p>
                                 <p className="text-xs text-slate-500 font-medium">UID: {job.userId?.slice(-12)}</p>
-                                <p className="text-xs text-slate-500 font-medium">{job.contactPhone}</p>
+                                <p className="text-xs text-slate-400 font-medium">{job.contactPhone}</p>
                             </div>
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Address</label>
-                                <p className="text-xs text-slate-700 font-bold leading-relaxed">{job.address}</p>
+                                <label className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block mb-1">Address</label>
+                                <p className="text-xs text-slate-300 font-bold leading-relaxed">{job.address}</p>
                             </div>
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Service & Date</label>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className={`material-symbols-outlined text-sm ${job.serviceType === 'Plumbing' ? 'text-blue-500' : 'text-amber-500'}`}>
-                                        {job.serviceType === 'Plumbing' ? 'plumbing' : 'bolt'}
-                                    </span>
-                                    <p className="text-sm font-bold text-slate-900">{job.serviceType}</p>
+                                <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest block mb-1">Service & Date</label>
+                                <div className="flex items-center gap-2 mb-1 text-white">
+                                    <p className="text-sm font-bold">{job.serviceType}</p>
                                 </div>
-                                <p className="text-xs text-slate-500 font-medium">
+                                <p className="text-xs text-slate-400 font-medium">
                                     {new Date(job.createdAt || job.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                                 </p>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{job.scheduledTime || 'N/A'}</p>
+                                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{job.scheduledTime || 'N/A'}</p>
                             </div>
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Status</label>
-                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border inline-block
-                                    ${job.status.toLowerCase() === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                        job.status.toLowerCase() === 'cancelled' || job.status.toLowerCase() === 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-100' :
-                                            'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Status</label>
+                                <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider border inline-block
+                                    ${job.status.toLowerCase() === 'completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                        job.status.toLowerCase() === 'cancelled' || job.status.toLowerCase() === 'rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                                            'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
                                     {job.status}
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="pt-6 border-t border-slate-100">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Job Description & Notes</label>
-                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                            <p className="text-xs text-slate-600 leading-relaxed italic">
+                    <div className="pt-6 border-t border-white/5">
+                        <label className="text-[10px] font-black text-amber-400 uppercase tracking-widest block mb-3">Job Description & Notes</label>
+                        <div className="bg-slate-950/50 rounded-xl p-4 border border-white/5 shadow-inner">
+                            <p className="text-xs text-slate-300 leading-relaxed italic">
                                 "{job.description || 'No description provided.'}"
                             </p>
                             {job.professional_note && (
-                                <div className="mt-4 pt-4 border-t border-slate-200/50">
-                                    <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-1">My Notes</p>
-                                    <p className="text-xs text-slate-700 font-medium">{job.professional_note}</p>
+                                <div className="mt-4 pt-4 border-t border-white/5">
+                                    <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">My Notes</p>
+                                    <p className="text-xs text-slate-400 font-medium">{job.professional_note}</p>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="pt-6 border-t border-slate-100">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Payment Breakdown</label>
-                        <div className="space-y-3">
-                            <div className="flex justify-between text-xs font-medium text-slate-500">
+                    <div className="pt-6 border-t border-white/5">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Payment Breakdown</label>
+                        <div className="space-y-3 bg-slate-800/20 p-4 rounded-xl border border-white/5">
+                            <div className="flex justify-between text-xs font-medium text-slate-400">
                                 <span>Visiting Charges</span>
-                                <span className="text-slate-900">₹{job.visiting_charges || 0}</span>
+                                <span className="text-slate-200">₹{job.visiting_charges || 0}</span>
                             </div>
-                            <div className="flex justify-between text-xs font-medium text-slate-500">
+                            <div className="flex justify-between text-xs font-medium text-slate-400">
                                 <span>Spare Parts Cost</span>
-                                <span className="text-slate-900">₹{job.spare_parts_cost || 0}</span>
+                                <span className="text-slate-200">₹{job.spare_parts_cost || 0}</span>
                             </div>
-                            <div className="flex justify-between text-xs font-medium text-slate-500">
+                            <div className="flex justify-between text-xs font-medium text-slate-400">
                                 <span>Tax (GST)</span>
-                                <span className="text-slate-900">₹{job.tax || 0}</span>
+                                <span className="text-slate-200">₹{job.tax || 0}</span>
                             </div>
-                            <div className="flex justify-between pt-3 border-t border-slate-100">
-                                <span className="text-sm font-black text-slate-800 uppercase tracking-tight">Total Amount</span>
-                                <span className="text-lg font-black text-blue-600">₹{parseFloat(job.totalCost || job.total_cost || 0).toFixed(2)}</span>
+                            <div className="flex justify-between pt-3 border-t border-white/10 mt-2">
+                                <span className="text-sm font-black text-white uppercase tracking-tight">Total Amount</span>
+                                <span className="text-lg font-black text-emerald-400">₹{parseFloat(job.totalCost || job.total_cost || 0).toFixed(2)}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                <div className="p-6 bg-slate-950/50 border-t border-white/10 flex justify-between items-center backdrop-blur-sm shrink-0">
                     <button
                         onClick={onReport}
-                        className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-rose-500 hover:text-rose-700 transition-all group"
+                        className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-rose-400 hover:text-rose-300 transition-all group"
                     >
-                        <span className="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">report_problem</span>
+                        <AlertTriangle size={16} className="group-hover:scale-110 transition-transform" />
                         Report Issue
                     </button>
                     <div className="flex gap-3">
                         <button
                             onClick={onClose}
-                            className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all font-inter"
+                            className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all"
                         >
                             Close
                         </button>
                         <button
-                            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-600/20 active:scale-95 transition-all flex items-center gap-2"
+                            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-500 shadow-lg shadow-blue-600/20 active:scale-95 transition-all flex items-center gap-2"
                             onClick={() => window.print()}
                         >
-                            <span className="material-symbols-outlined text-sm">print</span>
+                            <Download size={16} />
                             Print Receipt
                         </button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </GlassModal>
+        </AnimatePresence>
     );
 };
 
@@ -371,9 +399,9 @@ const JobHistoryLog = () => {
                     <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex flex-wrap items-center gap-4" onClick={e => e.stopPropagation()}>
                         <div className="flex-1 min-w-[200px]">
                             <div className="relative">
-                                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
                                 <input
-                                    className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder:text-slate-400 transition-all outline-none"
+                                    className="w-full pl-12 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder:text-slate-400 transition-all outline-none"
                                     placeholder="Search Customer or ID..."
                                     type="text"
                                     value={searchTerm}
@@ -381,6 +409,7 @@ const JobHistoryLog = () => {
                                 />
                             </div>
                         </div>
+
 
                         <div className="flex items-center gap-2">
                             <div className="relative group">
@@ -613,22 +642,26 @@ const JobHistoryLog = () => {
                     </div>
                 </div>
             </div>
-            {selectedJob && (
-                <JobDetailModal
-                    job={selectedJob}
-                    onClose={() => setSelectedJob(null)}
-                    onReport={() => setReportingJob(selectedJob)}
-                />
-            )}
+            {
+                selectedJob && (
+                    <JobDetailModal
+                        job={selectedJob}
+                        onClose={() => setSelectedJob(null)}
+                        onReport={() => setReportingJob(selectedJob)}
+                    />
+                )
+            }
 
-            {reportingJob && (
-                <ReportIssueModal
-                    job={reportingJob}
-                    onClose={() => setReportingJob(null)}
-                    onSubmit={handleReportIssue}
-                />
-            )}
-        </TechnicianLayout>
+            {
+                reportingJob && (
+                    <ReportIssueModal
+                        job={reportingJob}
+                        onClose={() => setReportingJob(null)}
+                        onSubmit={handleReportIssue}
+                    />
+                )
+            }
+        </TechnicianLayout >
     );
 };
 
