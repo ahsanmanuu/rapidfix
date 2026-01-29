@@ -299,11 +299,44 @@ class AdminManager extends BaseManager {
         }
     }
 
-    async getTechnicians(adminLat, adminLng) {
-        try {
-            const TechDB = new (require('./DatabaseLoader'))('technicians');
-            const techs = await TechDB.read();
+    setTechnicianManager(technicianManager) {
+        this.technicianManager = technicianManager;
+    }
 
+    async getTechnicians(adminLat, adminLng, filters = {}) {
+        try {
+            let techs = [];
+
+            // Use injected manager if available (Preferred), else load DB
+            if (this.technicianManager) {
+                techs = await this.technicianManager.getAllTechnicians();
+            } else {
+                const TechDB = new (require('./DatabaseLoader'))('technicians');
+                techs = await TechDB.read();
+            }
+
+            // [NEW] Strict Filter: City
+            if (filters.city) {
+                const searchCity = filters.city.trim().toLowerCase();
+                console.log(`[AdminManager] Strict Filtering by City: ${searchCity}`);
+                return techs.filter(t => {
+                    // Check Tech City
+                    const tCity = (t.addressDetails?.city || t.city || '').trim().toLowerCase();
+                    return tCity === searchCity;
+                });
+            }
+
+            // [NEW] Strict Filter: Pincode
+            if (filters.pincode) {
+                const searchPin = String(filters.pincode).trim();
+                console.log(`[AdminManager] Strict Filtering by Pincode: ${searchPin}`);
+                return techs.filter(t => {
+                    const tPin = String(t.addressDetails?.pincode || t.pincode || '').trim();
+                    return tPin === searchPin;
+                });
+            }
+
+            // Fallback: Geo-Fencing
             if (!adminLat || !adminLng) return techs;
 
             const radiusKm = 50;
