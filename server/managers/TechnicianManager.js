@@ -434,6 +434,25 @@ class TechnicianManager extends BaseManager {
         }
     }
 
+    async getTopRatedTechnicians(limit = 4) {
+        try {
+            const allTechs = await this.getAllTechnicians();
+            const enriched = await this._enrichWithRatings(allTechs);
+
+            // Sort by Rating (Desc) then Review Count (Desc)
+            return enriched
+                .filter(t => t.rating >= 4.0) // Minimum threshold
+                .sort((a, b) => {
+                    if (b.rating !== a.rating) return b.rating - a.rating;
+                    return (parseFloat(b.reviewCount) || 0) - (parseFloat(a.reviewCount) || 0);
+                })
+                .slice(0, limit);
+        } catch (err) {
+            console.error("[TechnicianManager] Error getting top rated:", err);
+            return [];
+        }
+    }
+
     async _enrichWithRatings(techs) {
         try {
             const FeedbackManager = require('./FeedbackManager');
