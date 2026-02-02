@@ -299,6 +299,18 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                         <div className="w-full md:w-1/2 h-[65%] md:h-full flex flex-col bg-white">
                             {/* Header */}
                             <div className="px-4 py-3 border-b border-gray-100 shrink-0">
+                                {userLocation?.address?.includes('Default') && (
+                                    <div className="mb-2 p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                                        <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-xs font-bold text-amber-700">Using Default Location</p>
+                                            <p className="text-[10px] text-amber-600">
+                                                We couldn't detect your location. Results are based on New Delhi.
+                                                Please enable location access for accurate results.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                                 <h2 className="text-lg font-bold text-gray-800">
                                     {searching ? 'Searching...' : `Nearby ${serviceType}s`}
                                 </h2>

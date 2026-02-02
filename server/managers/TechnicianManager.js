@@ -383,8 +383,8 @@ class TechnicianManager extends BaseManager {
             const lon = parseFloat(userLon);
             const type = this._normalizeType(serviceType);
 
-            // [UPDATED] Radius is now 100km by default as per requirement
-            const effectiveRadius = Number(radius) || 100;
+            // [UPDATED] Radius is now 30km by default as per requirement
+            const effectiveRadius = Number(radius) || 30;
 
             // Fix: Fetch technicians from DB if not available in scope
             const allTechs = await this.db.read();
