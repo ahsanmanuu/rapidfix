@@ -427,6 +427,37 @@ class TechnicianManager extends BaseManager {
             }).filter(item => item !== null && item.distance <= effectiveRadius);
 
             const enrichedTechs = await this._enrichWithRatings(nearbyTechs);
+
+            // [SMART ALGO] Auto-Expand Search if no results found in strict radius
+            if (enrichedTechs.length === 0) {
+                console.log(`[TechnicianManager] No techs found within ${effectiveRadius}km. Expanding search...`);
+                // Fallback: Search again with unlimited radius (global search) to find NEAREST professionals
+                const allNearby = techs.map(tech => {
+                    let tLat = tech.latitude;
+                    let tLon = tech.longitude;
+                    if (tLat === undefined || tLon === undefined || tLat === null || tLon === null) {
+                        tLat = tech.registeredLatitude || tech.fixedLatitude;
+                        tLon = tech.registeredLongitude || tech.fixedLongitude;
+                    }
+                    const parsedLat = parseFloat(tLat);
+                    const parsedLon = parseFloat(tLon);
+                    if (isNaN(parsedLat) || isNaN(parsedLon)) return null;
+                    if (Math.abs(parsedLat) < 0.0001 && Math.abs(parsedLon) < 0.0001) return null;
+
+                    const dist = this.calculateDistance(lat, lon, parsedLat, parsedLon);
+                    const { password, ...rest } = tech;
+                    return {
+                        ...rest,
+                        location: { latitude: parsedLat, longitude: parsedLon, address: tech.baseAddress || '' },
+                        distance: parseFloat(dist.toFixed(1)),
+                        isFar: dist > effectiveRadius // Flag to indicate this is outside original radius
+                    };
+                }).filter(item => item !== null); // No distance filter
+
+                const expandedEnriched = await this._enrichWithRatings(allNearby);
+                return expandedEnriched.sort((a, b) => a.distance - b.distance);
+            }
+
             return enrichedTechs.sort((a, b) => a.distance - b.distance);
         } catch (err) {
             console.error("[TechnicianManager] Error searching technicians:", err);

@@ -299,6 +299,17 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                         <div className="w-full md:w-1/2 h-[65%] md:h-full flex flex-col bg-white">
                             {/* Header */}
                             <div className="px-4 py-3 border-b border-gray-100 shrink-0">
+                                {sortedTechs.length > 0 && sortedTechs[0].isFar && (
+                                    <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
+                                        <AlertCircle size={16} className="text-blue-600 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-xs font-bold text-blue-700">Extended Search</p>
+                                            <p className="text-[10px] text-blue-600">
+                                                No professionals found nearby. Showing the nearest available experts.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                                 <h2 className="text-lg font-bold text-gray-800">
                                     {searching ? 'Searching...' : `Nearby ${serviceType}s`}
                                 </h2>
