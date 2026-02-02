@@ -138,8 +138,8 @@ const Home = () => {
                         reviewCount: t.reviewCount ? `${t.reviewCount}` : '50',
                         description: t.bio || `Professional ${t.serviceType}.`
                     }));
-                    // Only override fallback if we get enough profiles
-                    if (profiles.length >= 4) {
+                    // Override fallback if we get ANY profiles
+                    if (profiles.length > 0) {
                         setTechnicianProfiles(profiles.slice(0, 4));
                     }
                 }
