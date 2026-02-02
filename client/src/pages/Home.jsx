@@ -299,7 +299,7 @@ const Home = () => {
                 const defaultLoc = {
                     latitude: 26.126213,
                     longitude: 85.891854,
-                    address: "Admin Area (Default - Location Access Denied)"
+                    address: "Admin Area"
                 };
                 launchModal(defaultLoc);
             };
@@ -308,6 +308,11 @@ const Home = () => {
                 handleLocationError();
                 return;
             }
+
+            // [DEV FIX] Force Admin Area for Testing (Ignore Real Location)
+            console.log("DEV: Forcing Location Error to use Default Admin Area");
+            handleLocationError();
+            return;
 
             navigator.geolocation.getCurrentPosition(
                 (position) => {
