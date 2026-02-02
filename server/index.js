@@ -1983,6 +1983,136 @@ app.get('/api/broadcasts', async (req, res) => {
   res.json({ success: true, broadcasts });
 });
 
+// --- Technician Auth Routes [NEW] ---
+app.post('/api/technicians/login', async (req, res) => {
+  try {
+    const { email, password, latitude, longitude } = req.body;
+    const tech = await technicianManager.login(email, password, latitude, longitude);
+
+    if (tech) {
+      if (tech.status === 'Blacklisted' || tech.status === 'Banned') {
+        return res.status(403).json({ success: false, error: 'Account is suspended or blacklisted' });
+      }
+      const session = await sessionManager.createSession(tech.id, 'technician', 'web');
+      res.json({ success: true, technician: tech, sessionToken: session.token });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid email or password' });
+    }
+  } catch (err) {
+    console.error("Technician Login Error:", err);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+app.post('/api/technicians/register', upload.fields([
+  { name: 'photo', maxCount: 1 },
+  { name: 'pan', maxCount: 1 },
+  { name: 'aadhar', maxCount: 1 },
+  { name: 'dl', maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const data = req.body;
+
+    // Parse Location
+    let location = null;
+    if (data.location) {
+      try { location = JSON.parse(data.location); } catch (e) { location = null; }
+    }
+
+    // Parse Documents from Multer
+    const documents = {
+      verificationStatus: 'Pending',
+      photo: req.files?.['photo']?.[0]?.path || null,
+      pan: req.files?.['pan']?.[0]?.path || null,
+      aadhar: req.files?.['aadhar']?.[0]?.path || null,
+      dl: req.files?.['dl']?.[0]?.path || null
+    };
+
+    // Construct Technician Data
+    const techData = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      serviceType: data.serviceType,
+      experience: data.experience,
+      password: data.password,
+      addressDetails: `${data.city}, ${data.state}, ${data.country}, ${data.pincode}`, // Composite address
+      city: data.city,
+      state: data.state,
+      pincode: data.pincode,
+      country: data.country,
+      documents
+    };
+
+    const newTech = await technicianManager.createTechnician(techData, null, location);
+
+    if (newTech) {
+      const session = await sessionManager.createSession(newTech.id, 'technician', 'web');
+
+      // Welcome Notification
+      notificationManager.createNotification(newTech.id, 'technician', 'Welcome Partner', 'Welcome to RapidFix Partner Program!', 'welcome', newTech.id);
+
+      res.json({ success: true, technician: newTech, sessionToken: session.token });
+    } else {
+      res.status(400).json({ success: false, error: 'Registration failed' });
+    }
+  } catch (err) {
+    console.error("Technician Register Error:", err);
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// --- User Auth Routes [NEW] ---
+app.post('/api/users/login', async (req, res) => {
+  try {
+    const { email, password, location } = req.body;
+    const user = await userManager.login(email, password);
+    if (user) {
+      if (user.status === 'Banned') {
+        return res.status(403).json({ success: false, error: 'Account is banned' });
+      }
+      const session = await sessionManager.createSession(user.id, 'user', 'web');
+
+      // Sync Location on Login
+      if (location) {
+        userManager.updateUser(user.id, { location }).catch(err => console.error("Login Location Sync Error:", err));
+      }
+
+      res.json({ success: true, user, sessionToken: session.token });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid email or password' });
+    }
+  } catch (err) {
+    console.error("User Login Error:", err);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+app.post('/api/users/register', async (req, res) => {
+  try {
+    const { name, email, phone, password, location } = req.body;
+    // Basic validations
+    if (!email || !password || !name) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    const newUser = await userManager.createUser(name, email, phone, location, password);
+    if (newUser) {
+      const session = await sessionManager.createSession(newUser.id, 'user', 'web');
+
+      // Welcome Notification
+      notificationManager.createNotification(newUser.id, 'user', 'Welcome to RapidFix', 'Your account has been created successfully.', 'welcome', newUser.id);
+
+      res.json({ success: true, user: newUser, sessionToken: session.token });
+    } else {
+      res.status(400).json({ success: false, error: 'Registration failed' });
+    }
+  } catch (err) {
+    console.error("User Register Error:", err);
+    res.status(400).json({ success: false, error: err.message }); // 400 likely for duplicate email
+  }
+});
+
 // --- Admin Dashboard Routes ---
 app.post('/api/admin/login', async (req, res) => {
   try {
