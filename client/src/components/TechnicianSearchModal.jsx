@@ -305,7 +305,7 @@ const TechnicianSearchModal = ({ isOpen, onClose, userLocation, serviceType, onB
                                         <div>
                                             <p className="text-xs font-bold text-amber-700">Using Default Location</p>
                                             <p className="text-[10px] text-amber-600">
-                                                We couldn't detect your location. Results are based on New Delhi.
+                                                We couldn't detect your location. Results are based on Admin Area.
                                                 Please enable location access for accurate results.
                                             </p>
                                         </div>

@@ -297,9 +297,9 @@ const Home = () => {
                     return;
                 }
                 const defaultLoc = {
-                    latitude: 28.6139,
-                    longitude: 77.2090,
-                    address: "New Delhi (Default - Location Access Denied)"
+                    latitude: 26.126213,
+                    longitude: 85.891854,
+                    address: "Admin Area (Default - Location Access Denied)"
                 };
                 launchModal(defaultLoc);
             };
