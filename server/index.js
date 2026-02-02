@@ -1152,12 +1152,15 @@ app.post('/api/invoice-settings', upload.single('logo'), async (req, res) => {
 // NEW: WALLET ROUTES
 // ==========================================
 
-app.get('/api/finance/wallet/:technicianId', async (req, res) => {
+app.get('/api/finance/wallet/:id', async (req, res) => {
   try {
-    const { technicianId } = req.params;
-    const balance = await financeManager.getBalance(technicianId, true);
-    const stats = await financeManager.getFinancialStats(technicianId);
-    const analytics = await financeManager.getAIAnalytics(technicianId);
+    const { id } = req.params;
+    const { role } = req.query; // 'technician' or 'user'
+    const isTechnician = role === 'technician';
+
+    const balance = await financeManager.getBalance(id, isTechnician);
+    const stats = await financeManager.getFinancialStats(id, isTechnician);
+    const analytics = await financeManager.getAIAnalytics(id, isTechnician);
 
     res.json({
       success: true,
@@ -1247,7 +1250,13 @@ app.get('/api/finance/invoices/:technicianId', async (req, res) => {
 
 app.get('/api/technicians/:id/transactions', async (req, res) => {
   try {
-    const transactions = await financeManager.getTransactionsByUser(req.params.id, true);
+    const { role } = req.query;
+    const isTechnician = role === 'technician'; // Default false if not specified? Or safer to default true for this legacy route?
+    // Given the route name is /technicians/..., legacy behavior implies technician.
+    // However, I will check if role is explicitly 'user'.
+    const isTechFn = role !== 'user';
+
+    const transactions = await financeManager.getTransactionsByUser(req.params.id, isTechFn);
     res.json({ success: true, transactions });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

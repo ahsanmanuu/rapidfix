@@ -35,7 +35,9 @@ const useWallet = () => {
     const fetchWalletData = useCallback(async () => {
         if (!technicianId) return;
         try {
-            const res = await api.get(`/finance/wallet/${technicianId}`);
+            // [UPDATED] Pass role to support both User and Technician
+            const role = user?.role || 'technician';
+            const res = await api.get(`/finance/wallet/${technicianId}?role=${role}`);
             if (res.data.success) {
                 setWalletData(res.data.wallet || {
                     balance: 0,
@@ -51,19 +53,21 @@ const useWallet = () => {
             console.error("Fetch Wallet Error:", err);
             setError(err.response?.data?.error || err.message);
         }
-    }, [technicianId]);
+    }, [technicianId, user]);
 
     const fetchTransactions = useCallback(async () => {
         if (!technicianId) return;
         try {
-            const res = await api.get(`/technicians/${technicianId}/transactions`);
+            // [UPDATED] Pass role
+            const role = user?.role || 'technician';
+            const res = await api.get(`/technicians/${technicianId}/transactions?role=${role}`);
             if (res.data.success) {
                 setTransactions(res.data.transactions);
             }
         } catch (err) {
             console.error("Fetch Transactions Error:", err);
         }
-    }, [technicianId]);
+    }, [technicianId, user]);
 
     const fetchBankAndWithdrawals = useCallback(async () => {
         if (!technicianId) return;

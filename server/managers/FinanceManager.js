@@ -643,9 +643,9 @@ class FinanceManager {
     // NEW: ANALYTICS & AI INSIGHTS
     // ==========================================
 
-    async getFinancialStats(technicianId) {
+    async getFinancialStats(userId, isTechnician = true) {
         try {
-            const txns = await this.db.findAll('technician_id', technicianId);
+            const txns = await this.db.findAll(isTechnician ? 'technician_id' : 'user_id', userId);
             const earnings = txns.filter(t => t.type === 'credit');
             const withdrawals = txns.filter(t => t.description.toLowerCase().includes('withdrawal'));
 
@@ -738,34 +738,38 @@ class FinanceManager {
         }
     }
 
-    async getAIAnalytics(technicianId) {
+    async getAIAnalytics(userId, isTechnician = true) {
         try {
             if (this.db.client) {
-                const { data, error } = await this.db.client
-                    .from('technician_finance_analytics')
-                    .select('*')
-                    .eq('technician_id', technicianId)
-                    .single();
+                // Table 'technician_finance_analytics' is specific. For users, we might not have a dedicated table yet.
+                // If not technician, skip DB lookup for now or create 'user_finance_analytics'.
+                if (isTechnician) {
+                    const { data, error } = await this.db.client
+                        .from('technician_finance_analytics')
+                        .select('*')
+                        .eq('technician_id', userId)
+                        .single();
 
-                if (data) {
-                    return {
-                        taxEstimation: { amount: data.tax_estimation, message: data.tax_message },
-                        savingsSuggestion: { amount: data.savings_goal, message: data.savings_message },
-                        peakInsight: { message: data.peak_insight },
-                        healthScore: data.health_score
-                    };
+                    if (data) {
+                        return {
+                            taxEstimation: { amount: data.tax_estimation, message: data.tax_message },
+                            savingsSuggestion: { amount: data.savings_goal, message: data.savings_message },
+                            peakInsight: { message: data.peak_insight },
+                            healthScore: data.health_score
+                        };
+                    }
                 }
             }
-            return this.calculateAIAnalytics(technicianId);
+            return this.calculateAIAnalytics(userId, isTechnician);
         } catch (err) {
             console.error("[FinanceManager] Error getting AI analytics:", err);
-            return this.calculateAIAnalytics(technicianId);
+            return this.calculateAIAnalytics(userId, isTechnician);
         }
     }
 
-    async calculateAIAnalytics(technicianId) {
+    async calculateAIAnalytics(userId, isTechnician = true) {
         try {
-            const txns = await this.db.findAll('technician_id', technicianId);
+            const txns = await this.db.findAll(isTechnician ? 'technician_id' : 'user_id', userId);
             const earnings = txns.filter(t => t.type === 'credit');
             const totalEarnings = earnings.reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
